@@ -1,8 +1,9 @@
 import requests
-
+from PIL import Image
 from marqo.client import Client
 from marqo.errors import MarqoApiError
 import unittest
+import numpy as np
 import pprint
 from tests.marqo_test import MarqoTestCase
 import tempfile

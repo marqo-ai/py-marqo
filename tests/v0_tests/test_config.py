@@ -17,43 +17,6 @@ class TestConfig(MarqoTestCase):
         assert c.indexing_device == "cuda:3"
         assert c.search_device == "cuda:4"
 
-    def test_init_infer_gpu_device(self):
-        mock_torch_cuda = mock.MagicMock()
-        mock_torch_cuda.is_available.return_value = True
-
-        @mock.patch("torch.cuda", mock_torch_cuda)
-        def run():
-            c = config.Config(url=self.endpoint, indexing_device='cuda' if torch.cuda.is_available() else 'cpu', 
-                                    search_device='cuda' if torch.cuda.is_available() else 'cpu')
-            assert c.indexing_device == enums.Devices.cuda, f"{enums.Devices.cuda} {c.indexing_device}"
-            assert c.search_device == enums.Devices.cuda
-            return True
-        assert run()
-
-    def test_init_infer_cpu_device(self):
-        mock_torch_cuda = mock.MagicMock()
-        mock_torch_cuda.is_available.return_value = False
-
-        @mock.patch("torch.cuda", mock_torch_cuda)
-        def run():
-            c = config.Config(url=self.endpoint)
-            assert c.indexing_device == enums.Devices.cpu
-            assert c.search_device == enums.Devices.cpu
-            return True
-        assert run()
-
-    def test_init_override_inferred_device(self):
-        mock_torch_cuda = mock.MagicMock()
-        mock_torch_cuda.is_available.return_value = True
-
-        @mock.patch("torch.cuda", mock_torch_cuda)
-        def run():
-            c = config.Config(url=self.endpoint, indexing_device="cuda:3", search_device="cuda:4")
-            assert c.indexing_device == "cuda:3"
-            assert c.search_device == "cuda:4"
-            return True
-        assert run()
-
     def test_set_url_localhost(self):
         @mock.patch("urllib3.disable_warnings")
         def run(mock_dis_warnings):
