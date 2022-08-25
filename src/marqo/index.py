@@ -134,10 +134,6 @@ class Index():
                 "reranker": reranker
             }
         )
-        return neural_search.search(
-            config=self.config, index_name=self.index_name, text=q, return_doc_ids=True,
-            searchable_attributes=searchable_attributes, search_method=search_method, result_count=limit,
-            highlights=highlights, reranker=reranker)
 
     def get_document(self, document_id: Union[str, int]) -> Dict[str, Any]:
         """Get one document with given document identifier.
