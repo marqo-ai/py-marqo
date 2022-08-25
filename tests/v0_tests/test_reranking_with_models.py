@@ -1,8 +1,5 @@
 import unittest
-
-from marqo.s2_inference.reranking import rerank
 import copy
-import numpy as np
 
 class TestRerankingWithModels(unittest.TestCase):
 

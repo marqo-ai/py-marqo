@@ -6,13 +6,12 @@ class MarqoTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        local_opensearch_settings = {
-            "url": 'https://localhost:9200',
+        local_marqo_settings = {
+            "url": 'http://localhost:8000',
             "main_user": "admin",
             "main_password": "admin"
         }
-        s2search_settings = {}
-        cls.client_settings = local_opensearch_settings
+        cls.client_settings = local_marqo_settings
         cls.authorized_url = construct_authorized_url(
             url_base=cls.client_settings["url"],
             username=cls.client_settings["main_user"],

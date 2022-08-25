@@ -6,10 +6,8 @@ import unittest
 import pprint
 from tests.marqo_test import MarqoTestCase
 import tempfile
-from PIL import Image
-import numpy as np
 import os
-from marqo.s2_inference.processing import text as text_processor
+
 
 class TestSentenceChunking(MarqoTestCase):
     """Test for sentence chunking

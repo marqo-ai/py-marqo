@@ -6,8 +6,6 @@ import unittest
 import pprint
 from tests.marqo_test import MarqoTestCase
 import tempfile
-from PIL import Image
-import numpy as np
 import os
 
 class TestImageChunking(MarqoTestCase):

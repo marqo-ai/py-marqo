@@ -2,8 +2,6 @@ from marqo.client import Client
 from marqo.errors import MarqoApiError, MarqoError
 import unittest
 import copy
-from marqo.neural_search import parallel
-import torch
 from tests.marqo_test import MarqoTestCase
 
 

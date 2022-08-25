@@ -1,22 +1,8 @@
-# neural search:
+# marqo client:
+urllib3
 requests
-fastapi
-uvicorn[standard]
-fastapi_utils
+
 # testing:
 pytest
 tox
-# s2_inference:
-more_itertools
-nltk
-torch
-pillow
-numpy
-validators
-sentence-transformers
-clip-marqo
-protobuf==3.20.1
-onnxruntime-gpu
-onnx
-pandas
-optimum
+

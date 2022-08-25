@@ -1,18 +1,8 @@
 import base64
-import hashlib
-import hmac
-import json
-import datetime
-import nltk
-import ssl
 from typing import Any, Dict, List, Optional, Union
 from marqo.index import Index
-from marqo.enums import Devices
 from marqo.config import Config
 from marqo._httprequests import HttpRequests
-from marqo.errors import MarqoError
-from marqo.neural_search import neural_search, index_meta_cache
-import urllib3
 from marqo import utils, enums
 
 
@@ -34,10 +24,6 @@ class Client:
         url:
             The url to the S2Search API (ex: http://localhost:9200)
         """
-
-        # TODO move into neural search
-        self._ensure_nltk_setup()
-
         self.main_user = main_user
         self.main_password = main_password
         if (main_user is not None) and (main_password is not None):
@@ -46,19 +32,6 @@ class Client:
             self.url = url
         self.config = Config(self.url, indexing_device=indexing_device, search_device=search_device)
         self.http = HttpRequests(self.config)
-        index_meta_cache.populate_cache(config=self.config)
-        if not self.config.cluster_is_s2search:
-            self._turn_off_auto_create_index()
-
-    # move into neural search
-    def _turn_off_auto_create_index(self):
-        """turns off auto creation of indices. To be run in client instantiation"""
-        self.http.put(
-            path="_cluster/settings",
-            body={
-                "persistent": {"action.auto_create_index": "false"}
-            })
-
 
     def create_index(
         self, index_name: str,
@@ -68,23 +41,19 @@ class Client:
         sentence_overlap=0,
         image_preprocessing_method=None,
     ) -> Dict[str, Any]:
-        """Create an index.
+        """
 
-        Parameters
-        ----------
-        index_name: str
-            name of the index.
+        Args:
+            index_name:
+            treat_urls_and_pointers_as_images:
+            model:
+            normalize_embeddings:
+            sentences_per_chunk:
+            sentence_overlap:
+            image_preprocessing_method:
 
+        Returns:
 
-        Returns
-        -------
-        task:
-            Name of the index
-
-        Raises
-        ------
-        s2SearchApiError
-            An error containing details about why marqo can't process your request. marqo error codes are described here: https://docs.marqo.com/errors/#marqo-errors
         """
         return Index.create(
             config=self.config, index_name=index_name,
@@ -97,24 +66,13 @@ class Client:
     def delete_index(self, index_name: str) -> Dict[str, Any]:
         """Deletes an index
 
-        Parameters
-        ----------
-        index_name:
-            UID of the index.
+        Args:
+            index_name: name of the index
 
-        Returns
-        -------
-        task:
-            Dictionary containing a task to track the informations about the progress of an asynchronous process.
-            https://docs.marqo.com/reference/api/tasks.html#get-one-task
-
-        Raises
-        ------
-        s2SearchApiError
-            An error containing details about why marqo can't process your request. marqo error codes are described here: https://docs.marqo.com/errors/#marqo-errors
+        Returns:
+            response body about the result of the delete request
         """
-
-        return neural_search.delete_index(config=self.config, index_name=index_name)
+        return self.http.delete(path=f"indexes/{index_name}")
 
     def get_index(self, index_name: str) -> Index:
         """Get the index.
@@ -194,9 +152,3 @@ class Client:
         data: bytes
     ) -> str:
         return base64.urlsafe_b64encode(data).decode('utf-8').replace('=','')
-    # move into neural script - add the model warming - consider adding warming logic in create index as well
-    def _ensure_nltk_setup(self):
-        try:
-            nltk.data.find('tokenizers/punkt')
-        except LookupError:
-            nltk.download('punkt')
