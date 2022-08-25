@@ -207,7 +207,7 @@ curl -XPOST  http://admin:admin@localhost:8000/indexes/my-irst-ix/search -H 'Con
 """
 curl -XPOST http://admin:admin@localhost:8000/indexes/my-multimodal-index -H 'Content-type:application/json' -d '{
     "index_defaults": {
-      "treat_urls_and_pointers_as_images":true,    
+      "treat_urls_and_pointers_as_images":true,     
       "model":"ViT-B/32"
     }
 }'

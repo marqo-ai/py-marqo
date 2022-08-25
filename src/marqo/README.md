@@ -1,7 +1,8 @@
 ### Run the Marqo application locally (outside of docker):
 
-1. `cd` into `src/marqo/neuralsearch`
-2. Run the following command:
+1. Ensure OpenSearch is running
+2. `cd` into `src/marqo/neuralsearch`
+3. Run the following command:
 ```bash
 # if you are running OpenSearch locally, or add an external URL 
 export OPENSEARCH_URL="https://localhost:9200" && 
