@@ -2,7 +2,7 @@
 import copy
 import pprint
 from marqo.client import Client
-from marqo.errors import MarqoApiError, MarqoError
+from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
 import unittest
 from tests.marqo_test import MarqoTestCase
 
@@ -32,8 +32,8 @@ class TestAddDocuments(MarqoTestCase):
         self.client.create_index(index_name=self.index_name_1)
         try:
             self.client.create_index(index_name=self.index_name_1)
-        except MarqoApiError as e:
-            assert "already exists" in str(e)
+        except MarqoWebError as e:
+            assert "index_already_exists" == e.code
 
     # Delete index tests:
 
@@ -52,8 +52,9 @@ class TestAddDocuments(MarqoTestCase):
     def test_get_index_non_existent(self):
         try:
             index = self.client.get_index("some-non-existent-index")
-        except MarqoApiError as e:
-            assert "no such index" in str(e)
+            raise AssertionError
+        except MarqoWebError as e:
+            assert e.code == "index_not_found"
 
     # Add documents tests:
 
@@ -163,8 +164,8 @@ class TestAddDocuments(MarqoTestCase):
         try:
             self.client.index(self.index_name_1).delete_documents([])
             raise AssertionError
-        except MarqoError as e:
-            assert "can't be empty" in str(e)
+        except MarqoWebError as e:
+            assert "can't be empty" in str(e) or "value_error.missing" in str (e)
         res = self.client.index(self.index_name_1).get_document("123")
         print(res)
         assert "abc" in res
@@ -180,8 +181,8 @@ class TestAddDocuments(MarqoTestCase):
         try:
             self.client.index(self.index_name_1).search("some str")
             raise AssertionError
-        except MarqoApiError as s:
-            assert "no such index" in str(s)
+        except MarqoWebError as s:
+            assert "index_not_found" == s.code
         self.client.index(self.index_name_1).add_documents([{"abd": "efg"}])
         # it works:
         self.client.index(self.index_name_1).search("some str")

@@ -93,7 +93,7 @@ class Index():
     def refresh(self):
         """refreshes the index"""
         # might need to rename to hit Marqo or add if not it does exist
-        return self.http.post(path=F"{self.index_name}/_refresh")
+        return self.http.post(path=F"indexes/{self.index_name}/refresh")
 
     def search(self, q: str, searchable_attributes: Optional[List[str]]=None,
                limit: int=10, search_method: Union[SearchMethods.NEURAL, str] = SearchMethods.NEURAL,
@@ -120,7 +120,20 @@ class Index():
         s2SearchApiError
             An error containing details about why marqo can't process your request. marqo error codes are described here: https://docs.marqo.com/errors/#marqo-errors
         """
-        return self.http.post(path=f"indexes/{self.index_name}/search")
+        if reranker is not None:
+            # FIXME
+            raise NotImplementedError("reranking is not yet implemented in the API!")
+        return self.http.post(
+            path=f"indexes/{self.index_name}/search",
+            body={
+                "q": q,
+                "searchableAttributes": searchable_attributes,
+                "limit": limit,
+                "searchMethod": search_method,
+                "showHighlights": highlights,
+                "reranker": reranker
+            }
+        )
         return neural_search.search(
             config=self.config, index_name=self.index_name, text=q, return_doc_ids=True,
             searchable_attributes=searchable_attributes, search_method=search_method, result_count=limit,

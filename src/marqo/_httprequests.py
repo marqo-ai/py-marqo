@@ -128,49 +128,19 @@ class HttpRequests:
             request.raise_for_status()
             return HttpRequests.__to_json(request)
         except requests.exceptions.HTTPError as err:
-            convert_to_marqo_web_error_and_raise(response=request, err=err)
+            convert_to_marqo_error_and_raise(response=request, err=err)
 
 
-def convert_to_marqo_web_error_and_raise(response: requests.Response, err: requests.exceptions.HTTPError):
-    """Translates OpenSearch errors into Marqo errors, which are then raised"""
-    try:
-        response_dict = response.json()
-    except JSONDecodeError:
-        raise_catchall_http_as_marqo_error(response=response, err=err)
-
-    try:
-        open_search_error_type = response_dict["error"]["type"]
-
-        if open_search_error_type == "index_not_found_exception":
-            raise IndexNotFoundError(message=f"Index `{response_dict['error']['index']}` not found.") from err
-        elif open_search_error_type == "resource_already_exists_exception" and "index" in response_dict["error"]["reason"]:
-            raise IndexAlreadyExistsError(message=f"Index `{response_dict['error']['index']}` already exists") from err
-        elif open_search_error_type == "invalid_index_name_exception":
-            raise InvalidIndexNameError(
-                message=f"{response_dict['error']['reason'].replace('[','`').replace(']','`')}"
-            ) from err
-        else:
-            raise_catchall_http_as_marqo_error(response=response, err=err)
-    except KeyError:
-        pass
-
-    try:
-        if response_dict["found"] is False:
-            raise DocumentNotFoundError(
-                message=f"Document `{response_dict['_id']}` not found."
-            ) from err
-    except KeyError:
-        pass
-
-    raise_catchall_http_as_marqo_error(response=response, err=err)
-
-
-def raise_catchall_http_as_marqo_error(response: requests.Response, err: requests.exceptions.HTTPError) -> None:
+def convert_to_marqo_error_and_raise(response: requests.Response, err: requests.exceptions.HTTPError) -> None:
     """Raises a generic MarqoWebError for a given HTTPError"""
     try:
         response_msg = response.json()
-    except JSONDecodeError:
+        code = response_msg["code"]
+        error_type = response_msg["type"]
+    except (JSONDecodeError, KeyError) as e:
         response_msg = response.text
+        code = "unhandled_error"
+        error_type = "unhandled_error_type"
 
-    raise MarqoWebError(message=response_msg, code="unhandled_backend_error",
-                        error_type="backend_error", status_code=response.status_code) from err
+    raise MarqoWebError(message=response_msg, code=code, error_type=error_type,
+        status_code=response.status_code) from err

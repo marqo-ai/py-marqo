@@ -4,7 +4,7 @@ from marqo.index import Index
 from marqo.config import Config
 from marqo._httprequests import HttpRequests
 from marqo import utils, enums
-
+from marqo import errors
 
 class Client:
     """
@@ -72,7 +72,10 @@ class Client:
         Returns:
             response body about the result of the delete request
         """
-        return self.http.delete(path=f"indexes/{index_name}")
+        try:
+            res = self.http.delete(path=f"indexes/{index_name}")
+        except errors.MarqoWebError as e:
+            return e.message
 
     def get_index(self, index_name: str) -> Index:
         """Get the index.
@@ -96,7 +99,7 @@ class Client:
         ix = Index(self.config, index_name)
         # verify it exists
         # maybe delete - use stats end point for now
-        self.http.get(path=index_name)
+        self.http.get(path=f"indexes/{index_name}/stats")
         return ix
 
     def index(self, index_name: str) -> Index:

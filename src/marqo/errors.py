@@ -75,7 +75,10 @@ class MarqoWebError(Exception):
         super().__init__(self.message)
 
     def __str__(self) -> str:
-        return f'MarqoWebError: {self.__class__.__name__} Error message: {self.message}'
+        return f'MarqoWebError: {self.__class__.__name__} Error message: {self.message}\n' \
+               f'status_code: {self.status_code}, type: {self.error_type}, ' \
+               f'code: {self.code}, link: {self.link}'
+
 
 # ---MARQO USER ERRORS---
 
