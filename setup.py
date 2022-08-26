@@ -6,28 +6,9 @@ with open("README.md", "r", encoding="utf8") as fh:
 
 setup(
     install_requires=[
-        # difficult packages:
-        "click==8.0.4",
         # client:
         "requests",
         "urllib3",
-        # s2_inference:
-        "clip-marqo==1.0.2",
-        "more_itertools",
-        "nltk",
-        "torch",
-        "pillow",
-        "numpy",
-        "validators",
-        "sentence-transformers",
-        "onnxruntime-gpu",
-        "onnx",
-        "protobuf==3.20.1",
-        "pandas",
-        "optimum",
-        "fastapi",
-        "uvicorn[standard]",
-        "fastapi_utils",
     ],
     name="marqo",
     version="0.1.10",
