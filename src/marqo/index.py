@@ -120,9 +120,6 @@ class Index():
         s2SearchApiError
             An error containing details about why marqo can't process your request. marqo error codes are described here: https://docs.marqo.com/errors/#marqo-errors
         """
-        if reranker is not None:
-            # FIXME
-            raise NotImplementedError("reranking is not yet implemented in the API!")
         return self.http.post(
             path=f"indexes/{self.index_name}/search",
             body={
