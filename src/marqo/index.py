@@ -128,7 +128,7 @@ class Index():
                 "limit": limit,
                 "searchMethod": search_method,
                 "showHighlights": highlights,
-                "reranker": reranker
+                "reRanker": reranker
             }
         )
 
@@ -148,7 +148,7 @@ class Index():
         documents: List[Dict[str, Any]],
         auto_refresh=True,
         batch_size: int = None,
-        use_parallel: bool = False,
+        processes: int = None,
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """Add documents to a Marqo index
 
@@ -166,8 +166,8 @@ class Index():
         """
         if batch_size is None:
             return self.http.post(path=f"indexes/{self.index_name}/documents?refresh={auto_refresh}", body=documents)
-        elif use_parallel:
-            raise NotImplementedError("Parallel add docs not yet available, from the Cclient!")
+        elif processes is not None and processes > 1 and batch_size > 0:
+            return self.http.post(path=f"indexes/{self.index_name}/documents?refresh={auto_refresh}&processes={processes}&batch_size={batch_size}", body=documents)
         else:
             if batch_size <= 0:
                 raise errors.InvalidArgError("Batch size can't be less than 1!")
