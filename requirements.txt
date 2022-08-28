@@ -1,7 +1,7 @@
 # marqo client:
 urllib3
 requests
-
+pillow
 # testing:
 pytest
 tox
