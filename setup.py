@@ -9,6 +9,8 @@ setup(
         # client:
         "requests",
         "urllib3",
+        "pillow",
+        "numpy",
     ],
     name="marqo",
     version="0.1.10",
