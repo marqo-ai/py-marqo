@@ -4,6 +4,8 @@ from marqo.client import Client
 from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
 import unittest
 from tests.marqo_test import MarqoTestCase
+from marqo import enums
+from unittest import mock
 
 
 class TestAddDocuments(MarqoTestCase):
@@ -186,18 +188,107 @@ class TestAddDocuments(MarqoTestCase):
         # it works:
         self.client.index(self.index_name_1).search("some str")
 
+    def test_add_documents_with_device(self):
+        temp_client = copy.deepcopy(self.client)
+        temp_client.config.search_device = enums.Devices.cpu
+        temp_client.config.indexing_device = enums.Devices.cpu
 
-def strip_marqo_fields(doc, strip_id=False):
-    """Strips Marqo fields from a returned doc to get the original doc"""
-    copied = copy.deepcopy(doc)
+        mock__post = mock.MagicMock()
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        def run():
+            temp_client.index(self.index_name_1).add_documents(documents=[
+                {"d1": "blah"}, {"d2", "some data"}
+            ], device="cuda:45")
+            return True
+        assert run()
 
-    strip_fields = ["_highlights", "_score"]
-    if strip_id:
-        strip_fields += ["_id"]
+        args, kwargs = mock__post.call_args
+        assert "device=cuda45" in kwargs["path"]
 
-    for to_strip in strip_fields:
-        try:
-            del copied[to_strip]
-        except KeyError:
-            pass
-    return copied
+    def test_add_documents_with_device_batching(self):
+        temp_client = copy.deepcopy(self.client)
+        temp_client.config.search_device = enums.Devices.cpu
+        temp_client.config.indexing_device = enums.Devices.cpu
+
+        mock__post = mock.MagicMock()
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        def run():
+            temp_client.index(self.index_name_1).add_documents(documents=[
+                {"d1": "blah"}, {"d2", "some data"}, {"d2331": "blah"}, {"45d2", "some data"}
+            ], batch_size=2, device="cuda:37")
+            return True
+        assert run()
+
+        assert len(mock__post.call_args_list) == 2
+        for args, kwargs in mock__post.call_args_list:
+            assert "device=cuda37" in kwargs["path"]
+
+    def test_add_documents_default_device(self):
+        """do we use the default device defined in the client, if it isn't
+        overridden?
+        """
+        temp_client = copy.deepcopy(self.client)
+        temp_client.config.search_device = enums.Devices.cpu
+        temp_client.config.indexing_device = "cuda:28"
+
+        mock__post = mock.MagicMock()
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        def run():
+            temp_client.index(self.index_name_1).add_documents(documents=[
+                {"d1": "blah"}, {"d2", "some data"}
+            ])
+            return True
+        assert run()
+
+        args, kwargs = mock__post.call_args
+        assert "device=cuda28" in kwargs["path"]
+
+    def test_add_documents_set_refresh(self):
+        temp_client = copy.deepcopy(self.client)
+        temp_client.config.search_device = enums.Devices.cpu
+        temp_client.config.indexing_device = enums.Devices.cpu
+
+        mock__post = mock.MagicMock()
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        def run():
+            temp_client.index(self.index_name_1).add_documents(documents=[
+                {"d1": "blah"}, {"d2", "some data"}
+            ], auto_refresh=False)
+            temp_client.index(self.index_name_1).add_documents(documents=[
+                {"d1": "blah"}, {"d2", "some data"}
+            ], auto_refresh=True)
+            return True
+        assert run()
+
+        args, kwargs0 = mock__post.call_args_list[0]
+        assert "refresh=false" in kwargs0["path"]
+        args, kwargs1 = mock__post.call_args_list[1]
+        assert "refresh=true" in kwargs1["path"]
+
+    def test_add_documents_with_processes(self):
+        mock__post = mock.MagicMock()
+
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        def run():
+            self.client.index(self.index_name_1).add_documents(documents=[
+                {"d1": "blah"}, {"d2", "some data"}
+            ], processes=12)
+            return True
+        assert run()
+
+        args, kwargs = mock__post.call_args
+        assert "processes=12" in kwargs["path"]
+
+    def test_add_documents_with_no_processes(self):
+        mock__post = mock.MagicMock()
+
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        def run():
+            self.client.index(self.index_name_1).add_documents(documents=[
+                {"d1": "blah"}, {"d2", "some data"}
+            ])
+            return True
+        assert run()
+
+        args, kwargs = mock__post.call_args
+        assert "processes=12" not in kwargs["path"]

@@ -1,6 +1,7 @@
 import copy
-
 import marqo
+from marqo import enums
+from unittest import mock
 from marqo.client import Client
 from marqo.errors import MarqoApiError
 import unittest
@@ -106,3 +107,23 @@ class TestAddDocuments(MarqoTestCase):
         #    but can look for a word
         assert self.client.index(self.index_name_1).search(
             '"captain"')["hits"][0]["_id"] == "123456"
+
+    def test_search_with_device(self):
+        """use default as defined in config unless overridden"""
+        temp_client = copy.deepcopy(self.client)
+        temp_client.config.search_device = "cpu:4"
+        temp_client.config.indexing_device = enums.Devices.cpu
+
+        mock__post = mock.MagicMock()
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        def run():
+            temp_client.index(self.index_name_1).search(q="my search term")
+            temp_client.index(self.index_name_1).search(q="my search term", device="cuda:2")
+            return True
+        assert run()
+        # did we use the defined default device?
+        args, kwargs0 = mock__post.call_args_list[0]
+        assert "device=cpu4" in kwargs0["path"]
+        # did we overrride the default device?
+        args, kwargs1 = mock__post.call_args_list[1]
+        assert "device=cuda2" in kwargs1["path"]
