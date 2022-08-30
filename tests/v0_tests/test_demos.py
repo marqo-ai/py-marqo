@@ -51,7 +51,7 @@ class TestKaizanDemo(MarqoTestCase):
 
         import marqo
 
-        mq = marqo.Client(url='http://localhost:8000', main_user="admin", main_password="admin")
+        mq = marqo.Client(url='http://localhost:8882', main_user="admin", main_password="admin")
 
         mq.index("my-first-index").add_documents([
             {
@@ -92,7 +92,7 @@ class TestKaizanDemo(MarqoTestCase):
         assert len(r5["hits"]) == 2
 
         r6 = mq.index("my-first-index").delete_documents(ids=["article_591", "article_602"])
-        assert r6['deleted'] == 1
+        assert r6['details']['deletedDocuments'] == 1
 
         rneg1 = mq.index("my-first-index").delete()
         assert rneg1["acknowledged"] is True
