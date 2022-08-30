@@ -98,7 +98,7 @@ class Index():
 
     def search(self, q: str, searchable_attributes: Optional[List[str]]=None,
                limit: int = 10, search_method: Union[SearchMethods.NEURAL, str] = SearchMethods.NEURAL,
-               highlights=True, reranker=None, device: Optional[str] = None
+               highlights=True, reranker=None, device: Optional[str] = None, filter_string: str = None
                ) -> Dict[str, Any]:
         """Search the index.
 
@@ -112,6 +112,8 @@ class Index():
             reranker:
             device: the device used to index the data. Examples include "cpu",
                 "cuda" and "cuda:2". Overrides the Client's default device.
+            filter_string: a filter string, used to prefilter documents during the
+                search. For example: "car_colour:blue"
 
         Returns:
             Dictionary with hits and other metadata
@@ -121,16 +123,19 @@ class Index():
             f"indexes/{self.index_name}/search?"
             f"&device={utils.translate_device_string_for_url(selected_device)}"
         )
+        body = {
+            "q": q,
+            "searchableAttributes": searchable_attributes,
+            "limit": limit,
+            "searchMethod": search_method,
+            "showHighlights": highlights,
+            "reranker": reranker,
+        }
+        if filter_string is not None:
+            body["filter"] = filter_string
         return self.http.post(
             path=path_with_query_str,
-            body={
-                "q": q,
-                "searchableAttributes": searchable_attributes,
-                "limit": limit,
-                "searchMethod": search_method,
-                "showHighlights": highlights,
-                "reranker": reranker
-            }
+            body=body
         )
 
     def get_document(self, document_id: Union[str, int]) -> Dict[str, Any]:
