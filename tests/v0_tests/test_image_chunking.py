@@ -42,30 +42,26 @@ class TestImageChunking(MarqoTestCase):
         
         client.create_index(self.index_name, **settings)
 
-        with tempfile.TemporaryDirectory() as d:
-            for image_type in ['.png', '.jpg']:
-                temp_file_name = os.path.join(d, 'test_image' + image_type)
-                img = Image.fromarray(np.random.randint(0,255,size=image_size).astype(np.uint8))
-                img.save(temp_file_name)
+        temp_file_name = 'https://avatars.githubusercontent.com/u/13092433?v=4'
+        
+        document1 = {'_id': '1', # '_id' can be provided but is not required
+            'attributes': 'hello',
+            'description': 'the image chunking can (optionally) chunk the image into sub-patches (aking to segmenting text) by using either a learned model or simple box generation and cropping',
+            'location': temp_file_name}
 
-                document1 = {'_id': '1', # '_id' can be provided but is not required
-                    'attributes': 'hello',
-                    'description': 'the image chunking can (optionally) chunk the image into sub-patches (aking to segmenting text) by using either a learned model or simple box generation and cropping',
-                    'location': temp_file_name}
+        client.index(self.index_name).add_documents([document1])
 
-                client.index(self.index_name).add_documents([document1])
+        # test the search works
+        results = client.index(self.index_name).search('a')
+        print(results)
+        assert results['hits'][0]['location'] == temp_file_name
 
-                # test the search works
-                results = client.index(self.index_name).search('a')
-                print(results)
-                assert results['hits'][0]['location'] == temp_file_name
-
-                # search only the image location
-                results = client.index(self.index_name).search('a', searchable_attributes=['location'])
-                print(results)
-                assert results['hits'][0]['location'] == temp_file_name
-                # the highlight should be the location
-                assert results['hits'][0]['_highlights']['location'] == temp_file_name
+        # search only the image location
+        results = client.index(self.index_name).search('a', searchable_attributes=['location'])
+        print(results)
+        assert results['hits'][0]['location'] == temp_file_name
+        # the highlight should be the location
+        assert results['hits'][0]['_highlights']['location'] == temp_file_name
 
     def test_image_simple_chunking(self):
 
@@ -86,33 +82,33 @@ class TestImageChunking(MarqoTestCase):
         
         client.create_index(self.index_name, **settings)
 
-        with tempfile.TemporaryDirectory() as d:
-            temp_file_name = os.path.join(d, 'test_image.png')
-            img = Image.fromarray(np.random.randint(0,255,size=image_size).astype(np.uint8))
-            img.save(temp_file_name)
+        
+        temp_file_name = 'https://avatars.githubusercontent.com/u/13092433?v=4'
+        
+        img = Image.open(requests.get(temp_file_name, stream=True).raw)
 
-            document1 = {'_id': '1', # '_id' can be provided but is not required
-                'attributes': 'hello',
-                'description': 'the image chunking can (optionally) chunk the image into sub-patches (akin to segmenting text) by using either a learned model or simple box generation and cropping',
-                'location': temp_file_name}
+        document1 = {'_id': '1', # '_id' can be provided but is not required
+            'attributes': 'hello',
+            'description': 'the image chunking can (optionally) chunk the image into sub-patches (akin to segmenting text) by using either a learned model or simple box generation and cropping',
+            'location': temp_file_name}
 
-            client.index(self.index_name).add_documents([document1])
+        client.index(self.index_name).add_documents([document1])
 
-            # test the search works
-            results = client.index(self.index_name).search('a')
-            print(results)
-            assert results['hits'][0]['location'] == temp_file_name
+        # test the search works
+        results = client.index(self.index_name).search('a')
+        print(results)
+        assert results['hits'][0]['location'] == temp_file_name
 
-            # search only the image location
-            results = client.index(self.index_name).search('a', searchable_attributes=['location'])
-            print(results)
-            assert results['hits'][0]['location'] == temp_file_name
-            # the highlight should be the location
-            assert results['hits'][0]['_highlights']['location'] != temp_file_name
-            assert len(results['hits'][0]['_highlights']['location']) == 4
-            assert all(isinstance(_n, (float, int)) for _n in results['hits'][0]['_highlights']['location'])
+        # search only the image location
+        results = client.index(self.index_name).search('a', searchable_attributes=['location'])
+        print(results)
+        assert results['hits'][0]['location'] == temp_file_name
+        # the highlight should be the location
+        assert results['hits'][0]['_highlights']['location'] != temp_file_name
+        assert len(results['hits'][0]['_highlights']['location']) == 4
+        assert all(isinstance(_n, (float, int)) for _n in results['hits'][0]['_highlights']['location'])
 
-            # search using the image itself, should return a full sized image as highlight
-            results = client.index(self.index_name).search(temp_file_name)
-            print(results)
-            assert abs(np.array(results['hits'][0]['_highlights']['location']) - np.array([0, 0, img.size[0], img.size[1]])).sum() < 1e-6
+        # search using the image itself, should return a full sized image as highlight
+        results = client.index(self.index_name).search(temp_file_name)
+        print(results)
+        assert abs(np.array(results['hits'][0]['_highlights']['location']) - np.array([0, 0, img.size[0], img.size[1]])).sum() < 1e-6
