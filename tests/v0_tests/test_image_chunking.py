@@ -9,11 +9,9 @@ from tests.marqo_test import MarqoTestCase
 import tempfile
 import os
 
+
 class TestImageChunking(MarqoTestCase):
     """Test for image chunking as a preprocessing step
-
-    Assumptions:
-        - Local OpenSearch (not S2Search)
     """
     def setUp(self) -> None:
         client_0 = Client(**self.client_settings)
@@ -113,7 +111,6 @@ class TestImageChunking(MarqoTestCase):
             assert results['hits'][0]['_highlights']['location'] != temp_file_name
             assert len(results['hits'][0]['_highlights']['location']) == 4
             assert all(isinstance(_n, (float, int)) for _n in results['hits'][0]['_highlights']['location'])
-            
 
             # search using the image itself, should return a full sized image as highlight
             results = client.index(self.index_name).search(temp_file_name)

@@ -1,3 +1,7 @@
+"""Please have a running Marqo instance to test against!
+
+Pass its settings to local_marqo_settings.
+"""
 import unittest
 from marqo.utils import construct_authorized_url
 

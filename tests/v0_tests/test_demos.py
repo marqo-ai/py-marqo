@@ -7,11 +7,8 @@ import pprint
 from tests.marqo_test import MarqoTestCase
 
 
-class TestKaizanDemo(MarqoTestCase):
-    """Test for Kaizan demo.
-
-    Assumptions:
-        - Local OpenSearch (not S2Search)
+class TestDemo(MarqoTestCase):
+    """Tests for demos.
     """
     def setUp(self) -> None:
         client_0 = Client(**self.client_settings)

@@ -1,4 +1,3 @@
-"""you need a local OpenSearch client"""
 import copy
 import pprint
 from marqo.client import Client
