@@ -2,7 +2,4 @@
 urllib3
 requests
 
-# testing:
-pytest
-tox
 

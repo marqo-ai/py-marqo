@@ -8,7 +8,11 @@ setup(
     install_requires=[
         # client:
         "requests",
-        "urllib3",
+        "urllib3"
+    ],
+    tests_require=[
+        "pytest",
+        "tox"
     ],
     name="marqo",
     version="0.1.10",

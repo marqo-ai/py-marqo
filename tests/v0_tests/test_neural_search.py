@@ -1,6 +1,7 @@
 import copy
-
 import marqo
+from marqo import enums
+from unittest import mock
 from marqo.client import Client
 from marqo.errors import MarqoApiError
 import unittest
@@ -106,3 +107,48 @@ class TestAddDocuments(MarqoTestCase):
         #    but can look for a word
         assert self.client.index(self.index_name_1).search(
             '"captain"')["hits"][0]["_id"] == "123456"
+
+    def test_search_with_device(self):
+        """use default as defined in config unless overridden"""
+        temp_client = copy.deepcopy(self.client)
+        temp_client.config.search_device = "cpu:4"
+        temp_client.config.indexing_device = enums.Devices.cpu
+
+        mock__post = mock.MagicMock()
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        def run():
+            temp_client.index(self.index_name_1).search(q="my search term")
+            temp_client.index(self.index_name_1).search(q="my search term", device="cuda:2")
+            return True
+        assert run()
+        # did we use the defined default device?
+        args, kwargs0 = mock__post.call_args_list[0]
+        assert "device=cpu4" in kwargs0["path"]
+        # did we overrride the default device?
+        args, kwargs1 = mock__post.call_args_list[1]
+        assert "device=cuda2" in kwargs1["path"]
+
+    def test_prefiltering(self):
+        self.client.create_index(index_name=self.index_name_1)
+        d1 = {
+            "doc title": "Very heavy, dense metallic lead.",
+            "abc-123": "some text",
+            "an_int": 2,
+            "_id": "my-cool-doc"
+        }
+        d2 = {
+            "doc title": "The captain bravely lead her followers into battle."
+                         " She directed her soldiers to and fro.",
+            "field X": "this is a solid doc",
+            "field1": "other things",
+            "_id": "123456"
+        }
+        res = self.client.index(self.index_name_1).add_documents([
+            d1, d2
+        ],auto_refresh=True)
+        search_res = self.client.index(self.index_name_1).search(
+            "blah blah",
+            filter_string="(an_int:[0 TO 30] and an_int:2) AND abc-123:(some text)")
+        assert len(search_res["hits"]) == 1
+        pprint.pprint(search_res)
+        assert search_res["hits"][0]["_id"] == "my-cool-doc"

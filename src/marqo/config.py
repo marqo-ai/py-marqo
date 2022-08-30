@@ -1,5 +1,5 @@
 from typing import Optional, Union
-from marqo import enums
+from marqo import enums, utils
 import urllib3
 import warnings
 

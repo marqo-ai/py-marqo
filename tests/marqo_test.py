@@ -1,3 +1,7 @@
+"""Please have a running Marqo instance to test against!
+
+Pass its settings to local_marqo_settings.
+"""
 import unittest
 from marqo.utils import construct_authorized_url
 
@@ -7,7 +11,7 @@ class MarqoTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         local_marqo_settings = {
-            "url": 'http://localhost:8000',
+            "url": 'http://localhost:8882',
             "main_user": "admin",
             "main_password": "admin"
         }

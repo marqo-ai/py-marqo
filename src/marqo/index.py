@@ -1,14 +1,15 @@
 import functools
 import json
 import logging
+import typing
 from urllib import parse
 from datetime import datetime
 from typing import Any, Dict, Generator, List, Optional, Union
 from marqo._httprequests import HttpRequests
 from marqo.config import Config
 from marqo.marqo_logging import logger
-from marqo.enums import SearchMethods
-from marqo import errors
+from marqo.enums import SearchMethods, Devices
+from marqo import errors, utils
 
 # pylint: disable=too-many-public-methods
 class Index():
@@ -96,40 +97,45 @@ class Index():
         return self.http.post(path=F"indexes/{self.index_name}/refresh")
 
     def search(self, q: str, searchable_attributes: Optional[List[str]]=None,
-               limit: int=10, search_method: Union[SearchMethods.NEURAL, str] = SearchMethods.NEURAL,
-               highlights=True, reranker=None
+               limit: int = 10, search_method: Union[SearchMethods.NEURAL, str] = SearchMethods.NEURAL,
+               highlights=True, reranker=None, device: Optional[str] = None, filter_string: str = None
                ) -> Dict[str, Any]:
-        """Search in the index.
+        """Search the index.
 
-        Parameters
-        ----------
-        query:
-            String containing the searched word(s)
-        opt_params (optional):
-            Dictionary containing optional query parameters
-            https://docs.marqo.com/reference/api/search.html#search-in-an-index
-        searchable_attributes: a subset of attributes to search through
+        Args:
+            q: string to search, or a pointer/url to an image if the index has
+                treat_urls_and_pointers_as_images set to True
+            searchable_attributes:  attributes to search
+            limit: The max number of documents to be returned
+            search_method: Indicates NEURAL or LEXICAL (keyword) search
+            highlights: True if highlights are to be returned
+            reranker:
+            device: the device used to index the data. Examples include "cpu",
+                "cuda" and "cuda:2". Overrides the Client's default device.
+            filter_string: a filter string, used to prefilter documents during the
+                search. For example: "car_colour:blue"
 
-        Returns
-        -------
-        results:
-            Dictionary with hits, offset, limit, processingTime and initial query
-
-        Raises
-        ------
-        s2SearchApiError
-            An error containing details about why marqo can't process your request. marqo error codes are described here: https://docs.marqo.com/errors/#marqo-errors
+        Returns:
+            Dictionary with hits and other metadata
         """
+        selected_device = device if device is not None else self.config.search_device
+        path_with_query_str = (
+            f"indexes/{self.index_name}/search?"
+            f"&device={utils.translate_device_string_for_url(selected_device)}"
+        )
+        body = {
+            "q": q,
+            "searchableAttributes": searchable_attributes,
+            "limit": limit,
+            "searchMethod": search_method,
+            "showHighlights": highlights,
+            "reranker": reranker,
+        }
+        if filter_string is not None:
+            body["filter"] = filter_string
         return self.http.post(
-            path=f"indexes/{self.index_name}/search",
-            body={
-                "q": q,
-                "searchableAttributes": searchable_attributes,
-                "limit": limit,
-                "searchMethod": search_method,
-                "showHighlights": highlights,
-                "reranker": reranker
-            }
+            path=path_with_query_str,
+            body=body
         )
 
     def get_document(self, document_id: Union[str, int]) -> Dict[str, Any]:
@@ -148,7 +154,8 @@ class Index():
         documents: List[Dict[str, Any]],
         auto_refresh=True,
         batch_size: int = None,
-        use_parallel: bool = False,
+        processes: int = None,
+        device: str = None
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """Add documents to a Marqo index
 
@@ -159,19 +166,27 @@ class Index():
                 increase performance.
             batch_size: if it is set, documents will be indexed into batches
                 of this size. Otherwise documents are unbatched.
-            use_parallel:
+            processes: number of processes for the server to use, to do indexing,
+            device: the device used to index the data. Examples include "cpu",
+                "cuda" and "cuda:2"
 
         Returns:
             Response body outlining indexing result
         """
+        selected_device = device if device is not None else self.config.indexing_device
+        path_with_query_str = (
+            f"indexes/{self.index_name}/documents?refresh={str(auto_refresh).lower()}" 
+            f"{f'&device={utils.translate_device_string_for_url(selected_device)}'}"
+            f"{f'&processes={processes}' if processes is not None else ''}"
+        )
         if batch_size is None:
-            return self.http.post(path=f"indexes/{self.index_name}/documents?refresh={auto_refresh}", body=documents)
-        elif use_parallel:
-            raise NotImplementedError("Parallel add docs not yet available, from the Cclient!")
+            return self.http.post(
+                path=path_with_query_str,
+                body=documents)
         else:
             if batch_size <= 0:
                 raise errors.InvalidArgError("Batch size can't be less than 1!")
-            return self._batch_request(docs=documents, batch_size=batch_size, verbose=False)
+            return self._batch_request(docs=documents, batch_size=batch_size, verbose=False, device=device)
 
     def delete_documents(self, ids: List[str], auto_refresh: bool = None) -> Dict[str, int]:
         """
@@ -184,7 +199,7 @@ class Index():
 
         """
         base_path = f"indexes/{self.index_name}/documents/delete-batch"
-        path_with_refresh = base_path if auto_refresh is None else base_path + f"?refresh={auto_refresh}"
+        path_with_refresh = base_path if auto_refresh is None else base_path + f"?refresh={str(auto_refresh).lower()}"
 
         return self.http.post(
             path=path_with_refresh, body=ids
@@ -207,7 +222,8 @@ class Index():
             parsed_date = datetime.strptime(the_date, "%Y-%m-%dT%H:%M:%S.%f")
             return parsed_date
 
-    def _batch_request(self, docs: List[Dict], batch_size: int = 100, verbose: bool=True) -> List[Dict[str, Any]]:
+    def _batch_request(self, docs: List[Dict],  batch_size: int = 100, verbose: bool = True,
+                       device: typing.Optional[str] = None, processes: str = None) -> List[Dict[str, Any]]:
         """Batches a large chunk of documents to be sent as multiple
         add_documents invocations
 
@@ -220,6 +236,12 @@ class Index():
         Returns:
 
         """
+        path_with_query_str = (
+            f"indexes/{self.index_name}/documents?refresh=false"
+            f"{f'&device={utils.translate_device_string_for_url(device)}' if device is not None else ''}"
+            f"{f'&processes={processes}' if processes is not None else ''}"
+        )
+
         logger.info(f"starting batch ingestion in sizes of {batch_size}")
 
         deeper = ((doc, i, batch_size) for i, doc in enumerate(docs))
@@ -236,7 +258,7 @@ class Index():
 
         def verbosely_add_docs(i, docs):
             t0 = datetime.now()
-            res = self.http.post(path=f"indexes/{self.index_name}/documents?refresh=false", body=docs)
+            res = self.http.post(path=path_with_query_str, body=docs)
             total_batch_time = datetime.now() - t0
             num_docs = len(docs)
 
