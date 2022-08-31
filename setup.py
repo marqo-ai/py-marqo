@@ -15,7 +15,7 @@ setup(
         "tox"
     ],
     name="marqo",
-    version="0.1.10",
+    version="0.1.11",
     author="marqo org",
     author_email="org@marqo.io",
     description="Neural search for humans",
