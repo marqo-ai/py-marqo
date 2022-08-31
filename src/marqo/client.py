@@ -14,7 +14,7 @@ class Client:
     marqo and its permissions.
     """
     def __init__(
-        self, url: str = "http://localhost:9200", main_user: str = None, main_password: str = None,
+        self, url: str = "http://localhost:8882", main_user: str = None, main_password: str = None,
         indexing_device: Optional[Union[enums.Devices, str]] = None,
         search_device: Optional[Union[enums.Devices, str]] = None
     ) -> None:
@@ -22,7 +22,7 @@ class Client:
         Parameters
         ----------
         url:
-            The url to the S2Search API (ex: http://localhost:9200)
+            The url to the S2Search API (ex: http://localhost:8882)
         """
         self.main_user = main_user
         self.main_password = main_password
