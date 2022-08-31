@@ -174,19 +174,24 @@ class Index():
             Response body outlining indexing result
         """
         selected_device = device if device is not None else self.config.indexing_device
+
         path_with_query_str = (
             f"indexes/{self.index_name}/documents?refresh={str(auto_refresh).lower()}" 
             f"{f'&device={utils.translate_device_string_for_url(selected_device)}'}"
             f"{f'&processes={processes}' if processes is not None else ''}"
+            f"{f'&batch_size={batch_size}' if processes is not None else ''}"
         )
-        if batch_size is None:
-            return self.http.post(
-                path=path_with_query_str,
-                body=documents)
-        else:
+        
+        if processes in [None, 1] and batch_size is not None:
             if batch_size <= 0:
                 raise errors.InvalidArgError("Batch size can't be less than 1!")
             return self._batch_request(docs=documents, batch_size=batch_size, verbose=False, device=device)
+        else:
+            return self.http.post(
+                    path=path_with_query_str,
+                    body=documents)
+
+#        raise errors.MarqoError("unknown type of processes and batching")
 
     def delete_documents(self, ids: List[str], auto_refresh: bool = None) -> Dict[str, int]:
         """
