@@ -147,13 +147,13 @@ class TestAddDocuments(MarqoTestCase):
             d1, d2
         ], auto_refresh=True)
         search_res = self.client.index(self.index_name_1).search(
-            "blah blah",
+            "blah blah", search_method=enums.SearchMethods.NEURAL,
             filter_string="(an_int:[0 TO 30] and an_int:2) AND abc-123:(some text)")
         assert len(search_res["hits"]) == 1
         assert search_res["hits"][0]["_id"] == "my-cool-doc"
 
         lex_res = self.client.index(self.index_name_1).search(
-            "solid", search_method=enums.SearchMethods.NEURAL,
+            "solid", search_method=enums.SearchMethods.LEXICAL,
             filter_string="(my_bool:true AND a_float:[0.1 TO 0.75]) AND field1:(other things)")
         assert len(lex_res["hits"]) == 1
         assert lex_res["hits"][0]["_id"] == "123456"
