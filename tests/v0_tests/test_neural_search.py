@@ -141,7 +141,7 @@ class TestAddDocuments(MarqoTestCase):
                          " She directed her soldiers to and fro.",
             "field X": "this is a solid doc",
             "field1": "other things", "my_bool": True,
-            "_id": "123456", "a_float": 0.66
+            "_id": "123456", "a float": 0.66
         }
         res = self.client.index(self.index_name_1).add_documents([
             d1, d2
@@ -154,6 +154,6 @@ class TestAddDocuments(MarqoTestCase):
 
         lex_res = self.client.index(self.index_name_1).search(
             "solid", search_method=enums.SearchMethods.LEXICAL,
-            filter_string="(my_bool:true AND a_float:[0.1 TO 0.75]) AND field1:(other things)")
+            filter_string="(my_bool:true AND a\ float:[0.1 TO 0.75]) AND field1:(other things)")
         assert len(lex_res["hits"]) == 1
         assert lex_res["hits"][0]["_id"] == "123456"
