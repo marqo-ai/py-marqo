@@ -97,7 +97,7 @@ class Index():
         return self.http.post(path=F"indexes/{self.index_name}/refresh")
 
     def search(self, q: str, searchable_attributes: Optional[List[str]]=None,
-               limit: int = 10, search_method: Union[SearchMethods.NEURAL, str] = SearchMethods.NEURAL,
+               limit: int = 10, search_method: Union[SearchMethods.TENSOR, str] = SearchMethods.TENSOR,
                highlights=True, reranker=None, device: Optional[str] = None, filter_string: str = None
                ) -> Dict[str, Any]:
         """Search the index.
@@ -107,7 +107,7 @@ class Index():
                 treat_urls_and_pointers_as_images set to True
             searchable_attributes:  attributes to search
             limit: The max number of documents to be returned
-            search_method: Indicates NEURAL or LEXICAL (keyword) search
+            search_method: Indicates TENSOR or LEXICAL (keyword) search
             highlights: True if highlights are to be returned
             reranker:
             device: the device used to index the data. Examples include "cpu",

@@ -96,7 +96,7 @@ class TestAddDocuments(MarqoTestCase):
 
         # Ensure that vector search works
         search_res = self.client.index(self.index_name_1).search(
-            "Examples of leadership")
+            "Examples of leadership", search_method=enums.SearchMethods.TENSOR)
         assert d2 == self.strip_marqo_fields(search_res["hits"][0], strip_id=False)
         assert search_res["hits"][0]['_highlights']["doc title"].startswith("The captain bravely lead her followers")
 

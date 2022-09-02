@@ -5,14 +5,14 @@
 <h1 align="center">Marqo</h1>
 
 <p align="center">
-  <b>Neural search for humans.</b>
+  <b>Tensor search for humans.</b>
 </p>
 
 <p align="center">
   <a align="center" href="https://join.slack.com/t/marqo-community/shared_invite/zt-1d737l76e-u~b3Rvey2IN2nGM4wyr44w"><img src="https://img.shields.io/badge/Slack-blueviolet?logo=slack&amp;logoColor=white&style=flat-square"></a>
 </p>
 
-A deep-learning powered, open-source search engine which seamlessly integrates with your applications, websites, and workflow. 
+A tensor search framework which seamlessly integrates with your applications, websites, and workflow. 
 
 <!-- end marqo-description -->
 
@@ -32,7 +32,7 @@ pip install marqo
 ```python
 import marqo
 
-mq = marqo.Client(url='http://localhost:8882', main_user="admin", main_password="admin")
+mq = marqo.Client(url='http://localhost:8882')
 
 mq.index("my-first-index").add_documents([
     {
@@ -125,9 +125,23 @@ result =  mq.index("my-first-index").search('marco polo', search_method=marqo.Se
 ```
 
 ### Search specific fields
-Using the default neural search method
+Using the default tensor search method
 ```python
 result = mq.index("my-first-index").search('adventure', searchable_attributes=['Title'])
+```
+
+### Delete documents
+Delete documents.
+
+```python
+results = mq.index("my-first-index").delete_documents(ids=["article_591", "article_602"])
+```
+
+### Delete index
+Delete an index.
+
+```python
+results = mq.index("my-first-index").delete()
 ```
 
 ## Multi modal and cross modal search
@@ -176,49 +190,13 @@ results = mq.index("my-multimodal-index").search('https://upload.wikimedia.org/w
 ```
 
 
-### Delete index
-Delete an index.
-
-```python
-results = mq.index("my-first-index").delete()
-```
-
-
-### Delete documents
-Delete documents.
-
-```python
-results = mq.index("my-first-index").delete_documents(ids=["article_591", "article_602"])
-```
-
-
-
-## A note when using a GPU
-Depending on the class of GPU, a version of PyTorch compiled with the latest CUDA (>11.3) may be required. 
-If for example, an error appears similar to the following;
-
-```
-NVIDIA #### with CUDA capability sm_86 is not compatible with the current PyTorch installation.
-The current PyTorch install supports CUDA capabilities sm_37 sm_50 sm_60 sm_70.
-If you want to use the NVIDIA #### GPU with PyTorch, please check the instructions at https://pytorch.org/get-started/locally/
-```
-then PyTorch with the appropriate CUDA should be installed. For example, to install PyTorch 1.12 with CUDA 11.6 do the following;
-```
-pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu116 --upgrade
-```
-It should be noted that the CUDA version the current driver supports can be obtained by using the following command in the terminal;
-```
-$nvidia-smi
-```
-The respective PyTorch installation should have a CUDA version that does not exceed this. PyTorch installation instrucitons can be
-found here https://pytorch.org/get-started/locally/ and previous versions with other CUDA options can be found at https://pytorch.org/get-started/previous-versions/.
 
 ## Warning
 
 Note that you should not run other applications on Marqo's Opensearch cluster as Marqo automatically changes and adapts the settings on the cluster.
 
 ## Contributors
-Marqo is a community project with the goal of making neural search accessible to the wider developer community. We are glad that you are interested in helping out! Please read [this](./CONTRIBUTING.md) to get started
+Marqo is a community project with the goal of making tensor search accessible to the wider developer community. We are glad that you are interested in helping out! Please read [this](./CONTRIBUTING.md) to get started
 
 ## Dev set up
 1. Create a virtual env ```python -m venv ./venv```
@@ -230,10 +208,6 @@ Marqo is a community project with the goal of making neural search accessible to
 ## Merge instructions:
 1. Run the full test suite (by using the command `tox` in this dir).
 2. Create a pull request with an attached github issue.
-
-The large data test will 
-build Marqo from the main branch and fill indices with data. Go through and test queries 
-against this data. https://github.com/S2Search/NeuralSearchLargeDataTest
 
 <!-- start support-pitch -->
 

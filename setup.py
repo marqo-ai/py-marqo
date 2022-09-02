@@ -18,11 +18,11 @@ setup(
     version="0.1.13",
     author="marqo org",
     author_email="org@marqo.io",
-    description="Neural search for humans",
+    description="Tensor search for humans",
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=find_packages(where="src", exclude=("tests*",)),
-    keywords="search python marqo opensearch neural semantic vector embedding",
+    keywords="search python marqo opensearch tensor neural semantic vector embedding",
     platform="any",
     classifiers=[
         "Programming Language :: Python :: 3.8",
