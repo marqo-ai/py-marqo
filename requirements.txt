@@ -1,5 +1,7 @@
 # marqo client:
 urllib3
 requests
-
-
+# testing
+pillow
+numpy
+pytest
