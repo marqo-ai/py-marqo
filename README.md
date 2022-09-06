@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.svg" alt="Marqo" width="150" height="150" />
+  <img src="assets/logo2.svg" alt="Marqo"/>
 </p>
 
 <h1 align="center">Marqo</h1>
@@ -12,7 +12,7 @@
   <a align="center" href="https://join.slack.com/t/marqo-community/shared_invite/zt-1d737l76e-u~b3Rvey2IN2nGM4wyr44w"><img src="https://img.shields.io/badge/Slack-blueviolet?logo=slack&amp;logoColor=white&style=flat-square"></a>
 </p>
 
-A tensor search framework which seamlessly integrates with your applications, websites, and workflow. 
+An open-source tensor search framework that seamlessly integrates with your applications, websites, and workflow. 
 
 <!-- end marqo-description -->
 
@@ -21,7 +21,7 @@ A tensor search framework which seamlessly integrates with your applications, we
 1. Marqo requires docker. To install docker go to https://docs.docker.com/get-docker/
 2. Use docker to run Marqo:
 ```bash
-docker rm -f marqo;docker run --name marqo -it --privileged -p 8882:8882 --add-host host.docker.internal:host-gateway marqoai/marqo:0.0.3
+docker run --name marqo --privileged -p 8882:8882 --add-host host.docker.internal:host-gateway marqoai/marqo:0.0.2
 ```
 3. Install the Marqo client:
 ```bash
