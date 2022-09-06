@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.svg" alt="Marqo" width="150" height="150" />
+  <img src="assets/logo2.svg" alt="Marqo"/>
 </p>
 
 <h1 align="center">Marqo</h1>
@@ -9,10 +9,20 @@
 </p>
 
 <p align="center">
-  <a align="center" href="https://join.slack.com/t/marqo-community/shared_invite/zt-1d737l76e-u~b3Rvey2IN2nGM4wyr44w"><img src="https://img.shields.io/badge/Slack-blueviolet?logo=slack&amp;logoColor=white&style=flat-square"></a>
+<a href="https://pypistats.org/packages/marqo"><img alt="PyPI - Downloads from official pypistats" src="https://img.shields.io/pypi/dm/marqo?label=Downloads&style=flat-square"></a>
+<a align="center" href="https://join.slack.com/t/marqo-community/shared_invite/zt-1d737l76e-u~b3Rvey2IN2nGM4wyr44w"><img src="https://img.shields.io/badge/Slack-blueviolet?logo=slack&amp;logoColor=white&style=flat-square"></a>
 </p>
 
-A tensor search framework which seamlessly integrates with your applications, websites, and workflow. 
+
+An open-source tensor search framework that seamlessly integrates with your applications, websites, and workflow. 
+
+## What is tensor search?
+
+Tensor search uses deep-learning to transform documents, images and other data into collections of vectors called "tensors". Representing data as tensors allows us to match queries against documents with human-like understanding of the query and document's content. Tensor search can power a variety of use cases such as:
+- end user search and recommendations
+- multi-modal search (image-to-image, text-to-image, image-to-text)
+- chat bots and question and answer systems
+- text and image classification
 
 <!-- end marqo-description -->
 
