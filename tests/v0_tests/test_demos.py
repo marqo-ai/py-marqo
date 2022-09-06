@@ -48,7 +48,7 @@ class TestDemo(MarqoTestCase):
 
         import marqo
 
-        mq = marqo.Client(url='http://localhost:8882', main_user="admin", main_password="admin")
+        mq = marqo.Client(url=self.authorized_url, main_user="admin", main_password="admin")
 
         mq.index("my-first-index").add_documents([
             {
