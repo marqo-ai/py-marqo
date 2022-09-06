@@ -14,7 +14,7 @@ class Client:
     marqo and its permissions.
     """
     def __init__(
-        self, url: str = "http://localhost:8882", main_user: str = "admin", main_password: str = "admin",
+        self, url: str = "http://localhost:8882", main_user: str = None, main_password: str = None,
         indexing_device: Optional[Union[enums.Devices, str]] = None,
         search_device: Optional[Union[enums.Devices, str]] = None
     ) -> None:
