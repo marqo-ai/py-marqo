@@ -1,4 +1,5 @@
-# $1: the name of the marqo branch to test
+# $1: the toxinidir, the path to the tox file.
+# $2: the name of the marqo branch to test
 . ./conf
 if [[ $(pwd | grep -v marqo-api-tests) ]]; then
   exit
@@ -9,7 +10,7 @@ cd "${MARQO_API_TESTS_ROOT}/temp" || exit
 git clone https://github.com/marqo-ai/marqo.git
 cd "${MARQO_API_TESTS_ROOT}/temp/marqo" || exit
 git git fetch
-git switch "$1"
+git switch "$2"
 
 docker docker rm -f marqo-os
 docker run --name marqo-os -id -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" marqoai/marqo-os:0.0.2 &
