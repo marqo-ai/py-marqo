@@ -1,7 +1,7 @@
 # $1: the toxinidir, the path to the tox file.
 # $2: the name of the marqo branch to test
-. "$1/conf"
 pwd
+. "$1/conf"
 if [[ $(pwd | grep -v marqo-api-tests) ]]; then
   exit
 fi
