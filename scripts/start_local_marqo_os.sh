@@ -1,5 +1,8 @@
 # $1: the name of the marqo branch to test
 . ./conf
+if [[ $(pwd | grep -v marqo-api-tests) ]]; then
+  exit
+fi
 rm -rf "${MARQO_API_TESTS_ROOT}/temp"
 mkdir "${MARQO_API_TESTS_ROOT}/temp"
 cd "${MARQO_API_TESTS_ROOT}/temp" || exit
