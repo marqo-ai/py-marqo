@@ -12,10 +12,10 @@ mkdir "${MARQO_API_TESTS_ROOT}/temp"
 cd "${MARQO_API_TESTS_ROOT}/temp" || exit
 git clone https://github.com/marqo-ai/marqo.git
 cd "${MARQO_API_TESTS_ROOT}/temp/marqo" || exit
-git git fetch
+git fetch
 git switch "$2"
 
-docker docker rm -f marqo-os &&
+docker rm -f marqo-os &&
     docker run --name marqo-os -id -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" marqoai/marqo-os:0.0.2 &
 # wait for marqo-os to start
 until [[ $(curl -v --silent --insecure $OPENSEARCH_URL 2>&1 | grep Unauthorized) ]]; do
