@@ -11,3 +11,6 @@
 1. Make a copy of `conf_sample` called `conf` in the same directory. 
 Fill in the environment variables/credentials in `conf` as appropriate. 
 The `conf` file will be read by the startup scripts in order to populate environment variables.
+
+## Run tests
+ `cd` into the api testing repo home directory and run `tox`.
