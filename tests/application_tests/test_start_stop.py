@@ -33,6 +33,8 @@ class TestStartStop(marqo_test.MarqoTestCase):
             self.client.index(self.index_name_1).search(q="General nature facts")
             raise AssertionError("Marqo is still accessible despite docker stopping!")
         except BackendCommunicationError as mqe:
+            print("Excepted Marqo not accessible error:")
+            print(mqe, "\n")
             pass
 
         start_marqo_res = subprocess.run(["docker", "start", "marqo"], check=True, capture_output=True)
