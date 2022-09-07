@@ -1,14 +1,14 @@
 # $1: the toxinidir, the path to the tox file.
 # $2: the name of the marqo branch to test
-. ./conf
+. "$1/conf"
 if [[ $(pwd | grep -v marqo-api-tests) ]]; then
   exit
 fi
-rm -rf "${MARQO_API_TESTS_ROOT}/temp"
-mkdir "${MARQO_API_TESTS_ROOT}/temp"
-cd "${MARQO_API_TESTS_ROOT}/temp" || exit
+rm -rf "$1/temp"
+mkdir "$1/temp"
+cd "$1/temp" || exit
 git clone https://github.com/marqo-ai/marqo.git
-cd "${MARQO_API_TESTS_ROOT}/temp/marqo" || exit
+cd "$1/temp/marqo" || exit
 git git fetch
 git switch "$2"
 
