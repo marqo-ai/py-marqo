@@ -2,8 +2,10 @@
 # $2: the name of the marqo branch to test
 # shellcheck disable=SC2155
 export MARQO_API_TESTS_ROOT=$(pwd)
-ls
-. "$1/conf"
+
+. "${MARQO_API_TESTS_ROOT}/conf"
+export LOCAL_OPENSEARCH_URL="https://localhost:9200"
+
 if [[ $(pwd | grep -v marqo-api-tests) ]]; then
   exit
 fi
@@ -15,7 +17,7 @@ cd "${MARQO_API_TESTS_ROOT}/temp/marqo" || exit
 git fetch
 git switch "$2"
 
-export LOCAL_OPENSEARCH_URL="https://localhost:9200"
+
 
 docker rm -f marqo-os &&
     docker run --name marqo-os -id -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" marqoai/marqo-os:0.0.2 &
