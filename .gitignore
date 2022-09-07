@@ -136,4 +136,6 @@ tests/cache/
 
 cache/
 
-__pycache__/
+/conf
+
+/temp/

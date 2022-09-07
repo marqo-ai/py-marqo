@@ -1,0 +1,1 @@
+export MARQO_API_TESTS_ROOT="/your/abs/path/to/marqo-api-tests"
