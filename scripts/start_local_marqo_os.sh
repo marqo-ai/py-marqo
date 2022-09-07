@@ -4,13 +4,11 @@
 if [[ $(pwd | grep -v marqo-api-tests) ]]; then
   exit
 fi
-echo toxinidir:
-echo "$1"
-rm -rf "$1/temp"
-mkdir "$1/temp"
-cd "$1/temp" || exit
+rm -rf "${MARQO_API_TESTS_ROOT}/temp"
+mkdir "${MARQO_API_TESTS_ROOT}/temp"
+cd "${MARQO_API_TESTS_ROOT}/temp" || exit
 git clone https://github.com/marqo-ai/marqo.git
-cd "$1/temp/marqo" || exit
+cd "${MARQO_API_TESTS_ROOT}/temp/marqo" || exit
 git git fetch
 git switch "$2"
 
