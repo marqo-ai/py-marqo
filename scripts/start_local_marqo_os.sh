@@ -4,6 +4,8 @@
 if [[ $(pwd | grep -v marqo-api-tests) ]]; then
   exit
 fi
+echo toxinidir:
+echo "$1"
 rm -rf "$1/temp"
 mkdir "$1/temp"
 cd "$1/temp" || exit
