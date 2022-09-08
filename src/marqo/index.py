@@ -11,37 +11,30 @@ from marqo.marqo_logging import logger
 from marqo.enums import SearchMethods, Devices
 from marqo import errors, utils
 
-# pylint: disable=too-many-public-methods
+
 class Index():
     """
-    Indexes routes wrapper.
-
-    Index class gives access to all indexes routes and child routes (inherited).
-    https://docs.marqo.com/reference/api/indexes.html
+    Wraps the /indexes/ endpoint
     """
 
     def __init__(
         self,
         config: Config,
         index_name: str,
-        primary_key: Optional[str] = None,
         created_at: Optional[Union[datetime, str]] = None,
         updated_at: Optional[Union[datetime, str]] = None,
     ) -> None:
         """
-        Parameters
-        ----------
-        config:
-            Config object containing permission and location of marqo.
-        index_name:
-            UID of the index on which to perform the index actions.
-        primary_key:
-            Primary-key of the index.
+
+        Args:
+            config: config object location and other info of marqo.
+            index_name: name of the index
+            created_at:
+            updated_at:
         """
         self.config = config
         self.http = HttpRequests(config)
         self.index_name = index_name
-        self.primary_key = primary_key
         self.created_at = self._maybe_datetime(created_at)
         self.updated_at = self._maybe_datetime(updated_at)
 
@@ -93,10 +86,9 @@ class Index():
 
     def refresh(self):
         """refreshes the index"""
-        # might need to rename to hit Marqo or add if not it does exist
         return self.http.post(path=F"indexes/{self.index_name}/refresh")
 
-    def search(self, q: str, searchable_attributes: Optional[List[str]]=None,
+    def search(self, q: str, searchable_attributes: Optional[List[str]] = None,
                limit: int = 10, search_method: Union[SearchMethods.TENSOR, str] = SearchMethods.TENSOR,
                highlights=True, reranker=None, device: Optional[str] = None, filter_string: str = None
                ) -> Dict[str, Any]:
@@ -157,7 +149,7 @@ class Index():
         processes: int = None,
         device: str = None
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
-        """Add documents to a Marqo index
+        """Add documents to this index.
 
         Args:
             documents: List of documents. Each document should be a dictionary.
@@ -181,27 +173,22 @@ class Index():
             f"{f'&processes={processes}' if processes is not None else ''}"
             f"{f'&batch_size={batch_size}' if processes is not None else ''}"
         )
-        
         if processes in [None, 1] and batch_size is not None:
             if batch_size <= 0:
                 raise errors.InvalidArgError("Batch size can't be less than 1!")
             return self._batch_request(docs=documents, batch_size=batch_size, verbose=False, device=device)
         else:
-            return self.http.post(
-                    path=path_with_query_str,
-                    body=documents)
-
-#        raise errors.MarqoError("unknown type of processes and batching")
+            return self.http.post(path=path_with_query_str, body=documents)
 
     def delete_documents(self, ids: List[str], auto_refresh: bool = None) -> Dict[str, int]:
-        """
+        """Delete documents from this index by a list of their ids.
 
         Args:
-            ids: List of unique identifiers of documents.
+            ids: List of identifiers of documents.
             auto_refresh: if true refreshes the index
 
         Returns:
-
+            A dict with information about the delete operation.
         """
         base_path = f"indexes/{self.index_name}/documents/delete-batch"
         path_with_refresh = base_path if auto_refresh is None else base_path + f"?refresh={str(auto_refresh).lower()}"
@@ -239,7 +226,8 @@ class Index():
             verbose: If true, prints out info about the documents
 
         Returns:
-
+            A list of responses, which have information about the batch
+            operation
         """
         path_with_query_str = (
             f"indexes/{self.index_name}/documents?refresh=false"

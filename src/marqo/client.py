@@ -81,74 +81,35 @@ class Client:
         """Get the index.
         This index should already exist.
 
-        Parameters
-        ----------
-        index_name:
-            UID of the index.
+        Args:
+            index_name: name of the index
 
-        Returns
-        -------
-        index:
+        Returns:
             An Index instance containing the information of the fetched index.
 
-        Raises
-        ------
-        s2SearchApiError
-            An error containing details about why marqo can't process your request. marqo error codes are described here: https://docs.marqo.com/errors/#marqo-errors
+        Raises:
         """
         ix = Index(self.config, index_name)
-        # verify it exists
-        # maybe delete - use stats end point for now
+        # verify it exists:
         self.http.get(path=f"indexes/{index_name}/stats")
         return ix
 
     def index(self, index_name: str) -> Index:
-        """Create a local reference to an index identified by UID, without doing an HTTP call.
-        Calling this method doesn't create an index in the marqo instance, but grants access to all the other methods in the Index class.
+        """Create a local reference to an index identified by index_name,
+        without doing an HTTP call.
 
-        Parameters
-        ----------
-        index_name:
-            UID of the index.
+        Calling this method doesn't create an index on the Marqo instance, but
+         grants access to all the other methods in the Index class.
 
-        Returns
-        -------
-        index:
+        Args:
+            index_name: name of the index
+
+        Returns:
             An Index instance.
         """
         if index_name is not None:
             return Index(self.config, index_name=index_name)
         raise Exception('The index UID should not be None')
-
-    def get_version(self) -> Dict[str, str]:
-        """Get version marqo
-
-        Returns
-        -------
-        version:
-            Information about the version of marqo.
-
-        Raises
-        ------
-        s2SearchApiError
-            An error containing details about why marqo can't process your request. marqo error codes are described here: https://docs.marqo.com/errors/#marqo-errors
-        """
-        return self.http.get(self.config.paths.version)
-
-    def version(self) -> Dict[str, str]:
-        """Alias for get_version
-
-        Returns
-        -------
-        version:
-            Information about the version of marqo.
-
-        Raises
-        ------
-        s2SearchApiError
-            An error containing details about why marqo can't process your request. marqo error codes are described here: https://docs.marqo.com/errors/#marqo-errors
-        """
-        return self.get_version()
 
     @staticmethod
     def _base64url_encode(
