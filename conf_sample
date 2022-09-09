@@ -1,1 +1,2 @@
 export MARQO_API_TESTS_ROOT="/your/abs/path/to/marqo-api-tests"
+export S2SEARCH_URL="https://user:pw@s2search/your/endpoint"
