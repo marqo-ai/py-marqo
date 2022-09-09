@@ -7,7 +7,7 @@ from marqo.errors import MarqoApiError
 import unittest
 import pprint
 from tests.marqo_test import MarqoTestCase
-
+from tests.utilities import disallow_environments
 
 class TestAddDocuments(MarqoTestCase):
 
@@ -128,6 +128,7 @@ class TestAddDocuments(MarqoTestCase):
         args, kwargs1 = mock__post.call_args_list[1]
         assert "device=cuda2" in kwargs1["path"]
 
+    @disallow_environments(["S2SEARCH_OS"])
     def test_prefiltering(self):
         self.client.create_index(index_name=self.index_name_1)
         d1 = {
