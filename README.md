@@ -13,4 +13,14 @@ Fill in the environment variables/credentials in `conf` as appropriate.
 The `conf` file will be read by the startup scripts in order to populate environment variables.
 
 ## Run tests
- `cd` into the api testing repo home directory and run `tox`.
+ `cd` into the api testing repo home directory and run `tox`. 
+ 
+## Devloping
+If you are going to make a new test environment, make sure you set the `TESTING_CONFIGURATION` environment variable so
+that the test suite knows if whether or not to modify certain tests for the current configuration 
+
+You do this by creating a `setenv` section in `tox.ini`:
+```tox
+setenv =
+  TESTING_CONFIGURATION = YOUR_TEST_ENV_NAME
+```
