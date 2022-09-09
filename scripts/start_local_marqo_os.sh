@@ -9,7 +9,6 @@ done;
 
 
 docker rm -f marqo
-DOCKER_BUILDKIT=1 docker build . -t marqo_docker_0 &&
     docker run --name marqo --privileged -p 8882:8882 --add-host host.docker.internal:host-gateway \
         -e "OPENSEARCH_URL=$LOCAL_OPENSEARCH_URL" marqo_docker_0 &
 # wait for marqo to start

@@ -16,3 +16,5 @@ git clone https://github.com/marqo-ai/marqo.git
 cd "${MARQO_API_TESTS_ROOT}/temp/marqo" || exit
 git fetch
 git switch "$2"
+
+DOCKER_BUILDKIT=1 docker build . -t marqo_docker_0 || exit 1

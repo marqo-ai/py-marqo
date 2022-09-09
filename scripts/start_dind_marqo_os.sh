@@ -1,5 +1,4 @@
-docker rm -f marqo
-DOCKER_BUILDKIT=1 docker build . -t marqo_docker_0 &&
+docker rm -f marqo;
      docker run --name marqo --privileged -p 8882:8882 --add-host host.docker.internal:host-gateway marqo_docker_0 &
 # wait for marqo to start
 until [[ $(curl -v --silent --insecure http://localhost:8882 2>&1 | grep marqo) ]]; do
