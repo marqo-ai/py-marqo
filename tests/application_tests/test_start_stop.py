@@ -45,6 +45,8 @@ class TestStartStop(marqo_test.MarqoTestCase):
                 self.client.index(self.index_name_1).search(q="General nature facts")
                 break
             except BackendCommunicationError as mqe:
+                if "exceeds your S2Search free tier limit" in str(mqe):
+                    raise mqe
                 if i + 1 >= NUMBER_OF_TRIES:
                     raise AssertionError("Timeout waiting for Marqo to restart!")
                 time.sleep(1)
