@@ -17,8 +17,15 @@ Fill in the environment variables/credentials in `conf` as appropriate.
 The `conf` file will be read by the startup scripts in order to populate environment variables.
 
 ## Run tests
- `cd` into the api testing repo home directory and run `tox`. 
  
+`cd` into the api testing repo home directory and run `tox`, to test all environments. 
+
+To run a specific environment do `tox -e <TOX ENVIRONMENT NAME>`
+#### Arm64 Machines
+Install QEMU (this allows you to emulate the x86 instruction set on the ARM processor, needed for marqo-os). 
+
+Run the following  if you are on Ubuntu:
+1. `sudo apt-get install -y qemu-user-static`
 ## Devloping
 If you are going to make a new test environment, make sure you set the `TESTING_CONFIGURATION` environment variable so
 that the test suite knows if whether or not to modify certain tests for the current configuration 
