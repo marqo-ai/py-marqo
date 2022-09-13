@@ -35,3 +35,5 @@ You do this by creating a `setenv` section in `tox.ini`:
 setenv =
   TESTING_CONFIGURATION = YOUR_TEST_ENV_NAME
 ```
+### Future work
+* Have a tox var to specify the image name. This allows for remote images to be tested, in addition to local builds `marqo_image_name = marqo_docker_0`
