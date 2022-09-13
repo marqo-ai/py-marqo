@@ -128,7 +128,7 @@ class TestAddDocuments(MarqoTestCase):
         args, kwargs1 = mock__post.call_args_list[1]
         assert "device=cuda2" in kwargs1["path"]
 
-    @disallow_environments(["S2SEARCH_OS"])
+    @disallow_environments(["S2SEARCH_OS", "ARM64_LOCAL_MARQO_OS"])
     def test_prefiltering(self):
         self.client.create_index(index_name=self.index_name_1)
         d1 = {
