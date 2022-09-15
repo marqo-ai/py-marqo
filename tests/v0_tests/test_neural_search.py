@@ -57,6 +57,24 @@ class TestAddDocuments(MarqoTestCase):
             "title about some doc")
         assert len(search_res["hits"]) == 0
 
+    def test_search_highlights(self):
+        """Tests if show_highlights works and if the deprecation behaviour is expected"""
+        self.client.create_index(index_name=self.index_name_1)
+        self.client.index(index_name=self.index_name_1).add_documents([{"f1": "some doc"}])
+        for params, expected_highlights_presence in [
+                ({"highlights": True, "show_highlights": False}, False),
+                ({"highlights": False, "show_highlights": True}, False),
+                ({"highlights": True, "show_highlights": True}, True),
+                ({"highlights": True}, True),
+                ({"highlights": False}, False),
+                ({}, True),
+                ({"show_highlights": False}, False),
+                ({"show_highlights": True}, True)
+            ]:
+            search_res = self.client.index(self.index_name_1).search(
+                "title about some doc", **params)
+            assert ("_highlights" in search_res["hits"][0]) is expected_highlights_presence
+
     def test_search_multi(self):
         self.client.create_index(index_name=self.index_name_1)
         d1 = {
