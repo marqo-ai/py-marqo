@@ -51,6 +51,7 @@ class Index():
                sentences_per_chunk=2,
                sentence_overlap=0,
                image_preprocessing_method=None,
+               settings_dict: dict = None
                ) -> Dict[str, Any]:
         """Create the index.
 
@@ -63,11 +64,17 @@ class Index():
             sentences_per_chunk:
             sentence_overlap:
             image_preprocessing_method:
-
+            settings_dict: if specified, overwrites all other setting
+                parameters, and is passed directly as the index's
+                index_settings
         Returns:
             Response body, containing information about index creation result
         """
         req = HttpRequests(config)
+
+        if settings_dict is not None and settings_dict:
+            return req.post(f"indexes/{index_name}", body=settings_dict)
+
         return req.post(f"indexes/{index_name}", body={
             "index_defaults": {
                 "treat_urls_and_pointers_as_images": treat_urls_and_pointers_as_images,
@@ -90,7 +97,8 @@ class Index():
 
     def search(self, q: str, searchable_attributes: Optional[List[str]] = None,
                limit: int = 10, search_method: Union[SearchMethods.TENSOR, str] = SearchMethods.TENSOR,
-               highlights=True, reranker=None, device: Optional[str] = None, filter_string: str = None
+               highlights=None, reranker=None, device: Optional[str] = None, filter_string: str = None,
+               show_highlights=True
                ) -> Dict[str, Any]:
         """Search the index.
 
@@ -100,7 +108,7 @@ class Index():
             searchable_attributes:  attributes to search
             limit: The max number of documents to be returned
             search_method: Indicates TENSOR or LEXICAL (keyword) search
-            highlights: True if highlights are to be returned
+            show_highlights: True if highlights are to be returned
             reranker:
             device: the device used to index the data. Examples include "cpu",
                 "cuda" and "cuda:2". Overrides the Client's default device.
@@ -110,6 +118,11 @@ class Index():
         Returns:
             Dictionary with hits and other metadata
         """
+        if highlights is not None:
+            logging.warning("Deprecation warning for parameter 'highlights'. "
+                            "Please use the 'showHighlights' instead. ")
+            show_highlights = highlights if show_highlights is True else show_highlights
+
         selected_device = device if device is not None else self.config.search_device
         path_with_query_str = (
             f"indexes/{self.index_name}/search?"
@@ -120,7 +133,7 @@ class Index():
             "searchableAttributes": searchable_attributes,
             "limit": limit,
             "searchMethod": search_method,
-            "showHighlights": highlights,
+            "showHighlights": show_highlights,
             "reranker": reranker,
         }
         if filter_string is not None:
