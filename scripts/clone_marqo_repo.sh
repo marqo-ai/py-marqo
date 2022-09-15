@@ -7,7 +7,7 @@ export MARQO_API_TESTS_ROOT=$(pwd)
 . "${MARQO_API_TESTS_ROOT}/conf"
 export LOCAL_OPENSEARCH_URL="https://localhost:9200"
 
-if [[ $(pwd | grep -v marqo-api-tests) && $(pwd | grep -v marqo_CI) ]]; then
+if [[ $(pwd | grep -v marqo-api-tests) && $(pwd | grep -v runner/work) ]]; then
   echo checked pwd, and it does not look the directory is correct
   exit 1
 fi
