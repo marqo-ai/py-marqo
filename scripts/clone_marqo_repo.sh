@@ -1,3 +1,4 @@
+#!/bin/bash
 # $1: the toxinidir, the path to the tox file.
 # $2: the name of the marqo branch to test
 # shellcheck disable=SC2155
