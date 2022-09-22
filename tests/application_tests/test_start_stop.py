@@ -19,7 +19,7 @@ class TestStartStop(marqo_test.MarqoTestCase):
 
     def test_start_stop(self):
 
-        NUMBER_OF_RESTARTS = 5
+        NUMBER_OF_RESTARTS = 1
 
         def run_start_stop():
             # 1 retry a second...
@@ -60,5 +60,6 @@ class TestStartStop(marqo_test.MarqoTestCase):
             assert (search_res_1["hits"][0]["_id"] == "fact_1") or (search_res_1["hits"][0]["_id"] == "fact_2")
             return True
 
-        for _ in range(NUMBER_OF_RESTARTS):
+        for b in range(NUMBER_OF_RESTARTS):
+            print(f"restart number {b}")
             assert run_start_stop()
