@@ -21,7 +21,7 @@ class TestStartStop(marqo_test.MarqoTestCase):
 
         NUMBER_OF_RESTARTS = 5
 
-        def run_start_stop():
+        def run_start_stop(restart_number: int):
             # 1 retry a second...
             NUMBER_OF_TRIES = 100
 
@@ -52,7 +52,7 @@ class TestStartStop(marqo_test.MarqoTestCase):
                     if "exceeds your S2Search free tier limit" in str(mqe):
                         raise mqe
                     if i + 1 >= NUMBER_OF_TRIES:
-                        raise AssertionError("Timeout waiting for Marqo to restart!")
+                        raise AssertionError(f"Timeout waiting for Marqo to restart! Restart number {b}")
                     time.sleep(1)
 
             search_res_1 = self.client.index(self.index_name_1).search(q="General nature facts")
@@ -63,5 +63,5 @@ class TestStartStop(marqo_test.MarqoTestCase):
         counter = 0
         for b in range(NUMBER_OF_RESTARTS):
             counter += 1
-            assert run_start_stop()
+            assert run_start_stop(restart_number=b)
         assert counter == NUMBER_OF_RESTARTS
