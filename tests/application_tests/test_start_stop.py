@@ -23,7 +23,7 @@ class TestStartStop(marqo_test.MarqoTestCase):
 
         def run_start_stop(restart_number: int):
             # 1 retry a second...
-            NUMBER_OF_TRIES = 200
+            NUMBER_OF_TRIES = 400
 
             d1 = {"Title": "The colour of plants", "_id": "fact_1"}
             d2 = {"Title": "some frogs", "_id": "fact_2"}
