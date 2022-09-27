@@ -75,8 +75,8 @@ class TestStartStop(marqo_test.MarqoTestCase):
             return True
 
         for b in range(NUMBER_OF_RESTARTS):
-            print(f"testing SIGKILL: starting restart number {b}")
-            assert run_start_stop(restart_number=b, sig="SIGKILL")
+            print(f"testing SIGTERM: starting restart number {b}")
+            assert run_start_stop(restart_number=b, sig="SIGTERM")
 
         for c in range(NUMBER_OF_RESTARTS):
             print(f"testing SIGINT: starting restart number {c}")
