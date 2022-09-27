@@ -25,7 +25,7 @@ class TestStartStop(marqo_test.MarqoTestCase):
             """
             restart_number: an int which prints the restart number this
                 restart represents. Helpful for debugging
-            sig: Option of {'SIGTERM', 'SIGINT'}
+            sig: Option of {'SIGTERM', 'SIGINT', 'SIGKILL'}
                 the type of signal to send to the container. SIGTERM gets
                 sent with the 'docker stop' command. 'SIGINT' gets sent
                 by ctrl + C
@@ -47,8 +47,12 @@ class TestStartStop(marqo_test.MarqoTestCase):
                 stop_marqo_res = subprocess.run(["docker", "kill", "--signal=SIGINT", "marqo"], check=True, capture_output=True)
                 assert "marqo" in str(stop_marqo_res.stdout)
                 time.sleep(10)
+            elif sig == "SIGKILL":
+                stop_marqo_res = subprocess.run(["docker", "kill", "marqo"], check=True, capture_output=True)
+                assert "marqo" in str(stop_marqo_res.stdout)
+                time.sleep(10)
             else:
-                raise ValueError(f"bad option used for sig: {sig}. Must be one of  ('SIGTERM', 'SIGINT')")
+                raise ValueError(f"bad option used for sig: {sig}. Must be one of  ('SIGTERM', 'SIGINT', 'SIGKILL')")
 
             try:
                 self.client.index(self.index_name_1).search(q="General nature facts")
@@ -79,6 +83,10 @@ class TestStartStop(marqo_test.MarqoTestCase):
             print(f"testing SIGTERM: starting restart number {b}")
             assert run_start_stop(restart_number=b, sig="SIGTERM")
 
-        for c in range(NUMBER_OF_RESTARTS):
+        for c in range(3):
             print(f"testing SIGINT: starting restart number {c}")
             assert run_start_stop(restart_number=c, sig="SIGINT")
+
+        for d in range(3):
+            print(f"testing SIGKILL: starting restart number {d}")
+            assert run_start_stop(restart_number=d, sig="SIGKILL")
