@@ -49,6 +49,7 @@ class TestStartStop(marqo_test.MarqoTestCase):
                     self.client.index(self.index_name_1).search(q="General nature facts")
                     break
                 except BackendCommunicationError as mqe:
+                    print(f"jhrbvhjrbr: still waiting. Try number {i}. Caught backend comm error:  {mqe}")
                     if "exceeds your S2Search free tier limit" in str(mqe):
                         raise mqe
                     if i + 1 >= NUMBER_OF_TRIES:
@@ -60,8 +61,6 @@ class TestStartStop(marqo_test.MarqoTestCase):
             assert (search_res_1["hits"][0]["_id"] == "fact_1") or (search_res_1["hits"][0]["_id"] == "fact_2")
             return True
 
-        counter = 0
         for b in range(NUMBER_OF_RESTARTS):
-            counter += 1
+            print(f"jhrbvhjrbr: starting restart number {b}")
             assert run_start_stop(restart_number=b)
-        assert counter == NUMBER_OF_RESTARTS
