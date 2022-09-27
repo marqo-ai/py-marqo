@@ -79,6 +79,10 @@ class TestStartStop(marqo_test.MarqoTestCase):
             assert (search_res_1["hits"][0]["_id"] == "fact_1") or (search_res_1["hits"][0]["_id"] == "fact_2")
             return True
 
+        for d in range(3):
+            print(f"testing SIGKILL: starting restart number {d}")
+            assert run_start_stop(restart_number=d, sig="SIGKILL")
+
         for b in range(NUMBER_OF_RESTARTS):
             print(f"testing SIGTERM: starting restart number {b}")
             assert run_start_stop(restart_number=b, sig="SIGTERM")
@@ -87,6 +91,3 @@ class TestStartStop(marqo_test.MarqoTestCase):
             print(f"testing SIGINT: starting restart number {c}")
             assert run_start_stop(restart_number=c, sig="SIGINT")
 
-        for d in range(3):
-            print(f"testing SIGKILL: starting restart number {d}")
-            assert run_start_stop(restart_number=d, sig="SIGKILL")
