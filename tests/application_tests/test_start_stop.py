@@ -19,7 +19,7 @@ class TestStartStop(marqo_test.MarqoTestCase):
 
     def test_start_stop(self):
 
-        NUMBER_OF_RESTARTS = 5
+        NUMBER_OF_RESTARTS = 6
 
         def run_start_stop(restart_number: int):
             # 1 retry a second...
