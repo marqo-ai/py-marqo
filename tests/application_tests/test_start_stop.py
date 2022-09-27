@@ -19,9 +19,17 @@ class TestStartStop(marqo_test.MarqoTestCase):
 
     def test_start_stop(self):
 
-        NUMBER_OF_RESTARTS = 6
+        NUMBER_OF_RESTARTS = 5
 
-        def run_start_stop(restart_number: int):
+        def run_start_stop(restart_number: int, sig: str):
+            """
+            restart_number: an int which prints the restart number this
+                restart represents. Helpful for debugging
+            sig: Option of {'SIGTERM', 'SIGINT'}
+                the type of signal to send to the container. SIGTERM gets
+                sent with the 'docker stop' command. 'SIGINT' gets sent
+                by ctrl + C
+            """
             # 1 retry a second...
             NUMBER_OF_TRIES = 400
 
@@ -32,8 +40,14 @@ class TestStartStop(marqo_test.MarqoTestCase):
             assert (search_res_0["hits"][0]["_id"] == "fact_1") or (search_res_0["hits"][0]["_id"] == "fact_2")
             assert len(search_res_0["hits"]) == 2
 
-            stop_marqo_res = subprocess.run(["docker", "stop", "marqo"], check=True, capture_output=True)
-            assert "marqo" in str(stop_marqo_res.stdout)
+            if sig == 'SIGTERM':
+                stop_marqo_res = subprocess.run(["docker", "stop", "marqo"], check=True, capture_output=True)
+                assert "marqo" in str(stop_marqo_res.stdout)
+            elif sig == 'SIGINT':
+                stop_marqo_res = subprocess.run(["docker", "kill", "--signal=SIGINT", "marqo"], check=True, capture_output=True)
+                assert "marqo" in str(stop_marqo_res.stdout)
+            else:
+                raise ValueError(f"bad option used for sig: {sig}. Must be one of  ('SIGTERM', 'SIGINT')")
 
             try:
                 self.client.index(self.index_name_1).search(q="General nature facts")
@@ -61,5 +75,9 @@ class TestStartStop(marqo_test.MarqoTestCase):
             return True
 
         for b in range(NUMBER_OF_RESTARTS):
-            print(f"jhrbvhjrbr: starting restart number {b}")
-            assert run_start_stop(restart_number=b)
+            print(f"testing SIGKILL: starting restart number {b}")
+            assert run_start_stop(restart_number=b, sig="SIGKILL")
+
+        for c in range(NUMBER_OF_RESTARTS):
+            print(f"testing SIGINT: starting restart number {c}")
+            assert run_start_stop(restart_number=c, sig="SIGINT")
