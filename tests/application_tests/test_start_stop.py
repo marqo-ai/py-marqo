@@ -46,6 +46,7 @@ class TestStartStop(marqo_test.MarqoTestCase):
             elif sig == 'SIGINT':
                 stop_marqo_res = subprocess.run(["docker", "kill", "--signal=SIGINT", "marqo"], check=True, capture_output=True)
                 assert "marqo" in str(stop_marqo_res.stdout)
+                time.sleep(10)
             else:
                 raise ValueError(f"bad option used for sig: {sig}. Must be one of  ('SIGTERM', 'SIGINT')")
 
