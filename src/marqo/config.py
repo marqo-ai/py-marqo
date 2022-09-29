@@ -15,7 +15,7 @@ class Config:
         timeout: Optional[int] = None,
         indexing_device: Optional[Union[enums.Devices, str]] = None,
         search_device: Optional[Union[enums.Devices, str]] = None,
-        api_key:str = None
+        api_key: str = None
     ) -> None:
         """
         Parameters
