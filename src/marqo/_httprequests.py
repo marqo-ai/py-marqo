@@ -26,7 +26,11 @@ OPERATION_MAPPING = {'delete': requests.delete, 'get': requests.get,
 class HttpRequests:
     def __init__(self, config: Config) -> None:
         self.config = config
-        self.headers = dict()
+
+        if config.api_key:
+            self.headers = {'x-api-key': config.api_key}
+        else:
+            self.headers = dict()
 
     def send_request(
         self,

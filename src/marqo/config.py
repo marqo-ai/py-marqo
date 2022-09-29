@@ -14,7 +14,8 @@ class Config:
         url: str,
         timeout: Optional[int] = None,
         indexing_device: Optional[Union[enums.Devices, str]] = None,
-        search_device: Optional[Union[enums.Devices, str]] = None
+        search_device: Optional[Union[enums.Devices, str]] = None,
+        api_key:str = None
     ) -> None:
         """
         Parameters
@@ -26,7 +27,7 @@ class Config:
         self.cluster_is_s2search = False
         self.url = self.set_url(url)
         self.timeout = timeout
-
+        self.api_key = api_key
         default_device = enums.Devices.cpu
 
         self.indexing_device = indexing_device if indexing_device is not None else default_device

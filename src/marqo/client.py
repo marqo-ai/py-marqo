@@ -16,7 +16,8 @@ class Client:
     def __init__(
         self, url: str = "http://localhost:8882", main_user: str = None, main_password: str = None,
         indexing_device: Optional[Union[enums.Devices, str]] = None,
-        search_device: Optional[Union[enums.Devices, str]] = None
+        search_device: Optional[Union[enums.Devices, str]] = None,
+        api_key: str = None
     ) -> None:
         """
         Parameters
@@ -30,7 +31,7 @@ class Client:
             self.url = utils.construct_authorized_url(url_base=url, username=main_user, password=main_password)
         else:
             self.url = url
-        self.config = Config(self.url, indexing_device=indexing_device, search_device=search_device)
+        self.config = Config(self.url, indexing_device=indexing_device, search_device=search_device, api_key=api_key)
         self.http = HttpRequests(self.config)
 
     def create_index(
