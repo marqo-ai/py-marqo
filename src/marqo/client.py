@@ -16,7 +16,8 @@ class Client:
     def __init__(
         self, url: str = "http://localhost:8882", main_user: str = None, main_password: str = None,
         indexing_device: Optional[Union[enums.Devices, str]] = None,
-        search_device: Optional[Union[enums.Devices, str]] = None
+        search_device: Optional[Union[enums.Devices, str]] = None,
+        api_key: str = None
     ) -> None:
         """
         Parameters
@@ -30,7 +31,7 @@ class Client:
             self.url = utils.construct_authorized_url(url_base=url, username=main_user, password=main_password)
         else:
             self.url = url
-        self.config = Config(self.url, indexing_device=indexing_device, search_device=search_device)
+        self.config = Config(self.url, indexing_device=indexing_device, search_device=search_device, api_key=api_key)
         self.http = HttpRequests(self.config)
 
     def create_index(
@@ -40,27 +41,31 @@ class Client:
         sentences_per_chunk=2,
         sentence_overlap=0,
         image_preprocessing_method=None,
+        settings_dict=None
     ) -> Dict[str, Any]:
-        """
+        """Create the index.
 
         Args:
-            index_name:
+            index_name: name of the index.
             treat_urls_and_pointers_as_images:
             model:
             normalize_embeddings:
             sentences_per_chunk:
             sentence_overlap:
             image_preprocessing_method:
-
+            settings_dict: if specified, overwrites all other setting
+                parameters, and is passed directly as the index's
+                index_settings
         Returns:
-
+            Response body, containing information about index creation result
         """
         return Index.create(
             config=self.config, index_name=index_name,
             treat_urls_and_pointers_as_images=treat_urls_and_pointers_as_images,
             model=model, normalize_embeddings=normalize_embeddings,
             sentences_per_chunk=sentences_per_chunk, sentence_overlap=sentence_overlap,
-            image_preprocessing_method=image_preprocessing_method
+            image_preprocessing_method=image_preprocessing_method,
+            settings_dict=settings_dict
         )
 
     def delete_index(self, index_name: str) -> Dict[str, Any]:

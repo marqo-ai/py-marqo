@@ -14,11 +14,11 @@
 </p>
 
 
-An open-source tensor search framework that seamlessly integrates with your applications, websites, and workflow. 
+An open-source tensor search engine that seamlessly integrates with your applications, websites, and workflow. 
 
 ## What is tensor search?
 
-Tensor search uses deep-learning to transform documents, images and other data into collections of vectors called "tensors". Representing data as tensors allows us to match queries against documents with human-like understanding of the query and document's content. Tensor search can power a variety of use cases such as:
+Tensor search involves using deep-learning to transform documents, images and other data into collections of vectors called "tensors". Representing data as tensors allows us to match queries against documents with human-like understanding of the query and document's content. Tensor search can power a variety of use cases such as:
 - end user search and recommendations
 - multi-modal search (image-to-image, text-to-image, image-to-text)
 - chat bots and question and answer systems
@@ -33,9 +33,11 @@ Tensor search uses deep-learning to transform documents, images and other data i
 ## Getting started
 
 1. Marqo requires docker. To install docker go to https://docs.docker.com/get-docker/
-2. Use docker to run Marqo (Mac users with M1 chips will need to [go here](#M1-Mac-users)):
+2. Use docker to run Marqo (Mac users with M series chips will need to [go here](#m-series-mac-users)):
 ```bash
-docker rm -f marqo;docker run --name marqo -it --privileged -p 8882:8882 --add-host host.docker.internal:host-gateway marqoai/marqo:0.0.3
+docker pull marqoai/marqo:0.0.4;
+docker rm -f marqo;
+docker run --name marqo -it --privileged -p 8882:8882 --add-host host.docker.internal:host-gateway marqoai/marqo:0.0.4
 ```
 3. Install the Marqo client:
 ```bash
@@ -207,13 +209,13 @@ results = mq.index("my-multimodal-index").search('https://upload.wikimedia.org/w
 
 Note that you should not run other applications on Marqo's Opensearch cluster as Marqo automatically changes and adapts the settings on the cluster.
 
-## M1 Mac users
-The backend, marqo-os (Marqo-OpenSearch) isn't yet supported for the arm64 architecture. This means that if you have an M1
+## M series Mac users
+The backend, marqo-os (Marqo-OpenSearch) isn't yet supported for the arm64 architecture. This means that if you have an M series
 Mac, you will need to run OpenSearch locally. This unfortunately means that you won't be 
 able to use the filtering feature for tensor search queries. We are working on an arm64 Marqo-OpenSearch build as a top 
 priority. 
 
-To run Marqo on an M1 Mac, follow the next steps.
+To run Marqo on an M series Mac, follow the next steps.
 
 1. In one terminal run the following command to start opensearch:
 
@@ -226,7 +228,7 @@ docker rm -f marqo-os; docker run -p 9200:9200 -p 9600:9600 -e "discovery.type=s
 docker rm -f marqo; docker run --name marqo --privileged \
     -p 8882:8882 --add-host host.docker.internal:host-gateway \
     -e "OPENSEARCH_URL=https://localhost:9200" \
-    marqoai/marqo:0.0.3
+    marqoai/marqo:0.0.4
 ```
 
 

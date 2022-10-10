@@ -36,7 +36,7 @@ class TestImageChunking(MarqoTestCase):
 
         settings = {
             "treat_urls_and_pointers_as_images":True,   # allows us to find an image file and index it 
-            "model":"ViT-L/14", 
+            "model":"ViT-B/16",
              "image_preprocessing_method" : None
             }
         
@@ -76,7 +76,7 @@ class TestImageChunking(MarqoTestCase):
 
         settings = {
             "treat_urls_and_pointers_as_images":True,   # allows us to find an image file and index it 
-            "model":"ViT-L/14", 
+            "model":"ViT-B/16",
             "image_preprocessing_method":"simple"
             }
         
