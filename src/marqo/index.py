@@ -90,7 +90,8 @@ class Index():
 
     def search(self, q: str, searchable_attributes: Optional[List[str]] = None,
                limit: int = 10, search_method: Union[SearchMethods.TENSOR, str] = SearchMethods.TENSOR,
-               highlights=True, reranker=None, device: Optional[str] = None, filter_string: str = None
+               highlights=True, reranker=None, device: Optional[str] = None, filter_string: str = None,
+               attributes_to_retrieve: Optional[List[str]] = None
                ) -> Dict[str, Any]:
         """Search the index.
 
@@ -106,6 +107,9 @@ class Index():
                 "cuda" and "cuda:2". Overrides the Client's default device.
             filter_string: a filter string, used to prefilter documents during the
                 search. For example: "car_colour:blue"
+            attributes_to_retrieve: a list of document attributes to be
+                retrieved. If left as None, then all attributes will be
+                retrieved.
 
         Returns:
             Dictionary with hits and other metadata
@@ -123,6 +127,8 @@ class Index():
             "showHighlights": highlights,
             "reranker": reranker,
         }
+        if attributes_to_retrieve is not None:
+            body["attributesToRetrieve"] = attributes_to_retrieve
         if filter_string is not None:
             body["filter"] = filter_string
         return self.http.post(
@@ -179,6 +185,46 @@ class Index():
             return self._batch_request(docs=documents, batch_size=batch_size, verbose=False, device=device)
         else:
             return self.http.post(path=path_with_query_str, body=documents)
+
+    def update_documents(
+        self,
+        documents: List[Dict[str, Any]],
+        auto_refresh=True,
+        batch_size: int = None,
+        processes: int = None,
+        device: str = None
+    ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
+        """Add documents to this index. Does a partial updates on existing documents,
+        based on their ID. Adds unseen documents to the index.
+
+        Args:
+            documents: List of documents. Each document should be a dictionary.
+            auto_refresh: Automatically refresh the index. If you are making
+                lots of requests, it is advised to turn this to false to
+                increase performance.
+            batch_size: if it is set, documents will be indexed into batches
+                of this size. Otherwise documents are unbatched.
+            processes: number of processes for the server to use, to do indexing,
+            device: the device used to index the data. Examples include "cpu",
+                "cuda" and "cuda:2"
+
+        Returns:
+            Response body outlining indexing result
+        """
+        selected_device = device if device is not None else self.config.indexing_device
+
+        path_with_query_str = (
+            f"indexes/{self.index_name}/documents?refresh={str(auto_refresh).lower()}" 
+            f"{f'&device={utils.translate_device_string_for_url(selected_device)}'}"
+            f"{f'&processes={processes}' if processes is not None else ''}"
+            f"{f'&batch_size={batch_size}' if processes is not None else ''}"
+        )
+        if processes in [None, 1] and batch_size is not None:
+            if batch_size <= 0:
+                raise errors.InvalidArgError("Batch size can't be less than 1!")
+            return self._batch_request(docs=documents, batch_size=batch_size, verbose=False, device=device)
+        else:
+            return self.http.put(path=path_with_query_str, body=documents)
 
     def delete_documents(self, ids: List[str], auto_refresh: bool = None) -> Dict[str, int]:
         """Delete documents from this index by a list of their ids.

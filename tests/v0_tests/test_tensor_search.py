@@ -152,3 +152,33 @@ class TestAddDocuments(MarqoTestCase):
         assert len(search_res["hits"]) == 1
         pprint.pprint(search_res)
         assert search_res["hits"][0]["_id"] == "my-cool-doc"
+
+    def test_attributes_to_retrieve(self):
+        self.client.create_index(index_name=self.index_name_1)
+        d1 = {
+            "doc title": "Very heavy, dense metallic lead.",
+            "abc-123": "some text blah",
+            "an_int": 2,
+            "_id": "my-cool-doc"
+        }
+        d2 = {
+            "doc title": "The captain bravely lead her followers into battle."
+                         " She directed her soldiers to and fro.",
+            "field X": "this is a solid doc blah",
+            "field1": "other things",
+            "an_int": 2345678,
+            "_id": "123456"
+        }
+        x = self.client.index(self.index_name_1).add_documents([
+            d1, d2
+        ], auto_refresh=True)
+        atts = ["doc title", "an_int"]
+        for search_method in [enums.SearchMethods.TENSOR,
+                              enums.SearchMethods.LEXICAL]:
+            search_res = self.client.index(self.index_name_1).search(
+                q="blah blah", attributes_to_retrieve=atts,
+                search_method=search_method
+            )
+            assert len(search_res['hits']) == 2
+            for hit in search_res['hits']:
+                assert {k for k in hit.keys() if not k.startswith('_')} == set(atts)
