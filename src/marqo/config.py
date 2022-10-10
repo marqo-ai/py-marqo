@@ -7,6 +7,7 @@ import warnings
 class Config:
     """
     Client's credentials and configuration parameters
+
     """
 
     def __init__(
