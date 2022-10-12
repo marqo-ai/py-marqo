@@ -47,3 +47,93 @@ class TestIndex(MarqoTestCase):
             args, kwargs = mock__post.call_args
             assert dict(kwargs['body'])["index_defaults"]["treat_urls_and_pointers_as_images"] \
                    is expected_treat_urls_and_pointers_as_images
+
+    def test_get_documents(self):
+        self.client.create_index(index_name=self.index_name_1)
+        d1 = {
+            "Title": "Treatise on the viability of rocket cars",
+            "Blurb": "A rocket car is a car powered by a rocket engine. "
+                     "This treatise proposes that rocket cars are the inevitable "
+                     "future of land-based transport.",
+            "_id": "article_152"
+        }
+        d2 = {
+            "Title": "Your space suit and you",
+            "Blurb": "One must maintain one's space suite. "
+                     "It is, after all, the tool that will help you explore "
+                     "distant galaxies.",
+            "_id": "article_985"
+        }
+        self.client.index(self.index_name_1).add_documents([
+            d1, d2
+        ])
+        res = self.client.index(self.index_name_1).get_documents(
+            ["article_152", "article_490", "article_985"]
+        )
+        assert len(res['results']) == 3
+        for doc_res in res['results']:
+            if doc_res["_id"] == 'article_490':
+                assert not doc_res['_found']
+            else:
+                assert "Blurb" in doc_res
+                assert "Title" in doc_res
+                assert doc_res['_found']
+
+    def test_get_documents_expose_facets(self):
+        self.client.create_index(index_name=self.index_name_1)
+        d1 = {
+            "Title": "Treatise on the viability of rocket cars",
+            "Blurb": "A rocket car is a car powered by a rocket engine. "
+                     "This treatise proposes that rocket cars are the inevitable "
+                     "future of land-based transport.",
+            "_id": "article_152"
+        }
+        d2 = {
+            "Title": "Your space suit and you",
+            "Blurb": "One must maintain one's space suite. "
+                     "It is, after all, the tool that will help you explore "
+                     "distant galaxies.",
+            "_id": "article_985"
+        }
+        self.client.index(self.index_name_1).add_documents([
+            d1, d2
+        ])
+        res = self.client.index(self.index_name_1).get_documents(
+            ["article_152", "article_490", "article_985"],
+            expose_facets=True
+        )
+        assert len(res['results']) == 3
+        for doc_res in res['results']:
+            if doc_res["_id"] == 'article_490':
+                assert not doc_res['_found']
+            else:
+                assert "_tensor_facets" in doc_res
+                assert '_embedding' in doc_res['_tensor_facets'][0]
+                assert isinstance(doc_res['_tensor_facets'][0]['_embedding'], list)
+                assert 'Blurb' in doc_res['_tensor_facets'][0] or 'Title' in doc_res['_tensor_facets'][0]
+                assert "Blurb" in doc_res
+                assert "Title" in doc_res
+                assert doc_res['_found']
+
+    def test_get_document_expose_facets(self):
+        self.client.create_index(index_name=self.index_name_1)
+        d1 = {
+            "Title": "Treatise on the viability of rocket cars",
+            "Blurb": "A rocket car is a car powered by a rocket engine. "
+                     "This treatise proposes that rocket cars are the inevitable "
+                     "future of land-based transport.",
+            "_id": "article_152"
+        }
+        self.client.index(self.index_name_1).add_documents([
+            d1
+        ])
+        doc_res = self.client.index(self.index_name_1).get_document(
+            document_id="article_152",
+            expose_facets=True
+        )
+        assert "_tensor_facets" in doc_res
+        assert '_embedding' in doc_res['_tensor_facets'][0]
+        assert isinstance(doc_res['_tensor_facets'][0]['_embedding'], list)
+        assert 'Blurb' in doc_res['_tensor_facets'][0] or 'Title' in doc_res['_tensor_facets'][0]
+        assert "Blurb" in doc_res
+        assert "Title" in doc_res

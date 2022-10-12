@@ -166,17 +166,17 @@ class TestAddDocuments(MarqoTestCase):
             self.client.index(self.index_name_1).delete_documents([])
             raise AssertionError
         except MarqoWebError as e:
-            assert "can't be empty" in str(e) or "value_error.missing" in str (e)
+            assert "can't be empty" in str(e) or "value_error.missing" in str(e)
         res = self.client.index(self.index_name_1).get_document("123")
         print(res)
         assert "abc" in res
 
-    # get documents tests :
-
     def test_get_document(self):
-        """FIXME (do edge cases)"""
-
-    # user experience tests:
+        my_doc = {"abc": "efg", "_id": "123"}
+        self.client.create_index(index_name=self.index_name_1)
+        self.client.index(self.index_name_1).add_documents([my_doc])
+        retrieved = self.client.index(self.index_name_1).get_document(document_id='123')
+        assert retrieved == my_doc
 
     def test_add_documents_implicitly_create_index(self):
         try:
@@ -194,6 +194,7 @@ class TestAddDocuments(MarqoTestCase):
         temp_client.config.indexing_device = enums.Devices.cpu
 
         mock__post = mock.MagicMock()
+
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
         def run():
             temp_client.index(self.index_name_1).add_documents(documents=[
@@ -232,6 +233,7 @@ class TestAddDocuments(MarqoTestCase):
         temp_client.config.indexing_device = "cuda:28"
 
         mock__post = mock.MagicMock()
+
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
         def run():
             temp_client.index(self.index_name_1).add_documents(documents=[
@@ -249,6 +251,7 @@ class TestAddDocuments(MarqoTestCase):
         temp_client.config.indexing_device = enums.Devices.cpu
 
         mock__post = mock.MagicMock()
+
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
         def run():
             temp_client.index(self.index_name_1).add_documents(documents=[
@@ -292,3 +295,27 @@ class TestAddDocuments(MarqoTestCase):
 
         args, kwargs = mock__post.call_args
         assert "processes=12" not in kwargs["path"]
+
+    def test_update_documents(self):
+        original_doc = {"d1": "blah", "_id": "1234"}
+        self.client.index(self.index_name_1).add_documents(documents=[original_doc])
+        assert original_doc == self.client.index(self.index_name_1).get_document(document_id='1234')
+        new_doc = {"_id": "brand_new", "Content": "fascinating"}
+        self.client.index(self.index_name_1).update_documents(documents=[
+            {"_id": "1234", "new_field": "some data"}, new_doc])
+        assert {"new_field": "some data", **original_doc} == self.client.index(self.index_name_1).get_document(
+            document_id='1234')
+        assert new_doc == self.client.index(self.index_name_1).get_document(document_id='brand_new')
+
+    def test_resilient_indexing(self):
+        self.client.create_index(self.index_name_1)
+        assert 0 == self.client.index(self.index_name_1).get_stats()['numberOfDocuments']
+        d1 = {"d1": "blah", "_id": "1234"}
+        d2 = {"d2": "blah", "_id": "5678"}
+        docs = [d1,  {"content": "some terrible doc", "d3": "blah", "_id": 12345}, d2]
+        self.client.index(self.index_name_1).add_documents(documents=docs)
+        assert 2 == self.client.index(self.index_name_1).get_stats()['numberOfDocuments']
+        assert d1 == self.client.index(self.index_name_1).get_document(document_id='1234')
+        assert d2 == self.client.index(self.index_name_1).get_document(document_id='5678')
+        assert {"1234", "5678"} == {d['_id'] for d in
+                                    self.client.index(self.index_name_1).search("blah", limit=3)['hits']}

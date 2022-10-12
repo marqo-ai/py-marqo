@@ -15,7 +15,6 @@ from marqo.errors import (
     IndexAlreadyExistsError,
     InvalidIndexNameError
 )
-from marqo.version import qualified_version
 
 ALLOWED_OPERATIONS = {requests.delete, requests.get, requests.post, requests.put}
 
