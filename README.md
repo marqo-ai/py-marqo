@@ -9,16 +9,21 @@
 </p>
 
 <p align="center">
-<a href="https://pypistats.org/packages/marqo"><img alt="PyPI - Downloads from official pypistats" src="https://img.shields.io/pypi/dm/marqo?label=Downloads&style=flat-square"></a>
-<a align="center" href="https://join.slack.com/t/marqo-community/shared_invite/zt-1d737l76e-u~b3Rvey2IN2nGM4wyr44w"><img src="https://img.shields.io/badge/Slack-blueviolet?logo=slack&amp;logoColor=white&style=flat-square"></a>
+<a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
+<a href="https://pypi.org/project/marqo/"><img src="https://img.shields.io/pypi/v/marqo?label=PyPI"></a>
+<a href="https://github.com/marqo-ai/marqo/actions/workflows/CI.yml"><img src="https://img.shields.io/github/workflow/status/marqo-ai/marqo/CI?label=CI"></a>
+<a href="https://pypistats.org/packages/marqo"><img alt="PyPI - Downloads from official pypistats" src="https://img.shields.io/pypi/dm/marqo?label=Downloads"></a>
+<a align="center" href="https://join.slack.com/t/marqo-community/shared_invite/zt-1d737l76e-u~b3Rvey2IN2nGM4wyr44w"><img src="https://img.shields.io/badge/Slack-blueviolet?logo=slack&amp;logoColor=white"></a>
 </p>
 
 
 An open-source tensor search engine that seamlessly integrates with your applications, websites, and workflow. 
 
+Marqo cloud ☁️  is currently in beta. If you're interested, apply here: https://q78175g1wwa.typeform.com/to/d0PEuRPC
+
 ## What is tensor search?
 
-Tensor search involves using deep-learning to transform documents, images and other data into collections of vectors called "tensors". Representing data as tensors allows us to match queries against documents with human-like understanding of the query and document's content. Tensor search can power a variety of use cases such as:
+Tensor search involves transforming documents, images and other data into collections of vectors called "tensors". Representing data as tensors allows us to match queries against documents with human-like understanding of the query and document's content. Tensor search can power a variety of use cases such as:
 - end user search and recommendations
 - multi-modal search (image-to-image, text-to-image, image-to-text)
 - chat bots and question and answer systems
@@ -32,12 +37,12 @@ Tensor search involves using deep-learning to transform documents, images and ot
 
 ## Getting started
 
-1. Marqo requires docker. To install docker go to https://docs.docker.com/get-docker/
-2. Use docker to run Marqo (Mac users with M series chips will need to [go here](#m-series-mac-users)):
+1. Marqo requires docker. To install Docker go to the [Docker Official website.](https://docs.docker.com/get-docker/)
+2. Use docker to run Marqo (Mac users with M-series chips will need to [go here](#m-series-mac-users)):
 ```bash
-docker pull marqoai/marqo:0.0.4;
 docker rm -f marqo;
-docker run --name marqo -it --privileged -p 8882:8882 --add-host host.docker.internal:host-gateway marqoai/marqo:0.0.4
+docker pull marqoai/marqo:0.0.5;
+docker run --name marqo -it --privileged -p 8882:8882 --add-host host.docker.internal:host-gateway marqoai/marqo:0.0.5
 ```
 3. Install the Marqo client:
 ```bash
@@ -72,7 +77,7 @@ results = mq.index("my-first-index").search(
 - `mq` is the client that wraps the`marqo` API
 - `add_documents()` takes a list of documents, represented as python dicts, for indexing
 - `add_documents()` creates an index with default settings, if one does not already exist
-- You can optionally set a document's ID with the special `_id` field. Otherwise, marqo will generate one.
+- You can optionally set a document's ID with the special `_id` field. Otherwise, Marqo will generate one.
 - If the index doesn't exist, Marqo will create it. If it exists then Marqo will add the documents to the index.
 
 Let's have a look at the results:
@@ -168,7 +173,7 @@ To power image and text search, Marqo allows users to plug and play with CLIP mo
 
 settings = {
   "treat_urls_and_pointers_as_images":True,   # allows us to find an image file and index it 
-  "model":"ViT-B/32"
+  "model":"ViT-L/14"
 }
 response = mq.create_index("my-multimodal-index", **settings)
 ```
@@ -205,22 +210,22 @@ Searching using an image can be achieved by providing the image link.
 results = mq.index("my-multimodal-index").search('https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Standing_Hippopotamus_MET_DP248993.jpg/440px-Standing_Hippopotamus_MET_DP248993.jpg')
 ```
 
+## Documentation
+The full documentation for Marqo can be found here [https://marqo.pages.dev/](https://marqo.pages.dev/).
+
 ## Warning
 
 Note that you should not run other applications on Marqo's Opensearch cluster as Marqo automatically changes and adapts the settings on the cluster.
 
 ## M series Mac users
-The backend, marqo-os (Marqo-OpenSearch) isn't yet supported for the arm64 architecture. This means that if you have an M series
-Mac, you will need to run OpenSearch locally. This unfortunately means that you won't be 
-able to use the filtering feature for tensor search queries. We are working on an arm64 Marqo-OpenSearch build as a top 
-priority. 
+Marqo does not yet support the docker-in-docker backend configuration for the arm64 architecture. This means that if you have an M series Mac, you will also need to run marqo's backend, marqo-os, locally.
 
 To run Marqo on an M series Mac, follow the next steps.
 
 1. In one terminal run the following command to start opensearch:
 
 ```shell
-docker rm -f marqo-os; docker run -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" opensearchproject/opensearch:2.2.1
+docker rm -f marqo-os; docker run -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" marqoai/marqo-os:0.0.2-arm
 ```
 
 2. In another terminal run the following command to launch Marqo:
@@ -228,9 +233,8 @@ docker rm -f marqo-os; docker run -p 9200:9200 -p 9600:9600 -e "discovery.type=s
 docker rm -f marqo; docker run --name marqo --privileged \
     -p 8882:8882 --add-host host.docker.internal:host-gateway \
     -e "OPENSEARCH_URL=https://localhost:9200" \
-    marqoai/marqo:0.0.4
+    marqoai/marqo:0.0.5
 ```
-
 
 ## Contributors
 Marqo is a community project with the goal of making tensor search accessible to the wider developer community. We are glad that you are interested in helping out! Please read [this](./CONTRIBUTING.md) to get started
