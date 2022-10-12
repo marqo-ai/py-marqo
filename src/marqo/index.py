@@ -138,7 +138,7 @@ class Index():
             "limit": limit,
             "searchMethod": search_method,
             "showHighlights": show_highlights,
-            "reranker": reranker,
+            "reRanker": reranker,
         }
         if attributes_to_retrieve is not None:
             body["attributesToRetrieve"] = attributes_to_retrieve
