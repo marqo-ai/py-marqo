@@ -149,16 +149,42 @@ class Index():
             body=body
         )
 
-    def get_document(self, document_id: Union[str, int]) -> Dict[str, Any]:
-        """Get one document with given document identifier.
+    def get_document(self, document_id: str, expose_facets=None) -> Dict[str, Any]:
+        """Get one document with given an ID.
 
         Args:
-            document_id: Unique identifier of the document.
+            document_id: ID of the document.
+            expose_facets: If True, tensor facets will be returned for the the
+                document. Each facets' embedding is accessible via the
+                _embedding field.
 
         Returns:
             Dictionary containing the documents information.
         """
-        return self.http.get(f"indexes/{self.index_name}/documents/{document_id}")
+        url_string = f"indexes/{self.index_name}/documents/{document_id}"
+        if expose_facets is not None:
+            url_string += f"?expose_facets={expose_facets}"
+        return self.http.get(url_string)
+
+    def get_documents(self, document_ids: List[str], expose_facets=None) -> Dict[str, Any]:
+        """Gets a selection of documents based on their IDs.
+
+        Args:
+            document_ids: IDs to be searched
+            expose_facets: If True, tensor facets will be returned for the the
+                document. Each facets' embedding is accessible via the
+                _embedding field.
+
+        Returns:
+            Dictionary containing the documents information.
+        """
+        url_string = f"indexes/{self.index_name}/documents"
+        if expose_facets is not None:
+            url_string += f"?expose_facets={expose_facets}"
+        return self.http.get(
+            url_string,
+            body=document_ids
+        )
 
     def add_documents(
         self,
