@@ -1,3 +1,4 @@
+import asyncio
 import pprint
 import random
 import time
@@ -36,17 +37,19 @@ class TestAsync (marqo_test.MarqoTestCase):
         assert self.client.index(self.index_name_1).get_stats()['numberOfDocuments'] == 1
 
         def significant_ingestion():
-            for d in [
-                        [{"Title": " ".join(random.choices(population=vocab, k=10)),
+            docs = [{"Title": " ".join(random.choices(population=vocab, k=10)),
                           "Description": " ".join(random.choices(population=vocab, k=25)),
-                          }] for _ in range(num_docs)
-                    ]:
-                self.client.index(self.index_name_1).add_documents(auto_refresh=False, documents=d)
+                          } for _ in range(num_docs)]
+            self.client.index(self.index_name_1).add_documents(
+                auto_refresh=True, documents=docs, batch_size=5, processes=1)
 
         cache_update_thread = threading.Thread(
             target=significant_ingestion)
         cache_update_thread.start()
-        time.sleep(2)
+        time.sleep(3)
+        refresh_res = self.client.index(self.index_name_1).refresh()
+        time.sleep(1)
+        assert cache_update_thread.is_alive()
         assert self.client.index(self.index_name_1).get_stats()['numberOfDocuments'] > 1
         assert cache_update_thread.is_alive()
         assert self.client.index(self.index_name_1).get_stats()['numberOfDocuments'] < 251
