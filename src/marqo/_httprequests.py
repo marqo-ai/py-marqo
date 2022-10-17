@@ -1,7 +1,5 @@
 import copy
 import json
-import pprint
-from http import HTTPStatus
 from typing import Any, Callable, Dict, List, Optional, Union
 import requests
 from json.decoder import JSONDecodeError
@@ -9,11 +7,7 @@ from marqo.config import Config
 from marqo.errors import (
     MarqoWebError,
     BackendCommunicationError,
-    BackendTimeoutError,
-    IndexNotFoundError,
-    DocumentNotFoundError,
-    IndexAlreadyExistsError,
-    InvalidIndexNameError
+    BackendTimeoutError
 )
 
 ALLOWED_OPERATIONS = {requests.delete, requests.get, requests.post, requests.put}
@@ -38,7 +32,7 @@ class HttpRequests:
         body: Optional[Union[Dict[str, Any], List[Dict[str, Any]], List[str], str]] = None,
         content_type: Optional[str] = None,
     ) -> Any:
-        to_verify = False #  self.config.cluster_is_remote
+        to_verify = False
 
         if http_method not in ALLOWED_OPERATIONS:
             raise ValueError("{} not an allowed operation {}".format(http_method, ALLOWED_OPERATIONS))
