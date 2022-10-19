@@ -98,7 +98,7 @@ class Index:
     def search(self, q: str, searchable_attributes: Optional[List[str]] = None,
                limit: int = 10, search_method: Union[SearchMethods.TENSOR, str] = SearchMethods.TENSOR,
                highlights=None, device: Optional[str] = None, filter_string: str = None,
-               show_highlights=True, reRanker=None,
+               show_highlights=True, reranker=None,
                attributes_to_retrieve: Optional[List[str]] = None
                ) -> Dict[str, Any]:
         """Search the index.
@@ -138,7 +138,7 @@ class Index:
             "limit": limit,
             "searchMethod": search_method,
             "showHighlights": show_highlights,
-            "reRanker": reRanker,
+            "reRanker": reranker,
         }
         if attributes_to_retrieve is not None:
             body["attributesToRetrieve"] = attributes_to_retrieve
