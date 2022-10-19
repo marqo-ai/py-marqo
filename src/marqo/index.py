@@ -110,7 +110,7 @@ class Index:
             limit: The max number of documents to be returned
             search_method: Indicates TENSOR or LEXICAL (keyword) search
             show_highlights: True if highlights are to be returned
-            reranker:
+            reRanker:
             device: the device used to index the data. Examples include "cpu",
                 "cuda" and "cuda:2". Overrides the Client's default device.
             filter_string: a filter string, used to prefilter documents during the
@@ -138,7 +138,7 @@ class Index:
             "limit": limit,
             "searchMethod": search_method,
             "showHighlights": show_highlights,
-            "reranker": reranker,
+            "reRanker": reranker,
         }
         if attributes_to_retrieve is not None:
             body["attributesToRetrieve"] = attributes_to_retrieve
