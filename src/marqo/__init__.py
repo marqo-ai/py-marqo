@@ -1,9 +1,10 @@
 from marqo.client import Client
-from marqo.marqo_logging import logger
 from marqo.enums import SearchMethods
 from marqo.version import supported_marqo_version
+import logging
 
 
-def set_log_levels(level):
-    logger.setLevel(level)
+def set_log_level(level):
+    package_logger = logging.getLogger('marqo')
+    package_logger.setLevel(level)
 

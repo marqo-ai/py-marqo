@@ -6,6 +6,7 @@ from marqo._httprequests import HttpRequests
 from marqo import utils, enums
 from marqo import errors
 
+
 class Client:
     """
     A client for the marqo API

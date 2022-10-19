@@ -7,12 +7,12 @@ from datetime import datetime
 from typing import Any, Dict, Generator, List, Optional, Union
 from marqo._httprequests import HttpRequests
 from marqo.config import Config
-from marqo.marqo_logging import logger
 from marqo.enums import SearchMethods, Devices
 from marqo import errors, utils
+from marqo.marqo_logging import mq_logger
 
 
-class Index():
+class Index:
     """
     Wraps the /indexes/ endpoint
     """
@@ -320,14 +320,14 @@ class Index():
             f"{f'&processes={processes}' if processes is not None else ''}"
         )
 
-        logger.info(f"starting batch ingestion in sizes of {batch_size}")
+        mq_logger.info(f"starting batch ingestion with batch size {batch_size}")
 
         deeper = ((doc, i, batch_size) for i, doc in enumerate(docs))
 
         def batch_requests(gathered, doc_tuple):
             doc, i, the_batch_size = doc_tuple
             if i % the_batch_size == 0:
-                gathered.append([doc,])
+                gathered.append([doc, ])
             else:
                 gathered[-1].append(doc)
             return gathered
@@ -339,14 +339,14 @@ class Index():
             res = self.http.post(path=path_with_query_str, body=docs)
             total_batch_time = datetime.now() - t0
             num_docs = len(docs)
-
-            logger.info(f"    batch {i}: ingested {num_docs} docs. Time taken: {total_batch_time}. "
-                        f"Average timer per doc {total_batch_time/num_docs}")
+            mq_logger.info(
+                f"batch {i}: ingested {num_docs} docs. Time taken: {total_batch_time}. "
+                f"Average timer per doc {total_batch_time/num_docs}")
             if verbose:
-                logger.info(f"        results from indexing batch {i}: {res}")
+                mq_logger.info(f"results from indexing batch {i}: {res}")
             return res
 
         results = [verbosely_add_docs(i, docs) for i, docs in enumerate(batched)]
-        logger.info('completed batch ingestion.')
+        mq_logger.info('completed batch ingestion.')
         return results
 
