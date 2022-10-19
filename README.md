@@ -239,7 +239,7 @@ docker rm -f marqo; docker run --name marqo --privileged \
 ## Contributors
 Marqo is a community project with the goal of making tensor search accessible to the wider developer community. We are glad that you are interested in helping out! Please read [this](./CONTRIBUTING.md) to get started
 
-## Dev set up
+## Dev set up 
 1. Create a virtual env ```python -m venv ./venv```
 2. Activate the virtual environment ```source ./venv/bin/activate```
 3. Install requirements from the requirements file: ```pip install -r requirements.txt```
