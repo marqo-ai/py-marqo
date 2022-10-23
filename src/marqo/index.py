@@ -229,7 +229,8 @@ class Index:
         self,
         documents: List[Dict[str, Any]],
         auto_refresh=True,
-        batch_size: int = None,
+        server_batch_size: int = None,
+        client_batch_size: int = None,
         processes: int = None,
         device: str = None
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
@@ -250,20 +251,50 @@ class Index:
         Returns:
             Response body outlining indexing result
         """
+        return self._generic_add_update_docs(
+            update_method="update",
+            documents=documents, auto_refresh=auto_refresh, server_batch_size=server_batch_size,
+            client_batch_size=client_batch_size, processes=processes,
+        )
+
+    def _generic_add_update_docs(
+        self,
+        update_method: str,
+        documents: List[Dict[str, Any]],
+        auto_refresh=True,
+        server_batch_size: int = None,
+        client_batch_size: int = None,
+        processes: int = None,
+        device: str = None
+    ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         selected_device = device if device is not None else self.config.indexing_device
 
-        path_with_query_str = (
-            f"indexes/{self.index_name}/documents?refresh={str(auto_refresh).lower()}" 
+        base_path = f"indexes/{self.index_name}/documents"
+        query_str_params = (
             f"{f'&device={utils.translate_device_string_for_url(selected_device)}'}"
             f"{f'&processes={processes}' if processes is not None else ''}"
-            f"{f'&batch_size={batch_size}' if processes is not None else ''}"
+            f"{f'&batch_size={server_batch_size}' if server_batch_size is not None else ''}"
+
         )
-        if processes in [None, 1] and batch_size is not None:
-            if batch_size <= 0:
+        if client_batch_size is not None:
+            if client_batch_size <= 0:
                 raise errors.InvalidArgError("Batch size can't be less than 1!")
-            return self._batch_request(docs=documents, batch_size=batch_size, verbose=False, device=device)
+            return self._batch_request(
+                base_path=base_path, auto_refresh=auto_refresh,
+                update_method=update_method, docs=documents, verbose=False,
+                query_str_params=query_str_params
+            )
         else:
-            return self.http.put(path=path_with_query_str, body=documents)
+            refresh_option = f"?refresh={str(auto_refresh).lower()}"
+            path_with_query_str = f"{base_path}{refresh_option}{query_str_params}"
+
+            if update_method == 'update':
+                return self.http.put(path=path_with_query_str, body=documents)
+            elif update_method == 'replace':
+                return self.http.post(path=path_with_query_str, body=documents)
+            else:
+                raise ValueError(f'Received unknown update_method `{update_method}`. '
+                                 f'Allowed update_methods: ["replace", "update"] ')
 
     def delete_documents(self, ids: List[str], auto_refresh: bool = None) -> Dict[str, int]:
         """Delete documents from this index by a list of their ids.
@@ -299,8 +330,12 @@ class Index:
             parsed_date = datetime.strptime(the_date, "%Y-%m-%dT%H:%M:%S.%f")
             return parsed_date
 
-    def _batch_request(self, docs: List[Dict],  batch_size: int = 100, verbose: bool = True,
-                       device: typing.Optional[str] = None, processes: str = None) -> List[Dict[str, Any]]:
+    def _batch_request(
+            self, docs: List[Dict],  base_path: str,
+            query_str_params: str,
+            update_method: str, verbose: bool = True,
+            auto_refresh: bool = True, batch_size: int = 50
+    ) -> List[Dict[str, Any]]:
         """Batches a large chunk of documents to be sent as multiple
         add_documents invocations
 
@@ -314,11 +349,7 @@ class Index:
             A list of responses, which have information about the batch
             operation
         """
-        path_with_query_str = (
-            f"indexes/{self.index_name}/documents?refresh=false"
-            f"{f'&device={utils.translate_device_string_for_url(device)}' if device is not None else ''}"
-            f"{f'&processes={processes}' if processes is not None else ''}"
-        )
+        path_with_query_str = f"{base_path}?refresh=false{query_str_params}"
 
         mq_logger.info(f"starting batch ingestion with batch size {batch_size}")
 
@@ -336,7 +367,13 @@ class Index:
 
         def verbosely_add_docs(i, docs):
             t0 = datetime.now()
-            res = self.http.post(path=path_with_query_str, body=docs)
+            if update_method == 'replace':
+                res = self.http.post(path=path_with_query_str, body=docs)
+            elif update_method == 'update':
+                res = self.http.put(path=path_with_query_str, body=docs)
+            else:
+                raise ValueError(f'Received unknown update_method `{update_method}`. '
+                                 f'Allowed update_methods: ["replace", "update"] ')
             total_batch_time = datetime.now() - t0
             num_docs = len(docs)
             mq_logger.info(
@@ -347,6 +384,8 @@ class Index:
             return res
 
         results = [verbosely_add_docs(i, docs) for i, docs in enumerate(batched)]
+        if auto_refresh:
+            self.refresh()
         mq_logger.info('completed batch ingestion.')
         return results
 
