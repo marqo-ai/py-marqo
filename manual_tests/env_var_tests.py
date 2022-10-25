@@ -68,4 +68,8 @@ try:
         document_ids=[docs[i]['_id'] for i in range(max_retrievable_docs + 1)])
     raise AssertionError
 except MarqoWebError as e:
-    print(str(e))
+    pass
+
+mq.delete_index(index_name)
+print("Passed environment variable tests")
+
