@@ -28,3 +28,8 @@ class TestClient(MarqoTestCase):
     def test_get_marqo(self):
         res = self.client.get_marqo()
         assert 'Welcome to Marqo' == res['message']
+
+    def test_health(self):
+        res = self.client.health()
+        assert 'status' in res
+        assert 'status' in res['backend']

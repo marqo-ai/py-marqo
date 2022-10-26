@@ -125,3 +125,6 @@ class Client:
 
     def get_marqo(self):
         return self.http.get(path="")
+
+    def health(self):
+        return self.http.get(path="health")
