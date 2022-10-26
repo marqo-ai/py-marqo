@@ -190,19 +190,23 @@ class Index:
         self,
         documents: List[Dict[str, Any]],
         auto_refresh=True,
-        batch_size: int = None,
+        server_batch_size: int = None,
+        client_batch_size: int = None,
         processes: int = None,
         device: str = None
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
-        """Add documents to this index.
+        """Add documents to this index. Does a partial updates on existing documents,
+        based on their ID. Adds unseen documents to the index.
 
         Args:
             documents: List of documents. Each document should be a dictionary.
             auto_refresh: Automatically refresh the index. If you are making
                 lots of requests, it is advised to turn this to false to
                 increase performance.
-            batch_size: if it is set, documents will be indexed into batches
-                of this size. Otherwise documents are unbatched.
+            server_batch_size: if it is set, documents will be indexed into batches
+                on the server as they are indexed. Otherwise documents are unbatched.
+            client_batch_size: if it is set, documents will be indexed into batches
+                in the client, before being sent of. Otherwise documents are unbatched.
             processes: number of processes for the server to use, to do indexing,
             device: the device used to index the data. Examples include "cpu",
                 "cuda" and "cuda:2"
@@ -210,20 +214,11 @@ class Index:
         Returns:
             Response body outlining indexing result
         """
-        selected_device = device if device is not None else self.config.indexing_device
-
-        path_with_query_str = (
-            f"indexes/{self.index_name}/documents?refresh={str(auto_refresh).lower()}" 
-            f"{f'&device={utils.translate_device_string_for_url(selected_device)}'}"
-            f"{f'&processes={processes}' if processes is not None else ''}"
-            f"{f'&batch_size={batch_size}' if processes is not None else ''}"
+        return self._generic_add_update_docs(
+            update_method="replace",
+            documents=documents, auto_refresh=auto_refresh, server_batch_size=server_batch_size,
+            client_batch_size=client_batch_size, processes=processes, device=device
         )
-        if processes in [None, 1] and batch_size is not None:
-            if batch_size <= 0:
-                raise errors.InvalidArgError("Batch size can't be less than 1!")
-            return self._batch_request(docs=documents, batch_size=batch_size, verbose=False, device=device)
-        else:
-            return self.http.post(path=path_with_query_str, body=documents)
 
     def update_documents(
         self,
@@ -242,8 +237,10 @@ class Index:
             auto_refresh: Automatically refresh the index. If you are making
                 lots of requests, it is advised to turn this to false to
                 increase performance.
-            batch_size: if it is set, documents will be indexed into batches
-                of this size. Otherwise documents are unbatched.
+            server_batch_size: if it is set, documents will be indexed into batches
+                on the server as they are indexed. Otherwise documents are unbatched.
+            client_batch_size: if it is set, documents will be indexed into batches
+                in the client, before being sent of. Otherwise documents are unbatched.
             processes: number of processes for the server to use, to do indexing,
             device: the device used to index the data. Examples include "cpu",
                 "cuda" and "cuda:2"
@@ -254,7 +251,7 @@ class Index:
         return self._generic_add_update_docs(
             update_method="update",
             documents=documents, auto_refresh=auto_refresh, server_batch_size=server_batch_size,
-            client_batch_size=client_batch_size, processes=processes,
+            client_batch_size=client_batch_size, processes=processes, device=device
         )
 
     def _generic_add_update_docs(
