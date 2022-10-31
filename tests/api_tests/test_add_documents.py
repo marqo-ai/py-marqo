@@ -218,8 +218,7 @@ class TestAddDocuments(MarqoTestCase):
             ], server_batch_size=2, device="cuda:37")
             return True
         assert run()
-
-        assert len(mock__post.call_args_list) == 2
+        assert len(mock__post.call_args_list) == 1
         for args, kwargs in mock__post.call_args_list:
             assert "device=cuda37" in kwargs["path"]
 
