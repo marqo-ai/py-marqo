@@ -1,5 +1,8 @@
 import copy
+import math
 import pprint
+import random
+import requests
 from marqo.client import Client
 from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
 import unittest
@@ -219,8 +222,8 @@ class TestAddDocuments(MarqoTestCase):
             ], client_batch_size=2, device="cuda:37")
             return True
         assert run()
-
-        assert len(mock__post.call_args_list) == 2
+        print(mock__post.call_args_list)
+        assert len(mock__post.call_args_list) == 3
         for args, kwargs in mock__post.call_args_list[:-1]:
             assert "device=cuda37" in kwargs["path"]
 
@@ -319,3 +322,63 @@ class TestAddDocuments(MarqoTestCase):
         assert d2 == self.client.index(self.index_name_1).get_document(document_id='5678')
         assert {"1234", "5678"} == {d['_id'] for d in
                                     self.client.index(self.index_name_1).search("blah", limit=3)['hits']}
+
+    def test_batching(self):
+
+        vocab_source = "https://www.mit.edu/~ecprice/wordlist.10000"
+        docs_to_add = 250
+        vocab = requests.get(vocab_source).text.splitlines()
+        docs = [{"Title": " ".join(random.choices(population=vocab, k=10)),
+          "Description": " ".join(random.choices(population=vocab, k=25)),
+          } for _ in range(docs_to_add)]
+
+        batches = [None, 1, 2, 50]
+        for auto_refresh in (None, True, False):
+            for processes in [None, 1, 2]:
+                for client_batch_size in batches:
+                    for server_batch_size in batches:
+                        mock__post = mock.MagicMock()
+                        mock__post.return_value = dict()
+                        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+                        def run():
+                            res = self.client.index(self.index_name_1).add_documents(
+                                auto_refresh=auto_refresh, documents=docs, client_batch_size=client_batch_size,
+                                server_batch_size=server_batch_size, processes=processes)
+                            if client_batch_size is not None:
+                                assert isinstance(res, list)
+                                assert len(res) == math.ceil(docs_to_add/client_batch_size)
+                                # should only refresh on the last call, if auto_refresh=True
+                                assert all([f'refresh=false' in d[1]['path'] for d in
+                                            mock__post.call_args_list][:-1])
+                                if auto_refresh:
+                                    assert [f"{self.index_name_1}/refresh" in d[1]['path']
+                                            for d in mock__post.call_args_list][-1]
+                            else:
+                                assert isinstance(res, dict)
+                                # One huge request is made, if there is no client_side_batching:
+                                assert all([len(d[1]['body']) == docs_to_add for d in mock__post.call_args_list])
+                            if server_batch_size is not None:
+                                if auto_refresh:
+                                    assert all([f'batch_size={server_batch_size}' in d[1]['path'] for d in
+                                                mock__post.call_args_list][:-1])
+                                else:
+                                    assert all([f'batch_size={server_batch_size}' in d[1]['path']
+                                                for d in mock__post.call_args_list])
+                            else:
+                                assert all(['batch' not in d[1]['path'] for d in mock__post.call_args_list])
+
+                            if processes is not None:
+                                if auto_refresh is True and client_batch_size is not None:
+                                    assert [f'processes={processes}' in d[1]['path'] for d in mock__post.call_args_list][: -1]
+
+                                else:
+                                    assert all([f'processes={processes}' in d[1]['path']
+                                                for d in mock__post.call_args_list])
+                            else:
+                                assert all(['processes' not in d[1]['path'] for d in mock__post.call_args_list])
+
+                            return True
+                        assert run()
+
+
+

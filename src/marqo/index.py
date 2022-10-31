@@ -279,7 +279,7 @@ class Index:
             return self._batch_request(
                 base_path=base_path, auto_refresh=auto_refresh,
                 update_method=update_method, docs=documents, verbose=False,
-                query_str_params=query_str_params
+                query_str_params=query_str_params, batch_size=client_batch_size
             )
         else:
             refresh_option = f"?refresh={str(auto_refresh).lower()}"
