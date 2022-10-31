@@ -127,7 +127,7 @@ class TestAddDocuments(MarqoTestCase):
              "_id": doc_id}
             for doc_id in doc_ids]
 
-        ix.add_documents(docs, batch_size=20)
+        ix.add_documents(docs, server_batch_size=20)
         ix.refresh()
         # TODO we should do a count in here...
         # takes too long to search for all
@@ -215,7 +215,7 @@ class TestAddDocuments(MarqoTestCase):
         def run():
             temp_client.index(self.index_name_1).add_documents(documents=[
                 {"d1": "blah"}, {"d2", "some data"}, {"d2331": "blah"}, {"45d2", "some data"}
-            ], batch_size=2, device="cuda:37")
+            ], server_batch_size=2, device="cuda:37")
             return True
         assert run()
 
