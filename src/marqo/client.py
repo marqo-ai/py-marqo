@@ -122,3 +122,9 @@ class Client:
         data: bytes
     ) -> str:
         return base64.urlsafe_b64encode(data).decode('utf-8').replace('=','')
+
+    def get_marqo(self):
+        return self.http.get(path="")
+
+    def health(self):
+        return self.http.get(path="health")

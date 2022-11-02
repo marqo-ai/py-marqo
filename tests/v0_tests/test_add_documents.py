@@ -122,14 +122,19 @@ class TestAddDocuments(MarqoTestCase):
         assert d2 == self.client.index(self.index_name_1).get_document("56")
 
     def test_add_batched_documents(self):
+        try:
+            self.client.delete_index(self.index_name_1)
+        except MarqoApiError:
+            pass
         ix = self.client.index(index_name=self.index_name_1)
         doc_ids = [str(num) for num in range(0, 100)]
+
         docs = [
             {"Title": f"The Title of doc {doc_id}",
              "Generic text": "some text goes here...",
              "_id": doc_id}
             for doc_id in doc_ids]
-
+        assert len(docs) == 100
         ix.add_documents(docs, server_batch_size=5, client_batch_size=4)
         ix.refresh()
         # takes too long to search for all...
@@ -222,7 +227,6 @@ class TestAddDocuments(MarqoTestCase):
             ], client_batch_size=2, device="cuda:37")
             return True
         assert run()
-        print(mock__post.call_args_list)
         assert len(mock__post.call_args_list) == 3
         for args, kwargs in mock__post.call_args_list[:-1]:
             assert "device=cuda37" in kwargs["path"]

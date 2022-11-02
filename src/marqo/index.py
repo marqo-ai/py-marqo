@@ -195,18 +195,20 @@ class Index:
         processes: int = None,
         device: str = None
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
-        """Add documents to this index. Does a partial updates on existing documents,
+        """Add documents to this index. Does a partial update on existing documents,
         based on their ID. Adds unseen documents to the index.
 
         Args:
             documents: List of documents. Each document should be a dictionary.
             auto_refresh: Automatically refresh the index. If you are making
-                lots of requests, it is advised to turn this to false to
+                lots of requests, it is advised to set this to False to
                 increase performance.
             server_batch_size: if it is set, documents will be indexed into batches
-                on the server as they are indexed. Otherwise documents are unbatched.
+                on the server as they are indexed. Otherwise documents are unbatched
+                server-side.
             client_batch_size: if it is set, documents will be indexed into batches
-                in the client, before being sent of. Otherwise documents are unbatched.
+                in the client, before being sent off. Otherwise documents are unbatched
+                client-side.
             processes: number of processes for the server to use, to do indexing,
             device: the device used to index the data. Examples include "cpu",
                 "cuda" and "cuda:2"
@@ -238,9 +240,11 @@ class Index:
                 lots of requests, it is advised to turn this to false to
                 increase performance.
             server_batch_size: if it is set, documents will be indexed into batches
-                on the server as they are indexed. Otherwise documents are unbatched.
+                on the server as they are indexed. Otherwise documents are unbatched
+                server-side.
             client_batch_size: if it is set, documents will be indexed into batches
-                in the client, before being sent of. Otherwise documents are unbatched.
+                in the client, before being sent of. Otherwise documents are unbatched
+                client-side.
             processes: number of processes for the server to use, to do indexing,
             device: the device used to index the data. Examples include "cpu",
                 "cuda" and "cuda:2"
