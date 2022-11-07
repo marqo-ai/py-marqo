@@ -193,7 +193,8 @@ class Index:
         server_batch_size: int = None,
         client_batch_size: int = None,
         processes: int = None,
-        device: str = None
+        device: str = None,
+        non_tensor_fields: List[str] = []
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """Add documents to this index. Does a partial update on existing documents,
         based on their ID. Adds unseen documents to the index.
@@ -212,6 +213,7 @@ class Index:
             processes: number of processes for the server to use, to do indexing,
             device: the device used to index the data. Examples include "cpu",
                 "cuda" and "cuda:2"
+            non_tensor_fields: fields within documents to not create and store tensors against.
 
         Returns:
             Response body outlining indexing result
@@ -219,7 +221,7 @@ class Index:
         return self._generic_add_update_docs(
             update_method="replace",
             documents=documents, auto_refresh=auto_refresh, server_batch_size=server_batch_size,
-            client_batch_size=client_batch_size, processes=processes, device=device
+            client_batch_size=client_batch_size, processes=processes, device=device, non_tensor_fields=non_tensor_fields
         )
 
     def update_documents(
@@ -229,7 +231,8 @@ class Index:
         server_batch_size: int = None,
         client_batch_size: int = None,
         processes: int = None,
-        device: str = None
+        device: str = None,
+        non_tensor_fields: List[str] = []
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """Add documents to this index. Does a partial updates on existing documents,
         based on their ID. Adds unseen documents to the index.
@@ -248,6 +251,7 @@ class Index:
             processes: number of processes for the server to use, to do indexing,
             device: the device used to index the data. Examples include "cpu",
                 "cuda" and "cuda:2"
+            non_tensor_fields: fields within documents to not create and store tensors against.
 
         Returns:
             Response body outlining indexing result
@@ -255,7 +259,7 @@ class Index:
         return self._generic_add_update_docs(
             update_method="update",
             documents=documents, auto_refresh=auto_refresh, server_batch_size=server_batch_size,
-            client_batch_size=client_batch_size, processes=processes, device=device
+            client_batch_size=client_batch_size, processes=processes, device=device, non_tensor_fields=non_tensor_fields
         )
 
     def _generic_add_update_docs(
@@ -266,16 +270,18 @@ class Index:
         server_batch_size: int = None,
         client_batch_size: int = None,
         processes: int = None,
-        device: str = None
+        device: str = None,
+        non_tensor_fields: List[str] = []
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         selected_device = device if device is not None else self.config.indexing_device
 
         base_path = f"indexes/{self.index_name}/documents"
+        non_tensor_fields_query_param = utils.convert_list_to_query_params("non_tensor_fields", non_tensor_fields)
         query_str_params = (
             f"{f'&device={utils.translate_device_string_for_url(selected_device)}'}"
             f"{f'&processes={processes}' if processes is not None else ''}"
             f"{f'&batch_size={server_batch_size}' if server_batch_size is not None else ''}"
-
+            f"{f'&{non_tensor_fields_query_param}' if len(non_tensor_fields) > 0 else ''}"
         )
         if client_batch_size is not None:
             if client_batch_size <= 0:
@@ -288,7 +294,7 @@ class Index:
         else:
             refresh_option = f"?refresh={str(auto_refresh).lower()}"
             path_with_query_str = f"{base_path}{refresh_option}{query_str_params}"
-
+            print(path_with_query_str)
             if update_method == 'update':
                 return self.http.put(path=path_with_query_str, body=documents)
             elif update_method == 'replace':
