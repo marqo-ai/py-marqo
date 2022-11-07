@@ -294,7 +294,7 @@ class Index:
         else:
             refresh_option = f"?refresh={str(auto_refresh).lower()}"
             path_with_query_str = f"{base_path}{refresh_option}{query_str_params}"
-            print(path_with_query_str)
+
             if update_method == 'update':
                 return self.http.put(path=path_with_query_str, body=documents)
             elif update_method == 'replace':
