@@ -67,9 +67,10 @@ class TestStartStop(marqo_test.MarqoTestCase):
                 try:
                     self.client.index(self.index_name_1).search(q="General nature facts")
                     break
-                except (BackendCommunicationError, MarqoWebError) as mqe:
-                    if isinstance(mqe, MarqoWebError):
-                        # ignore too many requests response
+                except MarqoWebError as mqe:
+                    # most of the time they will be 500 errors
+                    # ignore too many requests response
+                    if not isinstance(mqe, BackendCommunicationError):
                         assert mqe.status_code == 429
                     if "exceeds your S2Search free tier limit" in str(mqe):
                         raise mqe
