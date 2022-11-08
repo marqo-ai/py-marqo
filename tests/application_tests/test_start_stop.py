@@ -72,7 +72,7 @@ class TestStartStop(marqo_test.MarqoTestCase):
                     # ignore too many requests response
                     if isinstance(mqe, HTTPError):
                         pass
-                    if not isinstance(mqe, BackendCommunicationError):
+                    elif not isinstance(mqe, BackendCommunicationError):
                         assert mqe.status_code == 429
                     if "exceeds your S2Search free tier limit" in str(mqe):
                         raise mqe
