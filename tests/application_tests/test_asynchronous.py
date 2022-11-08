@@ -8,7 +8,8 @@ from marqo import Client
 from marqo.errors import MarqoApiError
 import requests
 import logging
-logging.getLogger().setLevel('INFO')
+import sys
+sys.setswitchinterval(0.005)
 
 
 class TestAsync (marqo_test.MarqoTestCase):
@@ -36,6 +37,7 @@ class TestAsync (marqo_test.MarqoTestCase):
         self.client.index(self.index_name_1).add_documents([d1])
         assert self.client.index(self.index_name_1).get_stats()['numberOfDocuments'] == 1
 
+
         def significant_ingestion():
             docs = [{"Title": " ".join(random.choices(population=vocab, k=10)),
                           "Description": " ".join(random.choices(population=vocab, k=25)),
@@ -58,5 +60,5 @@ class TestAsync (marqo_test.MarqoTestCase):
             time.sleep(1)
 
         self.client.index(self.index_name_1).refresh()
-        assert self.client.index(self.index_name_1).get_stats()['numberOfDocuments'] == 251
+        assert self.client.index(self.index_name_1).get_stats()['numberOfDocuments'] == 5011
 
