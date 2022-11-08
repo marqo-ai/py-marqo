@@ -22,7 +22,7 @@ class TestAsync (marqo_test.MarqoTestCase):
             pass
 
     def test_async(self):
-        num_docs = 250
+        num_docs = 500
 
         vocab_source = "https://www.mit.edu/~ecprice/wordlist.10000"
 
@@ -41,12 +41,12 @@ class TestAsync (marqo_test.MarqoTestCase):
                           "Description": " ".join(random.choices(population=vocab, k=25)),
                           } for _ in range(num_docs)]
             self.client.index(self.index_name_1).add_documents(
-                auto_refresh=True, documents=docs, server_batch_size=10, processes=1)
+                auto_refresh=True, documents=docs, server_batch_size=1, processes=1)
 
         cache_update_thread = threading.Thread(
             target=significant_ingestion)
         cache_update_thread.start()
-        time.sleep(0.5)
+        time.sleep(3)
         refresh_res = self.client.index(self.index_name_1).refresh()
         time.sleep(0.5)
         assert cache_update_thread.is_alive()
