@@ -4,7 +4,7 @@ import time
 
 from tests import marqo_test
 from marqo import Client
-from marqo.errors import MarqoApiError, BackendCommunicationError
+from marqo.errors import MarqoApiError, BackendCommunicationError, MarqoWebError
 
 
 class TestStartStop(marqo_test.MarqoTestCase):
@@ -67,7 +67,10 @@ class TestStartStop(marqo_test.MarqoTestCase):
                 try:
                     self.client.index(self.index_name_1).search(q="General nature facts")
                     break
-                except BackendCommunicationError as mqe:
+                except (BackendCommunicationError, MarqoWebError) as mqe:
+                    if isinstance(mqe, MarqoWebError):
+                        # ignore too many requests response
+                        assert mqe.status_code == 429
                     if "exceeds your S2Search free tier limit" in str(mqe):
                         raise mqe
                     if i + 1 >= NUMBER_OF_TRIES:
