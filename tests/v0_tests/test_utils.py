@@ -20,3 +20,9 @@ class TestUtils(unittest.TestCase):
                         ("cuda2", "cuda2")]
         for to_be_translated, expected in translations:
             assert expected == utils.translate_device_string_for_url(to_be_translated)
+
+    def test_convert_list_to_query_params(self):
+        q = "key"
+        values = ["a", "one", "c"]
+        expected = "key=a&key=one&key=c"
+        assert expected == utils.convert_list_to_query_params(q, values)

@@ -1,5 +1,5 @@
 from marqo import errors
-from typing import Optional
+from typing import Any, Optional, List
 
 
 def construct_authorized_url(url_base: str, username: str, password: str) -> str:
@@ -21,7 +21,6 @@ def construct_authorized_url(url_base: str, username: str, password: str) -> str
     http_part, domain_part = url_split
     return f"{http_part}{http_sep}{username}:{password}@{domain_part}"
 
-
 def translate_device_string_for_url(device: Optional[str]) -> Optional[str]:
     """Translates a device string for use as a URL param
 
@@ -37,3 +36,15 @@ def translate_device_string_for_url(device: Optional[str]) -> Optional[str]:
 
     lowered_device = device.lower()
     return lowered_device.replace(":", "")
+
+def convert_list_to_query_params(query_param: str, x: List[Any]) -> str:
+    """ Converts a list value for a query parameter to its query string.
+
+    Args:
+        query_param: query parameter
+        x: List of values for the query parameter. 
+
+    Returns:
+        A rendered query string for the given parameter and parameter value.
+    """
+    return "&".join([f"{query_param}={str(xx)}" for xx in x])
