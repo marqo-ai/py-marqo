@@ -48,7 +48,7 @@ class TestDemo(MarqoTestCase):
 
         import marqo
 
-        mq = marqo.Client(url=self.authorized_url, main_user="admin", main_password="admin")
+        mq = marqo.Client(**self.client_settings)
 
         mq.index("my-first-index").add_documents([
             {
@@ -92,5 +92,6 @@ class TestDemo(MarqoTestCase):
         assert r6['details']['deletedDocuments'] == 1
 
         rneg1 = mq.index("my-first-index").delete()
-        assert rneg1["acknowledged"] is True
+        pprint.pprint(rneg1)
+        assert (rneg1["acknowledged"] is True) or (rneg1["acknowledged"] == 'true')
 
