@@ -24,5 +24,5 @@ class TestUtils(unittest.TestCase):
     def test_convert_list_to_query_params(self):
         q = "key"
         values = ["a", "one", "c"]
-        expected "key=a&key=one&key=c"
+        expected = "key=a&key=one&key=c"
         assert expected == utils.convert_list_to_query_params(q, values)
