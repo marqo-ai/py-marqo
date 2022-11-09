@@ -60,5 +60,6 @@ class TestAsync (marqo_test.MarqoTestCase):
             time.sleep(1)
 
         self.client.index(self.index_name_1).refresh()
-        assert self.client.index(self.index_name_1).get_stats()['numberOfDocuments'] == 5011
+        assert self.client.index(self.index_name_1).get_stats()['numberOfDocuments'] == 501
+
 
