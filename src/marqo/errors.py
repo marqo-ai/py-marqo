@@ -154,7 +154,7 @@ class BackendCommunicationError(InternalError):
     status_code = HTTPStatus.INTERNAL_SERVER_ERROR
 
     def __init__(self, message: str,) -> None:
-        self.message = f"Error communicating with OpenSearch backend: {message}"
+        self.message = f"Error communicating with Marqo: {message}"
 
 
 class BackendTimeoutError(InternalError):
@@ -163,5 +163,5 @@ class BackendTimeoutError(InternalError):
     status_code = HTTPStatus.INTERNAL_SERVER_ERROR
 
     def __init__(self, message: str,) -> None:
-        self.message = f"Timeout error communicating with OpenSearch backend: {message}"
+        self.message = f"Timeout error communicating with Marqo: {message}"
 
