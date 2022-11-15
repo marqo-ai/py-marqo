@@ -31,8 +31,14 @@ The `conf` file will be read by the startup scripts in order to populate environ
 is currently being tested. Enter this command in a terminal:
    - `export TESTING_CONFIGURATION="CUSTOM"`
 3. Then, in the same terminal, run `pytest tests/`
-   
 
+### To run a specific test:
+4. Export the test dir to `PYTHONPATH` by running the following: `export PYTHONPATH="${PYTHONPATH}:$(pwd)/tests"`
+5. Run pytest and specify the desired test/subdir. For example: 
+ 
+```
+pytest tests/api_tests/test_neural_search.py::TestAddDocuments::test_prefiltering
+```
 
 ## Run all tests (in multi configurations)
 This runs the tox tests including startup and cleanup scripts. This can mutate clusters it has access to.
