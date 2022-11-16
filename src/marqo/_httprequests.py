@@ -10,15 +10,18 @@ from marqo.errors import (
     BackendTimeoutError
 )
 
-ALLOWED_OPERATIONS = {requests.delete, requests.get, requests.post, requests.put}
+s = requests.Session()
 
-OPERATION_MAPPING = {'delete': requests.delete, 'get': requests.get,
-                     'post': requests.post, 'put': requests.put}
+ALLOWED_OPERATIONS = {s.delete, s.get, s.post, s.put}
+
+OPERATION_MAPPING = {'delete': s.delete, 'get': s.get,
+                     'post': s.post, 'put': s.put}
 
 
 class HttpRequests:
     def __init__(self, config: Config) -> None:
         self.config = config
+        self.session = s
 
         if config.api_key:
             self.headers = {'x-api-key': config.api_key}
@@ -46,7 +49,7 @@ class HttpRequests:
             request_path = self.config.url + '/' + path
             if isinstance(body, bytes):
                 response = http_method(
-                    request_path,
+                    url=request_path,
                     timeout=self.config.timeout,
                     headers=req_headers,
                     data=body,
@@ -54,7 +57,7 @@ class HttpRequests:
                 )
             elif isinstance(body, str):
                 response = http_method(
-                    request_path,
+                    url=request_path,
                     timeout=self.config.timeout,
                     headers=req_headers,
                     data=body,
@@ -62,7 +65,7 @@ class HttpRequests:
                 )
             else:
                 response = http_method(
-                    request_path,
+                    url=request_path,
                     timeout=self.config.timeout,
                     headers=req_headers,
                     data=json.dumps(body) if body else None,
@@ -82,7 +85,7 @@ class HttpRequests:
         content_type = None
         if body is not None:
             content_type = 'application/json'
-        return self.send_request(requests.get, path=path, body=body, content_type=content_type)
+        return self.send_request(s.get, path=path, body=body, content_type=content_type)
 
     def post(
         self,
@@ -90,7 +93,7 @@ class HttpRequests:
         body: Optional[Union[Dict[str, Any], List[Dict[str, Any]], List[str], str]] = None,
         content_type: Optional[str] = 'application/json',
     ) -> Any:
-        return self.send_request(requests.post, path, body, content_type)
+        return self.send_request(s.post, path, body, content_type)
 
     def put(
         self,
@@ -100,14 +103,14 @@ class HttpRequests:
     ) -> Any:
         if body is not None:
             content_type = 'application/json'
-        return self.send_request(requests.put, path, body, content_type)
+        return self.send_request(s.put, path, body, content_type)
 
     def delete(
         self,
         path: str,
         body: Optional[Union[Dict[str, Any], List[Dict[str, Any]], List[str]]] = None,
     ) -> Any:
-        return self.send_request(requests.delete, path, body)
+        return self.send_request(s.delete, path, body)
 
     @staticmethod
     def __to_json(
