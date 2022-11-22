@@ -5,7 +5,7 @@
 export LOCAL_OPENSEARCH_URL="https://localhost:9200"
 
 docker rm -f marqo-os &&
-    docker run --name marqo-os -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" marqoai/marqo-os:0.0.2-arm &
+    docker run --name marqo-os -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" marqoai/marqo-os:0.0.3-arm &
 # wait for marqo-os to start
 until [[ $(curl -v --silent --insecure $LOCAL_OPENSEARCH_URL 2>&1 | grep Unauthorized) ]]; do
     sleep 0.1;
