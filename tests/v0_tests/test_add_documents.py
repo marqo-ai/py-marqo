@@ -5,7 +5,6 @@ import random
 import requests
 from marqo.client import Client
 from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
-import unittest
 from tests.marqo_test import MarqoTestCase
 from marqo import enums
 from unittest import mock

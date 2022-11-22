@@ -117,6 +117,22 @@ class Client:
             return Index(self.config, index_name=index_name)
         raise Exception('The index UID should not be None')
 
+    def get_indexes(self) -> Dict[str, List[Index]]:
+        """Get all indexes.
+
+        Returns:
+        Indexes, a dictionary with the name of indexes.
+        """
+        response = self.http.get(path='indexes')
+        response['results'] = [
+            Index(
+                config=self.config,
+                index_name=index_info["index_name"],
+            )
+            for index_info in response["results"]
+        ]
+        return response
+
     @staticmethod
     def _base64url_encode(
         data: bytes
