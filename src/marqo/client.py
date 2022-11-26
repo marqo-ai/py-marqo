@@ -133,9 +133,11 @@ class Client:
         ]
         return response
 
-    def enrich(self, documents: List[Dict], enrichment: Dict):
+    def enrich(self, documents: List[Dict], enrichment: Dict, device: str = None, ):
         """Enrich documents"""
-        response = self.http.get(path='enrichment', body={
+        selected_device = device if device is not None else self.config.indexing_device
+
+        response = self.http.get(path=f'enrichment?device={selected_device}', body={
             "documents": documents,
             "enrichment": enrichment
         })
