@@ -137,7 +137,7 @@ class Client:
         """Enrich documents"""
         selected_device = device if device is not None else self.config.indexing_device
         translated = utils.translate_device_string_for_url(selected_device)
-        response = self.http.get(path=f'enrichment?device={translated}', body={
+        response = self.http.post(path=f'enrichment?device={translated}', body={
             "documents": documents,
             "enrichment": enrichment
         })
