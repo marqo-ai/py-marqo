@@ -133,6 +133,14 @@ class Client:
         ]
         return response
 
+    def enrich(self, documents: List[Dict], enrichment: Dict):
+        """Enrich documents"""
+        response = self.http.get(path='enrichment', body={
+            "documents": documents,
+            "enrichment": enrichment
+        })
+        return response
+
     @staticmethod
     def _base64url_encode(
         data: bytes
