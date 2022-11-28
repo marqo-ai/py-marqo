@@ -133,11 +133,21 @@ class Client:
         ]
         return response
 
+    def enrich(self, documents: List[Dict], enrichment: Dict, device: str = None, ):
+        """Enrich documents"""
+        selected_device = device if device is not None else self.config.indexing_device
+        translated = utils.translate_device_string_for_url(selected_device)
+        response = self.http.post(path=f'enrichment?device={translated}', body={
+            "documents": documents,
+            "enrichment": enrichment
+        })
+        return response
+
     @staticmethod
     def _base64url_encode(
         data: bytes
     ) -> str:
-        return base64.urlsafe_b64encode(data).decode('utf-8').replace('=','')
+        return base64.urlsafe_b64encode(data).decode('utf-8').replace('=', '')
 
     def get_marqo(self):
         return self.http.get(path="")
