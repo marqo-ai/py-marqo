@@ -25,6 +25,7 @@ Fill in the environment variables/credentials in `conf` as appropriate.
 The `conf` file will be read by the startup scripts in order to populate environment variables.
 
 ## Run the test suite locally
+This runs the tests without the setup and teardown scripts. This gives you more control over the specific Marqo set up you want to test. 
 
 1. Have Marqo instance running
 2. Export the `TESTING_CONFIGURATION` variable to `CUSTOM`. This tells the integration tests what configuration
@@ -40,19 +41,16 @@ is currently being tested. Enter this command in a terminal:
 pytest tests/api_tests/test_neural_search.py::TestAddDocuments::test_prefiltering
 ```
 
-## Run all tests (in multi configurations)
-This runs the tox tests including startup and cleanup scripts. This can mutate clusters it has access to.
+## Run all tests, including setup and teardowns
+This runs the tox tests including startup and cleanup scripts. This is how it will run in GitHub actions. You can also run this locally but be aware, this removes Marqo and Marqo-os containers found on the machine and will build Marqo images from the cloned repo. 
 
-This removes Marqo and Marqo-os containers found on the machine and will build Marqo images from the cloned repo. 
+**Running instructions**
+1. `cd` into the api testing repo home directory and run `tox`, to test all environments. 
 
-`cd` into the api testing repo home directory and run `tox`, to test all environments. 
+- To run a specific environment do `tox -e <TOX ENVIRONMENT NAME>`
+- To build a specific branch into a docker image for testing, specify the branch like this: `export MQ_API_TEST_BRANCH=my_feature_branch` before the `tox` command is run. By default `mainline` is built.
+- To run the tests against an image (and ignore whatever image is built), specify the branch like this: `export MQ_API_TEST_IMG=marqoai/marqo:test`. By default the image that is built is tested against.
 
-To run a specific environment do `tox -e <TOX ENVIRONMENT NAME>`
-
-
-
-Run the following  if you are on Ubuntu:
-1. `sudo apt-get install -y qemu-user-static`
 ## Devloping
 If you are going to make a new test environment, make sure you set the `TESTING_CONFIGURATION` environment variable so
 that the test suite knows if whether or not to modify certain tests for the current configuration 
