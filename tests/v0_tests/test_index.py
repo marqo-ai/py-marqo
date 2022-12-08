@@ -137,3 +137,11 @@ class TestIndex(MarqoTestCase):
         assert 'Blurb' in doc_res['_tensor_facets'][0] or 'Title' in doc_res['_tensor_facets'][0]
         assert "Blurb" in doc_res
         assert "Title" in doc_res
+
+    def create_cloud_index(self):
+        """TODO"""
+
+    def create_cloud_index_override_w_settings_dict(self):
+        """TODO"""
+
+
