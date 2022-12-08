@@ -1,7 +1,7 @@
 import functools
 import json
 import logging
-import defaults
+from marqo import defaults
 import typing
 from urllib import parse
 from datetime import datetime

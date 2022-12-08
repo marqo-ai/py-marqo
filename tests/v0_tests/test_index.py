@@ -1,3 +1,4 @@
+import copy
 import pprint
 from marqo.client import Client
 from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
@@ -138,10 +139,54 @@ class TestIndex(MarqoTestCase):
         assert "Blurb" in doc_res
         assert "Title" in doc_res
 
-    def create_cloud_index(self):
-        """TODO"""
+    def test_create_cloud_index(self):
+        mock__post = mock.MagicMock()
+        test_client = copy.deepcopy(self.client)
+        test_client.config.api_key = 'some-super-secret-API-key'
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        def run():
+            test_client.create_index(index_name=self.index_name_1)
+            args, kwargs = mock__post.call_args
+            # this is specific to cloud
+            assert kwargs['body']['number_of_shards'] == 2
+            assert kwargs['body']['index_defaults']['treat_urls_and_pointers_as_images'] is False
+            return True
+        assert run()
 
-    def create_cloud_index_override_w_settings_dict(self):
-        """TODO"""
+    def test_create_cloud_index_non_default_param(self):
+        mock__post = mock.MagicMock()
+        test_client = copy.deepcopy(self.client)
+        test_client.config.api_key = 'some-super-secret-API-key'
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        def run():
+            # this is overridden by a create_index() default parameter
+            test_client.create_index(
+                index_name=self.index_name_1, model='sentence-transformers/stsb-xlm-r-multilingual')
+            args, kwargs = mock__post.call_args
+            assert kwargs['body']['index_defaults']['model'] == 'sentence-transformers/stsb-xlm-r-multilingual'
+            assert kwargs['body']['number_of_shards'] == 2
+            assert kwargs['body']['index_defaults']['treat_urls_and_pointers_as_images'] is False
+            return True
+        assert run()
+
+    def test_create_cloud_index_settings_dict_precedence(self):
+        """settings_dict overrides all cloud defaults"""
+        mock__post = mock.MagicMock()
+        test_client = copy.deepcopy(self.client)
+        test_client.config.api_key = 'some-super-secret-API-key'
+
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        def run():
+            # this is overridden by a create_index() default parameter
+            test_client.create_index(
+                index_name=self.index_name_1, settings_dict={
+                    'index_defaults': {"treat_urls_and_pointers_as_images": True}
+                })
+            args, kwargs = mock__post.call_args
+            assert kwargs['body'] == {
+                    'index_defaults': {"treat_urls_and_pointers_as_images": True}
+                }
+            return True
+        assert run()
 
 
