@@ -1,6 +1,7 @@
 import functools
 import json
 import logging
+import defaults
 import typing
 from urllib import parse
 from datetime import datetime
@@ -75,6 +76,21 @@ class Index:
         if settings_dict is not None and settings_dict:
             return req.post(f"indexes/{index_name}", body=settings_dict)
 
+        if config.api_key is not None:
+            # making the keyword settings params override the default cloud
+            #  settings
+            cl_settings = defaults.get_cloud_default_index_settings()
+            cl_ix_defaults = cl_settings['index_defaults']
+            cl_ix_defaults['treat_urls_and_pointers_as_images'] = treat_urls_and_pointers_as_images
+            cl_ix_defaults['model'] = model
+            cl_ix_defaults['normalize_embeddings'] = normalize_embeddings
+            cl_text_preprocessing = cl_ix_defaults['text_preprocessing']
+            cl_text_preprocessing['split_overlap'] = sentence_overlap
+            cl_text_preprocessing['split_length'] = sentences_per_chunk
+            cl_img_preprocessing = cl_ix_defaults['text_preprocessing']
+            cl_img_preprocessing['patch_method'] = image_preprocessing_method
+            return req.post(f"indexes/{index_name}", body=cl_settings)
+
         return req.post(f"indexes/{index_name}", body={
             "index_defaults": {
                 "treat_urls_and_pointers_as_images": treat_urls_and_pointers_as_images,
@@ -85,7 +101,7 @@ class Index:
                     "split_length": sentences_per_chunk,
                     "split_method": "sentence"
                 },
-                "image_preprocessing":{
+                "image_preprocessing": {
                     "patch_method": image_preprocessing_method
                 }
             }
