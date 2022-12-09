@@ -174,17 +174,8 @@ class TestImageReranking(MarqoTestCase):
             results = client.index(self.index_name).search('brain', searchable_attributes=['location'], reranker='google/owlvi-base-patch32')
             assert False
         except Exception as e:
-             #assert "could not find model_name=" in str(e)
-            assert True
-
-        # the not present image did not get indexed
-        # results = client.index(self.index_name).search('hello', searchable_attributes=['location', 'description'], reranker='google/owlvit-base-patch32')
-        # print(results)
-        # "could not find model_name="
-        # except Exception as e:
-        #     print(e)
-        #     #assert 'is not a local file or a valid url' in str(e)
-
+            assert "could not find model_name=" in str(e)
+         
 
     def test_image_reranking_with_chunking(self):
 
