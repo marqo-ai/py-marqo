@@ -87,7 +87,7 @@ class Index:
             cl_text_preprocessing = cl_ix_defaults['text_preprocessing']
             cl_text_preprocessing['split_overlap'] = sentence_overlap
             cl_text_preprocessing['split_length'] = sentences_per_chunk
-            cl_img_preprocessing = cl_ix_defaults['text_preprocessing']
+            cl_img_preprocessing = cl_ix_defaults['image_preprocessing']
             cl_img_preprocessing['patch_method'] = image_preprocessing_method
             return req.post(f"indexes/{index_name}", body=cl_settings)
 
