@@ -1,9 +1,12 @@
 import functools
 import json
 import logging
+import pprint
+from marqo import defaults
 import typing
 from urllib import parse
 from datetime import datetime
+from timeit import default_timer as timer
 from typing import Any, Dict, Generator, List, Optional, Union
 from marqo._httprequests import HttpRequests
 from marqo.config import Config
@@ -75,6 +78,21 @@ class Index:
         if settings_dict is not None and settings_dict:
             return req.post(f"indexes/{index_name}", body=settings_dict)
 
+        if config.api_key is not None:
+            # making the keyword settings params override the default cloud
+            #  settings
+            cl_settings = defaults.get_cloud_default_index_settings()
+            cl_ix_defaults = cl_settings['index_defaults']
+            cl_ix_defaults['treat_urls_and_pointers_as_images'] = treat_urls_and_pointers_as_images
+            cl_ix_defaults['model'] = model
+            cl_ix_defaults['normalize_embeddings'] = normalize_embeddings
+            cl_text_preprocessing = cl_ix_defaults['text_preprocessing']
+            cl_text_preprocessing['split_overlap'] = sentence_overlap
+            cl_text_preprocessing['split_length'] = sentences_per_chunk
+            cl_img_preprocessing = cl_ix_defaults['image_preprocessing']
+            cl_img_preprocessing['patch_method'] = image_preprocessing_method
+            return req.post(f"indexes/{index_name}", body=cl_settings)
+
         return req.post(f"indexes/{index_name}", body={
             "index_defaults": {
                 "treat_urls_and_pointers_as_images": treat_urls_and_pointers_as_images,
@@ -85,7 +103,7 @@ class Index:
                     "split_length": sentences_per_chunk,
                     "split_method": "sentence"
                 },
-                "image_preprocessing":{
+                "image_preprocessing": {
                     "patch_method": image_preprocessing_method
                 }
             }
@@ -122,6 +140,8 @@ class Index:
         Returns:
             Dictionary with hits and other metadata
         """
+
+        start_time_client_request = timer()
         if highlights is not None:
             logging.warning("Deprecation warning for parameter 'highlights'. "
                             "Please use the 'showHighlights' instead. ")
@@ -144,10 +164,16 @@ class Index:
             body["attributesToRetrieve"] = attributes_to_retrieve
         if filter_string is not None:
             body["filter"] = filter_string
-        return self.http.post(
+        res = self.http.post(
             path=path_with_query_str,
             body=body
         )
+        
+        num_results = len(res["hits"])
+        end_time_client_request = timer()
+        total_client_request_time = end_time_client_request - start_time_client_request
+        mq_logger.info(f"search roundtrip: took {(total_client_request_time):.3f}s for Marqo to return {num_results} results.")
+        return res
 
     def get_document(self, document_id: str, expose_facets=None) -> Dict[str, Any]:
         """Get one document with given an ID.
@@ -274,7 +300,10 @@ class Index:
         non_tensor_fields: List[str] = []
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         selected_device = device if device is not None else self.config.indexing_device
+        num_docs = len(documents)
 
+        # ADD DOCS TIMER-LOGGER (1)
+        start_time_client_process = timer()
         base_path = f"indexes/{self.index_name}/documents"
         non_tensor_fields_query_param = utils.convert_list_to_query_params("non_tensor_fields", non_tensor_fields)
         query_str_params = (
@@ -283,6 +312,10 @@ class Index:
             f"{f'&batch_size={server_batch_size}' if server_batch_size is not None else ''}"
             f"{f'&{non_tensor_fields_query_param}' if len(non_tensor_fields) > 0 else ''}"
         )
+        end_time_client_process = timer()
+        total_client_process_time = end_time_client_process - start_time_client_process
+        mq_logger.info(f"add_documents pre-processing: took {(total_client_process_time):.3f}s for {num_docs} docs, for an average of {(total_client_process_time / num_docs):.3f}s per doc.")
+
         if client_batch_size is not None:
             if client_batch_size <= 0:
                 raise errors.InvalidArgError("Batch size can't be less than 1!")
@@ -292,16 +325,44 @@ class Index:
                 query_str_params=query_str_params, batch_size=client_batch_size
             )
         else:
+            # no Client Batching
             refresh_option = f"?refresh={str(auto_refresh).lower()}"
             path_with_query_str = f"{base_path}{refresh_option}{query_str_params}"
 
+            # ADD DOCS TIMER-LOGGER (2)
+            start_time_client_request = timer()
+
             if update_method == 'update':
-                return self.http.put(path=path_with_query_str, body=documents)
+                res = self.http.put(path=path_with_query_str, body=documents)
             elif update_method == 'replace':
-                return self.http.post(path=path_with_query_str, body=documents)
+                res = self.http.post(path=path_with_query_str, body=documents)
             else:
                 raise ValueError(f'Received unknown update_method `{update_method}`. '
                                  f'Allowed update_methods: ["replace", "update"] ')
+            
+            
+            end_time_client_request = timer()
+            total_client_request_time = end_time_client_request - start_time_client_request
+            # print("res dump")
+            #pprint.pprint(res)
+            
+            mq_logger.info(f"add_documents roundtrip: took {(total_client_request_time):.3f}s to send {num_docs} "
+                            f"docs to Marqo (roundtrip, unbatched), for an average of {(total_client_request_time / num_docs):.3f}s per doc.")
+            
+            
+            if server_batch_size is not None:
+                # with Server Batching (show processing time for each batch)
+                mq_logger.info(f"add_documents Marqo index (server-side batch reports): ")
+                for i in range(len(res)):
+                    server_batch_result_count = len(res[i]["items"])
+                    mq_logger.info(f"   marqo server batch {i}: "
+                                    f"processed {server_batch_result_count} docs in {(res[i]['processingTimeMs'] / 1000):.3f}s, "
+                                    f"for an average of {(res[i]['processingTimeMs'] / (1000 * server_batch_result_count)):.3f}s per doc.")
+            else:
+                # no Server Batching
+                mq_logger.info(f"add_documents Marqo index: took {(res['processingTimeMs'] / 1000):.3f}s for Marqo to process & index {num_docs} "
+                                f"docs (server unbatched), for an average of {(res['processingTimeMs'] / (1000 * num_docs)):.3f}s per doc.")
+            return res
 
     def delete_documents(self, ids: List[str], auto_refresh: bool = None) -> Dict[str, int]:
         """Delete documents from this index by a list of their ids.
@@ -373,7 +434,7 @@ class Index:
         batched = functools.reduce(lambda x, y: batch_requests(x, y), deeper, [])
 
         def verbosely_add_docs(i, docs):
-            t0 = datetime.now()
+            t0 = timer()
             if update_method == 'replace':
                 res = self.http.post(path=path_with_query_str, body=docs)
             elif update_method == 'update':
@@ -381,11 +442,11 @@ class Index:
             else:
                 raise ValueError(f'Received unknown update_method `{update_method}`. '
                                  f'Allowed update_methods: ["replace", "update"] ')
-            total_batch_time = datetime.now() - t0
+            total_batch_time = timer() - t0
             num_docs = len(docs)
             mq_logger.info(
-                f"batch {i}: ingested {num_docs} docs. Time taken: {total_batch_time}. "
-                f"Average timer per doc {total_batch_time/num_docs}")
+                f"add_documents batch {i}: added {num_docs} docs. Time taken: {(total_batch_time):.3f}s. "
+                f"Average time per doc {(total_batch_time/num_docs):.3f}s.")
             if verbose:
                 mq_logger.info(f"results from indexing batch {i}: {res}")
             return res
