@@ -154,3 +154,21 @@ class Client:
 
     def health(self):
         return self.http.get(path="health")
+
+
+    def eject_model(self, model_name:str, model_device:str):
+        return self.http.delete(path=f"models?model_name={model_name}&model_device={model_device}")
+
+
+    def get_loaded_models(self):
+        return self.http.get(path="models")
+
+
+    def get_cuda_info(self):
+        return self.http.get(path="device/cuda")
+
+
+    def get_cpu_info(self):
+        return self.http.get(path="device/cpu")
+
+
