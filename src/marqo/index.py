@@ -173,6 +173,9 @@ class Index:
         end_time_client_request = timer()
         total_client_request_time = end_time_client_request - start_time_client_request
         mq_logger.info(f"search ({search_method.lower()}) roundtrip: took {(total_client_request_time):.3f}s for Marqo to return {num_results} results.")
+        if 'processingTimeMs' in res:
+            mq_logger.info(f"   search ({search_method.lower()}) Marqo processing time: took {(res['processingTimeMs'] * 0.001):.3f}s for Marqo to execute the search.")
+        
         return res
 
     def get_document(self, document_id: str, expose_facets=None) -> Dict[str, Any]:
