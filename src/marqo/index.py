@@ -506,6 +506,6 @@ class Index:
         mq_logger.info('completed batch ingestion.')
         return results
 
-    def get_settings(self) -> List[str, Dict, Dict]:
+    def get_settings(self) -> List:
         """Get all settings for the index"""
         return self.http.get(path=f"indexes/{self.index_name}/settings")
