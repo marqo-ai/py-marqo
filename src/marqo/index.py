@@ -1,10 +1,12 @@
 import functools
 import json
 import logging
+import pprint
 from marqo import defaults
 import typing
 from urllib import parse
 from datetime import datetime
+from timeit import default_timer as timer
 from typing import Any, Dict, Generator, List, Optional, Union
 from marqo._httprequests import HttpRequests
 from marqo.config import Config
@@ -138,6 +140,8 @@ class Index:
         Returns:
             Dictionary with hits and other metadata
         """
+
+        start_time_client_request = timer()
         if highlights is not None:
             logging.warning("Deprecation warning for parameter 'highlights'. "
                             "Please use the 'showHighlights' instead. ")
@@ -160,10 +164,21 @@ class Index:
             body["attributesToRetrieve"] = attributes_to_retrieve
         if filter_string is not None:
             body["filter"] = filter_string
-        return self.http.post(
+        res = self.http.post(
             path=path_with_query_str,
             body=body
         )
+        
+        num_results = len(res["hits"])
+        end_time_client_request = timer()
+        total_client_request_time = end_time_client_request - start_time_client_request
+        
+        search_time_log = f"search ({search_method.lower()}): took {(total_client_request_time):.3f}s to send query and received {num_results} results from Marqo (roundtrip)."
+        if 'processingTimeMs' in res:
+            search_time_log += f" Marqo itself took {(res['processingTimeMs'] * 0.001):.3f}s to execute the search."
+        
+        mq_logger.info(search_time_log)
+        return res
 
     def get_document(self, document_id: str, expose_facets=None) -> Dict[str, Any]:
         """Get one document with given an ID.
@@ -290,7 +305,11 @@ class Index:
         non_tensor_fields: List[str] = []
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         selected_device = device if device is not None else self.config.indexing_device
+        num_docs = len(documents)
 
+        # ADD DOCS TIMER-LOGGER (1)
+        t0 = timer()
+        start_time_client_process = timer()
         base_path = f"indexes/{self.index_name}/documents"
         non_tensor_fields_query_param = utils.convert_list_to_query_params("non_tensor_fields", non_tensor_fields)
         query_str_params = (
@@ -299,25 +318,72 @@ class Index:
             f"{f'&batch_size={server_batch_size}' if server_batch_size is not None else ''}"
             f"{f'&{non_tensor_fields_query_param}' if len(non_tensor_fields) > 0 else ''}"
         )
+        end_time_client_process = timer()
+        total_client_process_time = end_time_client_process - start_time_client_process
+        mq_logger.info(f"add_documents pre-processing: took {(total_client_process_time):.3f}s for {num_docs} docs, for an average of {(total_client_process_time / num_docs):.3f}s per doc.")
+
         if client_batch_size is not None:
             if client_batch_size <= 0:
                 raise errors.InvalidArgError("Batch size can't be less than 1!")
-            return self._batch_request(
+            res = self._batch_request(
                 base_path=base_path, auto_refresh=auto_refresh,
                 update_method=update_method, docs=documents, verbose=False,
                 query_str_params=query_str_params, batch_size=client_batch_size
             )
+            
         else:
+            # no Client Batching
             refresh_option = f"?refresh={str(auto_refresh).lower()}"
             path_with_query_str = f"{base_path}{refresh_option}{query_str_params}"
 
+            # ADD DOCS TIMER-LOGGER (2)
+            start_time_client_request = timer()
+
             if update_method == 'update':
-                return self.http.put(path=path_with_query_str, body=documents)
+                res = self.http.put(path=path_with_query_str, body=documents)
             elif update_method == 'replace':
-                return self.http.post(path=path_with_query_str, body=documents)
+                res = self.http.post(path=path_with_query_str, body=documents)
             else:
                 raise ValueError(f'Received unknown update_method `{update_method}`. '
                                  f'Allowed update_methods: ["replace", "update"] ')
+            
+            
+            end_time_client_request = timer()
+            total_client_request_time = end_time_client_request - start_time_client_request
+            
+            mq_logger.info(f"add_documents roundtrip: took {(total_client_request_time):.3f}s to send {num_docs} "
+                            f"docs to Marqo (roundtrip, unbatched), for an average of {(total_client_request_time / num_docs):.3f}s per doc.")
+
+            if server_batch_size is not None:
+                # with Server Batching (show processing time for each batch)
+                mq_logger.info(f"add_documents Marqo index (server-side batch reports): ")
+
+                if processes is not None and processes > 1:
+                    # for multiprocess, timing messages should be arranged by process, then batch
+                    for process in range(len(res)):
+                        mq_logger.info(f"   process {process}:")
+
+                        for batch in range(len(res[process])):
+                            server_batch_result_count = len(res[process][batch]["items"])
+                            mq_logger.info(f"       marqo server batch {batch}: "
+                                            f"processed {server_batch_result_count} docs in {(res[process][batch]['processingTimeMs'] / 1000):.3f}s, "
+                                            f"for an average of {(res[process][batch]['processingTimeMs'] / (1000 * server_batch_result_count)):.3f}s per doc.")
+                else:
+                    # for single process, timing messages should be arranged by batch ONLY
+                    for batch in range(len(res)):
+                        server_batch_result_count = len(res[batch]["items"])
+                        mq_logger.info(f"   marqo server batch {batch}: "
+                                        f"processed {server_batch_result_count} docs in {(res[batch]['processingTimeMs'] / 1000):.3f}s, "
+                                        f"for an average of {(res[batch]['processingTimeMs'] / (1000 * server_batch_result_count)):.3f}s per doc.")
+            else:
+                # no Server Batching
+                if 'processingTimeMs' in res:       # Only outputs log if response is non-empty
+                    mq_logger.info(f"add_documents Marqo index: took {(res['processingTimeMs'] / 1000):.3f}s for Marqo to process & index {num_docs} "
+                                    f"docs (server unbatched), for an average of {(res['processingTimeMs'] / (1000 * num_docs)):.3f}s per doc.")
+
+        total_add_docs_time = timer() - t0
+        mq_logger.info(f"add_documents completed. total time taken: {(total_add_docs_time):.3f}s.")
+        return res
 
     def delete_documents(self, ids: List[str], auto_refresh: bool = None) -> Dict[str, int]:
         """Delete documents from this index by a list of their ids.
@@ -389,7 +455,7 @@ class Index:
         batched = functools.reduce(lambda x, y: batch_requests(x, y), deeper, [])
 
         def verbosely_add_docs(i, docs):
-            t0 = datetime.now()
+            t0 = timer()
             if update_method == 'replace':
                 res = self.http.post(path=path_with_query_str, body=docs)
             elif update_method == 'update':
@@ -397,11 +463,39 @@ class Index:
             else:
                 raise ValueError(f'Received unknown update_method `{update_method}`. '
                                  f'Allowed update_methods: ["replace", "update"] ')
-            total_batch_time = datetime.now() - t0
+            total_batch_time = timer() - t0
             num_docs = len(docs)
             mq_logger.info(
-                f"batch {i}: ingested {num_docs} docs. Time taken: {total_batch_time}. "
-                f"Average timer per doc {total_batch_time/num_docs}")
+                f"   add_documents batch {i} roundtrip: took {(total_batch_time):.3f}s to add {num_docs} docs, "
+                f"for an average of {(total_batch_time/num_docs):.3f}s per doc.")
+
+            if isinstance(res, list):
+                # with Server Batching (show processing time for each batch)
+
+                if isinstance(res[0], list):
+                    # for multiprocess, timing messages should be arranged by process, then batch
+                    for process in range(len(res)):
+                        mq_logger.info(f"       process {process}:")
+
+                        for batch in range(len(res[process])):
+                            server_batch_result_count = len(res[process][batch]["items"])
+                            mq_logger.info(f"           marqo server batch {batch}: "
+                                            f"processed {server_batch_result_count} docs in {(res[process][batch]['processingTimeMs'] / 1000):.3f}s, "
+                                            f"for an average of {(res[process][batch]['processingTimeMs'] / (1000 * server_batch_result_count)):.3f}s per doc.")
+                else:
+                    # for single process, timing messages should be arranged by batch ONLY
+                    for batch in range(len(res)):
+                        server_batch_result_count = len(res[batch]["items"])
+                        mq_logger.info(f"       marqo server batch {batch}: "
+                                        f"processed {server_batch_result_count} docs in {(res[batch]['processingTimeMs'] / 1000):.3f}s, "
+                                        f"for an average of {(res[batch]['processingTimeMs'] / (1000 * server_batch_result_count)):.3f}s per doc.")
+            else:
+                # no Server Batching
+                if 'processingTimeMs' in res:       # Only outputs log if response is non-empty
+                    mq_logger.info(f"   add_documents batch {i} Marqo processing: took {(res['processingTimeMs'] / 1000):.3f}s for Marqo to process & index {num_docs} "
+                                    f"docs (server unbatched), for an average of {(res['processingTimeMs'] / (1000 * num_docs)):.3f}s per doc.")
+
+
             if verbose:
                 mq_logger.info(f"results from indexing batch {i}: {res}")
             return res
