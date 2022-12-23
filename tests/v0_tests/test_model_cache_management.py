@@ -20,7 +20,9 @@ class TestModelCacheManagement(MarqoTestCase):
 
     def test_get_cuda_info(self) -> None:
         try:
-            self.client.get_cuda_info()
+            res = self.client.get_cuda_info()
+            if "cuda_devices" not in res:
+                raise AssertionError
         except MarqoWebError: # catch error if no cuda device in marqo
             pass
 
@@ -49,8 +51,6 @@ class TestModelCacheManagement(MarqoTestCase):
         # test a model that is not cached
         try:
             res = self.client.eject_model("void_model", "void_device")
-            if "cuda_devices" not in res:
-                raise AssertionError
         except MarqoWebError:
             pass
 
