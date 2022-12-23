@@ -17,6 +17,16 @@ class TestModelCacheManagement(MarqoTestCase):
         self.client = Client(**self.client_settings)
         self.index_name = "test_index"
         self.MODEL = "ViT-B/32"
+        try:
+            self.client.delete_index(self.index_name)
+        except MarqoApiError as s:
+            pass
+
+    def tearDown(self) -> None:
+        try:
+            self.client.delete_index(self.index_name)
+        except MarqoApiError as s:
+            pass
 
     def test_get_cuda_info(self) -> None:
         try:
