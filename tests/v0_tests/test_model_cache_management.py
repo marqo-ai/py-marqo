@@ -16,7 +16,7 @@ class TestModelCacheManagement(MarqoTestCase):
     def setUp(self) -> None:
         self.client = Client(**self.client_settings)
         self.index_name = "test_index"
-        self.MODEL = "ViT-L/14"
+        self.MODEL = "ViT-B/32"
 
     def test_get_cuda_info(self) -> None:
         try:
@@ -24,17 +24,33 @@ class TestModelCacheManagement(MarqoTestCase):
         except MarqoWebError: # catch error if no cuda device in marqo
             pass
 
+
     def test_get_cpu_info(self) -> None:
-        self.client.get_cpu_info()
+        res = self.client.get_cpu_info()
+
+        if "cpu_usage_percent" not in res:
+            raise AssertionError
+
+        if "memory_used_percent" not in res:
+            raise AssertionError
+
+        if "memory_used_gb" not in res:
+            raise AssertionError
 
 
     def test_get_loaded_models(self) -> None:
-        self.client.get_loaded_models()
+        res = self.client.get_loaded_models()
+
+        if "models" not in res:
+            raise AssertionError
 
 
     def test_eject_no_cached_model(self) -> None:
+        # test a model that is not cached
         try:
-            self.client.eject_model("void_model", "void_device")
+            res = self.client.eject_model("void_model", "void_device")
+            if "cuda_devices" not in res:
+                raise AssertionError
         except MarqoWebError:
             pass
 
