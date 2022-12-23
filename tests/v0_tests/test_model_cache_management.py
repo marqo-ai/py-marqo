@@ -63,7 +63,7 @@ class TestModelCacheManagement(MarqoTestCase):
             "doc title": "Cool Document 1",
             "field 1": "some extra info"
         }
-        self.client.index(self.index_name_1).add_documents([d1], device="cpu")
+        self.client.index(self.index_name).add_documents([d1], device="cpu")
         self.client.index.eject_model(self.MODEL, "cpu")
 
 
