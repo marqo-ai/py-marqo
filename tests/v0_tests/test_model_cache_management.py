@@ -58,7 +58,7 @@ class TestModelCacheManagement(MarqoTestCase):
     def test_eject_model(self) -> None:
         settings = {"model": self.MODEL}
 
-        self.client.create_index(index_name=self.index_name_1, **settings)
+        self.client.create_index(index_name=self.index_name, **settings)
         d1 = {
             "doc title": "Cool Document 1",
             "field 1": "some extra info"
