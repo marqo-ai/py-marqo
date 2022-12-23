@@ -22,11 +22,13 @@ class TestModelCacheManagement(MarqoTestCase):
         except MarqoApiError as s:
             pass
 
+
     def tearDown(self) -> None:
         try:
             self.client.delete_index(self.index_name)
         except MarqoApiError as s:
             pass
+
 
     def test_get_cuda_info(self) -> None:
         try:
