@@ -17,6 +17,17 @@ class TestAddDocuments(MarqoTestCase):
         self.client = Client(**self.client_settings)
         self.index_name = "test_index"
         self.MODEL = "ViT-B/32"
+        try:
+            self.client.delete_index(self.index_name)
+        except MarqoApiError as s:
+            pass
+
+
+    def tearDown(self) -> None:
+        try:
+            self.client.delete_index(self.index_name)
+        except MarqoApiError as s:
+            pass
 
 
     def test_get_cuda_info(self) -> None:
@@ -40,6 +51,7 @@ class TestAddDocuments(MarqoTestCase):
         if "memory_used_gb" not in res:
             raise AssertionError
 
+
     def test_get_loaded_models(self) -> None:
         res = self.client.get_loaded_models()
 
@@ -54,16 +66,17 @@ class TestAddDocuments(MarqoTestCase):
         except MarqoWebError:
             pass
 
-    def test_eject_model(self) -> None:
-        settings = {"model" : self.MODEL}
 
-        self.client.create_index(index_name=self.index_name_1, **settings)
+    def test_eject_model(self) -> None:
+        settings = {"model": self.MODEL}
+
+        self.client.create_index(index_name=self.index_name, **settings)
         d1 = {
             "doc title": "Cool Document 1",
             "field 1": "some extra info"
         }
-        self.client.index(self.index_name_1).add_documents([d1], device="cuda")
-        self.client.index.eject_model(self.MODEL, "cuda")
+        self.client.index(self.index_name).add_documents([d1], device="cuda")
+        self.client.eject_model(self.MODEL, "cuda")
 
 
 
