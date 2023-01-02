@@ -63,6 +63,7 @@ class TestModelCacheManagement(MarqoTestCase):
         # test a model that is not cached
         try:
             res = self.client.eject_model("void_model", "void_device")
+            raise AssertionError
         except MarqoWebError:
             pass
 
