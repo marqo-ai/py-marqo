@@ -35,7 +35,8 @@ class TestModelCacheManagement(MarqoTestCase):
             res = self.client.get_cuda_info()
             if "cuda_devices" not in res:
                 raise AssertionError
-        except MarqoWebError: # catch error if no cuda device in marqo
+        # catch error if no cuda device in marqo
+        except MarqoWebError:
             pass
 
 
