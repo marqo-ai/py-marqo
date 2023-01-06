@@ -78,6 +78,9 @@ class TestModelCacheManagement(MarqoTestCase):
             "field 1": "some extra info"
         }
         self.client.index(self.index_name).add_documents([d1], device="cpu")
-        self.client.eject_model(self.MODEL, "cpu")
+        res = self.client.eject_model(self.MODEL, "cpu")
+        assert res["result"] == "success"
+        assert res["message"].startswith("successfully eject")
+
 
 
