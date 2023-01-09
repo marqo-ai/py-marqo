@@ -6,6 +6,9 @@ from marqo.client import Client
 from marqo.errors import MarqoApiError
 import unittest
 import pprint
+import requests
+import random
+import math
 from tests.marqo_test import MarqoTestCase
 
 
@@ -200,3 +203,48 @@ class TestAddDocuments(MarqoTestCase):
             assert len(search_res['hits']) == 2
             for hit in search_res['hits']:
                 assert {k for k in hit.keys() if not k.startswith('_')} == set(atts)
+
+        
+    def test_pagination_single_field(self):
+        self.client.create_index(index_name=self.index_name_1)
+        
+        # 100 random words
+        vocab_source = "https://www.mit.edu/~ecprice/wordlist.10000"
+        vocab = requests.get(vocab_source).text.splitlines()
+        num_docs = 100
+        docs = [{"Title": "a " + (" ".join(random.choices(population=vocab, k=25))),
+                            "_id": str(i)
+                            }
+                        for i in range(num_docs)]
+        
+        self.client.index(index_name=self.index_name_1).add_documents(
+            docs, auto_refresh=False, client_batch_size=50
+        )
+        self.client.index(index_name=self.index_name_1).refresh()
+
+        for search_method in (enums.SearchMethods.TENSOR, enums.SearchMethods.LEXICAL):
+            for doc_count in [100]:
+                # Query full results
+                full_search_results = self.client.index(self.index_name_1).search(
+                                        search_method=search_method,
+                                        q='a', 
+                                        limit=doc_count)
+
+                for page_size in [1, 5, 10, 100]:
+                    paginated_search_results = {"hits": []}
+
+                    for page_num in range(math.ceil(num_docs / page_size)):
+                        lim = page_size
+                        off = page_num * page_size
+                        page_res = self.client.index(self.index_name_1).search(
+                                        search_method=search_method,
+                                        q='a', 
+                                        limit=lim, offset=off)
+                        
+                        paginated_search_results["hits"].extend(page_res["hits"])
+
+                    # Compare paginated to full results (length only for now)
+                    assert len(full_search_results["hits"]) == len(paginated_search_results["hits"])
+
+                    # TODO: re-add this assert when KNN incosistency bug is fixed
+                    # assert full_search_results["hits"] == paginated_search_results["hits"]

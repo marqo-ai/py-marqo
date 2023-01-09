@@ -114,7 +114,7 @@ class Index:
         return self.http.post(path=F"indexes/{self.index_name}/refresh")
 
     def search(self, q: str, searchable_attributes: Optional[List[str]] = None,
-               limit: int = 10, search_method: Union[SearchMethods.TENSOR, str] = SearchMethods.TENSOR,
+               limit: int = 10, offset: int = 0, search_method: Union[SearchMethods.TENSOR, str] = SearchMethods.TENSOR,
                highlights=None, device: Optional[str] = None, filter_string: str = None,
                show_highlights=True, reranker=None,
                attributes_to_retrieve: Optional[List[str]] = None
@@ -126,6 +126,7 @@ class Index:
                 treat_urls_and_pointers_as_images set to True
             searchable_attributes:  attributes to search
             limit: The max number of documents to be returned
+            offset: The number of search results to skip (for pagination)
             search_method: Indicates TENSOR or LEXICAL (keyword) search
             show_highlights: True if highlights are to be returned
             reranker:
@@ -156,6 +157,7 @@ class Index:
             "q": q,
             "searchableAttributes": searchable_attributes,
             "limit": limit,
+            "offset": offset,
             "searchMethod": search_method,
             "showHighlights": show_highlights,
             "reRanker": reranker,
