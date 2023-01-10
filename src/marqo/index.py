@@ -116,7 +116,7 @@ class Index:
     def search(self, q: str, searchable_attributes: Optional[List[str]] = None,
                limit: int = 10, offset: int = 0, search_method: Union[SearchMethods.TENSOR, str] = SearchMethods.TENSOR,
                highlights=None, device: Optional[str] = None, filter_string: str = None,
-               show_highlights=True, reranker=None,
+               show_highlights=True, reranker: str = None, reranker_properties: dict = None,
                attributes_to_retrieve: Optional[List[str]] = None
                ) -> Dict[str, Any]:
         """Search the index.
@@ -129,7 +129,10 @@ class Index:
             offset: The number of search results to skip (for pagination)
             search_method: Indicates TENSOR or LEXICAL (keyword) search
             show_highlights: True if highlights are to be returned
-            reranker:
+            reranker: the name of the reranker
+            reranker_properties: a dict of reranker-specific settings. Please see
+                our documentation for more information:
+                https://docs.marqo.ai/latest/Models-Reference/reranking/
             device: the device used to index the data. Examples include "cpu",
                 "cuda" and "cuda:2". Overrides the Client's default device.
             filter_string: a filter string, used to prefilter documents during the
@@ -161,6 +164,7 @@ class Index:
             "searchMethod": search_method,
             "showHighlights": show_highlights,
             "reRanker": reranker,
+            "reRankerProperties": reranker_properties
         }
         if attributes_to_retrieve is not None:
             body["attributesToRetrieve"] = attributes_to_retrieve

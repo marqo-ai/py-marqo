@@ -3,7 +3,7 @@ import marqo
 from marqo import enums
 from unittest import mock
 from marqo.client import Client
-from marqo.errors import MarqoApiError
+from marqo.errors import MarqoApiError, MarqoWebError
 import unittest
 import pprint
 import requests
@@ -248,3 +248,25 @@ class TestAddDocuments(MarqoTestCase):
 
                     # TODO: re-add this assert when KNN incosistency bug is fixed
                     # assert full_search_results["hits"] == paginated_search_results["hits"]
+
+    def test_reranker_properties(self):
+        self.client.create_index(index_name=self.index_name_1)
+        d1 = {
+            "doc title": "Very heavy, dense metallic lead.",
+            "abc-123": "some text blah",
+            "an_int": 2,
+            "_id": "my-cool-doc"
+        }
+        self.client.index(self.index_name_1).add_documents([d1], auto_refresh=True)
+        try:
+            res = self.client.index(self.index_name_1).search(
+                q="example of metals",
+                reranker="openai/gpt3-summarise",
+                searchable_attributes=["doc title"],
+                reranker_properties={"api_key": "f"}
+            )
+        except MarqoWebError as e:
+            options = [["api", "key"], ["open", "ai"]]
+            assert any([all([must_have in str(e).lower() for must_have in option]) for option in options])
+
+
