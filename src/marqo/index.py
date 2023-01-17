@@ -117,7 +117,7 @@ class Index:
                limit: int = 10, offset: int = 0, search_method: Union[SearchMethods.TENSOR, str] = SearchMethods.TENSOR,
                highlights=None, device: Optional[str] = None, filter_string: str = None,
                show_highlights=True, reranker=None,
-               attributes_to_retrieve: Optional[List[str]] = None
+               attributes_to_retrieve: Optional[List[str]] = None, num_highlights: int = 1
                ) -> Dict[str, Any]:
         """Search the index.
 
@@ -137,6 +137,7 @@ class Index:
             attributes_to_retrieve: a list of document attributes to be
                 retrieved. If left as None, then all attributes will be
                 retrieved.
+            num_highlights: number of highlights to be returned
 
         Returns:
             Dictionary with hits and other metadata
@@ -161,6 +162,7 @@ class Index:
             "searchMethod": search_method,
             "showHighlights": show_highlights,
             "reRanker": reranker,
+            "num_highlights": num_highlights
         }
         if attributes_to_retrieve is not None:
             body["attributesToRetrieve"] = attributes_to_retrieve
@@ -170,15 +172,15 @@ class Index:
             path=path_with_query_str,
             body=body
         )
-        
+
         num_results = len(res["hits"])
         end_time_client_request = timer()
         total_client_request_time = end_time_client_request - start_time_client_request
-        
+
         search_time_log = f"search ({search_method.lower()}): took {(total_client_request_time):.3f}s to send query and received {num_results} results from Marqo (roundtrip)."
         if 'processingTimeMs' in res:
             search_time_log += f" Marqo itself took {(res['processingTimeMs'] * 0.001):.3f}s to execute the search."
-        
+
         mq_logger.info(search_time_log)
         return res
 
@@ -332,7 +334,7 @@ class Index:
                 update_method=update_method, docs=documents, verbose=False,
                 query_str_params=query_str_params, batch_size=client_batch_size
             )
-            
+
         else:
             # no Client Batching
             refresh_option = f"?refresh={str(auto_refresh).lower()}"
@@ -348,11 +350,11 @@ class Index:
             else:
                 raise ValueError(f'Received unknown update_method `{update_method}`. '
                                  f'Allowed update_methods: ["replace", "update"] ')
-            
-            
+
+
             end_time_client_request = timer()
             total_client_request_time = end_time_client_request - start_time_client_request
-            
+
             mq_logger.info(f"add_documents roundtrip: took {(total_client_request_time):.3f}s to send {num_docs} "
                             f"docs to Marqo (roundtrip, unbatched), for an average of {(total_client_request_time / num_docs):.3f}s per doc.")
 
