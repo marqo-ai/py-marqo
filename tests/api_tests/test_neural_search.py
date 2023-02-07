@@ -153,3 +153,34 @@ class TestAddDocuments(MarqoTestCase):
         assert len(search_res["hits"]) == 1
         pprint.pprint(search_res)
         assert search_res["hits"][0]["_id"] == "my-cool-doc"
+
+    def test_multi_queries(self):
+        docs = [
+            {
+                "loc a": "https://raw.githubusercontent.com/marqo-ai/marqo-api-tests/mainline/assets/ai_hippo_realistic.png",
+                "_id": 'realistic_hippo'},
+            {"loc b": "https://raw.githubusercontent.com/marqo-ai/marqo-api-tests/mainline/assets/ai_hippo_statue.png",
+             "_id": 'artefact_hippo'}
+        ]
+        image_index_config = {
+            'index_defaults': {
+                'model': "ViT-B/16",
+                'treat_urls_and_pointers_as_images': True
+            }
+        }
+        self.client.create_index(index_name=self.index_name_1, settings_dict=image_index_config)
+        self.client.index(index_name=self.index_name_1).add_documents(
+            documents=docs, auto_refresh=True
+        )
+        queries_expected_ordering = [
+            ({"Nature photography": 2.0, "Artefact": -2}, ['realistic_hippo', 'artefact_hippo']),
+            ({"Nature photography": -1.0, "Artefact": 1.0}, ['artefact_hippo', 'realistic_hippo']),
+        ]
+        for query, expected_ordering in queries_expected_ordering:
+            res = self.client.index(index_name=self.index_name_1).search(
+                q=query,
+                search_method="TENSOR")
+            print(res)
+            # the poodle doc should be lower ranked than the irrelevant doc
+            for hit_position, _ in enumerate(res['hits']):
+                assert res['hits'][hit_position]['_id'] == expected_ordering[hit_position]
