@@ -16,7 +16,7 @@ class TestAddDocuments(MarqoTestCase):
     def setUp(self) -> None:
         self.client = Client(**self.client_settings)
         self.index_name = "test_index"
-        self.MODEL = "ViT-L/14"
+        self.MODEL = "ViT-B/32"
         try:
             self.client.delete_index(self.index_name)
         except MarqoApiError as s:
