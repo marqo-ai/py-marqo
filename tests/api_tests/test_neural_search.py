@@ -175,6 +175,11 @@ class TestAddDocuments(MarqoTestCase):
         queries_expected_ordering = [
             ({"Nature photography": 2.0, "Artefact": -2}, ['realistic_hippo', 'artefact_hippo']),
             ({"Nature photography": -1.0, "Artefact": 1.0}, ['artefact_hippo', 'realistic_hippo']),
+            ({"https://raw.githubusercontent.com/marqo-ai/marqo-api-tests/mainline/assets/ai_hippo_statue.png": -1.0,
+              "blah": 1.0}, ['realistic_hippo', 'artefact_hippo']),
+            ({"https://raw.githubusercontent.com/marqo-ai/marqo-api-tests/mainline/assets/ai_hippo_statue.png": 2.0,
+              "https://raw.githubusercontent.com/marqo-ai/marqo-api-tests/mainline/assets/ai_hippo_realistic.png": -1.0},
+             ['artefact_hippo', 'realistic_hippo']),
         ]
         for query, expected_ordering in queries_expected_ordering:
             res = self.client.index(index_name=self.index_name_1).search(
