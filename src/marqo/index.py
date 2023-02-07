@@ -113,7 +113,7 @@ class Index:
         """refreshes the index"""
         return self.http.post(path=F"indexes/{self.index_name}/refresh")
 
-    def search(self, q: str, searchable_attributes: Optional[List[str]] = None,
+    def search(self, q: Union[str, dict], searchable_attributes: Optional[List[str]] = None,
                limit: int = 10, offset: int = 0, search_method: Union[SearchMethods.TENSOR, str] = SearchMethods.TENSOR,
                highlights=None, device: Optional[str] = None, filter_string: str = None,
                show_highlights=True, reranker=None,
@@ -122,8 +122,10 @@ class Index:
         """Search the index.
 
         Args:
-            q: string to search, or a pointer/url to an image if the index has
-                treat_urls_and_pointers_as_images set to True
+            q: String to search, or a dictionary of weighted strings to search
+                (with the structure <search string>:<weight float>). Strings
+                to search are text or a pointer/url to an image if the index
+                has treat_urls_and_pointers_as_images set to True.
             searchable_attributes:  attributes to search
             limit: The max number of documents to be returned
             offset: The number of search results to skip (for pagination)
