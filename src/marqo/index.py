@@ -385,6 +385,7 @@ class Index:
 
         total_add_docs_time = timer() - t0
         mq_logger.info(f"add_documents completed. total time taken: {(total_add_docs_time):.3f}s.")
+        
         return res
 
     def delete_documents(self, ids: List[str], auto_refresh: bool = None) -> Dict[str, int]:

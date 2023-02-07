@@ -171,4 +171,5 @@ class Client:
     def get_cpu_info(self):
         return self.http.get(path="device/cpu")
 
-
+    def set_max_concurrent_index(self, thread_count):
+        return self.http.put(path=f"max_index/{str(thread_count)}")
