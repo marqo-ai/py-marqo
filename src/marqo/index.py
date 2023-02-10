@@ -125,7 +125,10 @@ class Index:
             q: String to search, or a dictionary of weighted strings to search
                 (with the structure <search string>:<weight float>). Strings
                 to search are text or a pointer/url to an image if the index
-                has treat_urls_and_pointers_as_images set to True.
+                has treat_urls_and_pointers_as_images set to True. 
+                
+                If queries are weighted, each weight act as a (possibly negative) 
+                multiplier for that query, relative to the other queries. 
             searchable_attributes:  attributes to search
             limit: The max number of documents to be returned
             offset: The number of search results to skip (for pagination)
