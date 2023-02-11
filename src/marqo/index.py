@@ -117,7 +117,7 @@ class Index:
                limit: int = 10, offset: int = 0, search_method: Union[SearchMethods.TENSOR, str] = SearchMethods.TENSOR,
                highlights=None, device: Optional[str] = None, filter_string: str = None,
                show_highlights=True, reranker=None,
-               attributes_to_retrieve: Optional[List[str]] = None
+               attributes_to_retrieve: Optional[List[str]] = None, boost: Optional[Dict[str,List[Union[float, int]]]] = None,
                ) -> Dict[str, Any]:
         """Search the index.
 
@@ -166,6 +166,7 @@ class Index:
             "searchMethod": search_method,
             "showHighlights": show_highlights,
             "reRanker": reranker,
+            "boost": boost,
         }
         if attributes_to_retrieve is not None:
             body["attributesToRetrieve"] = attributes_to_retrieve
