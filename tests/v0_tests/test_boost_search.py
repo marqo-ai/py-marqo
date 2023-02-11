@@ -68,7 +68,7 @@ class TestBoostSearch(MarqoTestCase):
         self.assertEqual(boost_score, res_score_positive * 1 + 1)
 
 
-    def test_boost_search_query_forat(self):
+    def test_boost_search_query_format(self):
         try:
             boost_res = self.client.index(self.index_name_1).search(q=self.query,
                                                                          boost=["Title", [1,2]])
