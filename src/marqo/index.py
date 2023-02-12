@@ -233,7 +233,7 @@ class Index:
         client_batch_size: int = None,
         processes: int = None,
         device: str = None,
-        non_tensor_fields=None
+        non_tensor_fields: List[str] = None
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """Add documents to this index. Does a partial update on existing documents,
         based on their ID. Adds unseen documents to the index.
@@ -273,7 +273,7 @@ class Index:
         client_batch_size: int = None,
         processes: int = None,
         device: str = None,
-        non_tensor_fields=None
+        non_tensor_fields: List[str] = None
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """Add documents to this index. Does a partial updates on existing documents,
         based on their ID. Adds unseen documents to the index.
