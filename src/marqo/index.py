@@ -233,7 +233,7 @@ class Index:
         client_batch_size: int = None,
         processes: int = None,
         device: str = None,
-        non_tensor_fields: List[str] = []
+        non_tensor_fields: List[str] = None
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """Add documents to this index. Does a partial update on existing documents,
         based on their ID. Adds unseen documents to the index.
@@ -257,6 +257,8 @@ class Index:
         Returns:
             Response body outlining indexing result
         """
+        if non_tensor_fields is None:
+            non_tensor_fields = []
         return self._generic_add_update_docs(
             update_method="replace",
             documents=documents, auto_refresh=auto_refresh, server_batch_size=server_batch_size,
@@ -271,7 +273,7 @@ class Index:
         client_batch_size: int = None,
         processes: int = None,
         device: str = None,
-        non_tensor_fields: List[str] = []
+        non_tensor_fields: List[str] = None
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """Add documents to this index. Does a partial updates on existing documents,
         based on their ID. Adds unseen documents to the index.
@@ -295,6 +297,8 @@ class Index:
         Returns:
             Response body outlining indexing result
         """
+        if non_tensor_fields is None:
+            non_tensor_fields = []
         return self._generic_add_update_docs(
             update_method="update",
             documents=documents, auto_refresh=auto_refresh, server_batch_size=server_batch_size,

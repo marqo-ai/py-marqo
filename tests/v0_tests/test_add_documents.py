@@ -442,3 +442,15 @@ class TestAddDocuments(MarqoTestCase):
 
                             return True
                         assert run()
+
+    def test_add_lists_non_tensor(self):
+        original_doc = {"d1": "blah", "_id": "1234", 'my list': ['tag-1', 'tag-2']}
+        self.client.index(self.index_name_1).add_documents(documents=[original_doc], non_tensor_fields=['my list'])
+        res = self.client.index(self.index_name_1).search(
+            q='something', filter_string='my\ list:tag-1'
+        )
+        assert res['hits'][0]['_id'] == '1234'
+        bad_res = self.client.index(self.index_name_1).search(
+            q='something', filter_string='my\ list:tag-non-existent'
+        )
+        assert len(bad_res['hits']) == 0
