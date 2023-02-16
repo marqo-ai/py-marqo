@@ -273,7 +273,8 @@ class Index:
         client_batch_size: int = None,
         processes: int = None,
         device: str = None,
-        non_tensor_fields: List[str] = None
+        non_tensor_fields: List[str] = None,
+        use_existing_vectors = True
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """Add documents to this index. Does a partial updates on existing documents,
         based on their ID. Adds unseen documents to the index.
@@ -293,6 +294,7 @@ class Index:
             device: the device used to index the data. Examples include "cpu",
                 "cuda" and "cuda:2"
             non_tensor_fields: fields within documents to not create and store tensors against.
+            use_existing_vectors: use vectors that already exist in the docs.
 
         Returns:
             Response body outlining indexing result
@@ -302,7 +304,8 @@ class Index:
         return self._generic_add_update_docs(
             update_method="update",
             documents=documents, auto_refresh=auto_refresh, server_batch_size=server_batch_size,
-            client_batch_size=client_batch_size, processes=processes, device=device, non_tensor_fields=non_tensor_fields
+            client_batch_size=client_batch_size, processes=processes, device=device, non_tensor_fields=non_tensor_fields,
+            use_existing_vectors=use_existing_vectors
         )
 
     def _generic_add_update_docs(
@@ -314,7 +317,8 @@ class Index:
         client_batch_size: int = None,
         processes: int = None,
         device: str = None,
-        non_tensor_fields: List[str] = []
+        non_tensor_fields: List[str] = [],
+        use_existing_vectors: bool = True
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         selected_device = device if device is not None else self.config.indexing_device
         num_docs = len(documents)
@@ -328,6 +332,7 @@ class Index:
             f"{f'&device={utils.translate_device_string_for_url(selected_device)}'}"
             f"{f'&processes={processes}' if processes is not None else ''}"
             f"{f'&batch_size={server_batch_size}' if server_batch_size is not None else ''}"
+            f"&use_existing_vectors={str(auto_refresh).lower()}"
             f"{f'&{non_tensor_fields_query_param}' if len(non_tensor_fields) > 0 else ''}"
         )
         end_time_client_process = timer()
