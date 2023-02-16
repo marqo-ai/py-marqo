@@ -332,7 +332,7 @@ class Index:
             f"{f'&device={utils.translate_device_string_for_url(selected_device)}'}"
             f"{f'&processes={processes}' if processes is not None else ''}"
             f"{f'&batch_size={server_batch_size}' if server_batch_size is not None else ''}"
-            f"&use_existing_vectors={str(auto_refresh).lower()}"
+            f"&use_existing_vectors={str(use_existing_vectors).lower()}"
             f"{f'&{non_tensor_fields_query_param}' if len(non_tensor_fields) > 0 else ''}"
         )
         end_time_client_process = timer()
