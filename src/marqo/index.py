@@ -233,7 +233,8 @@ class Index:
         client_batch_size: int = None,
         processes: int = None,
         device: str = None,
-        non_tensor_fields: List[str] = None
+        non_tensor_fields: List[str] = None,
+        use_existing_vectors: bool = True
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """Add documents to this index. Does a partial update on existing documents,
         based on their ID. Adds unseen documents to the index.
@@ -253,6 +254,7 @@ class Index:
             device: the device used to index the data. Examples include "cpu",
                 "cuda" and "cuda:2"
             non_tensor_fields: fields within documents to not create and store tensors against.
+            use_existing_vectors: use vectors that already exist in the docs.
 
         Returns:
             Response body outlining indexing result
@@ -262,7 +264,8 @@ class Index:
         return self._generic_add_update_docs(
             update_method="replace",
             documents=documents, auto_refresh=auto_refresh, server_batch_size=server_batch_size,
-            client_batch_size=client_batch_size, processes=processes, device=device, non_tensor_fields=non_tensor_fields
+            client_batch_size=client_batch_size, processes=processes, device=device, non_tensor_fields=non_tensor_fields,
+            use_existing_vectors=use_existing_vectors
         )
 
     def update_documents(
@@ -274,9 +277,11 @@ class Index:
         processes: int = None,
         device: str = None,
         non_tensor_fields: List[str] = None,
-        use_existing_vectors = True
+        use_existing_vectors: bool = True
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
-        """Add documents to this index. Does a partial updates on existing documents,
+        """
+        Will be deprecated soon.
+        Add documents to this index. Does a partial updates on existing documents,
         based on their ID. Adds unseen documents to the index.
 
         Args:
