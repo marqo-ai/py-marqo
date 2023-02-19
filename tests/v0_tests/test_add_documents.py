@@ -1,4 +1,5 @@
 import copy
+import functools
 import math
 import pprint
 import random
@@ -454,3 +455,39 @@ class TestAddDocuments(MarqoTestCase):
             q='something', filter_string='my\ list:tag-non-existent'
         )
         assert len(bad_res['hits']) == 0
+
+    def test_use_existing_fields(self):
+        self.client.index(index_name=self.index_name_1).add_documents(
+            documents=[
+                {
+                    "_id": "123",
+                    "title 1": "content 1",
+                    "desc 2": "content 2. blah blah blah",
+                    "old": "some other cool thing"
+                }],
+            non_tensor_fields=["desc 2"]
+        )
+
+        assert {"title 1", "_embedding", "old"} == functools.reduce(
+            lambda x, y: x.union(y),
+            [set(facet.keys()) for facet in
+             self.client.index(index_name=self.index_name_1).get_document(
+                 document_id="123", expose_facets=True)["_tensor_facets"]]
+        )
+
+        self.client.index(index_name=self.index_name_1).add_documents(
+            documents=[
+                {
+                    "_id": "123",
+                    "title 1": "content 1",
+                    "desc 2": "content 2. blah blah blah",
+                    "new f": "12345 "
+                }], use_existing_vectors=True
+        )
+        # we don't get desc 2 facets, because it was already a non_tensor_field
+        assert {"title 1", "_embedding", "new f"} == functools.reduce(
+            lambda x, y: x.union(y),
+            [set(facet.keys()) for facet in
+             self.client.index(index_name=self.index_name_1).get_document(
+                 document_id="123", expose_facets=True)["_tensor_facets"]]
+        )
