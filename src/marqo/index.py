@@ -234,7 +234,8 @@ class Index:
         processes: int = None,
         device: str = None,
         non_tensor_fields: List[str] = None,
-        use_existing_tensors: bool = False
+        use_existing_tensors: bool = False,
+        image_download_headers: dict = None
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """Add documents to this index. Does a partial update on existing documents,
         based on their ID. Adds unseen documents to the index.
@@ -255,17 +256,21 @@ class Index:
                 "cuda" and "cuda:2"
             non_tensor_fields: fields within documents to not create and store tensors against.
             use_existing_tensors: use vectors that already exist in the docs.
+            image_download_headers: a dictionary of headers to be passed while downloading images,
+                for URLs found in documents
 
         Returns:
             Response body outlining indexing result
         """
         if non_tensor_fields is None:
             non_tensor_fields = []
+        if image_download_headers is None:
+            non_tensor_fields = dict()
         return self._generic_add_update_docs(
             update_method="replace",
             documents=documents, auto_refresh=auto_refresh, server_batch_size=server_batch_size,
             client_batch_size=client_batch_size, processes=processes, device=device, non_tensor_fields=non_tensor_fields,
-            use_existing_tensors=use_existing_tensors
+            use_existing_tensors=use_existing_tensors, image_download_headers=image_download_headers
         )
 
     def update_documents(
@@ -321,10 +326,13 @@ class Index:
         processes: int = None,
         device: str = None,
         non_tensor_fields: List = None,
-        use_existing_tensors: bool = False
+        use_existing_tensors: bool = False,
+        image_download_headers: dict = None
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
+
         if non_tensor_fields is None:
             non_tensor_fields = []
+
         selected_device = device if device is not None else self.config.indexing_device
         num_docs = len(documents)
 
@@ -333,12 +341,15 @@ class Index:
         start_time_client_process = timer()
         base_path = f"indexes/{self.index_name}/documents"
         non_tensor_fields_query_param = utils.convert_list_to_query_params("non_tensor_fields", non_tensor_fields)
+        image_download_headers_param = (utils.convert_dict_to_url_params(image_download_headers)
+                                        if image_download_headers else '')
         query_str_params = (
             f"{f'&device={utils.translate_device_string_for_url(selected_device)}'}"
             f"{f'&processes={processes}' if processes is not None else ''}"
             f"{f'&batch_size={server_batch_size}' if server_batch_size is not None else ''}"
             f"&use_existing_tensors={str(use_existing_tensors).lower()}"
             f"{f'&{non_tensor_fields_query_param}' if len(non_tensor_fields) > 0 else ''}"
+            f"{f'&image_download_headers={image_download_headers_param}' if image_download_headers else ''}"
         )
         end_time_client_process = timer()
         total_client_process_time = end_time_client_process - start_time_client_process

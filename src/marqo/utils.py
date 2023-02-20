@@ -1,3 +1,5 @@
+import json
+import urllib.parse
 from marqo import errors
 from typing import Any, Optional, List
 
@@ -37,6 +39,7 @@ def translate_device_string_for_url(device: Optional[str]) -> Optional[str]:
     lowered_device = device.lower()
     return lowered_device.replace(":", "")
 
+
 def convert_list_to_query_params(query_param: str, x: List[Any]) -> str:
     """ Converts a list value for a query parameter to its query string.
 
@@ -48,3 +51,17 @@ def convert_list_to_query_params(query_param: str, x: List[Any]) -> str:
         A rendered query string for the given parameter and parameter value.
     """
     return "&".join([f"{query_param}={str(xx)}" for xx in x])
+
+
+def convert_dict_to_url_params(d: dict) -> str:
+    """Converts a dict into a url-encoded string that can be appended as a query_param
+    Args:
+        d: dict to be converted
+
+    Returns:
+         A URL-encoded string
+    """
+    as_str = json.dumps(d)
+    url_encoded = urllib.parse.quote_plus(as_str)
+    return url_encoded
+
