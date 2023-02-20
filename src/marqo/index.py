@@ -116,7 +116,7 @@ class Index:
     def search(self, q: Union[str, dict], searchable_attributes: Optional[List[str]] = None,
                limit: int = 10, offset: int = 0, search_method: Union[SearchMethods.TENSOR, str] = SearchMethods.TENSOR,
                highlights=None, device: Optional[str] = None, filter_string: str = None,
-               show_highlights=True, reranker=None,
+               show_highlights=True, reranker=None, image_download_headers: Optional[Dict] = None,
                attributes_to_retrieve: Optional[List[str]] = None, boost: Optional[Dict[str,List[Union[float, int]]]] = None,
                ) -> Dict[str, Any]:
         """Search the index.
@@ -172,6 +172,8 @@ class Index:
             body["attributesToRetrieve"] = attributes_to_retrieve
         if filter_string is not None:
             body["filter"] = filter_string
+        if image_download_headers is not None:
+            body["image_download_headers"] = image_download_headers
         res = self.http.post(
             path=path_with_query_str,
             body=body
