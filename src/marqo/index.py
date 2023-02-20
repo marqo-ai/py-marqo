@@ -234,7 +234,7 @@ class Index:
         processes: int = None,
         device: str = None,
         non_tensor_fields: List[str] = None,
-        use_existing_vectors: bool = False
+        use_existing_tensors: bool = False
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """Add documents to this index. Does a partial update on existing documents,
         based on their ID. Adds unseen documents to the index.
@@ -254,7 +254,7 @@ class Index:
             device: the device used to index the data. Examples include "cpu",
                 "cuda" and "cuda:2"
             non_tensor_fields: fields within documents to not create and store tensors against.
-            use_existing_vectors: use vectors that already exist in the docs.
+            use_existing_tensors: use vectors that already exist in the docs.
 
         Returns:
             Response body outlining indexing result
@@ -265,7 +265,7 @@ class Index:
             update_method="replace",
             documents=documents, auto_refresh=auto_refresh, server_batch_size=server_batch_size,
             client_batch_size=client_batch_size, processes=processes, device=device, non_tensor_fields=non_tensor_fields,
-            use_existing_vectors=use_existing_vectors
+            use_existing_tensors=use_existing_tensors
         )
 
     def update_documents(
@@ -308,7 +308,7 @@ class Index:
             update_method="update",
             documents=documents, auto_refresh=auto_refresh, server_batch_size=server_batch_size,
             client_batch_size=client_batch_size, processes=processes, device=device, non_tensor_fields=non_tensor_fields,
-            use_existing_vectors=False
+            use_existing_tensors=False
         )
 
     def _generic_add_update_docs(
@@ -321,7 +321,7 @@ class Index:
         processes: int = None,
         device: str = None,
         non_tensor_fields: List = None,
-        use_existing_vectors: bool = False
+        use_existing_tensors: bool = False
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         if non_tensor_fields is None:
             non_tensor_fields = []
@@ -337,7 +337,7 @@ class Index:
             f"{f'&device={utils.translate_device_string_for_url(selected_device)}'}"
             f"{f'&processes={processes}' if processes is not None else ''}"
             f"{f'&batch_size={server_batch_size}' if server_batch_size is not None else ''}"
-            f"&use_existing_vectors={str(use_existing_vectors).lower()}"
+            f"&use_existing_tensors={str(use_existing_tensors).lower()}"
             f"{f'&{non_tensor_fields_query_param}' if len(non_tensor_fields) > 0 else ''}"
         )
         end_time_client_process = timer()

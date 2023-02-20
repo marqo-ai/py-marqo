@@ -482,7 +482,7 @@ class TestAddDocuments(MarqoTestCase):
                     "title 1": "content 1",
                     "desc 2": "content 2. blah blah blah",
                     "new f": "12345 "
-                }], use_existing_vectors=True
+                }], use_existing_tensors=True
         )
         # we don't get desc 2 facets, because it was already a non_tensor_field
         assert {"title 1", "_embedding", "new f"} == functools.reduce(
