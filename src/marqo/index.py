@@ -267,7 +267,7 @@ class Index:
         if non_tensor_fields is None:
             non_tensor_fields = []
         if image_download_headers is None:
-            non_tensor_fields = dict()
+            image_download_headers = dict()
         return self._generic_add_update_docs(
             update_method="replace",
             documents=documents, auto_refresh=auto_refresh, server_batch_size=server_batch_size,
