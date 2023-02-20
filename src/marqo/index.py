@@ -315,7 +315,6 @@ class Index:
             update_method="update",
             documents=documents, auto_refresh=auto_refresh, server_batch_size=server_batch_size,
             client_batch_size=client_batch_size, processes=processes, device=device, non_tensor_fields=non_tensor_fields,
-            use_existing_tensors=False
         )
 
     def _generic_add_update_docs(
@@ -349,7 +348,7 @@ class Index:
             f"{f'&device={utils.translate_device_string_for_url(selected_device)}'}"
             f"{f'&processes={processes}' if processes is not None else ''}"
             f"{f'&batch_size={server_batch_size}' if server_batch_size is not None else ''}"
-            f"&use_existing_tensors={str(use_existing_tensors).lower()}"
+            f"{f'&use_existing_tensors={str(use_existing_tensors).lower()}' if use_existing_tensors is not None else ''}"
             f"{f'&{non_tensor_fields_query_param}' if len(non_tensor_fields) > 0 else ''}"
             f"{f'&image_download_headers={image_download_headers_param}' if image_download_headers else ''}"
         )
