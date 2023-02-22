@@ -33,17 +33,17 @@ class Config:
         self.indexing_device = indexing_device if indexing_device is not None else default_device
         self.search_device = search_device if search_device is not None else default_device
         # suppress warnings until we figure out the dependency issues:
-        warnings.filterwarnings("ignore")
+        # warnings.filterwarnings("ignore")
 
     def set_url(self, url):
         """Set the URL, and infers whether that url is remote"""
         lowered_url = url.lower()
         local_host_markers = ["localhost", "0.0.0.0", "127.0.0.1"]
         if any([marker in lowered_url for marker in local_host_markers]):
-            urllib3.disable_warnings()
+            # urllib3.disable_warnings()
             self.cluster_is_remote = False
         else:
-            warnings.resetwarnings()
+            # warnings.resetwarnings()
             self.cluster_is_remote = True
             if "s2search.io" in lowered_url:
                 self.cluster_is_s2search = True
