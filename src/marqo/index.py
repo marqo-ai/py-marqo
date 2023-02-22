@@ -126,9 +126,9 @@ class Index:
                 (with the structure <search string>:<weight float>). Strings
                 to search are text or a pointer/url to an image if the index
                 has treat_urls_and_pointers_as_images set to True. 
-                
-                If queries are weighted, each weight act as a (possibly negative) 
-                multiplier for that query, relative to the other queries. 
+
+                If queries are weighted, each weight act as a (possibly negative)
+                multiplier for that query, relative to the other queries.
             searchable_attributes:  attributes to search
             limit: The max number of documents to be returned
             offset: The number of search results to skip (for pagination)
@@ -178,16 +178,16 @@ class Index:
             path=path_with_query_str,
             body=body
         )
-        
+
         num_results = len(res["hits"])
         end_time_client_request = timer()
         total_client_request_time = end_time_client_request - start_time_client_request
-        
+
         search_time_log = (f"search ({search_method.lower()}): took {(total_client_request_time):.3f}s to send query "
                            f"and received {num_results} results from Marqo (roundtrip).")
         if 'processingTimeMs' in res:
             search_time_log += f" Marqo itself took {(res['processingTimeMs'] * 0.001):.3f}s to execute the search."
-        
+
         mq_logger.debug(search_time_log)
         return res
 
@@ -366,7 +366,7 @@ class Index:
                 update_method=update_method, docs=documents, verbose=False,
                 query_str_params=query_str_params, batch_size=client_batch_size
             )
-            
+
         else:
             # no Client Batching
             refresh_option = f"?refresh={str(auto_refresh).lower()}"
@@ -382,11 +382,11 @@ class Index:
             else:
                 raise ValueError(f'Received unknown update_method `{update_method}`. '
                                  f'Allowed update_methods: ["replace", "update"] ')
-            
-            
+
+
             end_time_client_request = timer()
             total_client_request_time = end_time_client_request - start_time_client_request
-            
+
             mq_logger.debug(f"add_documents roundtrip: took {(total_client_request_time):.3f}s to send {num_docs} "
                             f"docs to Marqo (roundtrip, unbatched), for an average of {(total_client_request_time / num_docs):.3f}s per doc.")
 
@@ -501,28 +501,28 @@ class Index:
                                  f'Allowed update_methods: ["replace", "update"] ')
             total_batch_time = timer() - t0
             num_docs = len(docs)
-            mq_logger.debug(
-                f"   add_documents batch {i} roundtrip: took {(total_batch_time):.3f}s to add {num_docs} docs, "
-                f"for an average of {(total_batch_time/num_docs):.3f}s per doc.")
 
             if isinstance(res, list):
                 # with Server Batching (show processing time for each batch)
+                mq_logger.info(
+                    f"   add_documents batch {i} roundtrip: took {(total_batch_time):.3f}s to add {num_docs} docs, "
+                    f"for an average of {(total_batch_time / num_docs):.3f}s per doc.")
 
                 if isinstance(res[0], list):
                     # for multiprocess, timing messages should be arranged by process, then batch
                     for process in range(len(res)):
-                        mq_logger.info(f"       process {process}:")
+                        mq_logger.debug(f"       process {process}:")
 
                         for batch in range(len(res[process])):
                             server_batch_result_count = len(res[process][batch]["items"])
-                            mq_logger.info(f"           marqo server batch {batch}: "
+                            mq_logger.debug(f"           marqo server batch {batch}: "
                                             f"processed {server_batch_result_count} docs in {(res[process][batch]['processingTimeMs'] / 1000):.3f}s, "
                                             f"for an average of {(res[process][batch]['processingTimeMs'] / (1000 * server_batch_result_count)):.3f}s per doc.")
                 else:
                     # for single process, timing messages should be arranged by batch ONLY
                     for batch in range(len(res)):
                         server_batch_result_count = len(res[batch]["items"])
-                        mq_logger.info(f"       marqo server batch {batch}: "
+                        mq_logger.debug(f"       marqo server batch {batch}: "
                                         f"processed {server_batch_result_count} docs in {(res[batch]['processingTimeMs'] / 1000):.3f}s, "
                                         f"for an average of {(res[batch]['processingTimeMs'] / (1000 * server_batch_result_count)):.3f}s per doc.")
             else:
