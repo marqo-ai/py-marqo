@@ -35,7 +35,7 @@ class HttpRequests:
         body: Optional[Union[Dict[str, Any], List[Dict[str, Any]], List[str], str]] = None,
         content_type: Optional[str] = None,
     ) -> Any:
-        to_verify = False
+        to_verify = True
 
         if http_method not in ALLOWED_OPERATIONS:
             raise ValueError("{} not an allowed operation {}".format(http_method, ALLOWED_OPERATIONS))
