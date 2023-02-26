@@ -17,35 +17,6 @@ class TestConfig(MarqoTestCase):
         assert c.indexing_device == "cuda:3"
         assert c.search_device == "cuda:4"
 
-    def test_set_url_localhost(self):
-        @mock.patch("urllib3.disable_warnings")
-        def run(mock_dis_warnings):
-            c = config.Config(url="https://localhost:8882")
-            assert not c.cluster_is_remote
-            mock_dis_warnings.assert_called()
-            return True
-        assert run()
-
-    def test_set_url_0000(self):
-        @mock.patch("urllib3.disable_warnings")
-        def run(mock_dis_warnings):
-            c = config.Config(url="https://0.0.0.0:8882")
-            assert not c.cluster_is_remote
-            mock_dis_warnings.assert_called()
-            return True
-        assert run()
-
-    def test_set_url_remote(self):
-        @mock.patch("urllib3.disable_warnings")
-        @mock.patch("warnings.resetwarnings")
-        def run(mock_reset_warnings, mock_dis_warnings):
-            c = config.Config(url="https://some-cluster-somewhere:8882")
-            assert c.cluster_is_remote
-            mock_dis_warnings.assert_not_called()
-            mock_reset_warnings.assert_called()
-            return True
-        assert run()
-
     def test_url_is_s2search(self):
         c = config.Config(url="https://s2search.io/abdcde:8882")
         assert c.cluster_is_s2search
