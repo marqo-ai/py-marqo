@@ -331,7 +331,8 @@ class Index:
         device: str = None,
         non_tensor_fields: List = None,
         use_existing_tensors: bool = False,
-        image_download_headers: dict = None
+        image_download_headers: dict = None,
+        mappings:dict = None
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
 
         if non_tensor_fields is None:
@@ -347,6 +348,7 @@ class Index:
         non_tensor_fields_query_param = utils.convert_list_to_query_params("non_tensor_fields", non_tensor_fields)
         image_download_headers_param = (utils.convert_dict_to_url_params(image_download_headers)
                                         if image_download_headers else '')
+        mappings_param = (utils.convert_dict_to_url_params(mappings) if mappings else '')
         query_str_params = (
             f"{f'&device={utils.translate_device_string_for_url(selected_device)}'}"
             f"{f'&processes={processes}' if processes is not None else ''}"
@@ -354,6 +356,7 @@ class Index:
             f"{f'&use_existing_tensors={str(use_existing_tensors).lower()}' if use_existing_tensors is not None else ''}"
             f"{f'&{non_tensor_fields_query_param}' if len(non_tensor_fields) > 0 else ''}"
             f"{f'&image_download_headers={image_download_headers_param}' if image_download_headers else ''}"
+            f"{f'&mappings={mappings_param}' if mappings else ''}"
         )
         end_time_client_process = timer()
         total_client_process_time = end_time_client_process - start_time_client_process
