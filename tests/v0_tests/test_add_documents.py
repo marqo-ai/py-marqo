@@ -491,3 +491,65 @@ class TestAddDocuments(MarqoTestCase):
              self.client.index(index_name=self.index_name_1).get_document(
                  document_id="123", expose_facets=True)["_tensor_facets"]]
         )
+
+    def test_multimodal_combination_doc(self):
+        settings = {
+            "treat_urls_and_pointers_as_images":True,
+            "model": "ViT-B/32",
+        }
+        self.client.create_index(index_name=self.index_name_1,**settings)
+
+        self.client.index(index_name=self.index_name_1).add_documents(
+            documents=[
+                {
+                    "combo_text_image": {
+                        # a space at the end
+                        "text_0 ": "A rider is riding a horse jumping over the barrier_0.",
+                        "text_1": "A rider is riding a horse jumping over the barrier_1.",
+                        "text_2": "A rider is riding a horse jumping over the barrier_2.",
+                        "text_3": "A rider is riding a horse jumping over the barrier_3.",
+                        "text_4": "A rider is riding a horse jumping over the barrier_4.",
+                        "image_0": "https://raw.githubusercontent.com/marqo-ai/marqo/mainline/examples/ImageSearchGuide/data/image0.jpg",
+                        "image_1": "https://raw.githubusercontent.com/marqo-ai/marqo/mainline/examples/ImageSearchGuide/data/image1.jpg",
+                        "image_2": "https://raw.githubusercontent.com/marqo-ai/marqo/mainline/examples/ImageSearchGuide/data/image2.jpg",
+                        "image_3": "https://raw.githubusercontent.com/marqo-ai/marqo/mainline/examples/ImageSearchGuide/data/image3.jpg",
+                        "image_4": "https://raw.githubusercontent.com/marqo-ai/marqo/mainline/examples/ImageSearchGuide/data/image4.jpg",
+                    },
+                    "space field":{
+                        "space child 1" : "search this with space",
+                        "space child 2" : "test space",
+                    },
+                    "_id": "111",
+                },
+
+            ], mappings={"combo_text_image": {"type": "multimodal_combination", "weights": {
+                "text_0 ": 0.1, "text_1": 0.1, "text_2": 0.1, "text_3": 0.1, "text_4": 0.1,
+                "image_0": 0.1, "image_1": 0.1, "image_2": 0.1, "image_3": 0.1, "image_4": 0.1,
+            }}, "space field": {
+                "type":"multimodal_combination", "weights":{
+                    "space child 1" : 0.5,
+                    "space child 2" : 0.5,
+                }}}, auto_refresh=True)
+
+        lexical_res = self.client.index(self.index_name_1).search("A rider is riding a horse jumping over the barrier_0", search_method="lexical")
+        assert lexical_res["hits"][0]["_id"] == "111"
+
+        # a space at the end
+        filtering_res = self.client.index(self.index_name_1).search(
+            "", filter_string="combo_text_image.text_0\ : (A rider is riding a horse jumping over the barrier_0.)")
+        assert filtering_res["hits"][0]["_id"] == "111"
+
+        tensor_res = self.client.index(self.index_name_1).search("")
+        assert tensor_res["hits"][0]["_id"] == "111"
+
+        space_lexical_res = self.client.index(self.index_name_1).search(
+            "search this with space", search_method="lexical")
+        assert space_lexical_res["hits"][0]["_id"] == "111"
+
+        # A space in the middle
+        space_filtering_res = self.client.index(self.index_name_1).search(
+            "", filter_string="space\ field.space\ child\ 1:(search this with space)")
+        assert space_filtering_res["hits"][0]["_id"] == "111"
+
+        space_tensor_res = self.client.index(self.index_name_1).search("")
+        assert space_tensor_res["hits"][0]["_id"] == "111"

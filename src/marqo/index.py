@@ -238,7 +238,8 @@ class Index:
         device: str = None,
         non_tensor_fields: List[str] = None,
         use_existing_tensors: bool = False,
-        image_download_headers: dict = None
+        image_download_headers: dict = None,
+        mappings: dict = None,
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """Add documents to this index. Does a partial update on existing documents,
         based on their ID. Adds unseen documents to the index.
@@ -261,6 +262,7 @@ class Index:
             use_existing_tensors: use vectors that already exist in the docs.
             image_download_headers: a dictionary of headers to be passed while downloading images,
                 for URLs found in documents
+            mappings: a dictionary to help handle the object fields. e.g., multimodal_combination field
 
         Returns:
             Response body outlining indexing result
@@ -273,7 +275,7 @@ class Index:
             update_method="replace",
             documents=documents, auto_refresh=auto_refresh, server_batch_size=server_batch_size,
             client_batch_size=client_batch_size, processes=processes, device=device, non_tensor_fields=non_tensor_fields,
-            use_existing_tensors=use_existing_tensors, image_download_headers=image_download_headers
+            use_existing_tensors=use_existing_tensors, image_download_headers=image_download_headers, mappings = mappings
         )
 
     def update_documents(
@@ -329,7 +331,8 @@ class Index:
         device: str = None,
         non_tensor_fields: List = None,
         use_existing_tensors: bool = False,
-        image_download_headers: dict = None
+        image_download_headers: dict = None,
+        mappings:dict = None
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
 
         if non_tensor_fields is None:
@@ -345,6 +348,7 @@ class Index:
         non_tensor_fields_query_param = utils.convert_list_to_query_params("non_tensor_fields", non_tensor_fields)
         image_download_headers_param = (utils.convert_dict_to_url_params(image_download_headers)
                                         if image_download_headers else '')
+        mappings_param = (utils.convert_dict_to_url_params(mappings) if mappings else '')
         query_str_params = (
             f"{f'&device={utils.translate_device_string_for_url(selected_device)}'}"
             f"{f'&processes={processes}' if processes is not None else ''}"
@@ -352,6 +356,7 @@ class Index:
             f"{f'&use_existing_tensors={str(use_existing_tensors).lower()}' if use_existing_tensors is not None else ''}"
             f"{f'&{non_tensor_fields_query_param}' if len(non_tensor_fields) > 0 else ''}"
             f"{f'&image_download_headers={image_download_headers_param}' if image_download_headers else ''}"
+            f"{f'&mappings={mappings_param}' if mappings else ''}"
         )
         end_time_client_process = timer()
         total_client_process_time = end_time_client_process - start_time_client_process
