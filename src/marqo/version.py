@@ -1,5 +1,5 @@
-__marqo_version__ = "0.0.13"
-__marqo_release_page__ = "https://github.com/marqo-ai/marqo/releases/tag/0.0.13"
+__marqo_version__ = "0.0.15"
+__marqo_release_page__ = "https://github.com/marqo-ai/marqo/releases/tag/0.0.15"
 
 
 def supported_marqo_version() -> str:
