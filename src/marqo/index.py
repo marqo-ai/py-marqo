@@ -312,6 +312,10 @@ class Index:
         Returns:
             Response body outlining indexing result
         """
+        mq_logger.warning(
+            "`update_documents()` is deprecated and will be removed in a future release. "
+            "To update documents with minimal inference operations, use `add_documents()` "
+            "with use_existing_tensors=True ")
         if non_tensor_fields is None:
             non_tensor_fields = []
         return self._generic_add_update_docs(
