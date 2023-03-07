@@ -8,7 +8,8 @@ setup(
     install_requires=[
         # client:
         "requests",
-        "urllib3"
+        "urllib3",
+        "pydantic"
     ],
     tests_require=[
         "pytest",
