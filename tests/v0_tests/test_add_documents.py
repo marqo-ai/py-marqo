@@ -4,6 +4,7 @@ import math
 import pprint
 import random
 import requests
+import time
 from marqo.client import Client
 from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
 from tests.marqo_test import MarqoTestCase
@@ -157,12 +158,19 @@ class TestAddDocuments(MarqoTestCase):
             {"abc": "wow camel", "_id": "123"},
             {"abc": "camels are cool", "_id": "foo"}
         ])
+        
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(self.index_name_1).search("wow camel"))
+            
         res0 = self.client.index(self.index_name_1).search("wow camel")
         print("res0res0")
         pprint.pprint(res0)
         assert res0['hits'][0]["_id"] == "123"
         assert len(res0['hits']) == 2
         self.client.index(self.index_name_1).delete_documents(["123"])
+
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(self.index_name_1).search("wow camel"))
         res1 = self.client.index(self.index_name_1).search("wow camel")
         assert res1['hits'][0]["_id"] == "foo"
         assert len(res1['hits']) == 1
@@ -316,14 +324,26 @@ class TestAddDocuments(MarqoTestCase):
 
     def test_resilient_indexing(self):
         self.client.create_index(self.index_name_1)
+
+        if self.IS_MULTI_INSTANCE:
+            time.sleep(1)
+
         assert 0 == self.client.index(self.index_name_1).get_stats()['numberOfDocuments']
         d1 = {"d1": "blah", "_id": "1234"}
         d2 = {"d2": "blah", "_id": "5678"}
         docs = [d1,  {"content": "some terrible doc", "d3": "blah", "_id": 12345}, d2]
         self.client.index(self.index_name_1).add_documents(documents=docs)
+
+        if self.IS_MULTI_INSTANCE:
+            time.sleep(1)
+
         assert 2 == self.client.index(self.index_name_1).get_stats()['numberOfDocuments']
         assert d1 == self.client.index(self.index_name_1).get_document(document_id='1234')
         assert d2 == self.client.index(self.index_name_1).get_document(document_id='5678')
+
+
+        if self.IS_MULTI_INSTANCE:
+            time.sleep(1)
         assert {"1234", "5678"} == {d['_id'] for d in
                                     self.client.index(self.index_name_1).search("blah", limit=3)['hits']}
 
@@ -447,10 +467,22 @@ class TestAddDocuments(MarqoTestCase):
     def test_add_lists_non_tensor(self):
         original_doc = {"d1": "blah", "_id": "1234", 'my list': ['tag-1', 'tag-2']}
         self.client.index(self.index_name_1).add_documents(documents=[original_doc], non_tensor_fields=['my list'])
+
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(self.index_name_1).search(
+                q='something', filter_string='my\ list:tag-1'
+            ))
+
         res = self.client.index(self.index_name_1).search(
             q='something', filter_string='my\ list:tag-1'
         )
         assert res['hits'][0]['_id'] == '1234'
+
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(self.index_name_1).search(
+                q='something', filter_string='my\ list:tag-non-existent'
+            ))
+
         bad_res = self.client.index(self.index_name_1).search(
             q='something', filter_string='my\ list:tag-non-existent'
         )
@@ -531,25 +563,47 @@ class TestAddDocuments(MarqoTestCase):
                     "space child 2" : 0.5,
                 }}}, auto_refresh=True)
 
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(self.index_name_1).search("A rider is riding a horse jumping over the barrier_0", search_method="lexical"))
+
         lexical_res = self.client.index(self.index_name_1).search("A rider is riding a horse jumping over the barrier_0", search_method="lexical")
         assert lexical_res["hits"][0]["_id"] == "111"
 
         # a space at the end
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(self.index_name_1).search(
+            "", filter_string="combo_text_image.text_0\ : (A rider is riding a horse jumping over the barrier_0.)"))
+
         filtering_res = self.client.index(self.index_name_1).search(
             "", filter_string="combo_text_image.text_0\ : (A rider is riding a horse jumping over the barrier_0.)")
         assert filtering_res["hits"][0]["_id"] == "111"
 
+
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(self.index_name_1).search(""))
+
         tensor_res = self.client.index(self.index_name_1).search("")
         assert tensor_res["hits"][0]["_id"] == "111"
+
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(self.index_name_1).search(
+            "search this with space", search_method="lexical"))
 
         space_lexical_res = self.client.index(self.index_name_1).search(
             "search this with space", search_method="lexical")
         assert space_lexical_res["hits"][0]["_id"] == "111"
 
         # A space in the middle
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(self.index_name_1).search(
+            "", filter_string="space\ field.space\ child\ 1:(search this with space)"))
+
         space_filtering_res = self.client.index(self.index_name_1).search(
             "", filter_string="space\ field.space\ child\ 1:(search this with space)")
         assert space_filtering_res["hits"][0]["_id"] == "111"
 
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(self.index_name_1).search(""))
+            
         space_tensor_res = self.client.index(self.index_name_1).search("")
         assert space_tensor_res["hits"][0]["_id"] == "111"

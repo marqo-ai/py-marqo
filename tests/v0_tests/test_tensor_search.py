@@ -47,6 +47,11 @@ class TestAddDocuments(MarqoTestCase):
             """
         }
         add_doc_res = self.client.index(self.index_name_1).add_documents([d1])
+        
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(self.index_name_1).search(
+            "title about some doc"))
+
         search_res = self.client.index(self.index_name_1).search(
             "title about some doc")
         assert len(search_res["hits"]) == 1
@@ -56,6 +61,11 @@ class TestAddDocuments(MarqoTestCase):
 
     def test_search_empty_index(self):
         self.client.create_index(index_name=self.index_name_1)
+
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(self.index_name_1).search(
+            "title about some doc"))
+
         search_res = self.client.index(self.index_name_1).search(
             "title about some doc")
         assert len(search_res["hits"]) == 0
@@ -74,6 +84,11 @@ class TestAddDocuments(MarqoTestCase):
                 ({"show_highlights": False}, False),
                 ({"show_highlights": True}, True)
             ]:
+
+            if self.IS_MULTI_INSTANCE:
+                self.warm_request(self.client.index(self.index_name_1).search(
+                "title about some doc", **params))
+
             search_res = self.client.index(self.index_name_1).search(
                 "title about some doc", **params)
             assert ("_highlights" in search_res["hits"][0]) is expected_highlights_presence
@@ -93,6 +108,11 @@ class TestAddDocuments(MarqoTestCase):
         res = self.client.index(self.index_name_1).add_documents([
             d1, d2
         ])
+
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(self.index_name_1).search(
+            "this is a solid doc"))
+
         search_res = self.client.index(self.index_name_1).search(
             "this is a solid doc")
         assert d2 == self.strip_marqo_fields(search_res['hits'][0], strip_id=False)
@@ -116,6 +136,10 @@ class TestAddDocuments(MarqoTestCase):
         ])
 
         # Ensure that vector search works
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(self.index_name_1).search(
+            "Examples of leadership", search_method=enums.SearchMethods.TENSOR))
+
         search_res = self.client.index(self.index_name_1).search(
             "Examples of leadership", search_method=enums.SearchMethods.TENSOR)
         assert d2 == self.strip_marqo_fields(search_res["hits"][0], strip_id=False)
@@ -123,9 +147,18 @@ class TestAddDocuments(MarqoTestCase):
 
         # try it with lexical search:
         #    can't find the above with synonym
+        if self.IS_MULTI_INSTANCE:
+            self.client.index(self.index_name_1).search(
+            "Examples of leadership", search_method=marqo.SearchMethods.LEXICAL)
+
         assert len(self.client.index(self.index_name_1).search(
             "Examples of leadership", search_method=marqo.SearchMethods.LEXICAL)["hits"]) == 0
         #    but can look for a word
+
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(self.index_name_1).search(
+            '"captain"'))
+
         assert self.client.index(self.index_name_1).search(
             '"captain"')["hits"][0]["_id"] == "123456"
 
@@ -138,7 +171,14 @@ class TestAddDocuments(MarqoTestCase):
         mock__post = mock.MagicMock()
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
         def run():
+            if self.IS_MULTI_INSTANCE:
+                self.warm_request(temp_client.index(self.index_name_1).search(q="my search term"))
+
             temp_client.index(self.index_name_1).search(q="my search term")
+
+            if self.IS_MULTI_INSTANCE:
+                self.warm_request(temp_client.index(self.index_name_1).search(q="my search term", device="cuda:2"))
+
             temp_client.index(self.index_name_1).search(q="my search term", device="cuda:2")
             return True
         assert run()
@@ -167,6 +207,12 @@ class TestAddDocuments(MarqoTestCase):
         res = self.client.index(self.index_name_1).add_documents([
             d1, d2
         ],auto_refresh=True)
+
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(self.index_name_1).search(
+                "blah blah",
+                filter_string="(an_int:[0 TO 30] and an_int:2) AND abc-123:(some text)"))
+
         search_res = self.client.index(self.index_name_1).search(
             "blah blah",
             filter_string="(an_int:[0 TO 30] and an_int:2) AND abc-123:(some text)")
@@ -196,6 +242,13 @@ class TestAddDocuments(MarqoTestCase):
         atts = ["doc title", "an_int"]
         for search_method in [enums.SearchMethods.TENSOR,
                               enums.SearchMethods.LEXICAL]:
+            
+            if self.IS_MULTI_INSTANCE:
+                self.warm_request(self.client.index(self.index_name_1).search(
+                    q="blah blah", attributes_to_retrieve=atts,
+                    search_method=search_method
+                ))
+
             search_res = self.client.index(self.index_name_1).search(
                 q="blah blah", attributes_to_retrieve=atts,
                 search_method=search_method
@@ -236,6 +289,13 @@ class TestAddDocuments(MarqoTestCase):
                     for page_num in range(math.ceil(num_docs / page_size)):
                         lim = page_size
                         off = page_num * page_size
+
+                        if self.IS_MULTI_INSTANCE:
+                            self.warm_request(self.client.index(self.index_name_1).search(
+                                        search_method=search_method,
+                                        q='a', 
+                                        limit=lim, offset=off))
+
                         page_res = self.client.index(self.index_name_1).search(
                                         search_method=search_method,
                                         q='a', 

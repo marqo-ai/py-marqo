@@ -52,11 +52,17 @@ class TestImageChunking(MarqoTestCase):
         client.index(self.index_name).add_documents([document1])
 
         # test the search works
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(client.index(self.index_name).search('a'))
+
         results = client.index(self.index_name).search('a')
         print(results)
         assert results['hits'][0]['location'] == temp_file_name
 
         # search only the image location
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(client.index(self.index_name).search('a', searchable_attributes=['location']))
+
         results = client.index(self.index_name).search('a', searchable_attributes=['location'])
         print(results)
         assert results['hits'][0]['location'] == temp_file_name
@@ -95,11 +101,17 @@ class TestImageChunking(MarqoTestCase):
         client.index(self.index_name).add_documents([document1])
 
         # test the search works
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(client.index(self.index_name).search('a'))
+
         results = client.index(self.index_name).search('a')
         print(results)
         assert results['hits'][0]['location'] == temp_file_name
 
         # search only the image location
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(client.index(self.index_name).search('a', searchable_attributes=['location']))
+
         results = client.index(self.index_name).search('a', searchable_attributes=['location'])
         print(results)
         assert results['hits'][0]['location'] == temp_file_name
@@ -109,6 +121,9 @@ class TestImageChunking(MarqoTestCase):
         assert all(isinstance(_n, (float, int)) for _n in results['hits'][0]['_highlights']['location'])
 
         # search using the image itself, should return a full sized image as highlight
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(client.index(self.index_name).search(temp_file_name))
+            
         results = client.index(self.index_name).search(temp_file_name)
         print(results)
         assert abs(np.array(results['hits'][0]['_highlights']['location']) - np.array([0, 0, img.size[0], img.size[1]])).sum() < 1e-6

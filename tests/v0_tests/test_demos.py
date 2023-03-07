@@ -39,9 +39,17 @@ class TestDemo(MarqoTestCase):
             },
         ])
         print("\nSearching the phrase 'River' across all fields")
+        
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(client.index("cool-index-1").search("River"))
+
         pprint.pprint(client.index("cool-index-1").search("River"))
         # then we search specific searchable attributes. We can see how powerful semantic search is
         print("\nThen we search specific 'River over' searchable attributes. We can see how powerful semantic search is")
+
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(client.index("cool-index-1").search("River", searchable_attributes=["Key Points"]))
+
         pprint.pprint(client.index("cool-index-1").search("River", searchable_attributes=["Key Points"]))
 
     def test_readme_example(self):
@@ -61,6 +69,11 @@ class TestDemo(MarqoTestCase):
                 "_id": "article_591"
             }
         ])
+
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(mq.index("my-first-index").search(
+                q="What is the best outfit to wear on the moon?"
+            ))
 
         results = mq.index("my-first-index").search(
             q="What is the best outfit to wear on the moon?"
@@ -82,9 +95,15 @@ class TestDemo(MarqoTestCase):
 
         assert r3["numberOfDocuments"] == 2
 
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(mq.index("my-first-index").search('marco polo', search_method=marqo.SearchMethods.LEXICAL))
+
         r4 = mq.index("my-first-index").search('marco polo', search_method=marqo.SearchMethods.LEXICAL)
         assert r4["hits"][0]["Title"] == "The Travels of Marco Polo"
 
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(mq.index("my-first-index").search('adventure', searchable_attributes=['Title']))
+            
         r5 = mq.index("my-first-index").search('adventure', searchable_attributes=['Title'])
         assert len(r5["hits"]) == 2
 

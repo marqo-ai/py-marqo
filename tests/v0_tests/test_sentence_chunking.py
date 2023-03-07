@@ -50,6 +50,9 @@ class TestSentenceChunking(MarqoTestCase):
         client.index(self.index_name).add_documents([document1])
 
         # test the search works
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(client.index(self.index_name).search('a'))
+
         results = client.index(self.index_name).search('a')
         print(results)
         assert results['hits'][0]['attributes'] == document1['attributes']
@@ -84,24 +87,40 @@ class TestSentenceChunking(MarqoTestCase):
 
         # search with a term we know is an exact chunk and will then show in the highlights
         search_term = 'hello. how are you.'
+        
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(client.index(self.index_name).search(search_term))
+
         results = client.index(self.index_name).search(search_term)
         print(results)
         assert results['hits'][0]['_highlights']['attributes'] == search_term
 
         # search with a term we know is an exact chunk and will then show in the highlights
         search_term = 'the image into sub-patches (aking to segmenting text). by using either.'
+        
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(client.index(self.index_name).search(search_term))
+
         results = client.index(self.index_name).search(search_term)
         print(results)
         assert results['hits'][0]['_highlights']['description'] == search_term
 
         # search with a term we know is an exact chunk and will then show in the highlights
         search_term = 'sasasasaifjfnonfqeno asadsdljknjdfln'
+        
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(client.index(self.index_name).search(search_term))
+
         results = client.index(self.index_name).search(search_term)
         print(results)
         assert results['hits'][0]['_highlights']['misc'] == search_term
 
         # search with a term we know is part of a sub-chunk and verify it is overlapping in the correct sentence
         search_term = 'can (optionally) chunk.'
+        
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(client.index(self.index_name).search(search_term))
+
         results = client.index(self.index_name).search(search_term)
         print(results)
         assert results['hits'][0]['_highlights']['description'] == 'the image chunking. can (optionally) chunk.'
@@ -132,35 +151,59 @@ class TestSentenceChunking(MarqoTestCase):
 
         # search with a term we know is an exact chunk and will then show in the highlights
         search_term = 'hello. how are you.'
+
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(client.index(self.index_name).search(search_term))
+        
         results = client.index(self.index_name).search(search_term)
         print(results)
         assert results['hits'][0]['_highlights']['attributes'] == search_term
 
         # search with a term we know is an exact chunk and will then show in the highlights
         search_term = 'the image into sub-patches (aking to segmenting text). by using either.'
+        
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(client.index(self.index_name).search(search_term))
+        
         results = client.index(self.index_name).search(search_term)
         print(results)
         assert results['hits'][0]['_highlights']['description'] == search_term
 
         # search with a term we know is an exact chunk and will then show in the highlights
         search_term = 'sasasasaifjfnonfqeno asadsdljknjdfln'
+        
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(client.index(self.index_name).search(search_term))
+        
         results = client.index(self.index_name).search(search_term)
         print(results)
         assert results['hits'][0]['_highlights']['misc'] == search_term
 
         # search with a term we know is part of a sub-chunk and verify it is overlapping in the correct sentence
         search_term = 'can (optionally) chunk.'
+        
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(client.index(self.index_name).search(search_term))
+        
         results = client.index(self.index_name).search(search_term)
         print(results)
         assert results['hits'][0]['_highlights']['description'] == 'the image chunking. can (optionally) chunk.'
 
         # check overlap
         search_term = "can (optionally) chunk. the image into sub-patches (aking to segmenting text)."
+        
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(client.index(self.index_name).search(search_term))
+        
         results = client.index(self.index_name).search(search_term)
         print(results)
         assert results['hits'][0]['_highlights']['description'] == search_term
 
         search_term = "the image into sub-patches (aking to segmenting text). by using either."
+        
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(client.index(self.index_name).search(search_term))
+        
         results = client.index(self.index_name).search(search_term)
         print(results)
         assert results['hits'][0]['_highlights']['description'] == search_term
