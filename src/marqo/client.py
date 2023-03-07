@@ -1,7 +1,11 @@
 import base64
 from typing import Any, Dict, List, Optional, Union
+
+from pydantic import error_wrappers
+
 from marqo.index import Index
 from marqo.config import Config
+from marqo.models import BulkSearchBody, BulkSearchQuery
 from marqo._httprequests import HttpRequests
 from marqo import utils, enums
 from marqo import errors
@@ -142,6 +146,20 @@ class Client:
             "enrichment": enrichment
         })
         return response
+
+    def bulk_search(self, queries: List[Dict[str, Any]], device: Optional[str] = None) -> Dict[str, Any]:
+        try:
+            parsed_queries = [BulkSearchBody(**q) for q in queries]
+        except error_wrappers.ValidationError as e:
+            raise errors.InvalidArgError(f"some parameters in search query(s) are invalid. Errors are: {e.errors()}")
+
+        selected_device = device if device is not None else self.config.search_device
+        translated = utils.translate_device_string_for_url(selected_device)
+        
+        return self.http.post(
+            f"indexes/bulk/search?device={translated}",
+            body=BulkSearchQuery(queries=parsed_queries).json()
+        )
 
     @staticmethod
     def _base64url_encode(
