@@ -160,7 +160,7 @@ class TestAddDocuments(MarqoTestCase):
         ])
         
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(self.index_name_1).search("wow camel"))
+            self.warm_request(self.client.index(self.index_name_1).search, "wow camel")
             
         res0 = self.client.index(self.index_name_1).search("wow camel")
         print("res0res0")
@@ -170,7 +170,7 @@ class TestAddDocuments(MarqoTestCase):
         self.client.index(self.index_name_1).delete_documents(["123"])
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(self.index_name_1).search("wow camel"))
+            self.warm_request(self.client.index(self.index_name_1).search, "wow camel")
         res1 = self.client.index(self.index_name_1).search("wow camel")
         assert res1['hits'][0]["_id"] == "foo"
         assert len(res1['hits']) == 1
@@ -469,9 +469,9 @@ class TestAddDocuments(MarqoTestCase):
         self.client.index(self.index_name_1).add_documents(documents=[original_doc], non_tensor_fields=['my list'])
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(self.index_name_1).search(
+            self.warm_request(self.client.index(self.index_name_1).search,
                 q='something', filter_string='my\ list:tag-1'
-            ))
+            )
 
         res = self.client.index(self.index_name_1).search(
             q='something', filter_string='my\ list:tag-1'
@@ -479,9 +479,9 @@ class TestAddDocuments(MarqoTestCase):
         assert res['hits'][0]['_id'] == '1234'
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(self.index_name_1).search(
+            self.warm_request(self.client.index(self.index_name_1).search,
                 q='something', filter_string='my\ list:tag-non-existent'
-            ))
+            )
 
         bad_res = self.client.index(self.index_name_1).search(
             q='something', filter_string='my\ list:tag-non-existent'
@@ -564,15 +564,15 @@ class TestAddDocuments(MarqoTestCase):
                 }}}, auto_refresh=True)
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(self.index_name_1).search("A rider is riding a horse jumping over the barrier_0", search_method="lexical"))
+            self.warm_request(self.client.index(self.index_name_1).search,"A rider is riding a horse jumping over the barrier_0", search_method="lexical")
 
         lexical_res = self.client.index(self.index_name_1).search("A rider is riding a horse jumping over the barrier_0", search_method="lexical")
         assert lexical_res["hits"][0]["_id"] == "111"
 
         # a space at the end
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(self.index_name_1).search(
-            "", filter_string="combo_text_image.text_0\ : (A rider is riding a horse jumping over the barrier_0.)"))
+            self.warm_request(self.client.index(self.index_name_1).search,
+            "", filter_string="combo_text_image.text_0\ : (A rider is riding a horse jumping over the barrier_0.)")
 
         filtering_res = self.client.index(self.index_name_1).search(
             "", filter_string="combo_text_image.text_0\ : (A rider is riding a horse jumping over the barrier_0.)")
@@ -580,14 +580,14 @@ class TestAddDocuments(MarqoTestCase):
 
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(self.index_name_1).search(""))
+            self.warm_request(self.client.index(self.index_name_1).search,"")
 
         tensor_res = self.client.index(self.index_name_1).search("")
         assert tensor_res["hits"][0]["_id"] == "111"
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(self.index_name_1).search(
-            "search this with space", search_method="lexical"))
+            self.warm_request(self.client.index(self.index_name_1).search,
+            "search this with space", search_method="lexical")
 
         space_lexical_res = self.client.index(self.index_name_1).search(
             "search this with space", search_method="lexical")
@@ -595,15 +595,15 @@ class TestAddDocuments(MarqoTestCase):
 
         # A space in the middle
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(self.index_name_1).search(
-            "", filter_string="space\ field.space\ child\ 1:(search this with space)"))
+            self.warm_request(self.client.index(self.index_name_1).search,
+            "", filter_string="space\ field.space\ child\ 1:(search this with space)")
 
         space_filtering_res = self.client.index(self.index_name_1).search(
             "", filter_string="space\ field.space\ child\ 1:(search this with space)")
         assert space_filtering_res["hits"][0]["_id"] == "111"
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(self.index_name_1).search(""))
-            
+            self.warm_request(self.client.index(self.index_name_1).search,"")
+
         space_tensor_res = self.client.index(self.index_name_1).search("")
         assert space_tensor_res["hits"][0]["_id"] == "111"

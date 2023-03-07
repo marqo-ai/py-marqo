@@ -51,7 +51,7 @@ class TestSentenceChunking(MarqoTestCase):
 
         # test the search works
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.index_name).search('a'))
+            self.warm_request(client.index(self.index_name).search,'a')
 
         results = client.index(self.index_name).search('a')
         print(results)
@@ -89,7 +89,7 @@ class TestSentenceChunking(MarqoTestCase):
         search_term = 'hello. how are you.'
         
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.index_name).search(search_term))
+            self.warm_request(client.index(self.index_name).search,search_term)
 
         results = client.index(self.index_name).search(search_term)
         print(results)
@@ -99,7 +99,7 @@ class TestSentenceChunking(MarqoTestCase):
         search_term = 'the image into sub-patches (aking to segmenting text). by using either.'
         
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.index_name).search(search_term))
+            self.warm_request(client.index(self.index_name).search,search_term)
 
         results = client.index(self.index_name).search(search_term)
         print(results)
@@ -109,7 +109,7 @@ class TestSentenceChunking(MarqoTestCase):
         search_term = 'sasasasaifjfnonfqeno asadsdljknjdfln'
         
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.index_name).search(search_term))
+            self.warm_request(client.index(self.index_name).search,search_term)
 
         results = client.index(self.index_name).search(search_term)
         print(results)
@@ -119,7 +119,7 @@ class TestSentenceChunking(MarqoTestCase):
         search_term = 'can (optionally) chunk.'
         
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.index_name).search(search_term))
+            self.warm_request(client.index(self.index_name).search,search_term)
 
         results = client.index(self.index_name).search(search_term)
         print(results)
@@ -153,7 +153,7 @@ class TestSentenceChunking(MarqoTestCase):
         search_term = 'hello. how are you.'
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.index_name).search(search_term))
+            self.warm_request(client.index(self.index_name).search,search_term)
         
         results = client.index(self.index_name).search(search_term)
         print(results)
@@ -163,7 +163,7 @@ class TestSentenceChunking(MarqoTestCase):
         search_term = 'the image into sub-patches (aking to segmenting text). by using either.'
         
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.index_name).search(search_term))
+            self.warm_request(client.index(self.index_name).search,search_term)
         
         results = client.index(self.index_name).search(search_term)
         print(results)
@@ -173,7 +173,7 @@ class TestSentenceChunking(MarqoTestCase):
         search_term = 'sasasasaifjfnonfqeno asadsdljknjdfln'
         
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.index_name).search(search_term))
+            self.warm_request(client.index(self.index_name).search,search_term)
         
         results = client.index(self.index_name).search(search_term)
         print(results)
@@ -183,7 +183,7 @@ class TestSentenceChunking(MarqoTestCase):
         search_term = 'can (optionally) chunk.'
         
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.index_name).search(search_term))
+            self.warm_request(client.index(self.index_name).search,search_term)
         
         results = client.index(self.index_name).search(search_term)
         print(results)
@@ -193,7 +193,7 @@ class TestSentenceChunking(MarqoTestCase):
         search_term = "can (optionally) chunk. the image into sub-patches (aking to segmenting text)."
         
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.index_name).search(search_term))
+            self.warm_request(client.index(self.index_name).search,search_term)
         
         results = client.index(self.index_name).search(search_term)
         print(results)
@@ -202,7 +202,7 @@ class TestSentenceChunking(MarqoTestCase):
         search_term = "the image into sub-patches (aking to segmenting text). by using either."
         
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.index_name).search(search_term))
+            self.warm_request(client.index(self.index_name).search,search_term)
         
         results = client.index(self.index_name).search(search_term)
         print(results)

@@ -76,8 +76,8 @@ class TestAddDocuments(MarqoTestCase):
             time.sleep(1)
 
         assert my_ix.get_stats()['numberOfDocuments'] == 1
-        
+
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(my_ix.search(q='aquatic animal'))
+            self.warm_request(my_ix.search,q='aquatic animal')
 
         assert len(my_ix.search(q='aquatic animal')['hits']) == 1

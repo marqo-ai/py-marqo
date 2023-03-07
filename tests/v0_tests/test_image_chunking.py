@@ -53,7 +53,7 @@ class TestImageChunking(MarqoTestCase):
 
         # test the search works
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.index_name).search('a'))
+            self.warm_request(client.index(self.index_name).search,'a')
 
         results = client.index(self.index_name).search('a')
         print(results)
@@ -61,7 +61,7 @@ class TestImageChunking(MarqoTestCase):
 
         # search only the image location
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.index_name).search('a', searchable_attributes=['location']))
+            self.warm_request(client.index(self.index_name).search,'a', searchable_attributes=['location'])
 
         results = client.index(self.index_name).search('a', searchable_attributes=['location'])
         print(results)
@@ -102,7 +102,7 @@ class TestImageChunking(MarqoTestCase):
 
         # test the search works
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.index_name).search('a'))
+            self.warm_request(client.index(self.index_name).search,'a')
 
         results = client.index(self.index_name).search('a')
         print(results)
@@ -110,7 +110,7 @@ class TestImageChunking(MarqoTestCase):
 
         # search only the image location
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.index_name).search('a', searchable_attributes=['location']))
+            self.warm_request(client.index(self.index_name).search,'a', searchable_attributes=['location'])
 
         results = client.index(self.index_name).search('a', searchable_attributes=['location'])
         print(results)
@@ -122,8 +122,8 @@ class TestImageChunking(MarqoTestCase):
 
         # search using the image itself, should return a full sized image as highlight
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.index_name).search(temp_file_name))
-            
+            self.warm_request(client.index(self.index_name).search,temp_file_name)
+
         results = client.index(self.index_name).search(temp_file_name)
         print(results)
         assert abs(np.array(results['hits'][0]['_highlights']['location']) - np.array([0, 0, img.size[0], img.size[1]])).sum() < 1e-6

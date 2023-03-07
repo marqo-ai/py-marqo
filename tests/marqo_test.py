@@ -30,12 +30,17 @@ class MarqoTestCase(unittest.TestCase):
 
         marqo_server_version = Client(**cls.client_settings).get_marqo()["version"]
         if marqo_server_version != py_marqo_support_version:
-            print(f"WARNING: supported py Marqo version and Marqo versions aren't the same!\n {marqo_server_version} != {py_marqo_support_version}")
+            print(f"WARNING: supported Py-marqo version and Marqo versions aren't the same!\n {marqo_server_version} != {py_marqo_support_version}")
             print(f"MARQO SERVER VERSION -> {marqo_server_version}")
             print(f"PY-MARQO SUPPORTED VERSION -> {py_marqo_support_version}")
 
 
 
-    def warm_request(f) -> None:
+    def warm_request(self, func, *args, **kwargs):
+        '''
+        Takes in a function object, func, and executes the function 5 times to warm search results.
+        Any arguments passed to args and kwargs are passed as arguments to the function.
+        This solves the occurence of tests failing due to eventual consistency implemented in marqo cloud.
+        '''
         for i in range(5):
-            f
+            func(*args, **kwargs) 
