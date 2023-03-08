@@ -241,7 +241,15 @@ Marqo is a community project with the goal of making tensor search accessible to
 2. Activate the virtual environment ```source ./venv/bin/activate``` (on Linux or Mac) or ```./venv/Scripts/activate``` (on Windows)
 3. Install requirements from the requirements file: ```pip install -r requirements.txt```
 4. Run tests by running the tox file. CD into this dir and then run "tox"
-5. If you update dependencies, make sure to delete the .tox dir and rerun
+5. If you want to run against marqo cloud, add the following in the `tox.ini` file, under the `[testenv]` section:
+    ```
+    setenv =
+        MARQO_URL = <host url>
+        MARQO_API_KEY = <my super secret api key>
+        IS_MULTI_INSTANCE = <True or False>
+    ```
+    then run the tox file.
+6. If you update dependencies, make sure to delete the .tox dir and rerun
 
 ## Merge instructions:
 1. Run the full test suite (by using the command `tox` in this dir).

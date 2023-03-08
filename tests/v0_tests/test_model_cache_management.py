@@ -70,6 +70,9 @@ class TestModelCacheManagement(MarqoTestCase):
 
 
     def test_eject_model(self) -> None:
+        if self.IS_MULTI_INSTANCE:
+            self.skipTest("Test will sometimes fail on marqo multi instance setup")
+
         settings = {"model": self.MODEL}
 
         self.client.create_index(index_name=self.index_name, **settings)

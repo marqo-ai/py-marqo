@@ -61,6 +61,9 @@ class TestAddDocumentsPara(MarqoTestCase):
         # CHECK ALL
         for _id in identifiers:
             text_1 = f'somethingelse{_id}'
+            if self.IS_MULTI_INSTANCE:
+                self.warm_request(self.client.index(self.index_name_1).search,text_1, search_method='LEXICAL', searchable_attributes=['text', 'other_text'])
+
             res = self.client.index(self.index_name_1).search(text_1, search_method='LEXICAL', searchable_attributes=['text', 'other_text'])
             assert res['hits'][0]['text'] == text_1, f"{res}-{text_1}"
 
@@ -82,5 +85,9 @@ class TestAddDocumentsPara(MarqoTestCase):
         for _id in identifiers:
             # chceck first and last
             text_1 = f'somethingelse{_id}'
+            
+            if self.IS_MULTI_INSTANCE:
+                self.warm_request(self.client.index(self.index_name_1).search,text_1, search_method='LEXICAL')
+
             res = self.client.index(self.index_name_1).search(text_1, search_method='LEXICAL')
             assert res['hits'][0]['text'] == text_1, f"{res}-{text_1}"
