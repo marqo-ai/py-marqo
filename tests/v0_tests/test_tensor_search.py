@@ -171,14 +171,7 @@ class TestAddDocuments(MarqoTestCase):
         mock__post = mock.MagicMock()
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
         def run():
-            if self.IS_MULTI_INSTANCE:
-                self.warm_request(temp_client.index(self.index_name_1).search,q="my search term")
-
             temp_client.index(self.index_name_1).search(q="my search term")
-
-            if self.IS_MULTI_INSTANCE:
-                self.warm_request(temp_client.index(self.index_name_1).search,q="my search term", device="cuda:2")
-
             temp_client.index(self.index_name_1).search(q="my search term", device="cuda:2")
             return True
         assert run()
