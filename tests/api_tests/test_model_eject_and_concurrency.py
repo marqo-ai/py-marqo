@@ -45,6 +45,15 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
             except MarqoApiError as s:
                 pass
 
+    def search(self, index_name):
+        try:
+            res = self.client.index(index_name).search("what is best to wear on the moon?")
+            assert len(res["hits"]) == 1
+            # Either get the search results or raise MarqoWebError
+        except MarqoWebError as e:
+            assert "another request was updating the model cache at the same time" in e.message
+            pass
+
     def test_model_eject_and_concurrency(self):
         for index_name, model in self.index_model_object.items():
             settings = {
@@ -74,18 +83,9 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
             self.client.index(index_name).search(q='What is the best outfit to wear on the moon?')
 
         # Concurrent search
-        def search(index_name):
-            try:
-                res = self.client.index(index_name).search("what is best to wear on the moon?")
-                assert len(res["hits"]) == 1
-                # Either get the search results or raise MarqoWebError
-            except MarqoWebError as e:
-                assert "another request was updating the model cache at the same time" in e.message
-                pass
-
         processes = []
         for index_name in list(self.index_model_object):
-            p = multiprocessing.Process(target=search, args=(index_name,))
+            p = multiprocessing.Process(target=self.search, args=(index_name,))
             processes.append(p)
             p.start()
 
