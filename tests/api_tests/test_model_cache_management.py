@@ -10,7 +10,7 @@ from tests.utilities import allow_environments
 from tests.utilities import classwide_decorate
 
 
-class TestAddDocuments(MarqoTestCase):
+class TestModlCacheManagement(MarqoTestCase):
 
     # NOTE: The cuda should already have model loaded in the startup
     def setUp(self) -> None:
