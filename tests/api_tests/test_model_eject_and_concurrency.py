@@ -14,7 +14,7 @@ import multiprocessing
 class TestModelEjectAndConcurrency(MarqoTestCase):
 
     # NOTE: The cuda should already have model loaded in the startup
-    def setUp(self) -> None:
+    def setUpClass(self) -> None:
         self.client = Client(**self.client_settings)
         self.index_model_object = {
             "test_0": 'open_clip/ViT-B-32/laion400m_e31',
@@ -38,7 +38,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
             except MarqoApiError as s:
                 pass
 
-    def tearDown(self) -> None:
+    def tearDownClass(self) -> None:
         for index_name in list(self.index_model_object):
             try:
                 self.client.delete_index(index_name)
@@ -54,7 +54,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
             assert "another request was updating the model cache at the same time" in e.message
             pass
 
-    def test_model_eject_and_concurrency(self):
+    def test_model_eject_in_add_document(self):
         for index_name, model in self.index_model_object.items():
             settings = {
                 "model": model
@@ -79,9 +79,11 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
                 }]
             )
 
+    def test_model_eject_in_search(self):
         for index_name in list(self.index_model_object):
             self.client.index(index_name).search(q='What is the best outfit to wear on the moon?')
 
+    def test_model_eject_in_concurrent_environment(self):
         # Concurrent search
         processes = []
         for index_name in list(self.index_model_object):
