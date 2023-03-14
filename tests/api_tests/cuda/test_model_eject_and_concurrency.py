@@ -73,6 +73,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
         for index_name in list(self.index_model_object):
             self.client.index(index_name).search(q='What is the best outfit to wear on the moon?', device="cuda")
 
+        # Concurrent search
         def search(index_name):
             try:
                 self.client.index(index_name).search("what is best to wear on the moon?", device="cuda")
