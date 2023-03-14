@@ -77,7 +77,8 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
         def search(index_name):
             try:
                 self.client.index(index_name).search("what is best to wear on the moon?", device="cuda")
-                # some will return MarqoWebError, some will return results.
+                assert len(res["hits"]) == 1
+                # Either get the search results or raise MarqoWebError
             except MarqoWebError as e:
                 assert "another request was updating the model cache at the same time" in e.message
                 pass
