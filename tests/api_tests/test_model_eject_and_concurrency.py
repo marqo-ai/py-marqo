@@ -45,7 +45,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
             except MarqoApiError as s:
                 pass
 
-    def test_sequentially_add_documents(self):
+    def test_model_eject_and_concurrency(self):
         for index_name, model in self.index_model_object.items():
             settings = {
                 "model": model
@@ -70,16 +70,15 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
                 }]
             )
 
-    def test_sequentially_search(self):
         for index_name in list(self.index_model_object):
             self.client.index(index_name).search(q='What is the best outfit to wear on the moon?')
 
-    def test_multiple_process_search(self):
         def search(index_name):
             try:
                 self.client.index(index_name).search("what is best to wear on the moon?")
                 # some will return MarqoWebError, some will return results.
-            except MarqoWebError:
+            except MarqoWebError as e:
+                assert "another request was updating the model cache at the same time" in e.message
                 pass
 
         processes = []
