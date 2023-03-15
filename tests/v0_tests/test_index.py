@@ -202,5 +202,4 @@ class TestIndex(MarqoTestCase):
             url='https://admin:admin@localhost:9200' + f"/{self.index_name_1}",
             verify=False,
         )
-        print(resp.text)
         assert intended_replicas == int(resp.json()[self.index_name_1]['settings']['index']['number_of_replicas'])
