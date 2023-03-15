@@ -168,7 +168,6 @@ class Index:
             "showHighlights": show_highlights,
             "reRanker": reranker,
             "boost": boost,
-            "context": context,
         }
         if attributes_to_retrieve is not None:
             body["attributesToRetrieve"] = attributes_to_retrieve
@@ -176,6 +175,8 @@ class Index:
             body["filter"] = filter_string
         if image_download_headers is not None:
             body["image_download_headers"] = image_download_headers
+        if context is not None:
+            body["context"] = context
         res = self.http.post(
             path=path_with_query_str,
             body=body
