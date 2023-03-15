@@ -28,7 +28,7 @@ class TestCustomVectorSearch(MarqoTestCase):
             ]
         )
 
-        self.query = "What are the best pets"
+        self.query = {"What are the best pets", 1}
 
     def tearDown(self) -> None:
         try:
