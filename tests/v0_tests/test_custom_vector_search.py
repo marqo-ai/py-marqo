@@ -12,7 +12,7 @@ class TestCustomVectorSearch(MarqoTestCase):
             self.client.delete_index(self.index_name_1)
         except MarqoApiError as s:
             pass
-        self.client.create_index(index_name=self.index_name_1)
+        self.client.create_index(index_name=self.index_name_1, model="ViT-B/32")
         self.client.index(index_name=self.index_name_1).add_documents(
             [
                 {
