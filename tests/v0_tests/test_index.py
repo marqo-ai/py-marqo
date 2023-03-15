@@ -149,6 +149,7 @@ class TestIndex(MarqoTestCase):
             args, kwargs = mock__post.call_args
             # this is specific to cloud
             assert kwargs['body']['number_of_shards'] == 2
+            assert kwargs['body']['number_of_replicas'] == 1
             assert kwargs['body']['index_defaults']['treat_urls_and_pointers_as_images'] is False
             return True
         assert run()
@@ -165,6 +166,7 @@ class TestIndex(MarqoTestCase):
             args, kwargs = mock__post.call_args
             assert kwargs['body']['index_defaults']['model'] == 'sentence-transformers/stsb-xlm-r-multilingual'
             assert kwargs['body']['number_of_shards'] == 2
+            assert kwargs['body']['number_of_replicas'] == 1
             assert kwargs['body']['index_defaults']['treat_urls_and_pointers_as_images'] is False
             return True
         assert run()
