@@ -5,6 +5,7 @@ from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
 import unittest
 from tests.marqo_test import MarqoTestCase
 from unittest import mock
+import requests
 
 
 class TestIndex(MarqoTestCase):
@@ -191,4 +192,14 @@ class TestIndex(MarqoTestCase):
             return True
         assert run()
 
-
+    def test_create_custom_number_of_replicas(self):
+        intended_replicas = 5
+        settings = {
+            "number_of_replicas": intended_replicas
+        }
+        self.client.create_index(index_name=self.index_name_1, **settings)
+        resp = requests.get(
+            url=self.authorized_url + f"/{self.index_name_1}",
+            verify=False
+        )
+        assert intended_replicas == int(resp.json()[self.index_name_1]['settings']['index']['number_of_replicas'])
