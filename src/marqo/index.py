@@ -118,6 +118,7 @@ class Index:
                highlights=None, device: Optional[str] = None, filter_string: str = None,
                show_highlights=True, reranker=None, image_download_headers: Optional[Dict] = None,
                attributes_to_retrieve: Optional[List[str]] = None, boost: Optional[Dict[str,List[Union[float, int]]]] = None,
+               context: Optional[dict] = None,
                ) -> Dict[str, Any]:
         """Search the index.
 
@@ -142,7 +143,7 @@ class Index:
             attributes_to_retrieve: a list of document attributes to be
                 retrieved. If left as None, then all attributes will be
                 retrieved.
-
+            context: a dictionary to allow you to bring your own vectors and more into search.
         Returns:
             Dictionary with hits and other metadata
         """
@@ -167,6 +168,7 @@ class Index:
             "showHighlights": show_highlights,
             "reRanker": reranker,
             "boost": boost,
+            "context": context,
         }
         if attributes_to_retrieve is not None:
             body["attributesToRetrieve"] = attributes_to_retrieve
