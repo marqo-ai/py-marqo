@@ -197,7 +197,7 @@ class TestIndex(MarqoTestCase):
         settings = {
             "number_of_replicas": intended_replicas
         }
-        self.client.create_index(index_name=self.index_name_1, **settings)
+        self.client.create_index(index_name=self.index_name_1, settings_dict = settings)
         resp = requests.get(
             url=self.authorized_url + f"/{self.index_name_1}",
             verify=False
