@@ -199,9 +199,7 @@ class TestIndex(MarqoTestCase):
         }
         res = self.client.create_index(index_name=self.index_name_1, settings_dict = settings)
         resp = requests.get(
-            url=self.authorized_url + f"/{self.index_name_1}",
+            url='https://localhost:9200' + f"/{self.index_name_1}",
             verify=False
         )
-        print(res)
-        print(resp.json())
         assert intended_replicas == int(resp.json()[self.index_name_1]['settings']['index']['number_of_replicas'])
