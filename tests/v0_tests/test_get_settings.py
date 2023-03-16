@@ -60,7 +60,7 @@ class TestGetSettings(MarqoTestCase):
 
         self.assertIn('index_defaults', index_settings)
         self.assertIn('number_of_shards', index_settings)
-        self.assertIn('number_of_shards', index_settings)
+        self.assertIn("number_of_replicas", index_settings)
         self.assertTrue(fields.issubset(set(index_settings['index_defaults'])))
 
     def test_settings_should_be_type_dict(self):
