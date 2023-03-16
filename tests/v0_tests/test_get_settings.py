@@ -19,7 +19,8 @@ class TestGetSettings(MarqoTestCase):
                                           'text_preprocessing': {'split_method': 'sentence', 'split_length': 2,
                                                                  'split_overlap': 0},
                                           'model': 'hf/all_datasets_v4_MiniLM-L6', 'normalize_embeddings': True,
-                                          'image_preprocessing': {'patch_method': None}}, 'number_of_shards': 5}
+                                          'image_preprocessing': {'patch_method': None}}, 'number_of_shards': 5,
+                                          'number_of_replicas' : 1,}
         """
         self.client.create_index(index_name=self.index_name)
 
@@ -30,6 +31,7 @@ class TestGetSettings(MarqoTestCase):
 
         self.assertIn('index_defaults', index_settings)
         self.assertIn('number_of_shards', index_settings)
+        self.assertIn("number_of_replicas", index_settings)
         self.assertTrue(fields.issubset(set(index_settings['index_defaults'])))
 
     def test_custom_settings(self):
@@ -58,6 +60,7 @@ class TestGetSettings(MarqoTestCase):
 
         self.assertIn('index_defaults', index_settings)
         self.assertIn('number_of_shards', index_settings)
+        self.assertIn("number_of_replicas", index_settings)
         self.assertTrue(fields.issubset(set(index_settings['index_defaults'])))
 
     def test_settings_should_be_type_dict(self):

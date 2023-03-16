@@ -5,6 +5,7 @@ from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
 import unittest
 from tests.marqo_test import MarqoTestCase
 from unittest import mock
+import requests
 
 
 class TestIndex(MarqoTestCase):
@@ -149,6 +150,7 @@ class TestIndex(MarqoTestCase):
             args, kwargs = mock__post.call_args
             # this is specific to cloud
             assert kwargs['body']['number_of_shards'] == 2
+            assert kwargs['body']['number_of_replicas'] == 1
             assert kwargs['body']['index_defaults']['treat_urls_and_pointers_as_images'] is False
             return True
         assert run()
@@ -165,6 +167,7 @@ class TestIndex(MarqoTestCase):
             args, kwargs = mock__post.call_args
             assert kwargs['body']['index_defaults']['model'] == 'sentence-transformers/stsb-xlm-r-multilingual'
             assert kwargs['body']['number_of_shards'] == 2
+            assert kwargs['body']['number_of_replicas'] == 1
             assert kwargs['body']['index_defaults']['treat_urls_and_pointers_as_images'] is False
             return True
         assert run()
@@ -189,4 +192,12 @@ class TestIndex(MarqoTestCase):
             return True
         assert run()
 
-
+    def test_create_custom_number_of_replicas(self):
+        intended_replicas = 5
+        settings = {
+            "number_of_replicas": intended_replicas
+        }
+        self.client.create_index(index_name=self.index_name_1, settings_dict = settings)
+        index_setting = self.client.index(self.index_name_1).get_settings()
+        print(index_setting)
+        assert intended_replicas == index_setting['number_of_replicas']
