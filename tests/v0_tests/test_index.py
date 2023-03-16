@@ -200,7 +200,7 @@ class TestIndex(MarqoTestCase):
         self.client.create_index(index_name=self.index_name_1, settings_dict = settings)
         index_setting = self.client.index(self.index_name_1).get_settings()
         print(index_setting)
-        assert intended_replicas == index_setting['index']['number_of_replicas']
+        assert intended_replicas == index_setting['number_of_replicas']
         #
         #
         #
