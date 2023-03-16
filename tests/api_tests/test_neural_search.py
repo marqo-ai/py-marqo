@@ -189,3 +189,40 @@ class TestAddDocuments(MarqoTestCase):
             # the poodle doc should be lower ranked than the irrelevant doc
             for hit_position, _ in enumerate(res['hits']):
                 assert res['hits'][hit_position]['_id'] == expected_ordering[hit_position]
+
+    def test_custom_search_results(self):
+        try:
+            self.client.delete_index(self.index_name_1)
+        except MarqoApiError as s:
+            pass
+
+        self.client.create_index(index_name=self.index_name_1, model="ViT-B/32")
+        self.client.index(index_name=self.index_name_1).add_documents(
+            [
+                {
+                    "Title": "A comparison of the best pets",
+                    "Description": "Animals",
+                    "_id": "d1"
+                },
+                {
+                    "Title": "The history of dogs",
+                    "Description": "A history of household pets",
+                    "_id": "d2"
+                }
+            ]
+        )
+        query = {
+            "What are the best pets": 1
+        }
+
+        custom_res = self.client.index(self.index_name_1).search(q=query,
+                                                                 context={"tensor": [
+                                                                     {"vector": [1, ] * 512, "weight": 0},
+                                                                     {"vector": [2, ] * 512, "weight": 0}], })
+
+        original_res = self.client.index(self.index_name_1).search(q=query)
+
+        original_score = original_res["hits"][0]["_score"]
+        custom_score = custom_res["hits"][0]["_score"]
+
+        self.assertEqual(custom_score, original_score)
