@@ -9,8 +9,6 @@ from marqo.errors import MarqoWebError
 
 
 class MarqoTestCase(unittest.TestCase):
-
-    client_settings = None
     @classmethod
     def setUpClass(cls) -> None:
         local_marqo_settings = {
@@ -20,7 +18,7 @@ class MarqoTestCase(unittest.TestCase):
         cls.authorized_url = cls.client_settings["url"]
     @classmethod
     def removeAllModels(cls) -> None:
-        client = Client(**cls.client_settings)
+        client = Client(**cls.client_setting)
         model_list = client.get_loaded_models()["models"]
         for model in model_list:
             try:
