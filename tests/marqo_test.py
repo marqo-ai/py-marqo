@@ -25,9 +25,3 @@ class MarqoTestCase(unittest.TestCase):
                 client.eject_model(model_name=model["model_name"], model_device=model["model_device"])
             except MarqoWebError:
                 pass
-
-
-
-
-
-
