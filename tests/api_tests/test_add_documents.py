@@ -25,7 +25,7 @@ class TestAddDocuments(MarqoTestCase):
             pass
     @classmethod
     def tearDownClass(cls) -> None:
-        MarqoTestCase.removeAllModels()
+        cls.removeAllModels()
 
     # Create index tests
     def test_create_index(self):
