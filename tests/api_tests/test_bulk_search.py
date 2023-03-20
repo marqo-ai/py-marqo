@@ -21,9 +21,6 @@ class TestBulkSearch(MarqoTestCase):
             self.client.delete_index(self.index_name_2)
         except MarqoApiError as s:
             pass
-    @classmethod
-    def tearDownClass(cls) -> None:
-        cls.removeAllModels()
 
     @staticmethod
     def strip_marqo_fields(doc, strip_id=True):
