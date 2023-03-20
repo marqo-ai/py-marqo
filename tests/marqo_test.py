@@ -18,7 +18,7 @@ class MarqoTestCase(unittest.TestCase):
         cls.authorized_url = cls.client_settings["url"]
     @classmethod
     def removeAllModels(cls) -> None:
-        client = Client(**cls.client_setting)
+        client = Client(**MarqoTestCase.client_setting)
         model_list = client.get_loaded_models()["models"]
         for model in model_list:
             try:
