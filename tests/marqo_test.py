@@ -10,6 +10,7 @@ from marqo.errors import MarqoWebError
 
 class MarqoTestCase(unittest.TestCase):
 
+    client_settings = None
     @classmethod
     def setUpClass(cls) -> None:
         local_marqo_settings = {
