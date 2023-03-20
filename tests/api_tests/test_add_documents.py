@@ -23,9 +23,10 @@ class TestAddDocuments(MarqoTestCase):
             self.client.delete_index(self.index_name_1)
         except MarqoApiError as s:
             pass
+    def tearDownClass(cls) -> None:
+        cls.removeAllModels()
 
     # Create index tests
-
     def test_create_index(self):
         self.client.create_index(index_name=self.index_name_1)
 

@@ -22,6 +22,9 @@ class TestBulkSearch(MarqoTestCase):
         except MarqoApiError as s:
             pass
 
+    def tearDownClass(cls) -> None:
+        cls.removeAllModels()
+
     @staticmethod
     def strip_marqo_fields(doc, strip_id=True):
         """Strips Marqo fields from a returned doc to get the original doc"""
