@@ -19,10 +19,15 @@ class MarqoTestCase(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls) -> None:
+        # A function that will be automatically called after each test call
+        # This removes all the loaded models to save memory space.
         cls.removeAllModels()
 
     @classmethod
     def removeAllModels(cls) -> None:
+        # A function that can be called to remove loaded models in Marqo.
+        # Use it when ever you think there is a risk of OOM memory problems.
+        # E.g., add it into the `tearDown` function to remove models between test cases.
         client = Client(**cls.client_settings)
         model_list = client.get_loaded_models()["models"]
         for model in model_list:
