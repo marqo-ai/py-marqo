@@ -19,7 +19,8 @@ class MarqoTestCase(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls) -> None:
-        cls.removeAllModels()
+        pass
+        # cls.removeAllModels()
 
     @classmethod
     def removeAllModels(cls) -> None:
