@@ -23,7 +23,7 @@ class TestBulkSearch(MarqoTestCase):
             pass
 
     def tearDownClass(cls) -> None:
-        cls.removeAllModels()
+        cls.removeAllModels(cls)
 
     @staticmethod
     def strip_marqo_fields(doc, strip_id=True):
