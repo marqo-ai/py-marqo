@@ -4,18 +4,21 @@ from marqo import enums
 from unittest import mock
 from marqo.client import Client
 from marqo.errors import MarqoApiError
-import unittest
-import pprint
+import requests
+import random
+import math
 from tests.marqo_test import MarqoTestCase
-from tests.utilities import disallow_environments
 
-class TestAddDocuments(MarqoTestCase):
+
+class TestBulkSearch(MarqoTestCase):
 
     def setUp(self) -> None:
         self.client = Client(**self.client_settings)
         self.index_name_1 = "my-test-index-1"
+        self.index_name_2 = "my-test-index-2"
         try:
             self.client.delete_index(self.index_name_1)
+            self.client.delete_index(self.index_name_2)
         except MarqoApiError as s:
             pass
 
@@ -44,8 +47,13 @@ class TestAddDocuments(MarqoTestCase):
             """
         }
         add_doc_res = self.client.index(self.index_name_1).add_documents([d1])
-        search_res = self.client.index(self.index_name_1).search(
-            "title about some doc")
+        resp = self.client.bulk_search([{
+            "index": self.index_name_1,
+            "q": "title about some doc"
+        }])
+        assert len(resp['result']) == 1
+        search_res = resp['result'][0]
+
         assert len(search_res["hits"]) == 1
         assert self.strip_marqo_fields(search_res["hits"][0]) == d1
         assert len(search_res["hits"][0]["_highlights"]) > 0
@@ -53,9 +61,31 @@ class TestAddDocuments(MarqoTestCase):
 
     def test_search_empty_index(self):
         self.client.create_index(index_name=self.index_name_1)
-        search_res = self.client.index(self.index_name_1).search(
-            "title about some doc")
+        resp = self.client.bulk_search([{
+            "index": self.index_name_1,
+            "q": "title about some doc"
+        }])
+        assert len(resp['result']) == 1
+        search_res = resp['result'][0]
+
         assert len(search_res["hits"]) == 0
+
+    def test_search_highlights(self):
+        """Tests if show_highlights works and if the deprecation behaviour is expected"""
+        self.client.create_index(index_name=self.index_name_1)
+        self.client.index(index_name=self.index_name_1).add_documents([{"f1": "some doc"}])
+        for params, expected_highlights_presence in [
+                ({}, True),
+                ({"showHighlights": False}, False),
+                ({"showHighlights": True}, True)
+            ]:
+            resp = self.client.bulk_search([{**{
+                "index": self.index_name_1,
+                "q": "title about some doc"
+            }, **params}])
+            assert len(resp['result']) == 1
+            search_res = resp['result'][0]
+            assert ("_highlights" in search_res["hits"][0]) is expected_highlights_presence
 
     def test_search_multi(self):
         self.client.create_index(index_name=self.index_name_1)
@@ -72,8 +102,13 @@ class TestAddDocuments(MarqoTestCase):
         res = self.client.index(self.index_name_1).add_documents([
             d1, d2
         ])
-        search_res = self.client.index(self.index_name_1).search(
-            "this is a solid doc")
+        resp = self.client.bulk_search([{
+            "index": self.index_name_1,
+            "q": "this is a solid doc"
+        }])
+        assert len(resp['result']) == 1
+        search_res = resp['result'][0]
+
         assert d2 == self.strip_marqo_fields(search_res['hits'][0], strip_id=False)
         assert search_res['hits'][0]['_highlights']["field X"] == "this is a solid doc"
 
@@ -95,8 +130,13 @@ class TestAddDocuments(MarqoTestCase):
         ])
 
         # Ensure that vector search works
-        search_res = self.client.index(self.index_name_1).search(
-            "Examples of leadership", search_method=enums.SearchMethods.TENSOR)
+        resp = self.client.bulk_search([{
+            "index": self.index_name_1,
+            "q": "Examples of leadership"
+        }])
+        assert len(resp['result']) == 1
+        search_res = resp['result'][0]
+
         assert d2 == self.strip_marqo_fields(search_res["hits"][0], strip_id=False)
         assert search_res["hits"][0]['_highlights']["doc title"].startswith("The captain bravely lead her followers")
 
@@ -117,18 +157,24 @@ class TestAddDocuments(MarqoTestCase):
         mock__post = mock.MagicMock()
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
         def run():
-            temp_client.index(self.index_name_1).search(q="my search term")
-            temp_client.index(self.index_name_1).search(q="my search term", device="cuda:2")
+            temp_client.bulk_search([{
+                "index": self.index_name_1,
+                "q": "my search term"
+            }])
+            temp_client.bulk_search([{
+                "index": self.index_name_1,
+                "q": "my search term"
+            }], device="cuda:2")
             return True
         assert run()
-        # did we use the defined default device?
-        args, kwargs0 = mock__post.call_args_list[0]
-        assert "device=cpu4" in kwargs0["path"]
-        # did we overrride the default device?
-        args, kwargs1 = mock__post.call_args_list[1]
-        assert "device=cuda2" in kwargs1["path"]
 
-    @disallow_environments(["S2SEARCH_OS"])
+        # did we use the defined default device?
+        args, _ = mock__post.call_args_list[0]
+        assert "device=cpu4" in args[0]
+        # did we overrride the default device?
+        args, _ = mock__post.call_args_list[1]
+        assert "device=cuda2" in args[0]
+
     def test_prefiltering(self):
         self.client.create_index(index_name=self.index_name_1)
         d1 = {
@@ -147,12 +193,106 @@ class TestAddDocuments(MarqoTestCase):
         res = self.client.index(self.index_name_1).add_documents([
             d1, d2
         ],auto_refresh=True)
-        search_res = self.client.index(self.index_name_1).search(
-            "blah blah",
-            filter_string="(an_int:[0 TO 30] and an_int:2) AND abc-123:(some text)")
+
+        resp = self.client.bulk_search([{
+            "index": self.index_name_1,
+            "q": "blah blah",
+            "filter": "(an_int:[0 TO 30] and an_int:2) AND abc-123:(some text)"
+        }])
+        assert len(resp['result']) == 1
+        search_res = resp['result'][0]
+
         assert len(search_res["hits"]) == 1
-        pprint.pprint(search_res)
         assert search_res["hits"][0]["_id"] == "my-cool-doc"
+
+    def test_attributes_to_retrieve(self):
+        self.client.create_index(index_name=self.index_name_1)
+        d1 = {
+            "doc title": "Very heavy, dense metallic lead.",
+            "abc-123": "some text blah",
+            "an_int": 2,
+            "_id": "my-cool-doc"
+        }
+        d2 = {
+            "doc title": "The captain bravely lead her followers into battle."
+                         " She directed her soldiers to and fro.",
+            "field X": "this is a solid doc blah",
+            "field1": "other things",
+            "an_int": 2345678,
+            "_id": "123456"
+        }
+        x = self.client.index(self.index_name_1).add_documents([
+            d1, d2
+        ], auto_refresh=True)
+        atts = ["doc title", "an_int"]
+        for search_method in [enums.SearchMethods.TENSOR,
+                              enums.SearchMethods.LEXICAL]:
+            resp = self.client.bulk_search([{
+                "index": self.index_name_1,
+                "q": "blah blah",
+                "searchMethod": search_method,
+                "attributesToRetrieve": atts
+            }])
+            assert len(resp['result']) == 1
+            search_res = resp['result'][0]
+
+            assert len(search_res['hits']) == 2
+            for hit in search_res['hits']:
+                assert {k for k in hit.keys() if not k.startswith('_')} == set(atts)
+
+        
+    def test_pagination_single_field(self):
+        self.client.create_index(index_name=self.index_name_1)
+        
+        # 100 random words
+        vocab_source = "https://www.mit.edu/~ecprice/wordlist.10000"
+        vocab = requests.get(vocab_source).text.splitlines()
+        num_docs = 100
+        docs = [{"Title": "a " + (" ".join(random.choices(population=vocab, k=25))),
+                            "_id": str(i)
+                            }
+                        for i in range(num_docs)]
+        
+        self.client.index(index_name=self.index_name_1).add_documents(
+            docs, auto_refresh=False, client_batch_size=50
+        )
+        self.client.index(index_name=self.index_name_1).refresh()
+
+        for search_method in (enums.SearchMethods.TENSOR, enums.SearchMethods.LEXICAL):
+            for doc_count in [100]:
+                # Query full results
+                resp = self.client.bulk_search([{
+                    "index": self.index_name_1,
+                    "q": "a",
+                    "searchMethod": search_method,
+                    "limit":doc_count
+                }])
+                assert len(resp['result']) == 1
+                full_search_results = resp['result'][0]
+                
+                for page_size in [1, 5, 10, 100]:
+                    paginated_search_results = {"hits": []}
+
+                    for page_num in range(math.ceil(num_docs / page_size)):
+                        lim = page_size
+                        off = page_num * page_size
+                        resp = self.client.bulk_search([{
+                            "index": self.index_name_1,
+                            "q": "a",
+                            "searchMethod": search_method,
+                            "limit": lim,
+                            "offset": off
+                        }])
+                        assert len(resp['result']) == 1
+                        page_res = resp['result'][0]
+                        
+                        paginated_search_results["hits"].extend(page_res["hits"])
+
+                    # Compare paginated to full results (length only for now)
+                    assert len(full_search_results["hits"]) == len(paginated_search_results["hits"])
+
+                    # TODO: re-add this assert when KNN incosistency bug is fixed
+                    # assert full_search_results["hits"] == paginated_search_results["hits"]
 
     def test_multi_queries(self):
         docs = [
@@ -182,47 +322,13 @@ class TestAddDocuments(MarqoTestCase):
              ['artefact_hippo', 'realistic_hippo']),
         ]
         for query, expected_ordering in queries_expected_ordering:
-            res = self.client.index(index_name=self.index_name_1).search(
-                q=query,
-                search_method="TENSOR")
-            print(res)
+            resp = self.client.bulk_search([{
+                "index": self.index_name_1,
+                "q": query
+            }])
+            assert len(resp['result']) == 1
+            res = resp['result'][0]
+
             # the poodle doc should be lower ranked than the irrelevant doc
             for hit_position, _ in enumerate(res['hits']):
                 assert res['hits'][hit_position]['_id'] == expected_ordering[hit_position]
-
-    def test_custom_search_results(self):
-        try:
-            self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
-            pass
-
-        self.client.create_index(index_name=self.index_name_1, model="ViT-B/32")
-        self.client.index(index_name=self.index_name_1).add_documents(
-            [
-                {
-                    "Title": "A comparison of the best pets",
-                    "Description": "Animals",
-                    "_id": "d1"
-                },
-                {
-                    "Title": "The history of dogs",
-                    "Description": "A history of household pets",
-                    "_id": "d2"
-                }
-            ]
-        )
-        query = {
-            "What are the best pets": 1
-        }
-
-        custom_res = self.client.index(self.index_name_1).search(q=query,
-                                                                 context={"tensor": [
-                                                                     {"vector": [1, ] * 512, "weight": 0},
-                                                                     {"vector": [2, ] * 512, "weight": 0}], })
-
-        original_res = self.client.index(self.index_name_1).search(q=query)
-
-        original_score = original_res["hits"][0]["_score"]
-        custom_score = custom_res["hits"][0]["_score"]
-
-        self.assertEqual(custom_score, original_score)
