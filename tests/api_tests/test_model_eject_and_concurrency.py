@@ -1,14 +1,8 @@
-import copy
-import pprint
 from marqo.client import Client
-from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
-import unittest
+from marqo.errors import MarqoWebError
 from tests.marqo_test import MarqoTestCase
-from marqo import enums
-from unittest import mock
-from tests.utilities import allow_environments
-from tests.utilities import classwide_decorate
 import multiprocessing
+import time
 
 
 class TestModelEjectAndConcurrency(MarqoTestCase):
@@ -80,6 +74,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
             pass
 
     def test_sequentially_search(self):
+        time.sleep(5)
         for index_name in list(self.index_model_object):
             self.client.index(index_name).search(q='What is the best outfit to wear on the moon?')
 
