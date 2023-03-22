@@ -39,22 +39,23 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
                 pass
 
     def tearDown(self) -> None:
-        for index_name in list(self.index_model_object):
-            try:
-                self.client.delete_index(index_name)
-            except MarqoApiError as s:
-                pass
+        pass
 
-    def search(self, index_name):
+    def normal_search(self, index_name, q):
+        res = self.client.index(index_name).search("what is best to wear on the moon?")
+        if len(res["hits"]) != 1:
+            q.put(AssertionError)
+
+    def racing_search(self, index_name, q):
         try:
             res = self.client.index(index_name).search("what is best to wear on the moon?")
-            assert len(res["hits"]) == 1
-            # Either get the search results or raise MarqoWebError
+            q.put(AssertionError)
         except MarqoWebError as e:
-            assert "another request was updating the model cache at the same time" in e.message
+            if not "another request was updating the model cache at the same time" in e.message:
+                q.put(e)
             pass
 
-    def test_model_eject_and_concurrency(self):
+    def test_sequentially_add_document(self):
         for index_name, model in self.index_model_object.items():
             settings = {
                 "model": model
@@ -79,15 +80,42 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
                 }]
             )
 
+    def test_sequentially_search(self):
         for index_name in list(self.index_model_object):
             self.client.index(index_name).search(q='What is the best outfit to wear on the moon?')
 
-        # Concurrent search
+    def test_concurrent_search_with_cache(self):
+        # Search once to make sure the model is in cache
+        test_index = "test_1"
+        res = self.client.index(test_index).search("what is best to wear on the moon?")
+
+        q = multiprocessing.Queue()
         processes = []
-        for index_name in list(self.index_model_object):
-            p = multiprocessing.Process(target=self.search, args=(index_name,))
+        for i in range(5):
+            p = multiprocessing.Process(target=self.normal_search, args=(test_index, q))
             processes.append(p)
             p.start()
 
         for p in processes:
             p.join()
+
+        assert q.empty()
+
+    def test_concurrent_search_without_cache(self):
+        # Remove all the cached models
+        MarqoTestCase.removeAllModels()
+
+        test_index = "test_3"
+        q = multiprocessing.Queue()
+        processes = []
+        p = multiprocessing.Process(target=self.normal_search, args=(test_index, q))
+        processes.append(p)
+        p.start()
+
+        for i in range(5):
+            p = multiprocessing.Process(target=self.racing_search, args=(test_index, q))
+            processes.append(p)
+            p.start()
+
+        assert q.empty()
+
