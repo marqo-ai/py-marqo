@@ -77,26 +77,26 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
                 q.put(e)
             pass
 
-    # def test_sequentially_search(self):
-    #     for index_name in list(self.index_model_object):
-    #         self.client.index(index_name).search(q='What is the best outfit to wear on the moon?')
+    def test_sequentially_search(self):
+        for index_name in list(self.index_model_object):
+            self.client.index(index_name).search(q='What is the best outfit to wear on the moon?')
 
-    # def test_concurrent_search_with_cache(self):
-    #     # Search once to make sure the model is in cache
-    #     test_index = "test_1"
-    #     res = self.client.index(test_index).search("what is best to wear on the moon?")
-    #
-    #     q = multiprocessing.Queue()
-    #     processes = []
-    #     for i in range(5):
-    #         p = multiprocessing.Process(target=self.normal_search, args=(test_index, q))
-    #         processes.append(p)
-    #         p.start()
-    #
-    #     for p in processes:
-    #         p.join()
-    #
-    #     assert q.empty()
+    def test_concurrent_search_with_cache(self):
+        # Search once to make sure the model is in cache
+        test_index = "test_1"
+        res = self.client.index(test_index).search("what is best to wear on the moon?")
+
+        q = multiprocessing.Queue()
+        processes = []
+        for i in range(5):
+            p = multiprocessing.Process(target=self.normal_search, args=(test_index, q))
+            processes.append(p)
+            p.start()
+
+        for p in processes:
+            p.join()
+
+        assert q.empty()
 
     def test_concurrent_search_without_cache(self):
         # Remove all the cached models
