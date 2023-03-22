@@ -32,11 +32,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
             "test_12": "onnx16/openai/ViT-L/14",
             "test_13": 'onnx32/open_clip/ViT-B-32-quickgelu/laion400m_e32',
         }
-        for index_name in list(self.index_model_object):
-            try:
-                self.client.delete_index(index_name)
-            except MarqoApiError as s:
-                pass
+
 
     def tearDown(self) -> None:
         pass
@@ -55,7 +51,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
                 q.put(e)
             pass
 
-    def test_sequentially_add_document(self):
+    def test_sequetially_add_documents(self):
         for index_name, model in self.index_model_object.items():
             settings = {
                 "model": model
