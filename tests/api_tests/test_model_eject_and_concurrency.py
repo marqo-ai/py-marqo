@@ -95,8 +95,10 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
 
         for p in processes:
             p.join()
-
-        assert q.empty()
+        if not q.empty():
+            print(q.get())
+            raise AssertionError
+        #assert q.empty()
 
     def test_concurrent_search_without_cache(self):
         # Remove all the cached models
