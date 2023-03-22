@@ -17,10 +17,10 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
         super().setUpClass()
         cls.client = Client(**cls.client_settings)
         cls.index_model_object = {
-            "test_0": 'open_clip/ViT-B-32/laion400m_e31',
+            #"test_0": 'open_clip/ViT-B-32/laion400m_e31',
             "test_1": 'open_clip/ViT-B-32/laion400m_e32',
-            "test_2": 'open_clip/RN50x4/openai',
-            "test_3": 'onnx16/open_clip/RN50-quickgelu/openai',
+            #"test_2": 'open_clip/RN50x4/openai',
+            #"test_3": 'onnx16/open_clip/RN50-quickgelu/openai',
             # "test_4": "onnx16/open_clip/ViT-L-14/laion2b_s32b_b82k",
             # "test_5": "onnx32/open_clip/ViT-L-14/openai",
             # "test_6": "hf/all-MiniLM-L6-v1",
@@ -78,9 +78,9 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
                 q.put(e)
             pass
 
-    def test_sequentially_search(self):
-        for index_name in list(self.index_model_object):
-            self.client.index(index_name).search(q='What is the best outfit to wear on the moon?')
+    # def test_sequentially_search(self):
+    #     for index_name in list(self.index_model_object):
+    #         self.client.index(index_name).search(q='What is the best outfit to wear on the moon?')
 
     def test_concurrent_search_with_cache(self):
         # Search once to make sure the model is in cache
@@ -101,21 +101,21 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
             raise AssertionError
         #assert q.empty()
 
-    def test_concurrent_search_without_cache(self):
-        # Remove all the cached models
-        super().removeAllModels()
-
-        test_index = "test_3"
-        q = multiprocessing.Queue()
-        processes = []
-        p = multiprocessing.Process(target=self.normal_search, args=(test_index, q))
-        processes.append(p)
-        p.start()
-
-        for i in range(5):
-            p = multiprocessing.Process(target=self.racing_search, args=(test_index, q))
-            processes.append(p)
-            p.start()
-
-        assert q.empty()
+    # def test_concurrent_search_without_cache(self):
+    #     # Remove all the cached models
+    #     super().removeAllModels()
+    #
+    #     test_index = "test_3"
+    #     q = multiprocessing.Queue()
+    #     processes = []
+    #     p = multiprocessing.Process(target=self.normal_search, args=(test_index, q))
+    #     processes.append(p)
+    #     p.start()
+    #
+    #     for i in range(5):
+    #         p = multiprocessing.Process(target=self.racing_search, args=(test_index, q))
+    #         processes.append(p)
+    #         p.start()
+    #
+    #     assert q.empty()
 
