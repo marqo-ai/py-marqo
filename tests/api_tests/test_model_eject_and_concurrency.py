@@ -12,9 +12,7 @@ import multiprocessing
 
 
 class TestModelEjectAndConcurrency(MarqoTestCase):
-
-    # NOTE: The cuda should already have model loaded in the startup
-
+    @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
         cls.client = Client(**cls.client_settings)
