@@ -14,9 +14,11 @@ import multiprocessing
 class TestModelEjectAndConcurrency(MarqoTestCase):
 
     # NOTE: The cuda should already have model loaded in the startup
-    def setUp(self) -> None:
-        self.client = Client(**self.client_settings)
-        self.index_model_object = {
+
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls.client = Client(**cls.client_settings)
+        cls.index_model_object = {
             "test_0": 'open_clip/ViT-B-32/laion400m_e31',
             "test_1": 'open_clip/ViT-B-32/laion400m_e32',
             "test_2": 'open_clip/RN50x4/openai',
@@ -33,6 +35,32 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
             "test_13": 'onnx32/open_clip/ViT-B-32-quickgelu/laion400m_e32',
         }
 
+        for index_name, model in cls.index_model_object.items():
+            settings = {
+                "model": model
+            }
+            try:
+                cls.client.delete_index(index_name)
+            except:
+                pass
+
+            cls.client.create_index(index_name, **settings)
+
+            cls.client.index(index_name).add_documents([
+                {
+                    "Title": "The Travels of Marco Polo",
+                    "Description": "A 13th-century travelogue describing Polo's travels"
+                },
+                {
+                    "Title": "Extravehicular Mobility Unit (EMU)",
+                    "Description": "The EMU is a spacesuit that provides environmental protection, "
+                                   "mobility, life support, and communications for astronauts",
+                    "_id": "article_591"
+                }]
+            )
+
+    def setUp(self) -> None:
+        self.client = Client(**self.client_settings)
 
     def tearDown(self) -> None:
         pass
@@ -50,31 +78,6 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
             if not "another request was updating the model cache at the same time" in e.message:
                 q.put(e)
             pass
-
-    def test_sequetially_add_documents(self):
-        for index_name, model in self.index_model_object.items():
-            settings = {
-                "model": model
-            }
-            try:
-                self.client.delete_index(index_name)
-            except:
-                pass
-
-            self.client.create_index(index_name, **settings)
-
-            self.client.index(index_name).add_documents([
-                {
-                    "Title": "The Travels of Marco Polo",
-                    "Description": "A 13th-century travelogue describing Polo's travels"
-                },
-                {
-                    "Title": "Extravehicular Mobility Unit (EMU)",
-                    "Description": "The EMU is a spacesuit that provides environmental protection, "
-                                   "mobility, life support, and communications for astronauts",
-                    "_id": "article_591"
-                }]
-            )
 
     def test_sequentially_search(self):
         for index_name in list(self.index_model_object):
