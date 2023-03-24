@@ -17,7 +17,6 @@ class MarqoTestCase(unittest.TestCase):
         local_marqo_settings = {
             "url": os.environ.get("MARQO_URL", 'http://localhost:8882'),
         }
-
         api_key = os.environ.get("MARQO_API_KEY", None)
         if (api_key):
             local_marqo_settings["api_key"] = api_key
