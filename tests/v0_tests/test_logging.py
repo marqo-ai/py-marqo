@@ -42,11 +42,11 @@ class TestLogging(MarqoTestCase):
             {"_id": "104", "Title": "wolol the second"},
             {"_id": "105", "Title": "strange the second"},
 
-            {"_id": "106", "Title": "blach"},
             {"_id": "127", "Title": "https://marqo.ai/this_image_doesnt_exist.png"},  # bad as well
+            {"_id": "106", "Title": "blach"},
             {"_id": "108", "Title": "blach the third"},
             {"_id": "131", "Title": "blach the forf"},
-            {"_id": "132", "Title": "blach the fif"},
+            {"_id": "189", "Title": "https://marqo.ai/this_image_doesnt_too_exist.png"},  # bad as well
 
             {"_id": "109", "Title": "Sun person"},
             {"_id": "110", "Title": "Shark Shar"},
