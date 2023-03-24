@@ -118,7 +118,7 @@ class Index:
                highlights=None, device: Optional[str] = None, filter_string: str = None,
                show_highlights=True, reranker=None, image_download_headers: Optional[Dict] = None,
                attributes_to_retrieve: Optional[List[str]] = None, boost: Optional[Dict[str,List[Union[float, int]]]] = None,
-               context: Optional[dict] = None,
+               context: Optional[dict] = None, reweight_score_param: Optional[str] = None, random_weight_score: int = 0, reputation_weight_score: int = 1
                ) -> Dict[str, Any]:
         """Search the index.
 
@@ -158,7 +158,14 @@ class Index:
         path_with_query_str = (
             f"indexes/{self.index_name}/search?"
             f"&device={utils.translate_device_string_for_url(selected_device)}"
+            f"&random_weight_score={random_weight_score}"
         )
+        if reweight_score_param is not None:
+            path_with_query_str += f"&reweight_score_param={reweight_score_param}"
+
+        if reputation_weight_score is not None:
+            path_with_query_str += f"&reputation_weight_score={reputation_weight_score}"
+
         body = {
             "q": q,
             "searchableAttributes": searchable_attributes,
