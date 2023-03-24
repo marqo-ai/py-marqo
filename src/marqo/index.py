@@ -558,11 +558,11 @@ class Index:
                 # no Server Batching
                 if 'processingTimeMs' in res:       # Only outputs log if response is non-empty
                     mq_logger.info(
-                        f"   add_documents batch {i}: took {(res['processingTimeMs'] / 1000):.3f}s for Marqo to process & index {num_docs} "
+                        f"    add_documents batch {i}: took {(res['processingTimeMs'] / 1000):.3f}s for Marqo to process & index {num_docs} "
                         f"docs (server unbatched), for an average of {(res['processingTimeMs'] / (1000 * num_docs)):.3f}s per doc."
                         f" Roundtrip time: {(total_batch_time):.3f}s")
                     if 'errors' in res and res['errors']:
-                        mq_logger.info(error_detected_message)
+                        mq_logger.info(f"    add_documents batch {i}: {error_detected_message}")
 
 
             if verbose:

@@ -69,7 +69,7 @@ class TestLogging(MarqoTestCase):
     def test_add_document_warnings_client_batching(self):
         self._create_img_index(index_name=self.index_name_1)
         params_expected = [
-            # so no client batching, that means no batch info output
+            # so no client batching, that means no batch info output,  and therefore only 1 warning
             ({}, {"num_log_msgs": 1, "num_errors_msgs": 1}),
             ({'server_batch_size': 5}, {"num_log_msgs": 1, "num_errors_msgs": 1}),
             ({'server_batch_size': 5, "processes": 2}, {"num_log_msgs": 1, "num_errors_msgs": 1}),
