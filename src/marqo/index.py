@@ -118,7 +118,7 @@ class Index:
                highlights=None, device: Optional[str] = None, filter_string: str = None,
                show_highlights=True, reranker=None, image_download_headers: Optional[Dict] = None,
                attributes_to_retrieve: Optional[List[str]] = None, boost: Optional[Dict[str,List[Union[float, int]]]] = None,
-               context: Optional[dict] = None, reweight_score_param: Optional[str] = None, random_weight_score: int = 0, reputation_weight_score: int = 1
+               context: Optional[dict] = None, reweight_score_param: Optional[str] = None, random_weight_score: float = 0.0, reputation_weight_score: float = 1.0
                ) -> Dict[str, Any]:
         """Search the index.
 

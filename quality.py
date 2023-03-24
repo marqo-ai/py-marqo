@@ -1,6 +1,6 @@
 from typing import Any, Dict, List
 import random
-
+import json
 import requests
 
 import marqo
@@ -16,15 +16,15 @@ def get_random_query() -> str:
     """
     return " ".join(random.sample(words, k=5))
 
-def search(use_rep_score: bool = True, random_weight_score: int = 0) -> List[Dict[str, Any]]:
-    reweight_score_param = "reputation" if use_rep_score else None
+def search(rep_w: int = 0, random_weight_score: int = 0) -> List[Dict[str, Any]]:
     results: List[Dict[str, Any]]= mq.index(index_name).search(
         q=get_random_query(),
-        reweight_score_param= reweight_score_param,
+        reweight_score_param= "reputation",
+        reputation_weight_score=rep_w,
         random_weight_score = random_weight_score,
         searchable_attributes=["image"],
         attributes_to_retrieve=["image", "reputation", "word1", "word2"],
-        limit=5
+        limit=10
     )["hits"]
 
     return [
@@ -34,10 +34,16 @@ def search(use_rep_score: bool = True, random_weight_score: int = 0) -> List[Dic
             "rank": i+1,
             "score": r["_score"],
             "uniq": f"{r['word1']}_{r['word2']}",
-            "random": random_weight_score
+            "rand_w": random_weight_score,
+            "rep_w": rep_w,
         } for i, r in enumerate(results)
     ]
 
-pprint(search(use_rep_score=True, random_weight_score=0))
-# print()
-# pprint(search(use_rep_score=True, random_weight_score=1))
+samples = 1 # 20
+output = []
+for rand_w in range(0, 10, 5):
+    for rep_w in range(0, 10, 5):
+        for i in range(samples):
+            output.extend(search(rep_w=rep_w/10, random_weight_score=rand_w/10))
+
+json.dump(output, open("result.json", "w"), indent=2)
