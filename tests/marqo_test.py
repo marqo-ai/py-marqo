@@ -15,8 +15,8 @@ class MarqoTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         local_marqo_settings = {
-            "url": os.environ.get("MARQO_URL", 'http://localhost:8882'),
-        }
+    "url": 'https://cff00aeacd.api.s2search.io', 'api_key': '8lQkoEGRBW2UX2JmSI6ZK8velGqiv9767DYSUjMc'
+}
 
         api_key = os.environ.get("MARQO_API_KEY", None)
         if (api_key):

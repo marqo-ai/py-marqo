@@ -339,9 +339,11 @@ class Index:
         non_tensor_fields: List = None,
         use_existing_tensors: bool = False,
         image_download_headers: dict = None,
-        mappings:dict = None
+        mappings: dict = None
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
 
+        error_detected_message = ('Errors detected in add documents call. Examine the returned '
+                                  'add documents result object for more information.')
         if non_tensor_fields is None:
             non_tensor_fields = []
 
@@ -401,7 +403,7 @@ class Index:
 
             mq_logger.debug(f"add_documents roundtrip: took {(total_client_request_time):.3f}s to send {num_docs} "
                             f"docs to Marqo (roundtrip, unbatched), for an average of {(total_client_request_time / num_docs):.3f}s per doc.")
-
+            errors_detected = False
             if server_batch_size is not None:
                 # with Server Batching (show processing time for each batch)
                 mq_logger.debug(f"add_documents Marqo index (server-side batch reports): ")
@@ -416,6 +418,8 @@ class Index:
                             mq_logger.debug(f"       marqo server batch {batch}: "
                                             f"processed {server_batch_result_count} docs in {(res[process][batch]['processingTimeMs'] / 1000):.3f}s, "
                                             f"for an average of {(res[process][batch]['processingTimeMs'] / (1000 * server_batch_result_count)):.3f}s per doc.")
+                            if 'errors' in res[process][batch] and res[process][batch]['errors']:
+                                errors_detected = True
                 else:
                     # for single process, timing messages should be arranged by batch ONLY
                     for batch in range(len(res)):
@@ -423,12 +427,18 @@ class Index:
                         mq_logger.debug(f"   marqo server batch {batch}: "
                                         f"processed {server_batch_result_count} docs in {(res[batch]['processingTimeMs'] / 1000):.3f}s, "
                                         f"for an average of {(res[batch]['processingTimeMs'] / (1000 * server_batch_result_count)):.3f}s per doc.")
+                        if 'errors' in res[batch] and res[batch]['errors']:
+                            errors_detected = True
             else:
                 # no Server Batching
                 if 'processingTimeMs' in res:       # Only outputs log if response is non-empty
                     mq_logger.debug(f"add_documents Marqo index: took {(res['processingTimeMs'] / 1000):.3f}s for Marqo to process & index {num_docs} "
                                     f"docs (server unbatched), for an average of {(res['processingTimeMs'] / (1000 * num_docs)):.3f}s per doc.")
+                if 'errors' in res and res['errors']:
+                    mq_logger.info(error_detected_message)
 
+            if errors_detected:
+                mq_logger.info(error_detected_message)
         total_add_docs_time = timer() - t0
         mq_logger.debug(f"add_documents completed. total time taken: {(total_add_docs_time):.3f}s.")
         return res
@@ -489,6 +499,8 @@ class Index:
         path_with_query_str = f"{base_path}?refresh=false{query_str_params}"
 
         mq_logger.debug(f"starting batch ingestion with batch size {batch_size}")
+        error_detected_message = ('Errors detected in add documents call. Examine the returned '
+                                  'add documents result object for more information.')
 
         deeper = ((doc, i, batch_size) for i, doc in enumerate(docs))
 
@@ -530,6 +542,9 @@ class Index:
                             mq_logger.debug(f"           marqo server batch {batch}: "
                                             f"processed {server_batch_result_count} docs in {(res[process][batch]['processingTimeMs'] / 1000):.3f}s, "
                                             f"for an average of {(res[process][batch]['processingTimeMs'] / (1000 * server_batch_result_count)):.3f}s per doc.")
+                            if 'errors' in res[process][batch] and res[process][batch]['errors']:
+                                mq_logger.info(f"       process {process}, marqo server batch {batch}: {error_detected_message}")
+
                 else:
                     # for single process, timing messages should be arranged by batch ONLY
                     for batch in range(len(res)):
@@ -537,6 +552,8 @@ class Index:
                         mq_logger.debug(f"       marqo server batch {batch}: "
                                         f"processed {server_batch_result_count} docs in {(res[batch]['processingTimeMs'] / 1000):.3f}s, "
                                         f"for an average of {(res[batch]['processingTimeMs'] / (1000 * server_batch_result_count)):.3f}s per doc.")
+                        if 'errors' in res[batch] and res[batch]['errors']:
+                            mq_logger.info(f"   marqo server batch {batch}: {error_detected_message}")
             else:
                 # no Server Batching
                 if 'processingTimeMs' in res:       # Only outputs log if response is non-empty
@@ -544,6 +561,8 @@ class Index:
                         f"   add_documents batch {i}: took {(res['processingTimeMs'] / 1000):.3f}s for Marqo to process & index {num_docs} "
                         f"docs (server unbatched), for an average of {(res['processingTimeMs'] / (1000 * num_docs)):.3f}s per doc."
                         f" Roundtrip time: {(total_batch_time):.3f}s")
+                    if 'errors' in res and res['errors']:
+                        mq_logger.info(error_detected_message)
 
 
             if verbose:

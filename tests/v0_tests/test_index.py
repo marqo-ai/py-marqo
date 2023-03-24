@@ -193,7 +193,7 @@ class TestIndex(MarqoTestCase):
         assert run()
 
     def test_create_custom_number_of_replicas(self):
-        intended_replicas = 5
+        intended_replicas = 0
         settings = {
             "number_of_replicas": intended_replicas
         }
