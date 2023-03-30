@@ -66,6 +66,6 @@ class TestCustomVectorSearch(MarqoTestCase):
 
         modifiers_score = modifiers_res["hits"][0]["_score"]
         expected_sore = original_score * 20 * 1 + 1 * -3 + 30 * 1
-        assert abs(expected_sore -modifiers_score)
+        assert abs(expected_sore -modifiers_score) < 1e-5
 
 
