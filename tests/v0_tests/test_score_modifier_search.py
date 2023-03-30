@@ -54,7 +54,7 @@ class TestCustomVectorSearch(MarqoTestCase):
                      },
                     {"field_name": "add_2", "weight": 1,
                      }]
-            },
+            }
 
         original_res = self.client.index(self.index_name_1).search(q = self.query, score_modifiers=None,
                                                                      filter_string="filter:original")
