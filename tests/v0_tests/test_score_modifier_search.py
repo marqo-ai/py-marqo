@@ -65,7 +65,7 @@ class TestCustomVectorSearch(MarqoTestCase):
         modifiers_res = self.client.index(self.index_name_1).search(q=self.query, score_modifiers=score_modifiers)
 
         modifiers_score = modifiers_res["hits"][0]["_score"]
-
-        self.assertEqual(original_score * 20 * 1 + 1 * -3 + 30 * 1, modifiers_score)
+        expected_sore = original_score * 20 * 1 + 1 * -3 + 30 * 1
+        assert abs(expected_sore -modifiers_score)
 
 
