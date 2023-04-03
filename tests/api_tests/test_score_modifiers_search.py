@@ -3,7 +3,7 @@ from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
 from tests.marqo_test import MarqoTestCase
 
 
-class TestCustomVectorSearch(MarqoTestCase):
+class TestScoreModifierSearch(MarqoTestCase):
 
     def setUp(self) -> None:
         self.client = Client(**self.client_settings)
@@ -69,26 +69,27 @@ class TestCustomVectorSearch(MarqoTestCase):
 
     def test_invalid_score_modifiers_format(self):
         invalid_score_modifiers = {
-                # typo in multiply_score_by
+                # typo in multiply score by
                 "multiply_score_bys":
                     [{"field_name": "multiply_1",
                       "weight": 1,},
                      {"field_name": "multiply_2",}],
                 "add_to_score": [
-                    {"field_name": "add_1", "weight" : -3,
+                    {"field_name": "add_1", "weight" : 4,
                      },
                     {"field_name": "add_2", "weight": 1,
                      }]
             }
 
         try:
-            modifiers_res = self.client.index(self.index_name_1).search(q=self.query, score_modifiers=invalid_score_modifiers)
+            modifiers_res = self.client.index(self.index_name_1).search(q=self.query,
+                                                                        score_modifiers = invalid_score_modifiers)
             raise AssertionError
         except MarqoWebError:
             pass
 
     def test_valid_score_modifiers_format(self):
-        invalid_score_modifiers = {
+        valid_score_modifiers = {
                 # missing one part
                 "add_to_score": [
                     {"field_name": "add_1", "weight" : -3,
@@ -97,4 +98,26 @@ class TestCustomVectorSearch(MarqoTestCase):
                      }]
             }
 
-        modifiers_res = self.client.index(self.index_name_1).search(q=self.query, score_modifiers=invalid_score_modifiers)
+        modifiers_res = self.client.index(self.index_name_1).search(q=self.query, score_modifiers=valid_score_modifiers)
+
+    def test_bulk_search_error(self):
+        try:
+            resp = self.client.bulk_search([{
+                "index": self.index_name_1,
+                "q": "title about some doc",
+                "scoreModifiers" : {
+                    # typo in multiply score by
+                    "multiply_score_bys":
+                        [{"field_name": "multiply_1",
+                          "weight": 1,},
+                         {"field_name": "multiply_2",}],
+                    "add_to_score": [
+                        {"field_name": "add_1", "weight" : 4,
+                         },
+                        {"field_name": "add_2", "weight": 1,
+                         }]
+                }
+            }])
+            raise AssertionError
+        except MarqoWebError:
+            pass
