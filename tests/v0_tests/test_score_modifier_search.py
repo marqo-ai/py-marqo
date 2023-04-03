@@ -69,7 +69,7 @@ class TestCustomVectorSearch(MarqoTestCase):
 
     def test_invalid_score_modifiers_format(self):
         invalid_score_modifiers = {
-                # miss one weight
+                # typo in multiply score by
                 "multiply_score_bys":
                     [{"field_name": "multiply_1",
                       "weight": 1,},
