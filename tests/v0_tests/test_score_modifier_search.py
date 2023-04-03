@@ -3,7 +3,7 @@ from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
 from tests.marqo_test import MarqoTestCase
 
 
-class TestCustomVectorSearch(MarqoTestCase):
+class TestScoreModifierSearch(MarqoTestCase):
 
     def setUp(self) -> None:
         self.client = Client(**self.client_settings)
