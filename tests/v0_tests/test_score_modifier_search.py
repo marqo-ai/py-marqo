@@ -104,7 +104,7 @@ class TestCustomVectorSearch(MarqoTestCase):
         resp = self.client.bulk_search([{
             "index": self.index_name_1,
             "q": "title about some doc",
-            "void" : {
+            "void-void" : {
                 # typo in multiply score by
                 "multiply_score_bys":
                     [{"field_name": "multiply_1",
