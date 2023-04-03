@@ -3,7 +3,7 @@ import marqo
 from marqo import enums
 from unittest import mock
 from marqo.client import Client
-from marqo.errors import MarqoApiError
+from marqo.errors import InvalidArgError, MarqoApiError
 import requests
 import random
 import math
@@ -69,6 +69,16 @@ class TestBulkSearch(MarqoTestCase):
         search_res = resp['result'][0]
 
         assert len(search_res["hits"]) == 0
+
+    def test_search__extra_parameters_raise_exception(self):
+        self.client.create_index(index_name=self.index_name_1)
+        
+        with self.assertRaises(InvalidArgError):
+            self.client.bulk_search([{
+                "index": self.index_name_1,
+                "q": "title about some doc",
+                "parameter-not-expected": 1,
+            }])
 
     def test_search_highlights(self):
         """Tests if show_highlights works and if the deprecation behaviour is expected"""
