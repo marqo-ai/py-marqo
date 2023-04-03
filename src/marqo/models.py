@@ -31,6 +31,5 @@ class BulkSearchBody(SearchBody):
     scoreModifiers: None = None
 
 
-
 class BulkSearchQuery(BaseMarqoModel):
     queries: List[BulkSearchBody]
