@@ -118,7 +118,6 @@ class TestCustomVectorSearch(MarqoTestCase):
                          }]
                 }
             }])
-
             raise AssertionError
         except MarqoWebError:
             pass
