@@ -20,9 +20,17 @@ class SearchBody(BaseMarqoModel):
     attributesToRetrieve: Union[None, List[str]] = None
     boost: Optional[Dict] = None
     image_download_headers: Optional[Dict] = None
+    context: Optional[Dict] = None
+    scoreModifiers: Optional[Dict] = None
+
 
 class BulkSearchBody(SearchBody):
     index: str
+    # Attributes that are not supported in bulk search
+    context: None = None
+    scoreModifiers: None = None
+
+
 
 class BulkSearchQuery(BaseMarqoModel):
     queries: List[BulkSearchBody]
