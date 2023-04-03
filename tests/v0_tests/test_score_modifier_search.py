@@ -121,7 +121,3 @@ class TestScoreModifierSearch(MarqoTestCase):
             raise AssertionError
         except MarqoWebError:
             pass
-
-
-
-
