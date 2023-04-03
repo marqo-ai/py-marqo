@@ -88,7 +88,7 @@ class TestCustomVectorSearch(MarqoTestCase):
             pass
 
     def test_valid_score_modifiers_format(self):
-        invalid_score_modifiers = {
+        valid_score_modifiers = {
                 # missing one part
                 "add_to_score": [
                     {"field_name": "add_1", "weight" : -3,
@@ -97,7 +97,7 @@ class TestCustomVectorSearch(MarqoTestCase):
                      }]
             }
 
-        modifiers_res = self.client.index(self.index_name_1).search(q=self.query, score_modifiers=invalid_score_modifiers)
+        modifiers_res = self.client.index(self.index_name_1).search(q=self.query, score_modifiers=valid_score_modifiers)
 
 
 
