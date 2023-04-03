@@ -82,7 +82,8 @@ class TestCustomVectorSearch(MarqoTestCase):
             }
 
         try:
-            modifiers_res = self.client.index(self.index_name_1).search(q=self.query, score_modifiers=invalid_score_modifiers)
+            modifiers_res = self.client.index(self.index_name_1).search(q=self.query,
+                                                                        score_modifiers = invalid_score_modifiers)
             raise AssertionError
         except MarqoWebError:
             pass
