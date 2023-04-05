@@ -87,16 +87,25 @@ class TestScoreModifierSearch(MarqoTestCase):
             pass
 
     def test_valid_score_modifiers_format(self):
-        valid_score_modifiers = {
-                # missing one part
+        valid_score_modifiers_list = [
+            {
+                # missing add to score
                 "add_to_score": [
                     {"field_name": "add_1", "weight" : -3,
                      },
                     {"field_name": "add_2", "weight": 1,
                      }]
-            }
+            },
+            {
+                # missing multiply score by
+                "multiply_score_by":
+                    [{"field_name": "multiply_1",
+                      "weight": 1,},
+                     {"field_name": "multiply_2"}],
+            }]
 
-        modifiers_res = self.client.index(self.index_name_1).search(q=self.query, score_modifiers=valid_score_modifiers)
+        for valid_score_modifiers in valid_score_modifiers_list:
+            modifiers_res = self.client.index(self.index_name_1).search(q=self.query, score_modifiers=valid_score_modifiers)
 
     def test_bulk_search_error(self):
         try:
