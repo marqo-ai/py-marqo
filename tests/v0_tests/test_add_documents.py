@@ -40,6 +40,26 @@ class TestAddDocuments(MarqoTestCase):
         except MarqoWebError as e:
             assert "index_already_exists" == e.code
 
+    def test_create_index_hnsw(self):
+        self.client.create_index(index_name=self.index_name_1, settings_dict={
+            "index_defaults": {
+                "ann_parameters": {
+                    "parameters": {
+                        "m": 24
+                    }
+                }
+            }
+        })
+        assert self.client.get_index(self.index_name_1).get_settings() \
+            ["index_defaults"]["ann_parameters"]["parameters"]["m"] == 24
+
+        # Ensure non-specified values are in default
+        assert self.client.get_index(self.index_name_1).get_settings() \
+            ["index_defaults"]["ann_parameters"]["parameters"]["ef_construction"] == 128
+        assert self.client.get_index(self.index_name_1).get_settings() \
+            ["index_defaults"]["ann_parameters"]["space_type"] == "cosinesimil"
+
+
     # Delete index tests:
 
     def test_delete_index(self):

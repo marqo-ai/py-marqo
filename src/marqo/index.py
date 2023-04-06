@@ -118,7 +118,7 @@ class Index:
                highlights=None, device: Optional[str] = None, filter_string: str = None,
                show_highlights=True, reranker=None, image_download_headers: Optional[Dict] = None,
                attributes_to_retrieve: Optional[List[str]] = None, boost: Optional[Dict[str,List[Union[float, int]]]] = None,
-               context: Optional[dict] = None,
+               context: Optional[dict] = None, score_modifiers: Optional[dict] = None,
                ) -> Dict[str, Any]:
         """Search the index.
 
@@ -144,6 +144,7 @@ class Index:
                 retrieved. If left as None, then all attributes will be
                 retrieved.
             context: a dictionary to allow you to bring your own vectors and more into search.
+            score_modifiers: a dictionary to modify the score based on field values, for tensor search only
         Returns:
             Dictionary with hits and other metadata
         """
@@ -177,6 +178,8 @@ class Index:
             body["image_download_headers"] = image_download_headers
         if context is not None:
             body["context"] = context
+        if score_modifiers is not None:
+            body["scoreModifiers"] = score_modifiers
         res = self.http.post(
             path=path_with_query_str,
             body=body

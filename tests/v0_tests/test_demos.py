@@ -12,7 +12,7 @@ class TestDemo(MarqoTestCase):
     """
     def setUp(self) -> None:
         client_0 = Client(**self.client_settings)
-        for ix_name in ["cool-index-1", "my-first-index"]:
+        for ix_name in ["cool-index-1", "my-first-index", "my-weighted-query-index", "my-first-multimodal-index"]:
             try:
                 client_0.delete_index(ix_name)
             except MarqoApiError as s:
@@ -114,3 +114,175 @@ class TestDemo(MarqoTestCase):
         pprint.pprint(rneg1)
         assert (rneg1["acknowledged"] is True) or (rneg1["acknowledged"] == 'true')
 
+    def test_readme_example_weighted_query(self):
+        import marqo
+        mq = marqo.Client(**self.client_settings)
+        mq.index("my-weighted-query-index").add_documents([
+            {
+                "Title": "Smartphone",
+                "Description": "A smartphone is a portable computer device that combines mobile telephone "
+                "functions and computing functions into one unit.",
+            },
+            {
+                "Title": "Telephone",
+                "Description": "A telephone is a telecommunications device that permits two or more users to"
+                "conduct a conversation when they are too far apart to be easily heard directly.",
+            },
+            {
+                "Title": "Thylacine",
+                "Description": "The thylacine, also commonly known as the Tasmanian tiger or Tasmanian wolf, "
+                "is an extinct carnivorous marsupial."
+                "The last known of its species died in 1936.",
+            },
+        ])
+
+        r1 = mq.index("my-weighted-query-index").get_stats()
+        assert r1["numberOfDocuments"] == 3
+
+        query = {
+            "I need to buy a communications device, what should I get?": 1.1,
+            "Technology that became prevelant in the 21st century": 1.0,
+        }
+
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(mq.index("my-weighted-query-index").search,
+                q=query, searchable_attributes=["Title", "Description"]
+            )
+
+        r2 = mq.index("my-weighted-query-index").search(
+            q=query, searchable_attributes=["Title", "Description"]
+        )
+
+        assert r2["hits"][0]["Title"] == "Smartphone"
+
+        print("Query 1:")
+        pprint.pprint(r2)
+        query = {
+            "I need to buy a communications device, what should I get?": 1.0,
+            "Technology that became prevelant in the 21st century": -1.0,
+        }
+
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(mq.index("my-weighted-query-index").search,
+                q=query, searchable_attributes=["Title", "Description"]
+            )
+
+        r3 = mq.index("my-weighted-query-index").search(
+            q=query, searchable_attributes=["Title", "Description"]
+        )
+        print("\nQuery 2:")
+        pprint.pprint(r3)
+
+        assert r3["hits"][0]["Title"] == "Telephone"
+
+
+        assert r2["hits"][-1]["Title"] == "Thylacine"
+        assert r3["hits"][-1]["Title"] == "Thylacine"
+
+        assert len(r2["hits"]) == 3
+        assert len(r3["hits"]) == 3
+
+        rneg1 = mq.index("my-weighted-query-index").delete()
+        pprint.pprint(rneg1)
+        assert (rneg1["acknowledged"] is True) or (rneg1["acknowledged"] == 'true')
+
+    def test_readme_example_multimodal_combination_query(self):
+        import marqo
+        mq = marqo.Client(**self.client_settings)
+        settings = {"treat_urls_and_pointers_as_images": True, "model": "ViT-L/14"}
+        mq.create_index("my-first-multimodal-index", **settings)
+        mq.index("my-first-multimodal-index").add_documents(
+            [
+                {
+                    "Title": "Flying Plane",
+                    "captioned_image": {
+                        "caption": "An image of a passenger plane flying in front of the moon.",
+                        "image": "https://raw.githubusercontent.com/marqo-ai/marqo/mainline/examples/ImageSearchGuide/data/image2.jpg",
+                    },
+                },
+                {
+                    "Title": "Red Bus",
+                    "captioned_image": {
+                        "caption": "A red double decker London bus traveling to Aldwych",
+                        "image": "https://raw.githubusercontent.com/marqo-ai/marqo/mainline/examples/ImageSearchGuide/data/image4.jpg",
+                    },
+                },
+                {
+                    "Title": "Horse Jumping",
+                    "captioned_image": {
+                        "caption": "A person riding a horse over a jump in a competition.",
+                        "image": "https://raw.githubusercontent.com/marqo-ai/marqo/mainline/examples/ImageSearchGuide/data/image1.jpg",
+                    },
+                },
+            ],
+            mappings={
+                "captioned_image": {
+                    "type": "multimodal_combination",
+                    "weights": {
+                        "caption": 0.3,
+                        "image": 0.7,
+                    },
+                }
+            },
+        )
+
+        r1 = mq.index("my-first-multimodal-index").get_stats()
+        assert r1["numberOfDocuments"] == 3
+
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(mq.index("my-first-multimodal-index").search,
+                q="Give me some images of vehicles and modes of transport. I am especially interested in air travel and commercial aeroplanes.",
+                searchable_attributes=["captioned_image"]
+            )
+
+        r2 = mq.index("my-first-multimodal-index").search(
+            q="Give me some images of vehicles and modes of transport. I am especially interested in air travel and commercial aeroplanes.",
+            searchable_attributes=["captioned_image"],
+        )
+        print("Query 1:")
+        pprint.pprint(r2)
+
+        assert r2["hits"][0]["Title"] == "Flying Plane"
+
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(mq.index("my-first-multimodal-index").search,
+                q={
+                    "What are some vehicles and modes of transport?": 1.0,
+                    "Aeroplanes and other things that fly": -1.0,
+                },
+                searchable_attributes=["captioned_image"]
+            )
+        r3 = mq.index("my-first-multimodal-index").search(
+            q={
+                "What are some vehicles and modes of transport?": 1.0,
+                "Aeroplanes and other things that fly": -1.0,
+            },
+            searchable_attributes=["captioned_image"],
+        )
+
+        print("\nQuery 2:")
+        pprint.pprint(r3)
+
+        assert r3["hits"][0]["Title"] == "Red Bus"
+
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(mq.index("my-first-multimodal-index").search,
+                q={"Animals of the Perissodactyla order": -1.0},
+                searchable_attributes=["captioned_image"],
+            )
+        r4 = mq.index("my-first-multimodal-index").search(
+            q={"Animals of the Perissodactyla order": -1.0},
+            searchable_attributes=["captioned_image"],
+        )
+        print("\nQuery 3:")
+        pprint.pprint(r4)
+
+        assert r4["hits"][-1]["Title"] == "Horse Jumping"
+
+        assert len(r2["hits"]) == 3
+        assert len(r3["hits"]) == 3
+        assert len(r4["hits"]) == 3
+
+        rneg1 = mq.index("my-first-multimodal-index").delete()
+        pprint.pprint(rneg1)
+        assert (rneg1["acknowledged"] is True) or (rneg1["acknowledged"] == 'true')

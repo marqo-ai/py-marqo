@@ -1,9 +1,14 @@
 from typing import Dict, List, Optional, Union
 from pydantic import BaseModel
 
-from marqo.enums import SearchMethods
 
-class SearchBody(BaseModel):
+class BaseMarqoModel(BaseModel):
+    class Config:
+        extra: str = "forbid"
+    pass
+
+
+class SearchBody(BaseMarqoModel):
     q: Union[str, Dict[str, float]]
     searchableAttributes: Union[None, List[str]] = None
     searchMethod: Union[None, str] = "TENSOR"
@@ -15,9 +20,16 @@ class SearchBody(BaseModel):
     attributesToRetrieve: Union[None, List[str]] = None
     boost: Optional[Dict] = None
     image_download_headers: Optional[Dict] = None
+    context: Optional[Dict] = None
+    scoreModifiers: Optional[Dict] = None
+
 
 class BulkSearchBody(SearchBody):
     index: str
+    # Attributes that are not supported in bulk search
+    context: None = None
+    scoreModifiers: None = None
 
-class BulkSearchQuery(BaseModel):
+
+class BulkSearchQuery(BaseMarqoModel):
     queries: List[BulkSearchBody]
