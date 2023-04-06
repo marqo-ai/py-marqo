@@ -342,8 +342,8 @@ class Index:
         mappings: dict = None
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
 
-        error_detected_message = ('Errors detected in add documents call. Examine the returned '
-                                  'add documents result object for more information.')
+        error_detected_message = ('Errors detected in add documents call. '
+                                  'Please examine the returned result object for more information.')
         if non_tensor_fields is None:
             non_tensor_fields = []
 
@@ -499,8 +499,8 @@ class Index:
         path_with_query_str = f"{base_path}?refresh=false{query_str_params}"
 
         mq_logger.debug(f"starting batch ingestion with batch size {batch_size}")
-        error_detected_message = ('Errors detected in add documents call. Examine the returned '
-                                  'add documents result object for more information.')
+        error_detected_message = ('Errors detected in add documents call. '
+                                  'Please examine the returned result object for more information.')
 
         deeper = ((doc, i, batch_size) for i, doc in enumerate(docs))
         def batch_requests(gathered, doc_tuple):
