@@ -350,6 +350,8 @@ class TestAddDocuments(MarqoTestCase):
         self.client.index(index_name=self.index_name_1).add_documents(
             docs, auto_refresh=True, non_tensor_fields=["dont#tensorise Me"]
         )
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(self.index_name_1).search, q='Blah')
         search_res = self.client.index(index_name=self.index_name_1).search("Dog")
         pprint.pprint(search_res)
         assert list(search_res['hits'][0]['_highlights'].keys()) == ['tensorise_me']
