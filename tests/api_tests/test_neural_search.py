@@ -153,6 +153,21 @@ class TestAddDocuments(MarqoTestCase):
         assert len(search_res["hits"]) == 1
         pprint.pprint(search_res)
         assert search_res["hits"][0]["_id"] == "my-cool-doc"
+        
+    def test_escaped_non_tensor_field(self):
+        """We need to make sure non tensor field escaping works properly.
+
+        We test to ensure Marqo doesn't match to the non tensor field
+        """
+        docs = [{
+            "dont#tensorise Me": "Dog",
+            "tensorise_me": "quarterly earnings report"
+        }]
+        self.client.index(index_name=self.index_name_1).add_documents(
+            docs, auto_refresh=True, non_tensor_fields=["dont#tensorise Me"]
+        )
+        search_res = self.client.index(index_name=self.index_name_1).search("Dog")
+        assert list(search_res['hits'][0]['_highlights'].keys()) == ['tensorise_me']
 
     def test_multi_queries(self):
         docs = [
@@ -226,3 +241,4 @@ class TestAddDocuments(MarqoTestCase):
         custom_score = custom_res["hits"][0]["_score"]
 
         self.assertEqual(custom_score, original_score)
+        
