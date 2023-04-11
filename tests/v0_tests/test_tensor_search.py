@@ -210,7 +210,6 @@ class TestAddDocuments(MarqoTestCase):
             "blah blah",
             filter_string="(an_int:[0 TO 30] and an_int:2) AND abc-123:(some text)")
         assert len(search_res["hits"]) == 1
-        pprint.pprint(search_res)
         assert search_res["hits"][0]["_id"] == "my-cool-doc"
 
     def test_attributes_to_retrieve(self):
@@ -353,5 +352,39 @@ class TestAddDocuments(MarqoTestCase):
         if self.IS_MULTI_INSTANCE:
             self.warm_request(self.client.index(self.index_name_1).search, q='Blah')
         search_res = self.client.index(index_name=self.index_name_1).search("Dog")
-        pprint.pprint(search_res)
         assert list(search_res['hits'][0]['_highlights'].keys()) == ['tensorise_me']
+
+    def test_special_characters(self):
+        """TODO: add more special characters"""
+        for special_char, filter_char in [ ("|", "|"), ('#', '#'), (' ', '\ '), ('_', '_')]:
+            self.setUp()
+            field_to_search = f"tensorise{special_char}me"
+            field_to_not_search = f"dont{special_char}tensorise me"
+            filter_field = f"filter{special_char}me"
+            docs = [{
+                field_to_not_search: "Dog",
+                field_to_search: "quarterly earnings report",
+                filter_field: "Walrus",
+                "red herring": "Dog",
+                "_id": f"id_{special_char}"
+            }, {
+                field_to_search: "Dog",
+                filter_field: "Alpaca"
+            }
+            ]
+            add_res = self.client.index(index_name=self.index_name_1).add_documents(
+                docs, auto_refresh=True, non_tensor_fields=[field_to_not_search]
+            )
+            if self.IS_MULTI_INSTANCE:
+                self.warm_request(self.client.index(self.index_name_1).search, q='Blah')
+            search_filter_field = f"filter{filter_char}me"
+            search1_res = self.client.index(index_name=self.index_name_1).search(
+                "Dog", searchable_attributes=[field_to_search, field_to_not_search],
+                attributes_to_retrieve=[field_to_not_search],
+                filter_string=f'{search_filter_field}:Walrus'
+            )
+            assert len(search1_res['hits']) == 1
+            assert search1_res['hits'][0]['_id'] == f"id_{special_char}"
+            assert list(search1_res['hits'][0]['_highlights'].keys()) == [field_to_search, ]
+            assert set(k for k in search1_res['hits'][0].keys() if not k.startswith('_')) == {field_to_not_search}
+
