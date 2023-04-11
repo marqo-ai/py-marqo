@@ -337,3 +337,19 @@ class TestAddDocuments(MarqoTestCase):
             # the poodle doc should be lower ranked than the irrelevant doc
             for hit_position, _ in enumerate(res['hits']):
                 assert res['hits'][hit_position]['_id'] == expected_ordering[hit_position]
+
+    def test_escaped_non_tensor_field(self):
+        """We need to make sure non tensor field escaping works properly.
+
+        We test to ensure Marqo doesn't match to the non tensor field
+        """
+        docs = [{
+            "dont#tensorise Me": "Dog",
+            "tensorise_me": "quarterly earnings report"
+        }]
+        self.client.index(index_name=self.index_name_1).add_documents(
+            docs, auto_refresh=True, non_tensor_fields=["dont#tensorise Me"]
+        )
+        search_res = self.client.index(index_name=self.index_name_1).search("Dog")
+        pprint.pprint(search_res)
+        assert list(search_res['hits'][0]['_highlights'].keys()) == ['tensorise_me']

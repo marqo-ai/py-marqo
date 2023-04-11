@@ -50,7 +50,7 @@ def convert_list_to_query_params(query_param: str, x: List[Any]) -> str:
     Returns:
         A rendered query string for the given parameter and parameter value.
     """
-    return "&".join([f"{query_param}={str(xx)}" for xx in x])
+    return "&".join([f"{query_param}={urllib.parse.quote_plus(str(xx))}" for xx in x])
 
 
 def convert_dict_to_url_params(d: dict) -> str:
