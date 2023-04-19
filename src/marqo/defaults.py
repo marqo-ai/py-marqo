@@ -1,8 +1,7 @@
 
 def get_cloud_default_index_settings():
-    """
-    Diverges from default in:
-        - number_of_shards
+    """Diverges from default in:
+    - number_of_shards.
     """
     return {
         "index_defaults": {

@@ -130,7 +130,7 @@ class HttpRequests:
 
 
 def convert_to_marqo_error_and_raise(response: requests.Response, err: requests.exceptions.HTTPError) -> None:
-    """Raises a generic MarqoWebError for a given HTTPError"""
+    """Raises a generic MarqoWebError for a given HTTPError."""
     try:
         response_msg = response.json()
         code = response_msg["code"]

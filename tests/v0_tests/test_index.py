@@ -24,7 +24,7 @@ class TestIndex(MarqoTestCase):
             pass
 
     def test_create_index_settings_dict(self):
-        """if settings_dict exists, it should override existing params"""
+        """If settings_dict exists, it should override existing params."""
         for non_settings_dicts_param, settings_dict, expected_treat_urls_and_pointers_as_images in [
                     ({"treat_urls_and_pointers_as_images": False},
                      {"index_defaults": {"treat_urls_and_pointers_as_images": True}},
@@ -172,7 +172,7 @@ class TestIndex(MarqoTestCase):
         assert run()
 
     def test_create_cloud_index_settings_dict_precedence(self):
-        """settings_dict overrides all cloud defaults"""
+        """settings_dict overrides all cloud defaults."""
         mock__post = mock.MagicMock()
         test_client = copy.deepcopy(self.client)
         test_client.config.api_key = 'some-super-secret-API-key'

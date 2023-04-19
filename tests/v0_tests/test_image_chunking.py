@@ -9,8 +9,8 @@ from tests.marqo_test import MarqoTestCase
 
 
 class TestImageChunking(MarqoTestCase):
-    """Test for image chunking as a preprocessing step
-    """
+    """Test for image chunking as a preprocessing step."""
+
     def setUp(self) -> None:
         client_0 = Client(**self.client_settings)
         

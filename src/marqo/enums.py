@@ -1,4 +1,4 @@
-"""enums to be used by consumers of the Marqo client"""
+"""enums to be used by consumers of the Marqo client."""
 from enum import Enum
 
 

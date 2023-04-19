@@ -12,9 +12,7 @@ from marqo.marqo_logging import mq_logger
 
 
 class Index:
-    """
-    Wraps the /indexes/ endpoint
-    """
+    """Wraps the /indexes/ endpoint."""
 
     def __init__(
         self,
@@ -23,9 +21,8 @@ class Index:
         created_at: Optional[Union[datetime, str]] = None,
         updated_at: Optional[Union[datetime, str]] = None,
     ) -> None:
-        """
-
-        Args:
+        """Args:
+        ----
             config: config object location and other info of marqo.
             index_name: name of the index
             created_at:
@@ -38,8 +35,7 @@ class Index:
         self.updated_at = self._maybe_datetime(updated_at)
 
     def delete(self) -> Dict[str, Any]:
-        """Delete the index.
-        """
+        """Delete the index."""
         return self.http.delete(path=f"indexes/{self.index_name}")
 
     @staticmethod
@@ -55,6 +51,7 @@ class Index:
         """Create the index.
 
         Args:
+        ----
             config: config instance
             index_name: name of the index.
             treat_urls_and_pointers_as_images:
@@ -106,7 +103,7 @@ class Index:
         })
 
     def refresh(self):
-        """refreshes the index"""
+        """Refreshes the index."""
         return self.http.post(path=F"indexes/{self.index_name}/refresh")
 
     def search(self, q: Union[str, dict], searchable_attributes: Optional[List[str]] = None,
@@ -119,6 +116,7 @@ class Index:
         """Search the index.
 
         Args:
+        ----
             q: String to search, or a dictionary of weighted strings to search
                 (with the structure <search string>:<weight float>). Strings
                 to search are text or a pointer/url to an image if the index
@@ -144,7 +142,6 @@ class Index:
         Returns:
             Dictionary with hits and other metadata
         """
-
         start_time_client_request = timer()
         if highlights is not None:
             logging.warning("Deprecation warning for parameter 'highlights'. "
@@ -197,12 +194,14 @@ class Index:
         """Get one document with given an ID.
 
         Args:
+        ----
             document_id: ID of the document.
             expose_facets: If True, tensor facets will be returned for the the
                 document. Each facets' embedding is accessible via the
                 _embedding field.
 
         Returns:
+        -------
             Dictionary containing the documents information.
         """
         url_string = f"indexes/{self.index_name}/documents/{document_id}"
@@ -214,12 +213,14 @@ class Index:
         """Gets a selection of documents based on their IDs.
 
         Args:
+        ----
             document_ids: IDs to be searched
             expose_facets: If True, tensor facets will be returned for the the
                 document. Each facets' embedding is accessible via the
                 _embedding field.
 
         Returns:
+        -------
             Dictionary containing the documents information.
         """
         url_string = f"indexes/{self.index_name}/documents"
@@ -247,6 +248,7 @@ class Index:
         based on their ID. Adds unseen documents to the index.
 
         Args:
+        ----
             documents: List of documents. Each document should be a dictionary.
             auto_refresh: Automatically refresh the index. If you are making
                 lots of requests, it is advised to set this to False to
@@ -267,6 +269,7 @@ class Index:
             mappings: a dictionary to help handle the object fields. e.g., multimodal_combination field
 
         Returns:
+        -------
             Response body outlining indexing result
         """
         if non_tensor_fields is None:
@@ -290,12 +293,12 @@ class Index:
         device: str = None,
         non_tensor_fields: List[str] = None,
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
-        """
-        Will be deprecated soon.
+        """Will be deprecated soon.
         Add documents to this index. Does a partial updates on existing documents,
         based on their ID. Adds unseen documents to the index.
 
         Args:
+        ----
             documents: List of documents. Each document should be a dictionary.
             auto_refresh: Automatically refresh the index. If you are making
                 lots of requests, it is advised to turn this to false to
@@ -312,6 +315,7 @@ class Index:
             non_tensor_fields: fields within documents to not create and store tensors against.
 
         Returns:
+        -------
             Response body outlining indexing result
         """
         mq_logger.warning(
@@ -446,10 +450,12 @@ class Index:
         """Delete documents from this index by a list of their ids.
 
         Args:
+        ----
             ids: List of identifiers of documents.
             auto_refresh: if true refreshes the index
 
         Returns:
+        -------
             A dict with information about the delete operation.
         """
         base_path = f"indexes/{self.index_name}/documents/delete-batch"
@@ -460,13 +466,14 @@ class Index:
         )
 
     def get_stats(self) -> Dict[str, Any]:
-        """Get stats about the index"""
+        """Get stats about the index."""
         return self.http.get(path=f"indexes/{self.index_name}/stats")
 
     @staticmethod
     def _maybe_datetime(the_date: Optional[Union[datetime, str]]) -> Optional[datetime]:
         """This should handle incoming timestamps from Marqo, including
-         parsing if necessary."""
+        parsing if necessary.
+        """
         if the_date is None or not the_date:
             return None
 
@@ -483,15 +490,17 @@ class Index:
             auto_refresh: bool = True, batch_size: int = 50
     ) -> List[Dict[str, Any]]:
         """Batches a large chunk of documents to be sent as multiple
-        add_documents invocations
+        add_documents invocations.
 
         Args:
+        ----
             docs: A list of documents
             batch_size: Size of a batch passed into a single add_documents
                 call
             verbose: If true, prints out info about the documents
 
         Returns:
+        -------
             A list of responses, which have information about the batch
             operation
         """
@@ -577,5 +586,5 @@ class Index:
         return results
 
     def get_settings(self) -> dict:
-        """Get all settings of the index"""
+        """Get all settings of the index."""
         return self.http.get(path=f"indexes/{self.index_name}/settings")

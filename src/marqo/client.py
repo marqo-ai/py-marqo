@@ -11,20 +11,19 @@ from marqo.models import BulkSearchBody, BulkSearchQuery
 
 
 class Client:
-    """
-    A client for the marqo API
+    """A client for the marqo API.
 
     A client instance is needed for every marqo API method to know the location of
     marqo and its permissions.
     """
+
     def __init__(
         self, url: str = "http://localhost:8882", main_user: str = None, main_password: str = None,
         indexing_device: Optional[Union[enums.Devices, str]] = None,
         search_device: Optional[Union[enums.Devices, str]] = None,
         api_key: str = None
     ) -> None:
-        """
-        Parameters
+        """Parameters
         ----------
         url:
             The url to the S2Search API (ex: http://localhost:8882)
@@ -50,6 +49,7 @@ class Client:
         """Create the index.
 
         Args:
+        ----
             index_name: name of the index.
             treat_urls_and_pointers_as_images:
             model:
@@ -73,12 +73,14 @@ class Client:
         )
 
     def delete_index(self, index_name: str) -> Dict[str, Any]:
-        """Deletes an index
+        """Deletes an index.
 
         Args:
+        ----
             index_name: name of the index
 
         Returns:
+        -------
             response body about the result of the delete request
         """
         try:
@@ -91,12 +93,15 @@ class Client:
         This index should already exist.
 
         Args:
+        ----
             index_name: name of the index
 
         Returns:
+        -------
             An Index instance containing the information of the fetched index.
 
         Raises:
+        ------
         """
         ix = Index(self.config, index_name)
         # verify it exists:
@@ -111,9 +116,11 @@ class Client:
          grants access to all the other methods in the Index class.
 
         Args:
+        ----
             index_name: name of the index
 
         Returns:
+        -------
             An Index instance.
         """
         if index_name is not None:
@@ -123,7 +130,8 @@ class Client:
     def get_indexes(self) -> Dict[str, List[Index]]:
         """Get all indexes.
 
-        Returns:
+        Returns
+        -------
         Indexes, a dictionary with the name of indexes.
         """
         response = self.http.get(path='indexes')
@@ -137,7 +145,7 @@ class Client:
         return response
 
     def enrich(self, documents: List[Dict], enrichment: Dict, device: str = None, ):
-        """Enrich documents"""
+        """Enrich documents."""
         selected_device = device if device is not None else self.config.indexing_device
         translated = utils.translate_device_string_for_url(selected_device)
         response = self.http.post(path=f'enrichment?device={translated}', body={

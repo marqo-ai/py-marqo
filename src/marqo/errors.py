@@ -6,7 +6,7 @@ from requests import Response
 
 class MarqoError(Exception):
     """Generic class for Marqo error handling
-    These will be caught and returned to the user as 5xx internal errors
+    These will be caught and returned to the user as 5xx internal errors.
 
     """
 
@@ -19,7 +19,7 @@ class MarqoError(Exception):
 
 
 class MarqoApiError(MarqoError):
-    """Error sent by Marqo API"""
+    """Error sent by Marqo API."""
 
     def __init__(self, error: str, request: Response) -> None:
         self.status_code = request.status_code
@@ -87,7 +87,7 @@ class MarqoWebError(Exception):
 
 
 class __InvalidRequestError(MarqoWebError):
-    """abstract error"""
+    """abstract error."""
 
     def __init__(self, message: str):
         self.message = message
@@ -136,7 +136,8 @@ class DocumentNotFoundError(__InvalidRequestError):
 
 
 class NonTensorIndexError(__InvalidRequestError):
-    """Error trying to use a non-neural OpenSearch index like a neural one"""
+    """Error trying to use a non-neural OpenSearch index like a neural one."""
+
     code = "document_not_found"
     status_code = HTTPStatus.NOT_FOUND
 
@@ -150,7 +151,8 @@ class InternalError(MarqoWebError):
 
 
 class BackendCommunicationError(InternalError):
-    """Error when connecting to Marqo"""
+    """Error when connecting to Marqo."""
+
     code = "backend_communication_error"
     status_code = HTTPStatus.INTERNAL_SERVER_ERROR
 
@@ -159,7 +161,8 @@ class BackendCommunicationError(InternalError):
 
 
 class BackendTimeoutError(InternalError):
-    """Error when Marqo operation takes longer than expected"""
+    """Error when Marqo operation takes longer than expected."""
+
     code = "backend_timeout_error"
     status_code = HTTPStatus.INTERNAL_SERVER_ERROR
 

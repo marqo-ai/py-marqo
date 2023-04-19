@@ -16,13 +16,13 @@ class TestGetSettings(MarqoTestCase):
             pass
 
     def test_default_settings(self):
-        """default fields should be returned if index is created with default settings
-            sample structure of output: {'index_defaults': {'treat_urls_and_pointers_as_images': False,
-                                          'text_preprocessing': {'split_method': 'sentence', 'split_length': 2,
-                                                                 'split_overlap': 0},
-                                          'model': 'hf/all_datasets_v4_MiniLM-L6', 'normalize_embeddings': True,
-                                          'image_preprocessing': {'patch_method': None}}, 'number_of_shards': 5,
-                                          'number_of_replicas' : 1,}
+        """Default fields should be returned if index is created with default settings
+        sample structure of output: {'index_defaults': {'treat_urls_and_pointers_as_images': False,
+        'text_preprocessing': {'split_method': 'sentence', 'split_length': 2,
+        'split_overlap': 0},
+        'model': 'hf/all_datasets_v4_MiniLM-L6', 'normalize_embeddings': True,
+        'image_preprocessing': {'patch_method': None}}, 'number_of_shards': 5,
+        'number_of_replicas' : 1,}.
         """
         self.client.create_index(index_name=self.index_name)
 
@@ -37,8 +37,7 @@ class TestGetSettings(MarqoTestCase):
         self.assertTrue(fields.issubset(set(index_settings['index_defaults'])))
 
     def test_custom_settings(self):
-        """adding custom settings to the index should be reflected in the returned output
-        """
+        """Adding custom settings to the index should be reflected in the returned output."""
         model_properties = {'name': 'sentence-transformers/multi-qa-MiniLM-L6-cos-v1',
                             'dimensions': 384,
                             'tokens': 128,

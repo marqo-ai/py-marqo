@@ -7,8 +7,8 @@ from tests.marqo_test import MarqoTestCase
 
 
 class TestDemo(MarqoTestCase):
-    """Tests for demos.
-    """
+    """Tests for demos."""
+
     def setUp(self) -> None:
         client_0 = Client(**self.client_settings)
         for ix_name in ["cool-index-1", "my-first-index", "my-weighted-query-index", "my-first-multimodal-index"]:

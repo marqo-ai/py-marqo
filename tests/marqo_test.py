@@ -1,5 +1,4 @@
-"""Please have a running Marqo instance to test against!
-
+"""Please have a running Marqo instance to test against!.
 
 Pass its settings to local_marqo_settings.
 """
@@ -36,8 +35,7 @@ class MarqoTestCase(unittest.TestCase):
 
 
     def warm_request(self, func, *args, **kwargs):
-        '''
-        Takes in a function object, func, and executes the function 5 times to warm search results.
+        '''Takes in a function object, func, and executes the function 5 times to warm search results.
         Any arguments passed to args and kwargs are passed as arguments to the function.
         This solves the occurence of tests failing due to eventual consistency implemented in marqo cloud.
         '''

@@ -106,7 +106,7 @@ class TestAddDocuments(MarqoTestCase):
         assert retrieved_d2 == d2
 
     def test_add_documents(self):
-        """indexes the documents and retrieves the documents with the generated IDs"""
+        """Indexes the documents and retrieves the documents with the generated IDs."""
         self.client.create_index(index_name=self.index_name_1)
         d1 = {
                 "doc title": "Cool Document 1",
@@ -167,10 +167,9 @@ class TestAddDocuments(MarqoTestCase):
         assert self.client.index(index_name=self.index_name_1).get_stats()['numberOfDocuments'] == 100
 
     def test_add_documents_long_fields(self):
-        """TODO
-        """
+        """TODO."""
     def test_update_docs_updates_chunks(self):
-        """TODO"""
+        """TODO."""
 
     # delete documents tests:
 
@@ -262,8 +261,8 @@ class TestAddDocuments(MarqoTestCase):
             assert "device=cuda37" in kwargs["path"]
 
     def test_add_documents_default_device(self):
-        """do we use the default device defined in the client, if it isn't
-        overridden?
+        """Do we use the default device defined in the client, if it isn't
+        overridden?.
         """
         temp_client = copy.deepcopy(self.client)
         temp_client.config.search_device = enums.Devices.cpu

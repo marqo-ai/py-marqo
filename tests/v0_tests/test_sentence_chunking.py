@@ -6,11 +6,12 @@ from tests.marqo_test import MarqoTestCase
 
 
 class TestSentenceChunking(MarqoTestCase):
-    """Test for sentence chunking
+    """Test for sentence chunking.
 
     Assumptions:
         - Local OpenSearch (not S2Search)
     """
+
     def setUp(self) -> None:
         client_0 = Client(**self.client_settings)
         

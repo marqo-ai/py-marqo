@@ -5,9 +5,7 @@ from marqo import enums
 
 
 class Config:
-    """
-    Client's credentials and configuration parameters
-    """
+    """Client's credentials and configuration parameters."""
 
     def __init__(
         self,
@@ -17,8 +15,7 @@ class Config:
         search_device: Optional[Union[enums.Devices, str]] = None,
         api_key: str = None
     ) -> None:
-        """
-        Parameters
+        """Parameters
         ----------
         url:
             The url to the S2Search API (ex: http://localhost:9200)
@@ -36,7 +33,7 @@ class Config:
         # warnings.filterwarnings("ignore")
 
     def set_url(self, url):
-        """Set the URL, and infers whether that url is remote"""
+        """Set the URL, and infers whether that url is remote."""
         lowered_url = url.lower()
         local_host_markers = ["localhost", "0.0.0.0", "127.0.0.1"]
         if any([marker in lowered_url for marker in local_host_markers]):

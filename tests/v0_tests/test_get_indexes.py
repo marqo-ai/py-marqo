@@ -56,7 +56,7 @@ class TestAddDocuments(MarqoTestCase):
             assert isinstance(found_index, marqo.index.Index)
 
     def test_get_indexes_usable(self):
-        """Are the indices we get back usable? """
+        """Are the indices we get back usable?."""
         self.client.create_index(self.index_name_1)
         get_ixes_res = self.client.get_indexes()
         assert self._is_index_name_in_get_indexes_response(self.index_name_1, get_ixes_res)

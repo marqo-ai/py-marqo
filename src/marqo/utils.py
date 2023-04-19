@@ -6,13 +6,14 @@ from marqo import errors
 
 
 def construct_authorized_url(url_base: str, username: str, password: str) -> str:
-    """
-    Args:
+    """Args:
+    ----
         url_base: The url of the resource. For example, 'http://localhost:8882'
         username: User's username
-        password: User's password
+        password: User's password.
 
-    Returns:
+    Returns
+    -------
         A url string using the credentials for simple HTTP authentication.
     """
     http_sep = "://"
@@ -25,13 +26,15 @@ def construct_authorized_url(url_base: str, username: str, password: str) -> str
     return f"{http_part}{http_sep}{username}:{password}@{domain_part}"
 
 def translate_device_string_for_url(device: Optional[str]) -> Optional[str]:
-    """Translates a device string for use as a URL param
+    """Translates a device string for use as a URL param.
 
     Args:
+    ----
         device: a string representing a device on the server. Examples include
             "cpu", "cuda", "cuda:2"
 
     Returns:
+    -------
         A string of the device, for use as query string parameter.
     """
     if device is None:
@@ -42,13 +45,15 @@ def translate_device_string_for_url(device: Optional[str]) -> Optional[str]:
 
 
 def convert_list_to_query_params(query_param: str, x: List[Any]) -> str:
-    """ Converts a list value for a query parameter to its query string.
+    """Converts a list value for a query parameter to its query string.
 
     Args:
+    ----
         query_param: query parameter
         x: List of values for the query parameter. 
 
     Returns:
+    -------
         A rendered query string for the given parameter and parameter value.
     """
     return "&".join([f"{query_param}={urllib.parse.quote_plus(str(xx))}" for xx in x])
@@ -57,9 +62,10 @@ def convert_list_to_query_params(query_param: str, x: List[Any]) -> str:
 def convert_dict_to_url_params(d: dict) -> str:
     """Converts a dict into a url-encoded string that can be appended as a query_param
     Args:
-        d: dict to be converted
+        d: dict to be converted.
 
-    Returns:
+    Returns
+    -------
          A URL-encoded string
     """
     as_str = json.dumps(d)

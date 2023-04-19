@@ -26,7 +26,7 @@ class TestBulkSearch(MarqoTestCase):
 
     @staticmethod
     def strip_marqo_fields(doc, strip_id=True):
-        """Strips Marqo fields from a returned doc to get the original doc"""
+        """Strips Marqo fields from a returned doc to get the original doc."""
         copied = copy.deepcopy(doc)
 
         strip_fields = ["_highlights", "_score"]
@@ -40,7 +40,8 @@ class TestBulkSearch(MarqoTestCase):
 
     def test_search_single(self):
         """Searches an index of a single doc.
-        Checks the basic functionality and response structure"""
+        Checks the basic functionality and response structure.
+        """
         self.client.create_index(index_name=self.index_name_1)
         d1 = {
             "Title": "This is a title about some doc. ",
@@ -83,7 +84,7 @@ class TestBulkSearch(MarqoTestCase):
             }])
 
     def test_search_highlights(self):
-        """Tests if show_highlights works and if the deprecation behaviour is expected"""
+        """Tests if show_highlights works and if the deprecation behaviour is expected."""
         self.client.create_index(index_name=self.index_name_1)
         self.client.index(index_name=self.index_name_1).add_documents([{"f1": "some doc"}])
         for params, expected_highlights_presence in [
@@ -161,7 +162,7 @@ class TestBulkSearch(MarqoTestCase):
             '"captain"')["hits"][0]["_id"] == "123456"
 
     def test_search_with_device(self):
-        """use default as defined in config unless overridden"""
+        """Use default as defined in config unless overridden."""
         temp_client = copy.deepcopy(self.client)
         temp_client.config.search_device = "cpu:4"
         temp_client.config.indexing_device = enums.Devices.cpu
