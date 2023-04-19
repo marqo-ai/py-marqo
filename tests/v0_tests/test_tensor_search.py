@@ -300,7 +300,6 @@ class TestAddDocuments(MarqoTestCase):
                     assert len(full_search_results["hits"]) == len(paginated_search_results["hits"])
 
                     # TODO: re-add this assert when KNN incosistency bug is fixed
-                    # assert full_search_results["hits"] == paginated_search_results["hits"]
 
     def test_multi_queries(self):
         docs = [
