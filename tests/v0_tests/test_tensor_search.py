@@ -1,14 +1,16 @@
 import copy
-import marqo
-from marqo import enums
+import math
+import pprint
+import random
+import unittest
 from unittest import mock
+
+import marqo
+import requests
+from marqo import enums
 from marqo.client import Client
 from marqo.errors import MarqoApiError
-import unittest
-import pprint
-import requests
-import random
-import math
+
 from tests.marqo_test import MarqoTestCase
 
 

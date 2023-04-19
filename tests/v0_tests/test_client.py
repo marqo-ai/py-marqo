@@ -1,12 +1,12 @@
 import pprint
 import unittest
 from unittest import mock
-from marqo import config
-from marqo import enums
+
+from marqo import config, enums, utils
 from marqo.client import Client
-from marqo import utils
-from tests.marqo_test import MarqoTestCase
 from marqo.errors import MarqoApiError
+
+from tests.marqo_test import MarqoTestCase
 
 
 class TestClient(MarqoTestCase):

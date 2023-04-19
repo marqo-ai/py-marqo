@@ -1,5 +1,6 @@
-from marqo import utils
 import unittest
+
+from marqo import utils
 
 
 class TestUtils(unittest.TestCase):

@@ -1,7 +1,8 @@
 import json
 import urllib.parse
+from typing import Any, List, Optional
+
 from marqo import errors
-from typing import Any, Optional, List
 
 
 def construct_authorized_url(url_base: str, username: str, password: str) -> str:

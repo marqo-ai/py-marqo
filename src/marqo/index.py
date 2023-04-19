@@ -2,16 +2,16 @@ import functools
 import json
 import logging
 import pprint
-from marqo import defaults
 import typing
-from urllib import parse
 from datetime import datetime
 from timeit import default_timer as timer
 from typing import Any, Dict, Generator, List, Optional, Union
+from urllib import parse
+
+from marqo import defaults, errors, utils
 from marqo._httprequests import HttpRequests
 from marqo.config import Config
-from marqo.enums import SearchMethods, Devices
-from marqo import errors, utils
+from marqo.enums import Devices, SearchMethods
 from marqo.marqo_logging import mq_logger
 
 

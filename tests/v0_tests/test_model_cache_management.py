@@ -2,12 +2,14 @@ import copy
 import math
 import pprint
 import random
+from unittest import mock
+
 import requests
+from marqo import enums
 from marqo.client import Client
 from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
+
 from tests.marqo_test import MarqoTestCase
-from marqo import enums
-from unittest import mock
 
 
 class TestModelCacheManagement(MarqoTestCase):

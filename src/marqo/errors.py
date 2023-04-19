@@ -1,6 +1,7 @@
 import json
-from requests import Response
 from http import HTTPStatus
+
+from requests import Response
 
 
 class MarqoError(Exception):

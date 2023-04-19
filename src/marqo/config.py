@@ -1,7 +1,9 @@
-from typing import Optional, Union
-from marqo import enums, utils
-import urllib3
 import warnings
+from typing import Optional, Union
+
+import urllib3
+
+from marqo import enums, utils
 
 
 class Config:

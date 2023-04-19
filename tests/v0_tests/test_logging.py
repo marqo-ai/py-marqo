@@ -1,13 +1,15 @@
 import copy
 import pprint
+import unittest
+from unittest import mock
 
 import marqo
+import requests
 from marqo.client import Client
 from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
-import unittest
+
 from tests.marqo_test import MarqoTestCase
-from unittest import mock
-import requests
+
 marqo.set_log_level("INFO")
 
 class TestLogging(MarqoTestCase):

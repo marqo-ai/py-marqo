@@ -1,12 +1,14 @@
 import copy
-import marqo
-from marqo import enums
+import math
+import random
 from unittest import mock
+
+import marqo
+import requests
+from marqo import enums
 from marqo.client import Client
 from marqo.errors import InvalidArgError, MarqoApiError
-import requests
-import random
-import math
+
 from tests.marqo_test import MarqoTestCase
 
 

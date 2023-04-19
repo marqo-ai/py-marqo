@@ -1,13 +1,15 @@
+import os
+import pprint
+import tempfile
+import unittest
+
+import numpy as np
 import requests
-from PIL import Image
 from marqo.client import Client
 from marqo.errors import MarqoApiError
-import unittest
-import numpy as np
-import pprint
+from PIL import Image
+
 from tests.marqo_test import MarqoTestCase
-import tempfile
-import os
 
 
 class TestImageChunking(MarqoTestCase):

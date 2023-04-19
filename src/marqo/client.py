@@ -3,12 +3,11 @@ from typing import Any, Dict, List, Optional, Union
 
 from pydantic import error_wrappers
 
-from marqo.index import Index
-from marqo.config import Config
-from marqo.models import BulkSearchBody, BulkSearchQuery
+from marqo import enums, errors, utils
 from marqo._httprequests import HttpRequests
-from marqo import utils, enums
-from marqo import errors
+from marqo.config import Config
+from marqo.index import Index
+from marqo.models import BulkSearchBody, BulkSearchQuery
 
 
 class Client:

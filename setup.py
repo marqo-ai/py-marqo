@@ -1,4 +1,5 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
+
 # from src.marqo.version import __version__
 
 with open("README.md", "r", encoding="utf8") as fh:

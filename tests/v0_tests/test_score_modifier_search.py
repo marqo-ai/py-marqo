@@ -1,5 +1,6 @@
 from marqo.client import Client
 from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
+
 from tests.marqo_test import MarqoTestCase
 
 

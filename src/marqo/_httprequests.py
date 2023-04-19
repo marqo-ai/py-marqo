@@ -1,14 +1,12 @@
 import copy
 import json
-from typing import Any, Callable, Dict, List, Optional, Union
-import requests
 from json.decoder import JSONDecodeError
+from typing import Any, Callable, Dict, List, Optional, Union
+
+import requests
+
 from marqo.config import Config
-from marqo.errors import (
-    MarqoWebError,
-    BackendCommunicationError,
-    BackendTimeoutError
-)
+from marqo.errors import BackendCommunicationError, BackendTimeoutError, MarqoWebError
 
 s = requests.Session()
 
