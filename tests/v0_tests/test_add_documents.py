@@ -9,7 +9,7 @@ from unittest import mock
 import requests
 from marqo import enums
 from marqo.client import Client
-from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
+from marqo.errors import MarqoApiError, MarqoWebError
 
 from tests.marqo_test import MarqoTestCase
 
@@ -21,13 +21,13 @@ class TestAddDocuments(MarqoTestCase):
         self.index_name_1 = "my-test-index-1"
         try:
             self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
+        except MarqoApiError:
             pass
 
     def tearDown(self) -> None:
         try:
             self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
+        except MarqoApiError:
             pass
 
     # Create index tests
@@ -78,7 +78,7 @@ class TestAddDocuments(MarqoTestCase):
 
     def test_get_index_non_existent(self):
         try:
-            index = self.client.get_index("some-non-existent-index")
+            self.client.get_index("some-non-existent-index")
             raise AssertionError
         except MarqoWebError as e:
             assert e.code == "index_not_found"
@@ -97,7 +97,7 @@ class TestAddDocuments(MarqoTestCase):
                 "field X": "this is a solid doc",
                 "_id": "123456"
         }
-        res = self.client.index(self.index_name_1).add_documents([
+        self.client.index(self.index_name_1).add_documents([
             d1, d2
         ])
         retrieved_d1 = self.client.index(self.index_name_1).get_document(document_id="e197e580-0393-4f4e-90e9-8cdf4b17e339")
@@ -394,7 +394,7 @@ class TestAddDocuments(MarqoTestCase):
                                 assert isinstance(res, list)
                                 assert len(res) == math.ceil(docs_to_add/client_batch_size)
                                 # should only refresh on the last call, if auto_refresh=True
-                                assert all([f'refresh=false' in d[1]['path'] for d in
+                                assert all(['refresh=false' in d[1]['path'] for d in
                                             mock__post.call_args_list][:-1])
                                 if auto_refresh:
                                     assert [f"{self.index_name_1}/refresh" in d[1]['path']
@@ -454,7 +454,7 @@ class TestAddDocuments(MarqoTestCase):
                                 assert isinstance(res, list)
                                 assert len(res) == math.ceil(docs_to_add/client_batch_size)
                                 # should only refresh on the last call, if auto_refresh=True
-                                assert all([f'refresh=false' in d[1]['path'] for d in
+                                assert all(['refresh=false' in d[1]['path'] for d in
                                             mock__put.call_args_list][:-1])
                                 if auto_refresh:
                                     assert [f"{self.index_name_1}/refresh" in d[1]['path']

@@ -1,7 +1,5 @@
 import pprint
-import unittest
 
-import requests
 from marqo.client import Client
 from marqo.errors import MarqoApiError
 
@@ -16,7 +14,7 @@ class TestDemo(MarqoTestCase):
         for ix_name in ["cool-index-1", "my-first-index", "my-weighted-query-index", "my-first-multimodal-index"]:
             try:
                 client_0.delete_index(ix_name)
-            except MarqoApiError as s:
+            except MarqoApiError:
                 pass
 
     def test_demo(self):

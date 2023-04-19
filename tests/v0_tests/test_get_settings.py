@@ -12,7 +12,7 @@ class TestGetSettings(MarqoTestCase):
         self.index_name = 'my-test-index-1'
         try:
             self.client.delete_index(self.index_name)
-        except IndexNotFoundError as s:
+        except IndexNotFoundError:
             pass
 
     def test_default_settings(self):

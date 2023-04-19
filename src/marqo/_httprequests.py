@@ -135,7 +135,7 @@ def convert_to_marqo_error_and_raise(response: requests.Response, err: requests.
         response_msg = response.json()
         code = response_msg["code"]
         error_type = response_msg["type"]
-    except (JSONDecodeError, KeyError) as e:
+    except (JSONDecodeError, KeyError):
         response_msg = response.text
         code = "unhandled_error"
         error_type = "unhandled_error_type"

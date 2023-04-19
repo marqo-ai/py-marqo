@@ -1,10 +1,9 @@
 import copy
-import string
 import time
 import uuid
 
 from marqo.client import Client
-from marqo.errors import MarqoApiError, MarqoError
+from marqo.errors import MarqoApiError
 
 from tests.marqo_test import MarqoTestCase
 
@@ -19,7 +18,7 @@ class TestAddDocumentsPara(MarqoTestCase):
         self.config = copy.deepcopy(self.client.config)
         try:
             self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
+        except MarqoApiError:
             pass
         
         self.para_params = {'server_batch_size':10, 'processes':2}
@@ -32,7 +31,7 @@ class TestAddDocumentsPara(MarqoTestCase):
 
         try:
             self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
+        except MarqoApiError:
             pass
 
         identifiers = self.identifiers
@@ -51,7 +50,7 @@ class TestAddDocumentsPara(MarqoTestCase):
 
         try:
             self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
+        except MarqoApiError:
             pass
 
         identifiers = self.identifiers
@@ -74,7 +73,7 @@ class TestAddDocumentsPara(MarqoTestCase):
 
         try:
             self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
+        except MarqoApiError:
             pass
 
         identifiers = self.identifiers

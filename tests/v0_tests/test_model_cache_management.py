@@ -1,13 +1,6 @@
-import copy
-import math
-import pprint
-import random
-from unittest import mock
 
-import requests
-from marqo import enums
 from marqo.client import Client
-from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
+from marqo.errors import MarqoApiError, MarqoWebError
 
 from tests.marqo_test import MarqoTestCase
 
@@ -21,14 +14,14 @@ class TestModelCacheManagement(MarqoTestCase):
         self.MODEL = "ViT-B/32"
         try:
             self.client.delete_index(self.index_name)
-        except MarqoApiError as s:
+        except MarqoApiError:
             pass
 
 
     def tearDown(self) -> None:
         try:
             self.client.delete_index(self.index_name)
-        except MarqoApiError as s:
+        except MarqoApiError:
             pass
 
 
@@ -65,7 +58,7 @@ class TestModelCacheManagement(MarqoTestCase):
     def test_eject_no_cached_model(self) -> None:
         # test a model that is not cached
         try:
-            res = self.client.eject_model("void_model", "void_device")
+            self.client.eject_model("void_model", "void_device")
             raise AssertionError
         except MarqoWebError:
             pass

@@ -82,7 +82,7 @@ class Client:
             response body about the result of the delete request
         """
         try:
-            res = self.http.delete(path=f"indexes/{index_name}")
+            self.http.delete(path=f"indexes/{index_name}")
         except errors.MarqoWebError as e:
             return e.message
 

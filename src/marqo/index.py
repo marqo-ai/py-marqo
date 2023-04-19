@@ -1,17 +1,13 @@
 import functools
-import json
 import logging
-import pprint
-import typing
 from datetime import datetime
 from timeit import default_timer as timer
-from typing import Any, Dict, Generator, List, Optional, Union
-from urllib import parse
+from typing import Any, Dict, List, Optional, Union
 
 from marqo import defaults, errors, utils
 from marqo._httprequests import HttpRequests
 from marqo.config import Config
-from marqo.enums import Devices, SearchMethods
+from marqo.enums import SearchMethods
 from marqo.marqo_logging import mq_logger
 
 
@@ -409,7 +405,7 @@ class Index:
             errors_detected = False
             if server_batch_size is not None:
                 # with Server Batching (show processing time for each batch)
-                mq_logger.debug(f"add_documents Marqo index (server-side batch reports): ")
+                mq_logger.debug("add_documents Marqo index (server-side batch reports): ")
 
                 if processes is not None and processes > 1:
                     # for multiprocess, timing messages should be arranged by process, then batch

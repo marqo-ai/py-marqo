@@ -4,11 +4,9 @@
 Pass its settings to local_marqo_settings.
 """
 import os
-import time
 import unittest
 
 from marqo.client import Client
-from marqo.utils import construct_authorized_url
 from marqo.version import __marqo_version__ as py_marqo_support_version
 
 

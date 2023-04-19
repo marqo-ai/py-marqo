@@ -1,5 +1,5 @@
 from marqo.client import Client
-from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
+from marqo.errors import MarqoApiError, MarqoWebError
 
 from tests.marqo_test import MarqoTestCase
 
@@ -11,7 +11,7 @@ class TestScoreModifierSearch(MarqoTestCase):
         self.index_name_1 = "my-test-index-1"
         try:
             self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
+        except MarqoApiError:
             pass
         self.client.create_index(index_name=self.index_name_1, model="ViT-B/32")
         self.client.index(index_name=self.index_name_1).add_documents(
@@ -39,7 +39,7 @@ class TestScoreModifierSearch(MarqoTestCase):
     def tearDown(self) -> None:
         try:
             self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
+        except MarqoApiError:
             pass
 
     def test_score_modifier_search_results(self):
@@ -83,7 +83,7 @@ class TestScoreModifierSearch(MarqoTestCase):
             }
 
         try:
-            modifiers_res = self.client.index(self.index_name_1).search(q=self.query,
+            self.client.index(self.index_name_1).search(q=self.query,
                                                                         score_modifiers = invalid_score_modifiers)
             raise AssertionError
         except MarqoWebError:
@@ -99,11 +99,11 @@ class TestScoreModifierSearch(MarqoTestCase):
                      }]
             }
 
-        modifiers_res = self.client.index(self.index_name_1).search(q=self.query, score_modifiers=valid_score_modifiers)
+        self.client.index(self.index_name_1).search(q=self.query, score_modifiers=valid_score_modifiers)
 
     def test_bulk_search_error(self):
         try:
-            resp = self.client.bulk_search([{
+            self.client.bulk_search([{
                 "index": self.index_name_1,
                 "q": "title about some doc",
                 "scoreModifiers" : {

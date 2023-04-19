@@ -1,12 +1,7 @@
-import copy
-import pprint
-import unittest
-from unittest import mock
 
 import marqo
-import requests
 from marqo.client import Client
-from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
+from marqo.errors import MarqoApiError
 
 from tests.marqo_test import MarqoTestCase
 
@@ -19,13 +14,13 @@ class TestLogging(MarqoTestCase):
         self.index_name_1 = "my-test-index-1"
         try:
             self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
+        except MarqoApiError:
             pass
 
     def tearDown(self) -> None:
         try:
             self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
+        except MarqoApiError:
             pass
 
     @staticmethod

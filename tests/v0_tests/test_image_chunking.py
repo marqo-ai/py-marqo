@@ -1,7 +1,3 @@
-import os
-import pprint
-import tempfile
-import unittest
 
 import numpy as np
 import requests
@@ -22,18 +18,17 @@ class TestImageChunking(MarqoTestCase):
 
         try:
             client_0.delete_index(self.index_name)
-        except MarqoApiError as s:
+        except MarqoApiError:
             pass
 
     def test_image_no_chunking(self):
 
-        image_size = (256, 384)
 
         client = Client(**self.client_settings)
         
         try:
             client.delete_index(self.index_name)
-        except MarqoApiError as s:
+        except MarqoApiError:
             pass
 
         settings = {
@@ -73,13 +68,12 @@ class TestImageChunking(MarqoTestCase):
 
     def test_image_simple_chunking(self):
 
-        image_size = (256, 384)
 
         client = Client(**self.client_settings)
 
         try:
             client.delete_index(self.index_name)
-        except MarqoApiError as s:
+        except MarqoApiError:
             pass
 
         settings = {

@@ -1,9 +1,4 @@
-import os
-import pprint
-import tempfile
-import unittest
 
-import requests
 from marqo.client import Client
 from marqo.errors import MarqoApiError
 
@@ -23,7 +18,7 @@ class TestSentenceChunking(MarqoTestCase):
 
         try:
             client_0.delete_index(self.index_name)
-        except MarqoApiError as s:
+        except MarqoApiError:
             pass
 
     def test_sentence_no_chunking(self):
@@ -32,7 +27,7 @@ class TestSentenceChunking(MarqoTestCase):
         
         try:
             client.delete_index(self.index_name)
-        except MarqoApiError as s:
+        except MarqoApiError:
             pass
 
         settings = {
@@ -68,7 +63,7 @@ class TestSentenceChunking(MarqoTestCase):
         
         try:
             client.delete_index(self.index_name)
-        except MarqoApiError as s:
+        except MarqoApiError:
             pass
 
         settings = {
@@ -132,7 +127,7 @@ class TestSentenceChunking(MarqoTestCase):
         
         try:
             client.delete_index(self.index_name)
-        except MarqoApiError as s:
+        except MarqoApiError:
             pass
 
         settings = {

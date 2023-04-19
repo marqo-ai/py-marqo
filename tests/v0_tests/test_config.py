@@ -1,8 +1,5 @@
-import unittest
-from unittest import mock
 
-from marqo import config, enums, utils
-from marqo.client import Client
+from marqo import config
 
 from tests.marqo_test import MarqoTestCase
 

@@ -1,5 +1,5 @@
 from marqo.client import Client
-from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
+from marqo.errors import MarqoApiError, MarqoWebError
 
 from tests.marqo_test import MarqoTestCase
 
@@ -11,7 +11,7 @@ class TestCustomVectorSearch(MarqoTestCase):
         self.index_name_1 = "my-test-index-1"
         try:
             self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
+        except MarqoApiError:
             pass
         self.client.create_index(index_name=self.index_name_1, model="ViT-B/32")
         self.client.index(index_name=self.index_name_1).add_documents(
@@ -34,7 +34,7 @@ class TestCustomVectorSearch(MarqoTestCase):
     def tearDown(self) -> None:
         try:
             self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
+        except MarqoApiError:
             pass
 
     def test_custome_vector_search_format(self):
@@ -80,7 +80,7 @@ class TestCustomVectorSearch(MarqoTestCase):
                                   context={"tensor": [{"vector": [1, ] * 512, "weight": 0},
                                                       {"vector": [2, ] * 512, "weight": 0}], })
 
-            custom_res = self.client.index(self.index_name_1).search(q=self.query,
+            self.client.index(self.index_name_1).search(q=self.query,
                                                                      context={"tensorsss": [
                                                                          {"vector": [1, ] * 512, "weight": 0},
                                                                          {"vector": [2, ] * 512, "weight": 0}], })

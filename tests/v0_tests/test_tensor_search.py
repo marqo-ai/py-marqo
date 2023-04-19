@@ -1,8 +1,6 @@
 import copy
 import math
-import pprint
 import random
-import unittest
 from unittest import mock
 
 import marqo
@@ -21,7 +19,7 @@ class TestAddDocuments(MarqoTestCase):
         self.index_name_1 = "my-test-index-1"
         try:
             self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
+        except MarqoApiError:
             pass
 
     @staticmethod
@@ -48,7 +46,7 @@ class TestAddDocuments(MarqoTestCase):
             The editor-in-chief Katharine Viner succeeded Alan Rusbridger in 2015.[10][11] Since 2018, the paper's main newsprint sections have been published in tabloid format. As of July 2021, its print edition had a daily circulation of 105,134.[4] The newspaper has an online edition, TheGuardian.com, as well as two international websites, Guardian Australia (founded in 2013) and Guardian US (founded in 2011). The paper's readership is generally on the mainstream left of British political opinion,[12][13][14][15] and the term "Guardian reader" is used to imply a stereotype of liberal, left-wing or "politically correct" views.[3] Frequent typographical errors during the age of manual typesetting led Private Eye magazine to dub the paper the "Grauniad" in the 1960s, a nickname still used occasionally by the editors for self-mockery.[16]
             """
         }
-        add_doc_res = self.client.index(self.index_name_1).add_documents([d1])
+        self.client.index(self.index_name_1).add_documents([d1])
         
         if self.IS_MULTI_INSTANCE:
             self.warm_request(self.client.index(self.index_name_1).search,
@@ -107,7 +105,7 @@ class TestAddDocuments(MarqoTestCase):
                 "field X": "this is a solid doc",
                 "_id": "123456"
         }
-        res = self.client.index(self.index_name_1).add_documents([
+        self.client.index(self.index_name_1).add_documents([
             d1, d2
         ])
 
@@ -133,7 +131,7 @@ class TestAddDocuments(MarqoTestCase):
             "field X": "this is a solid doc",
             "_id": "123456"
         }
-        res = self.client.index(self.index_name_1).add_documents([
+        self.client.index(self.index_name_1).add_documents([
             d1, d2
         ])
 
@@ -199,7 +197,7 @@ class TestAddDocuments(MarqoTestCase):
             "field1": "other things",
             "_id": "123456"
         }
-        res = self.client.index(self.index_name_1).add_documents([
+        self.client.index(self.index_name_1).add_documents([
             d1, d2
         ],auto_refresh=True)
 
@@ -230,7 +228,7 @@ class TestAddDocuments(MarqoTestCase):
             "an_int": 2345678,
             "_id": "123456"
         }
-        x = self.client.index(self.index_name_1).add_documents([
+        self.client.index(self.index_name_1).add_documents([
             d1, d2
         ], auto_refresh=True)
         atts = ["doc title", "an_int"]
@@ -374,7 +372,7 @@ class TestAddDocuments(MarqoTestCase):
                 filter_field: "Alpaca"
             }
             ]
-            add_res = self.client.index(index_name=self.index_name_1).add_documents(
+            self.client.index(index_name=self.index_name_1).add_documents(
                 docs, auto_refresh=True, non_tensor_fields=[field_to_not_search]
             )
             if self.IS_MULTI_INSTANCE:

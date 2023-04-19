@@ -1,13 +1,6 @@
-import copy
-import math
-import pprint
-import random
-from unittest import mock
 
-import requests
-from marqo import enums
 from marqo.client import Client
-from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
+from marqo.errors import MarqoApiError, MarqoWebError
 
 from tests.marqo_test import MarqoTestCase
 
@@ -19,7 +12,7 @@ class TestBoostSearch(MarqoTestCase):
         self.index_name_1 = "my-test-index-1"
         try:
             self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
+        except MarqoApiError:
             pass
         self.client.create_index(index_name = self.index_name_1)
         self.client.index(index_name = self.index_name_1).add_documents(
@@ -42,7 +35,7 @@ class TestBoostSearch(MarqoTestCase):
     def tearDown(self) -> None:
         try:
             self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
+        except MarqoApiError:
             pass
 
 
@@ -95,7 +88,7 @@ class TestBoostSearch(MarqoTestCase):
                 self.warm_request(self.client.index(self.index_name_1).search,q=self.query,
                                                                          boost=["Title", [1,2]])
                 
-            boost_res = self.client.index(self.index_name_1).search(q=self.query,
+            self.client.index(self.index_name_1).search(q=self.query,
                                                                          boost=["Title", [1,2]])
             raise AssertionError
         except MarqoWebError:
@@ -109,7 +102,7 @@ class TestBoostSearch(MarqoTestCase):
                                                                          boost={"Title": [1, 1]}
                                                                          ,searchable_attributes=["Description"])
                 
-            boost_res = self.client.index(self.index_name_1).search(q=self.query,
+            self.client.index(self.index_name_1).search(q=self.query,
                                                                          boost={"Title": [1, 1]}
                                                                          ,searchable_attributes=["Description"])
             raise AssertionError
