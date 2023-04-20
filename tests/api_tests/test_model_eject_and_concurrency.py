@@ -48,8 +48,9 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
                     "Description": "The EMU is a spacesuit that provides environmental protection, "
                                    "mobility, life support, and communications for astronauts",
                     "_id": "article_591"
-                }]
-            )
+                }], auto_refresh=True)
+
+        time.sleep(10)
 
     def setUp(self) -> None:
         self.client = Client(**self.client_settings)
@@ -74,7 +75,6 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
             pass
 
     def test_sequentially_search(self):
-        time.sleep(5)
         for index_name in list(self.index_model_object):
             self.client.index(index_name).search(q='What is the best outfit to wear on the moon?')
 
