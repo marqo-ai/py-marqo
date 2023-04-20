@@ -29,7 +29,7 @@ class MarqoTestCase(unittest.TestCase):
         # Use it whenever you think there is a risk of OOM problem.
         # E.g., add it into the `tearDown` function to remove models between test cases.
         client = Client(**cls.client_settings)
-        model_list = client.get_loaded_models()["models"]
+        model_list = client.get_loaded_models().get("models", [])
         for model in model_list:
             try:
                 client.eject_model(model_name=model["model_name"], model_device=model["model_device"])

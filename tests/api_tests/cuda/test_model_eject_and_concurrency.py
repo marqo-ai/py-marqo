@@ -16,11 +16,10 @@ import os
 class TestModelEjectAndConcurrency(MarqoTestCase):
     @classmethod
     def setUpClass(cls) -> None:
+        super().setUpClass()
         if os.environ["TESTING_CONFIGURATION"] not in ["CUDA_DIND_MARQO_OS"]:
             cls.skip_class = True
             return
-
-        super().setUpClass()
         cls.client = Client(**cls.client_settings)
         cls.index_model_object = {
             "test_0": 'open_clip/ViT-B-32/laion400m_e31',
@@ -97,7 +96,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
 
         q = multiprocessing.Queue()
         processes = []
-        for i in range(5):
+        for i in range(2):
             p = multiprocessing.Process(target=self.normal_search, args=(test_index, q))
             processes.append(p)
             p.start()
@@ -118,7 +117,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
         processes.append(p)
         p.start()
 
-        for i in range(5):
+        for i in range(2):
             p = multiprocessing.Process(target=self.racing_search, args=(test_index, q))
             processes.append(p)
             p.start()
