@@ -10,11 +10,16 @@ from tests.utilities import allow_environments
 from tests.utilities import classwide_decorate
 import multiprocessing
 import time
+import os
 
 @classwide_decorate(allow_environments, allowed_configurations=["CUDA_DIND_MARQO_OS"])
 class TestModelEjectAndConcurrency(MarqoTestCase):
     @classmethod
     def setUpClass(cls) -> None:
+        if os.environ["TESTING_CONFIGURATION"] not in ["CUDA_DIND_MARQO_OS"]:
+            cls.skip_class = True
+            return
+
         super().setUpClass()
         cls.client = Client(**cls.client_settings)
         cls.index_model_object = {
