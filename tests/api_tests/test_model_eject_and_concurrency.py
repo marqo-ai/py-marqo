@@ -14,17 +14,17 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
             "test_0": 'open_clip/ViT-B-32/laion400m_e31',
             "test_1": 'open_clip/ViT-B-32/laion400m_e32',
             "test_2": 'open_clip/RN50x4/openai',
-            "test_3": 'onnx16/open_clip/RN50-quickgelu/openai',
-            "test_4": "onnx16/open_clip/ViT-L-14/laion2b_s32b_b82k",
-            "test_5": "onnx32/open_clip/ViT-L-14/openai",
+            "test_3": 'open_clip/RN101-quickgelu/yfcc15m',
+            "test_4": 'open_clip/ViT-B-16-plus-240/laion400m_e32',
+            "test_5": 'open_clip/ViT-B-32-quickgelu/laion400m_e31',
             "test_6": "hf/all-MiniLM-L6-v1",
             "test_7": "hf/all-MiniLM-L6-v2",
             "test_8": "hf/all_datasets_v3_MiniLM-L12",
             "test_9": 'open_clip/ViT-B-32/laion2b_e16',
             "test_10": 'ViT-B/16',
             "test_11": 'ViT-L/14@336px',
-            "test_12": "onnx16/openai/ViT-L/14",
-            "test_13": 'onnx32/open_clip/ViT-B-32-quickgelu/laion400m_e32',
+            "test_12": 'open_clip/ViT-B-16/laion400m_e32',
+            "test_13": 'open_clip/ViT-B-16/laion2b_s34b_b88k',
         }
 
         for index_name, model in cls.index_model_object.items():
