@@ -1,8 +1,8 @@
 from marqo.client import Client
 from marqo.errors import MarqoWebError
 from tests.marqo_test import MarqoTestCase
-import multiprocessing
 import time
+import threading, queue, multiprocessing
 
 
 class TestModelEjectAndConcurrency(MarqoTestCase):
@@ -33,7 +33,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
             }
             try:
                 cls.client.delete_index(index_name)
-            except:
+            except Exception:
                 pass
 
             cls.client.create_index(index_name, **settings)
@@ -58,11 +58,25 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
     def tearDown(self) -> None:
         pass
 
+    @classmethod
+    def tearDownClass(cls) -> None:
+        super().tearDownClass()
+        for index_name, model in cls.index_model_object.items():
+            try:
+                cls.client.delete_index(index_name)
+            except Exception:
+                pass
+
     def normal_search(self, index_name, q):
         # A function will be called in multiprocess
-        res = self.client.index(index_name).search("what is best to wear on the moon?")
-        if len(res["hits"]) != 2:
-            q.put(AssertionError)
+        try:
+            res = self.client.index(index_name).search("what is best to wear on the moon?")
+            if len(res["hits"]) == 2:
+                q.put("normal search success")
+            else:
+                q.put(AssertionError)
+        except Exception as e:
+            q.put(e)
 
     def racing_search(self, index_name, q):
         # A function will be called in multiprocess
@@ -70,9 +84,10 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
             res = self.client.index(index_name).search("what is best to wear on the moon?")
             q.put(AssertionError)
         except MarqoWebError as e:
-            if not "another request was updating the model cache at the same time" in e.message:
+            if "Request rejected, as this request attempted to update the model cache," in str(e):
+                q.put("racing search get blocked with correct error")
+            else:
                 q.put(e)
-            pass
 
     def test_sequentially_search(self):
         for index_name in list(self.index_model_object):
@@ -83,36 +98,48 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
         test_index = "test_1"
         res = self.client.index(test_index).search("what is best to wear on the moon?")
 
-        q = multiprocessing.Queue()
-        processes = []
+        normal_search_queue = queue.Queue()
+        threads = []
         for i in range(2):
-            p = multiprocessing.Process(target=self.normal_search, args=(test_index, q))
-            processes.append(p)
-            p.start()
+            t = threading.Thread(target=self.normal_search, args=(test_index, normal_search_queue))
+            threads.append(t)
+            t.start()
 
-        for p in processes:
-            p.join()
+        for t in threads:
+            t.join()
 
-        assert q.empty()
+        assert normal_search_queue.qsize() == 2
+        while not normal_search_queue.empty():
+            assert normal_search_queue.get() == "normal search success"
 
     def test_concurrent_search_without_cache(self):
         # Remove all the cached models
         super().removeAllModels()
 
         test_index = "test_10"
-        q = multiprocessing.Queue()
-        processes = []
-        main_process = multiprocessing.Process(target=self.normal_search, args=(test_index, q))
-        main_process.start()
+        normal_search_queue = queue.Queue()
+        racing_search_queue = queue.Queue()
+        threads = []
+        main_thread = threading.Thread(target=self.normal_search, args=(test_index, normal_search_queue))
+        main_thread.start()
+        time.sleep(0.2)
 
         for i in range(2):
-            p = multiprocessing.Process(target=self.racing_search, args=(test_index, q))
-            processes.append(p)
-            p.start()
+            t = threading.Thread(target=self.racing_search, args=(test_index, racing_search_queue))
+            threads.append(t)
+            t.start()
 
-        for p in processes:
-            p.join()
-        main_process.join()
+        for t in threads:
+            t.join()
 
-        assert q.empty()
+        main_thread.join()
+
+        assert normal_search_queue.qsize() == 1
+        while not normal_search_queue.empty():
+            assert normal_search_queue.get() == "normal search success"
+
+        assert racing_search_queue.qsize() == 2
+        while not racing_search_queue.empty():
+            assert racing_search_queue.get() == "racing search get blocked with correct error"
+
 
