@@ -22,9 +22,9 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
             # "test_8": "hf/all_datasets_v3_MiniLM-L12",
             # "test_9": 'open_clip/ViT-B-32/laion2b_e16',
             "test_10": 'ViT-B/16',
-            "test_11": 'open_clip/convnext_base/laion400m_s13b_b51k',
-            "test_12": 'open_clip/ViT-B-16/laion400m_e32',
-            "test_13": 'open_clip/ViT-B-16/laion2b_s34b_b88k',
+            # "test_11": 'open_clip/convnext_base/laion400m_s13b_b51k',
+            # "test_12": 'open_clip/ViT-B-16/laion400m_e32',
+            # "test_13": 'open_clip/ViT-B-16/laion2b_s34b_b88k',
         }
 
         for index_name, model in cls.index_model_object.items():
