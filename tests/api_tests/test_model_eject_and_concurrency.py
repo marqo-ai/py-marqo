@@ -90,8 +90,29 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
                 q.put(e)
 
     def test_sequentially_search(self):
+        """Iterate through each index and loading each model. We expect to not run out of space as we 
+        older loaded models are ejected to make space for newer ones.
+        
+        If the Marqo does through this test, it indicates that a problem with model cache ejection.
+        
+        Running this without a sleep between each call sometimes kills Marqo. This is probably because
+        we don't have much control over the garbage collection of dereferenced objects in Python, 
+        resulting in an Out Of Memory crash. 
+        
+        Because rapidly loading different models is a niche usecase, we want to relax the strictness of 
+        the test (by adding a sleep) rather than making the ejections stricter (for example, by locking
+        the available models dict). 
+        """
+        
+        # this downloads the models if they aren't already downloaded 
         for index_name in list(self.index_model_object):
             self.client.index(index_name).search(q='What is the best outfit to wear on the moon?')
+            time.sleep(3)
+            
+        # this swaps the models from disk to memory
+        for index_name in list(self.index_model_object):
+            self.client.index(index_name).search(q='What is the best outfit to wear on the moon?')
+            time.sleep(3)
 
     def test_concurrent_search_with_cache(self):
         # Search once to make sure the model is in cache
