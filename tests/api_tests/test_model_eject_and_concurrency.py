@@ -61,9 +61,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
     def normal_search(self, index_name, q):
         # A function will be called in multiprocess
         res = self.client.index(index_name).search("what is best to wear on the moon?")
-        print(len(res["hits"])==2)
         if len(res["hits"]) == 2:
-            print("normal search success")
             q.put("normal search success")
 
     def racing_search(self, index_name, q):
@@ -127,7 +125,6 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
     def test_concurrent_search_without_cache(self):
         # Remove all the cached models
         super().removeAllModels()
-        print(self.client.get_loaded_models())
 
         test_index = "test_10"
         normal_search_queue = queue.Queue()
