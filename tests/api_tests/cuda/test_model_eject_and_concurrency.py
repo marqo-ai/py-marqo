@@ -37,8 +37,8 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
             "test_9": 'open_clip/ViT-B-32/laion2b_e16',
             "test_10": 'open_clip/RN101/yfcc15m',
             "test_11": 'open_clip/convnext_base/laion400m_s13b_b51k',
-            "test_12": 'hf/e5-small-unsupervised',
-            "test_13": 'open_clip/ViT-B-16/laion2b_s34b_b88k',
+            "test_12": 'open_clip/convnext_base_w/laion2b_s13b_b82k',
+            "test_13": 'open_clip/coca_ViT-B-32/mscoco_finetuned_laion2b_s13b_b90k',
         }
 
         for index_name, model in cls.index_model_object.items():
