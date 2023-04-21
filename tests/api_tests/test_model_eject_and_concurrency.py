@@ -11,12 +11,12 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
         super().setUpClass()
         cls.client = Client(**cls.client_settings)
         cls.index_model_object = {
-            # "test_0": 'open_clip/ViT-B-32/laion400m_e31',
-            # "test_1": 'open_clip/ViT-B-32/laion400m_e32',
-            # "test_2": 'open_clip/RN50x4/openai',
-            # "test_3": 'open_clip/RN101-quickgelu/yfcc15m',
-            # "test_4": 'open_clip/ViT-B-16-plus-240/laion400m_e32',
-            # "test_5": 'open_clip/ViT-B-32-quickgelu/laion400m_e31',
+            "test_0": 'open_clip/ViT-B-32/laion400m_e31',
+            "test_1": 'open_clip/ViT-B-32/laion400m_e32',
+            "test_2": 'open_clip/RN50x4/openai',
+            "test_3": 'open_clip/RN101-quickgelu/yfcc15m',
+            "test_4": 'open_clip/ViT-B-16-plus-240/laion400m_e32',
+            "test_5": 'open_clip/ViT-B-32-quickgelu/laion400m_e31',
             # "test_6": "hf/all-MiniLM-L6-v1",
             # "test_7": "hf/all-MiniLM-L6-v2",
             # "test_8": "hf/all_datasets_v3_MiniLM-L12",
