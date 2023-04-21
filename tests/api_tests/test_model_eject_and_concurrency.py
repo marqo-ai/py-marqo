@@ -119,6 +119,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
         threads = []
         main_thread = threading.Thread(target=self.normal_search, args=(test_index, normal_search_queue))
         main_thread.start()
+        time.sleep(0.2)
 
         for i in range(2):
             t = threading.Thread(target=self.racing_search, args=(test_index, racing_search_queue))
