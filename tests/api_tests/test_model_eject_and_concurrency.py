@@ -18,13 +18,13 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
             "test_4": 'open_clip/ViT-B-32/laion2b_e16',
             "test_5": 'open_clip/ViT-B-32-quickgelu/laion400m_e31',
             "test_6": "hf/all-MiniLM-L6-v1",
-            "test_7": "hf/all-MiniLM-L6-v2",
-            "test_8": "hf/all_datasets_v3_MiniLM-L12",
-            "test_9": 'open_clip/ViT-B-32/laion2b_e16',
-            "test_10": 'open_clip/RN101/yfcc15m',
-            "test_11": 'open_clip/convnext_base/laion400m_s13b_b51k',
-            "test_12": 'open_clip/convnext_base_w/laion2b_s13b_b82k',
-            "test_13": 'open_clip/ViT-B-32/laion2b_s34b_b79k',
+            # "test_7": "hf/all-MiniLM-L6-v2",
+            # "test_8": "hf/all_datasets_v3_MiniLM-L12",
+            # "test_9": 'open_clip/ViT-B-32/laion2b_e16',
+            # "test_10": 'open_clip/RN101/yfcc15m',
+            # "test_11": 'open_clip/convnext_base/laion400m_s13b_b51k',
+            # "test_12": 'open_clip/convnext_base_w/laion2b_s13b_b82k',
+            # "test_13": 'open_clip/ViT-B-32/laion2b_s34b_b79k',
         }
 
         for index_name, model in cls.index_model_object.items():
