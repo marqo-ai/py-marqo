@@ -14,6 +14,9 @@ import os
 
 @classwide_decorate(allow_environments, allowed_configurations=["CUDA_DIND_MARQO_OS"])
 class TestModelEjectAndConcurrency(MarqoTestCase):
+    
+    index_model_object = dict()
+    
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
