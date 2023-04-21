@@ -8,7 +8,7 @@ from marqo import enums
 from unittest import mock
 from tests.utilities import allow_environments
 from tests.utilities import classwide_decorate
-import multiprocessing
+import threading, queue, multiprocessing
 import time
 import os
 
@@ -25,17 +25,17 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
             "test_0": 'open_clip/ViT-B-32/laion400m_e31',
             "test_1": 'open_clip/ViT-B-32/laion400m_e32',
             "test_2": 'open_clip/RN50x4/openai',
-            "test_3": 'onnx16/open_clip/RN50-quickgelu/openai',
-            "test_4": "onnx16/open_clip/ViT-L-14/laion2b_s32b_b82k",
-            "test_5": "onnx32/open_clip/ViT-L-14/openai",
+            "test_3": 'open_clip/RN101-quickgelu/yfcc15m',
+            "test_4": 'open_clip/ViT-B-16-plus-240/laion400m_e32',
+            "test_5": 'open_clip/ViT-B-32-quickgelu/laion400m_e31',
             "test_6": "hf/all-MiniLM-L6-v1",
             "test_7": "hf/all-MiniLM-L6-v2",
             "test_8": "hf/all_datasets_v3_MiniLM-L12",
             "test_9": 'open_clip/ViT-B-32/laion2b_e16',
             "test_10": 'ViT-B/16',
-            "test_11": 'ViT-L/14@336px',
-            "test_12": "onnx16/openai/ViT-L/14",
-            "test_13": 'onnx32/open_clip/ViT-B-32-quickgelu/laion400m_e32',
+            "test_11": 'open_clip/convnext_base/laion400m_s13b_b51k',
+            "test_12": 'open_clip/ViT-B-16/laion400m_e32',
+            "test_13": 'open_clip/ViT-B-16/laion2b_s34b_b88k',
         }
 
         for index_name, model in cls.index_model_object.items():
@@ -68,58 +68,86 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
     def tearDown(self) -> None:
         pass
 
+    @classmethod
+    def tearDownClass(cls) -> None:
+        super().tearDownClass()
+        for index_name, model in cls.index_model_object.items():
+            try:
+                cls.client.delete_index(index_name)
+            except Exception:
+                pass
+
     def normal_search(self, index_name, q):
         # A function will be called in multiprocess
-        res = self.client.index(index_name).search("what is best to wear on the moon?", device = "cuda")
-        if len(res["hits"]) != 2:
-            q.put(AssertionError)
+        try:
+            res = self.client.index(index_name).search("what is best to wear on the moon?", device="cuda")
+            if len(res["hits"]) == 2:
+                q.put("normal search success")
+            else:
+                q.put(AssertionError)
+        except Exception as e:
+            q.put(e)
 
     def racing_search(self, index_name, q):
         # A function will be called in multiprocess
         try:
-            res = self.client.index(index_name).search("what is best to wear on the moon?", device = "cuda")
+            res = self.client.index(index_name).search("what is best to wear on the moon?", device="cuda")
             q.put(AssertionError)
         except MarqoWebError as e:
-            if not "another request was updating the model cache at the same time" in e.message:
+            if "Request rejected, as this request attempted to update the model cache," in str(e):
+                q.put("racing search get blocked with correct error")
+            else:
                 q.put(e)
-            pass
 
     def test_sequentially_search(self):
-        time.sleep(5)
         for index_name in list(self.index_model_object):
-            self.client.index(index_name).search(q='What is the best outfit to wear on the moon?',device = "cuda")
+            self.client.index(index_name).search(q='What is the best outfit to wear on the moon?', device="cuda")
 
     def test_concurrent_search_with_cache(self):
         # Search once to make sure the model is in cache
         test_index = "test_1"
-        res = self.client.index(test_index).search("what is best to wear on the moon?",device = "cuda")
+        res = self.client.index(test_index).search("what is best to wear on the moon?", device="cuda")
 
-        q = multiprocessing.Queue()
-        processes = []
+        normal_search_queue = queue.Queue()
+        threads = []
         for i in range(2):
-            p = multiprocessing.Process(target=self.normal_search, args=(test_index, q))
-            processes.append(p)
-            p.start()
+            t = threading.Thread(target=self.normal_search, args=(test_index, normal_search_queue))
+            threads.append(t)
+            t.start()
 
-        for p in processes:
-            p.join()
+        for t in threads:
+            t.join()
 
-        assert q.empty()
+        assert normal_search_queue.qsize() == 2
+        while not normal_search_queue.empty():
+            assert normal_search_queue.get() == "normal search success"
 
     def test_concurrent_search_without_cache(self):
         # Remove all the cached models
         super().removeAllModels()
 
-        test_index = "test_3"
-        q = multiprocessing.Queue()
-        processes = []
-        p = multiprocessing.Process(target=self.normal_search, args=(test_index, q))
-        processes.append(p)
-        p.start()
+        test_index = "test_10"
+        normal_search_queue = queue.Queue()
+        racing_search_queue = queue.Queue()
+        threads = []
+        main_thread = threading.Thread(target=self.normal_search, args=(test_index, normal_search_queue))
+        main_thread.start()
+        time.sleep(0.2)
 
         for i in range(2):
-            p = multiprocessing.Process(target=self.racing_search, args=(test_index, q))
-            processes.append(p)
-            p.start()
+            t = threading.Thread(target=self.racing_search, args=(test_index, racing_search_queue))
+            threads.append(t)
+            t.start()
 
-        assert q.empty()
+        for t in threads:
+            t.join()
+
+        main_thread.join()
+
+        assert normal_search_queue.qsize() == 1
+        while not normal_search_queue.empty():
+            assert normal_search_queue.get() == "normal search success"
+
+        assert racing_search_queue.qsize() == 2
+        while not racing_search_queue.empty():
+            assert racing_search_queue.get() == "racing search get blocked with correct error"
