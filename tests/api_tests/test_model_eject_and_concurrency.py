@@ -147,7 +147,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
         while not normal_search_queue.empty():
             assert normal_search_queue.get() == "normal search success"
 
-        assert normal_search_queue.qsize() == 2
+        assert racing_search_queue == 2
         while not racing_search_queue.empty():
             assert racing_search_queue.get() == "racing search get blocked with correct error"
 
