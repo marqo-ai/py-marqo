@@ -1,9 +1,8 @@
 from marqo.client import Client
 from marqo.errors import MarqoWebError
 from tests.marqo_test import MarqoTestCase
-import multiprocessing
 import time
-import threading
+import threading, queue, multiprocessing
 
 
 class TestModelEjectAndConcurrency(MarqoTestCase):
@@ -62,19 +61,19 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
     def normal_search(self, index_name, q):
         # A function will be called in multiprocess
         res = self.client.index(index_name).search("what is best to wear on the moon?")
-        if len(res["hits"]) != 2:
-            q.put(AssertionError)
+        if len(res["hits"]) == 2:
+            q.put("normal search success")
 
     def racing_search(self, index_name, q):
         # A function will be called in multiprocess
         try:
             res = self.client.index(index_name).search("what is best to wear on the moon?")
-            print(res["hits"])
             q.put(AssertionError)
         except MarqoWebError as e:
-            if not "another request was updating the model cache at the same time" in e.message:
-                q.put(AssertionError("raise error but not correct message"))
-            pass
+            if "another request was updating the model cache at the same time" in e.message:
+                q.put("racing search get blocked with correct error")
+            else:
+                q.put(e)
 
     def test_sequentially_search(self):
         for index_name in list(self.index_model_object):
@@ -85,7 +84,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
         test_index = "test_1"
         res = self.client.index(test_index).search("what is best to wear on the moon?")
 
-        q = multiprocessing.Queue()
+        q = queue.Queue()
         processes = []
         for i in range(2):
             p = multiprocessing.Process(target=self.normal_search, args=(test_index, q))
@@ -95,7 +94,9 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
         for p in processes:
             p.join()
 
-        assert q.empty()
+        while not q.empty():
+            assert q.get() == "normal search success"
+
 
     # def test_concurrent_search_without_cache(self):
     #     # Remove all the cached models
@@ -126,7 +127,8 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
         print(self.client.get_loaded_models())
 
         test_index = "test_10"
-        q = multiprocessing.Queue()
+        normal_search_queue = queue.Queue()
+        racing_search_queue = queue.Queue()
         processes = []
         main_process = threading.Thread(target=self.normal_search, args=(test_index, q))
         main_process.start()
@@ -140,8 +142,11 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
             p.join()
 
         main_process.join()
-        if not q.empty():
-            print(q.get().message)
-            raise AssertionError
+
+        while not normal_search_queue.empty():
+            assert normal_search_queue.get() == "normal search success"
+
+        while not racing_search_queue.empty():
+            assert racing_search_queue.get() == "racing search get blocked with correct error"
 
 
