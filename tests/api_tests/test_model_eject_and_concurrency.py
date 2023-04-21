@@ -63,6 +63,8 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
         res = self.client.index(index_name).search("what is best to wear on the moon?")
         if len(res["hits"]) == 2:
             q.put("normal search success")
+        else:
+            q.put(AssertionError)
 
     def racing_search(self, index_name, q):
         # A function will be called in multiprocess
