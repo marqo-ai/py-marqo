@@ -57,6 +57,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
 
     def tearDown(self) -> None:
         pass
+
     @classmethod
     def tearDownClass(cls) -> None:
         super().tearDownClass()
