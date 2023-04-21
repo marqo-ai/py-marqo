@@ -84,18 +84,19 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
         test_index = "test_1"
         res = self.client.index(test_index).search("what is best to wear on the moon?")
 
-        q = queue.Queue()
+        normal_search_queue = queue.Queue()
         processes = []
         for i in range(2):
-            p = multiprocessing.Process(target=self.normal_search, args=(test_index, q))
+            p = multiprocessing.Process(target=self.normal_search, args=(test_index, normal_search_queue))
             processes.append(p)
             p.start()
 
         for p in processes:
             p.join()
 
-        while not q.empty():
-            assert q.get() == "normal search success"
+        assert normal_search_queue.qsize() == 2
+        while not normal_search_queue.empty():
+            assert normal_search_queue.get() == "normal search success"
 
 
     # def test_concurrent_search_without_cache(self):
