@@ -102,9 +102,8 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
         test_index = "test_10"
         q = multiprocessing.Queue()
         processes = []
-        p = multiprocessing.Process(target=self.normal_search, args=(test_index, q))
-        processes.append(p)
-        p.start()
+        main_process = multiprocessing.Process(target=self.normal_search, args=(test_index, q))
+        main_process.start()
 
         for i in range(2):
             p = multiprocessing.Process(target=self.racing_search, args=(test_index, q))
@@ -113,6 +112,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
 
         for p in processes:
             p.join()
+        main_process.join()
 
         assert q.empty()
 
