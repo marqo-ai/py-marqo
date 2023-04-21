@@ -68,6 +68,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
         # A function will be called in multiprocess
         try:
             res = self.client.index(index_name).search("what is best to wear on the moon?")
+            print(res["hits"])
             q.put(AssertionError)
         except MarqoWebError as e:
             if not "another request was updating the model cache at the same time" in e.message:
