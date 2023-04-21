@@ -137,7 +137,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
         # Remove all the cached models
         super().removeAllModels()
 
-        test_index = "test_10"
+        test_index = "test_6"
         normal_search_queue = queue.Queue()
         racing_search_queue = queue.Queue()
         threads = []
