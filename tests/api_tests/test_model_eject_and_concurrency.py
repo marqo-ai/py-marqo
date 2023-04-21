@@ -61,7 +61,6 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
     def normal_search(self, index_name, q):
         # A function will be called in multiprocess
         res = self.client.index(index_name).search("what is best to wear on the moon?")
-        print(len(res["hits"]))
         if len(res["hits"]) == 2:
             q.put("normal search success")
 
@@ -145,6 +144,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
 
         main_process.join()
 
+        print(normal_search_queue.qsize())
         assert normal_search_queue.qsize() == 1
         while not normal_search_queue.empty():
             assert normal_search_queue.get() == "normal search success"
