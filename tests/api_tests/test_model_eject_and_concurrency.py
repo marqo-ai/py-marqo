@@ -140,6 +140,8 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
             p.join()
 
         main_process.join()
+        if not q.empty():
+            print(q.get())
+            raise AssertionError
 
-        assert q.empty()
 
