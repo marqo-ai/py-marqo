@@ -33,7 +33,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
             }
             try:
                 cls.client.delete_index(index_name)
-            except:
+            except Exception:
                 pass
 
             cls.client.create_index(index_name, **settings)
@@ -57,6 +57,14 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
 
     def tearDown(self) -> None:
         pass
+    @classmethod
+    def tearDownClass(cls) -> None:
+        super().tearDownClass()
+        for index_name, model in cls.index_model_object.items():
+            try:
+                cls.client.delete_index(index_name)
+            except Exception:
+                pass
 
     def normal_search(self, index_name, q):
         # A function will be called in multiprocess
