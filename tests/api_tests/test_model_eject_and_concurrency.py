@@ -107,12 +107,12 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
         # this downloads the models if they aren't already downloaded 
         for index_name in list(self.index_model_object):
             self.client.index(index_name).search(q='What is the best outfit to wear on the moon?')
-            time.sleep(3)
+            time.sleep(5)
             
         # this swaps the models from disk to memory
         for index_name in list(self.index_model_object):
             self.client.index(index_name).search(q='What is the best outfit to wear on the moon?')
-            time.sleep(3)
+            time.sleep(5)
 
     def test_concurrent_search_with_cache(self):
         # Search once to make sure the model is in cache
