@@ -99,6 +99,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
     def test_concurrent_search_without_cache(self):
         # Remove all the cached models
         super().removeAllModels()
+        print(self.client.get_loaded_models())
 
         test_index = "test_10"
         q = multiprocessing.Queue()
