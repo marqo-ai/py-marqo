@@ -73,7 +73,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
             q.put(AssertionError)
         except MarqoWebError as e:
             if not "another request was updating the model cache at the same time" in e.message:
-                q.put(e)
+                q.put(AssertionError("raise error but not correct message"))
             pass
 
     def test_sequentially_search(self):
@@ -141,7 +141,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
 
         main_process.join()
         if not q.empty():
-            print(q.get())
+            print(q.get().message)
             raise AssertionError
 
 
