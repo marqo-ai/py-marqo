@@ -70,7 +70,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
             res = self.client.index(index_name).search("what is best to wear on the moon?")
             q.put(AssertionError)
         except MarqoWebError as e:
-            if "another request was updating the model cache at the same time" in e.message:
+            if e.message.startswith("Request rejected, as this request attempted to update the model cache,")
                 q.put("racing search get blocked with correct error")
             else:
                 q.put(e)
