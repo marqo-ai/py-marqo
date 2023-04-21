@@ -3,6 +3,7 @@ from marqo.errors import MarqoWebError
 from tests.marqo_test import MarqoTestCase
 import multiprocessing
 import time
+import threading
 
 
 class TestModelEjectAndConcurrency(MarqoTestCase):
@@ -96,19 +97,42 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
 
         assert q.empty()
 
+    # def test_concurrent_search_without_cache(self):
+    #     # Remove all the cached models
+    #     super().removeAllModels()
+    #     print(self.client.get_loaded_models())
+    #
+    #     test_index = "test_10"
+    #     q = multiprocessing.Queue()
+    #     processes = []
+    #     main_process = multiprocessing.Process(target=self.normal_search, args=(test_index, q))
+    #     main_process.start()
+    #
+    #     for i in range(2):
+    #         p = multiprocessing.Process(target=self.racing_search, args=(test_index, q))
+    #         processes.append(p)
+    #         p.start()
+    #
+    #     for p in processes:
+    #         p.join()
+    #
+    #     main_process.join()
+    #
+    #     assert q.empty()
+
     def test_concurrent_search_without_cache(self):
         # Remove all the cached models
         super().removeAllModels()
         print(self.client.get_loaded_models())
 
         test_index = "test_10"
-        q = multiprocessing.Queue()
+        q = threading.Queue()
         processes = []
-        main_process = multiprocessing.Process(target=self.normal_search, args=(test_index, q))
+        main_process = threading.Thread(target=self.normal_search, args=(test_index, q))
         main_process.start()
 
         for i in range(2):
-            p = multiprocessing.Process(target=self.racing_search, args=("test_3", q))
+            p = threading.Thread(target=self.racing_search, args=(test_index, q))
             processes.append(p)
             p.start()
 
