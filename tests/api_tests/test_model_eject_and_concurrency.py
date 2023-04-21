@@ -126,7 +126,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
         print(self.client.get_loaded_models())
 
         test_index = "test_10"
-        q = threading.Queue()
+        q = multiprocessing.Queue()
         processes = []
         main_process = threading.Thread(target=self.normal_search, args=(test_index, q))
         main_process.start()
