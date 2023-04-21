@@ -11,20 +11,20 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
         super().setUpClass()
         cls.client = Client(**cls.client_settings)
         cls.index_model_object = {
-            # "test_0": 'open_clip/ViT-B-32/laion400m_e31',
-            # "test_1": 'open_clip/ViT-B-32/laion400m_e32',
-            # "test_2": 'open_clip/RN50x4/openai',
-            # "test_3": 'open_clip/RN101-quickgelu/yfcc15m',
-            # "test_4": 'open_clip/ViT-B-16-plus-240/laion400m_e32',
-            # "test_5": 'open_clip/ViT-B-32-quickgelu/laion400m_e31',
-            # "test_6": "hf/all-MiniLM-L6-v1",
-            # "test_7": "hf/all-MiniLM-L6-v2",
-            # "test_8": "hf/all_datasets_v3_MiniLM-L12",
-            # "test_9": 'open_clip/ViT-B-32/laion2b_e16',
-             "test_10": 'ViT-B/16',
-            # "test_11": 'open_clip/convnext_base/laion400m_s13b_b51k',
-            # "test_12": 'open_clip/ViT-B-16/laion400m_e32',
-            # "test_13": 'open_clip/ViT-B-16/laion2b_s34b_b88k',
+            "test_0": 'open_clip/ViT-B-32/laion400m_e31',
+            "test_1": 'open_clip/ViT-B-32/laion400m_e32',
+            "test_2": 'open_clip/RN50x4/openai',
+            "test_3": 'open_clip/RN101-quickgelu/yfcc15m',
+            "test_4": 'open_clip/ViT-B-16-plus-240/laion400m_e32',
+            "test_5": 'open_clip/ViT-B-32-quickgelu/laion400m_e31',
+            "test_6": "hf/all-MiniLM-L6-v1",
+            "test_7": "hf/all-MiniLM-L6-v2",
+            "test_8": "hf/all_datasets_v3_MiniLM-L12",
+            "test_9": 'open_clip/ViT-B-32/laion2b_e16',
+            "test_10": 'ViT-B/16',
+            "test_11": 'open_clip/convnext_base/laion400m_s13b_b51k',
+            "test_12": 'open_clip/ViT-B-16/laion400m_e32',
+            "test_13": 'open_clip/ViT-B-16/laion2b_s34b_b88k',
         }
 
         for index_name, model in cls.index_model_object.items():
@@ -88,42 +88,18 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
         res = self.client.index(test_index).search("what is best to wear on the moon?")
 
         normal_search_queue = queue.Queue()
-        processes = []
+        threads = []
         for i in range(2):
-            p = multiprocessing.Process(target=self.normal_search, args=(test_index, normal_search_queue))
-            processes.append(p)
-            p.start()
+            t = threading.Thread(target=self.normal_search, args=(test_index, normal_search_queue))
+            threads.append(t)
+            t.start()
 
-        for p in processes:
-            p.join()
+        for t in threads:
+            t.join()
 
         assert normal_search_queue.qsize() == 2
         while not normal_search_queue.empty():
             assert normal_search_queue.get() == "normal search success"
-
-
-    # def test_concurrent_search_without_cache(self):
-    #     # Remove all the cached models
-    #     super().removeAllModels()
-    #     print(self.client.get_loaded_models())
-    #
-    #     test_index = "test_10"
-    #     q = multiprocessing.Queue()
-    #     processes = []
-    #     main_process = multiprocessing.Process(target=self.normal_search, args=(test_index, q))
-    #     main_process.start()
-    #
-    #     for i in range(2):
-    #         p = multiprocessing.Process(target=self.racing_search, args=(test_index, q))
-    #         processes.append(p)
-    #         p.start()
-    #
-    #     for p in processes:
-    #         p.join()
-    #
-    #     main_process.join()
-    #
-    #     assert q.empty()
 
     def test_concurrent_search_without_cache(self):
         # Remove all the cached models
@@ -132,19 +108,19 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
         test_index = "test_10"
         normal_search_queue = queue.Queue()
         racing_search_queue = queue.Queue()
-        processes = []
-        main_process = multiprocessing.Process(target=self.normal_search, args=(test_index, normal_search_queue))
-        main_process.start()
+        threads = []
+        main_thread = threading.Thread(target=self.normal_search, args=(test_index, normal_search_queue))
+        main_thread.start()
 
         for i in range(2):
-            p = multiprocessing.Process(target=self.racing_search, args=(test_index, racing_search_queue))
-            processes.append(p)
-            p.start()
+            t = threading.Thread(target=self.racing_search, args=(test_index, racing_search_queue))
+            threads.append(t)
+            t.start()
 
-        for p in processes:
-            p.join()
+        for t in threads:
+            t.join()
 
-        main_process.join()
+        main_thread.join()
 
         assert normal_search_queue.qsize() == 1
         while not normal_search_queue.empty():
