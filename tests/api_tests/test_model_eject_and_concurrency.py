@@ -112,6 +112,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
 
         for p in processes:
             p.join()
+
         main_process.join()
 
         assert q.empty()
