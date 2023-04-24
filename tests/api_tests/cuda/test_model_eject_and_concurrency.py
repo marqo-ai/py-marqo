@@ -20,6 +20,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
+        cls.device = "cuda"
         if os.environ["TESTING_CONFIGURATION"] not in ["CUDA_DIND_MARQO_OS"]:
             cls.skip_class = True
             return
@@ -71,7 +72,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
                     "Description": "The EMU is a spacesuit that provides environmental protection, "
                                    "mobility, life support, and communications for astronauts",
                     "_id": "article_591"
-                }], device = "cuda",
+                }], device = cls.device,
             )
 
     def setUp(self) -> None:
@@ -94,7 +95,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
     def normal_search(self, index_name, q):
         # A function will be called in multiprocess
         try:
-            res = self.client.index(index_name).search("what is best to wear on the moon?", device="cuda")
+            res = self.client.index(index_name).search("what is best to wear on the moon?", device=self.device)
             if len(res["hits"]) == 2:
                 q.put("normal search success")
             else:
@@ -105,7 +106,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
     def racing_search(self, index_name, q):
         # A function will be called in multiprocess
         try:
-            res = self.client.index(index_name).search("what is best to wear on the moon?", device="cuda")
+            res = self.client.index(index_name).search("what is best to wear on the moon?", device=self.device)
             q.put(AssertionError)
         except MarqoWebError as e:
             if "Request rejected, as this request attempted to update the model cache," in str(e):
@@ -115,12 +116,12 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
 
     def test_sequentially_search(self):
         for index_name in list(self.index_model_object):
-            self.client.index(index_name).search(q='What is the best outfit to wear on the moon?', device="cuda")
+            self.client.index(index_name).search(q='What is the best outfit to wear on the moon?', device=self.device)
 
     def test_concurrent_search_with_cache(self):
         # Search once to make sure the model is in cache
         test_index = "test_1"
-        res = self.client.index(test_index).search("what is best to wear on the moon?", device="cuda")
+        res = self.client.index(test_index).search("what is best to wear on the moon?", device=self.device)
 
         normal_search_queue = queue.Queue()
         threads = []

@@ -4,9 +4,7 @@ from tests.marqo_test import MarqoTestCase
 from tests.utilities import allow_environments
 from tests.utilities import classwide_decorate
 import threading, queue, multiprocessing
-import time
-
-
+import time, os
 
 @classwide_decorate(allow_environments, allowed_configurations=["CUDA_DIND_MARQO_OS"])
 class TestModelEjectAndConcurrency(MarqoTestCase):
@@ -17,6 +15,10 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
+        cls.device = "cpu"
+        if os.environ["TESTING_CONFIGURATION"] not in ["CUDA_DIND_MARQO_OS"]:
+            cls.skip_class = True
+            return
         cls.client = Client(**cls.client_settings)
         cls.index_model_object = {
             "test_0": 'open_clip/ViT-B-32/laion400m_e31',
@@ -65,7 +67,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
                     "Description": "The EMU is a spacesuit that provides environmental protection, "
                                    "mobility, life support, and communications for astronauts",
                     "_id": "article_591"
-                }], auto_refresh=True)
+                }], auto_refresh=True, device=cls.device)
 
         time.sleep(10)
 
@@ -87,7 +89,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
     def normal_search(self, index_name, q):
         # A function will be called in multiprocess
         try:
-            res = self.client.index(index_name).search("what is best to wear on the moon?")
+            res = self.client.index(index_name).search("what is best to wear on the moon?", device=self.device)
             if len(res["hits"]) == 2:
                 q.put("normal search success")
             else:
@@ -98,7 +100,7 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
     def racing_search(self, index_name, q):
         # A function will be called in multiprocess
         try:
-            res = self.client.index(index_name).search("what is best to wear on the moon?")
+            res = self.client.index(index_name).search("what is best to wear on the moon?", device=self.device)
             q.put(AssertionError)
         except MarqoWebError as e:
             if "Request rejected, as this request attempted to update the model cache," in str(e):
@@ -123,12 +125,12 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
         
         # this downloads the models if they aren't already downloaded 
         for index_name in list(self.index_model_object):
-            self.client.index(index_name).search(q='What is the best outfit to wear on the moon?')
+            self.client.index(index_name).search(q='What is the best outfit to wear on the moon?', device=self.device)
             time.sleep(5)
             
         # this swaps the models from disk to memory
         for index_name in list(self.index_model_object):
-            self.client.index(index_name).search(q='What is the best outfit to wear on the moon?')
+            self.client.index(index_name).search(q='What is the best outfit to wear on the moon?', device=self.device)
             time.sleep(5)
 
     def test_concurrent_search_with_cache(self):
