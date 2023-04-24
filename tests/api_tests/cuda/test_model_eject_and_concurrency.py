@@ -116,6 +116,8 @@ class TestModelEject(MarqoTestCase):
 @classwide_decorate(allow_environments, allowed_configurations=["CUDA_DIND_MARQO_OS"])
 class TestConcurrencyRequestsBlock(MarqoTestCase):
     def setUp(self) -> None:
+        if os.environ["TESTING_CONFIGURATION"] not in ["CUDA_DIND_MARQO_OS"]:
+            return
         self.client = Client(**self.client_settings)
         self.index_name = "test"
         self.device = "cuda"
