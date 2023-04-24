@@ -6,8 +6,9 @@ from tests.utilities import classwide_decorate
 import threading, queue, multiprocessing
 import time, os
 
+
 @classwide_decorate(allow_environments, allowed_configurations=["CUDA_DIND_MARQO_OS"])
-class TestModelEjectAndConcurrency(MarqoTestCase):
+class TestModelEject(MarqoTestCase):
     '''
     Although the test is running in cpu, we restrict it to cuda environments due to its intensive usage of memory.
     '''
@@ -88,28 +89,6 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
             except Exception:
                 pass
 
-    def normal_search(self, index_name, q):
-        # A function will be called in multiprocess
-        try:
-            res = self.client.index(index_name).search("what is best to wear on the moon?", device=self.device)
-            if len(res["hits"]) == 2:
-                q.put("normal search success")
-            else:
-                q.put(AssertionError)
-        except Exception as e:
-            q.put(e)
-
-    def racing_search(self, index_name, q):
-        # A function will be called in multiprocess
-        try:
-            res = self.client.index(index_name).search("what is best to wear on the moon?", device=self.device)
-            q.put(AssertionError)
-        except MarqoWebError as e:
-            if "Request rejected, as this request attempted to update the model cache," in str(e):
-                q.put("racing search get blocked with correct error")
-            else:
-                q.put(e)
-
     def test_sequentially_search(self):
         """Iterate through each index and loading each model. We expect to not run out of space as we 
         older loaded models are ejected to make space for newer ones.
@@ -124,26 +103,83 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
         the test (by adding a sleep) rather than making the ejections stricter (for example, by locking
         the available models dict). 
         """
-        
+
         # this downloads the models if they aren't already downloaded 
         for index_name in list(self.index_model_object):
             self.client.index(index_name).search(q='What is the best outfit to wear on the moon?', device=self.device)
             time.sleep(5)
-            
+
         # this swaps the models from disk to memory
         for index_name in list(self.index_model_object):
             self.client.index(index_name).search(q='What is the best outfit to wear on the moon?', device=self.device)
             time.sleep(5)
 
+        return True
+
+
+class TestConcurrencyRequestsBlock(MarqoTestCase):
+    def setUp(self) -> None:
+        self.client = Client(**self.client_settings)
+        self.index_name = "test"
+        self.device = "cpu"
+        try:
+            self.client.delete_index(self.index_name)
+        except MarqoApiError:
+            pass
+
+        self.model = 'open_clip/ViT-B-32/laion2b_e16'
+        settings = {
+            "model": self.model
+        }
+        self.client.create_index(self.index_name, **settings)
+        self.client.index(self.index_name).add_documents([
+            {
+                "Title": "The Travels of Marco Polo",
+                "Description": "A 13th-century travelogue describing Polo's travels"
+            },
+            {
+                "Title": "Extravehicular Mobility Unit (EMU)",
+                "Description": "The EMU is a spacesuit that provides environmental protection, "
+                               "mobility, life support, and communications for astronauts",
+                "_id": "article_591"
+            }], auto_refresh=True, device=self.device)
+
+    def tearDown(self) -> None:
+        try:
+            self.client.delete_index(self.index_name)
+        except MarqoApiError:
+            pass
+
+    def normal_search(self, index_name, q):
+        # A function will be called in threading
+        try:
+            res = self.client.index(index_name).search("what is best to wear on the moon?", device=self.device)
+            if len(res["hits"]) == 2:
+                q.put("normal search success")
+            else:
+                q.put(AssertionError)
+        except Exception as e:
+            q.put(e)
+
+    def racing_search(self, index_name, q):
+        # A function will be called in threading
+        try:
+            res = self.client.index(index_name).search("what is best to wear on the moon?", device=self.device)
+            q.put(AssertionError)
+        except MarqoWebError as e:
+            if "Request rejected, as this request attempted to update the model cache," in str(e):
+                q.put("racing search get blocked with correct error")
+            else:
+                q.put(e)
+
     def test_concurrent_search_with_cache(self):
         # Search once to make sure the model is in cache
-        test_index = "test_1"
-        res = self.client.index(test_index).search("what is best to wear on the moon?")
+        res = self.client.index(self.index_name).search("what is best to wear on the moon?")
 
         normal_search_queue = queue.Queue()
         threads = []
         for i in range(2):
-            t = threading.Thread(target=self.normal_search, args=(test_index, normal_search_queue))
+            t = threading.Thread(target=self.normal_search, args=(self.index_name, normal_search_queue))
             threads.append(t)
             t.start()
 
@@ -158,16 +194,15 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
         # Remove all the cached models
         super().removeAllModels()
 
-        test_index = "test_6"
         normal_search_queue = queue.Queue()
         racing_search_queue = queue.Queue()
         threads = []
-        main_thread = threading.Thread(target=self.normal_search, args=(test_index, normal_search_queue))
+        main_thread = threading.Thread(target=self.normal_search, args=(self.index_name, normal_search_queue))
         main_thread.start()
         time.sleep(0.2)
 
         for i in range(2):
-            t = threading.Thread(target=self.racing_search, args=(test_index, racing_search_queue))
+            t = threading.Thread(target=self.racing_search, args=(self.index_name, racing_search_queue))
             threads.append(t)
             t.start()
 
@@ -183,5 +218,3 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
         assert racing_search_queue.qsize() == 2
         while not racing_search_queue.empty():
             assert racing_search_queue.get() == "racing search get blocked with correct error"
-
-
