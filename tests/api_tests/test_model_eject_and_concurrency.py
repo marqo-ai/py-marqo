@@ -80,6 +80,8 @@ class TestModelEjectAndConcurrency(MarqoTestCase):
     @classmethod
     def tearDownClass(cls) -> None:
         super().tearDownClass()
+        if os.environ["TESTING_CONFIGURATION"] not in ["CUDA_DIND_MARQO_OS"]:
+            return True
         for index_name, model in cls.index_model_object.items():
             try:
                 cls.client.delete_index(index_name)
