@@ -9,7 +9,7 @@ import time, os
 @classwide_decorate(allow_environments, allowed_configurations=["CUDA_DIND_MARQO_OS"])
 class TestModelEjectAndConcurrency(MarqoTestCase):
     '''
-    Although the test is running in cpu, we restrict it to cuda environments due to its intensive usage of the memory.
+    Although the test is running in cpu, we restrict it to cuda environments due to its intensive usage of memory.
     '''
 
     @classmethod
