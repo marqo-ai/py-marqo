@@ -1,15 +1,15 @@
 import copy
 import pprint
+
+import pytest
 from marqo.client import Client
 from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
 import unittest
 from tests.marqo_test import MarqoTestCase
 from marqo import enums
 from unittest import mock
-from tests.utilities import allow_environments
-from tests.utilities import classwide_decorate
 
-@classwide_decorate(allow_environments, allowed_configurations=["CUDA_DIND_MARQO_OS"])
+@pytest.mark.cuda_test
 class TestAddDocuments(MarqoTestCase):
 
     # NOTE: test_add_documents_default_device has been removed from these cuda tests

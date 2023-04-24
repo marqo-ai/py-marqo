@@ -1,13 +1,12 @@
 from marqo.client import Client
 from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
 from tests.marqo_test import MarqoTestCase
-from tests.utilities import allow_environments
-from tests.utilities import classwide_decorate
+import pytest
 import threading, queue, multiprocessing
-import time, os
+import time
 
 
-@classwide_decorate(allow_environments, allowed_configurations=["CUDA_DIND_MARQO_OS"])
+@pytest.mark.cuda_test
 class TestModelEject(MarqoTestCase):
     '''
     Although the test is running in cpu, we restrict it to cuda environments due to its intensive usage of memory.
@@ -17,9 +16,6 @@ class TestModelEject(MarqoTestCase):
     def setUpClass(cls) -> None:
         super().setUpClass()
         cls.device = "cpu"
-        if os.environ["TESTING_CONFIGURATION"] not in ["CUDA_DIND_MARQO_OS"]:
-            cls.skip_class = True
-            return
         cls.client = Client(**cls.client_settings)
         cls.index_model_object = {
             "test_0": 'open_clip/ViT-B-32/laion400m_e31',
@@ -81,8 +77,6 @@ class TestModelEject(MarqoTestCase):
     @classmethod
     def tearDownClass(cls) -> None:
         super().tearDownClass()
-        if os.environ["TESTING_CONFIGURATION"] not in ["CUDA_DIND_MARQO_OS"]:
-            return True
         for index_name, model in cls.index_model_object.items():
             try:
                 cls.client.delete_index(index_name)
