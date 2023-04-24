@@ -144,6 +144,8 @@ class TestConcurrencyRequestsBlock(MarqoTestCase):
             }], auto_refresh=True, device=self.device)
 
     def tearDown(self) -> None:
+        if os.environ["TESTING_CONFIGURATION"] not in ["CUDA_DIND_MARQO_OS"]:
+            return
         try:
             self.client.delete_index(self.index_name)
         except MarqoApiError:
