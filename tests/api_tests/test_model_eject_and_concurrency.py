@@ -149,6 +149,7 @@ class TestConcurrencyRequestsBlock(MarqoTestCase):
             self.client.delete_index(self.index_name)
         except MarqoApiError:
             pass
+        time.sleep(10)
 
     def normal_search(self, index_name, q):
         # A function will be called in threading
