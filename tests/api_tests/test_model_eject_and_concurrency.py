@@ -127,7 +127,7 @@ class TestConcurrencyRequestsBlock(MarqoTestCase):
         except MarqoApiError:
             pass
 
-        self.model = 'open_clip/ViT-B-32/laion2b_e16'
+        self.model = 'hf/all-MiniLM-L6-v2'
         settings = {
             "model": self.model
         }
