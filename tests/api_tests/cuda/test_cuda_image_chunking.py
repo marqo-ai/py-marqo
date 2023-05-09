@@ -6,12 +6,8 @@ import unittest
 import numpy as np
 import pprint
 from tests.marqo_test import MarqoTestCase
-import tempfile
-import os
-from tests.utilities import allow_environments
-from tests.utilities import classwide_decorate
-
-@classwide_decorate(allow_environments, allowed_configurations=["CUDA_DIND_MARQO_OS"])
+import pytest
+@pytest.mark.cuda_test
 class TestImageChunking(MarqoTestCase):
     """Test for image chunking as a preprocessing step
     """

@@ -5,12 +5,9 @@ from marqo.errors import MarqoApiError
 import unittest
 import pprint
 from tests.marqo_test import MarqoTestCase
-import tempfile
-import os
-from tests.utilities import allow_environments
-from tests.utilities import classwide_decorate
+import pytest
 
-@classwide_decorate(allow_environments, allowed_configurations=["CUDA_DIND_MARQO_OS"])
+@pytest.mark.cuda_test
 class TestSentenceChunking(MarqoTestCase):
     """Test for sentence chunking
 

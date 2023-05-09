@@ -5,10 +5,9 @@ from tests.marqo_test import MarqoTestCase
 import string
 import time
 import uuid
-from tests.utilities import allow_environments
-from tests.utilities import classwide_decorate
+import pytest
 
-@classwide_decorate(allow_environments, allowed_configurations=["CUDA_DIND_MARQO_OS"])
+@pytest.mark.cuda_test
 class TestAddDocumentsPara(MarqoTestCase):
 
     def setUp(self) -> None:

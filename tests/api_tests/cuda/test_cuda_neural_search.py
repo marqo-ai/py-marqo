@@ -8,10 +8,10 @@ import unittest
 import pprint
 from tests.marqo_test import MarqoTestCase
 from tests.utilities import disallow_environments
-from tests.utilities import allow_environments
-from tests.utilities import classwide_decorate
+import pytest
 
-@classwide_decorate(allow_environments, allowed_configurations=["CUDA_DIND_MARQO_OS"])
+
+@pytest.mark.cuda_test
 class TestAddDocuments(MarqoTestCase):
 
     # NOTE: test_search_with_device was removed from these cuda tests
