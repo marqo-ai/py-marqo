@@ -22,7 +22,7 @@ class SearchBody(BaseMarqoModel):
     image_download_headers: Optional[Dict] = None
     context: Optional[Dict] = None
     scoreModifiers: Optional[Dict] = None
-
+    modelAuth: Optional[Dict] = None
 
 class BulkSearchBody(SearchBody):
     index: str

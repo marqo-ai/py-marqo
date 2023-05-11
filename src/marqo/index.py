@@ -118,7 +118,7 @@ class Index:
                highlights=None, device: Optional[str] = None, filter_string: str = None,
                show_highlights=True, reranker=None, image_download_headers: Optional[Dict] = None,
                attributes_to_retrieve: Optional[List[str]] = None, boost: Optional[Dict[str,List[Union[float, int]]]] = None,
-               context: Optional[dict] = None, score_modifiers: Optional[dict] = None,
+               context: Optional[dict] = None, score_modifiers: Optional[dict] = None, model_auth: Optional[dict] = None
                ) -> Dict[str, Any]:
         """Search the index.
 
@@ -145,6 +145,7 @@ class Index:
                 retrieved.
             context: a dictionary to allow you to bring your own vectors and more into search.
             score_modifiers: a dictionary to modify the score based on field values, for tensor search only
+            model_auth: authorisation that lets Marqo download a private model, if required
         Returns:
             Dictionary with hits and other metadata
         """
@@ -180,6 +181,8 @@ class Index:
             body["context"] = context
         if score_modifiers is not None:
             body["scoreModifiers"] = score_modifiers
+        if model_auth is not None:
+            body["modelAuth"] = model_auth
         res = self.http.post(
             path=path_with_query_str,
             body=body
@@ -246,6 +249,7 @@ class Index:
         use_existing_tensors: bool = False,
         image_download_headers: dict = None,
         mappings: dict = None,
+        model_auth: dict = None
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """Add documents to this index. Does a partial update on existing documents,
         based on their ID. Adds unseen documents to the index.
@@ -269,7 +273,7 @@ class Index:
             image_download_headers: a dictionary of headers to be passed while downloading images,
                 for URLs found in documents
             mappings: a dictionary to help handle the object fields. e.g., multimodal_combination field
-
+            model_auth: used to authorise a private model
         Returns:
             Response body outlining indexing result
         """
@@ -281,7 +285,8 @@ class Index:
             update_method="replace",
             documents=documents, auto_refresh=auto_refresh, server_batch_size=server_batch_size,
             client_batch_size=client_batch_size, processes=processes, device=device, non_tensor_fields=non_tensor_fields,
-            use_existing_tensors=use_existing_tensors, image_download_headers=image_download_headers, mappings = mappings
+            use_existing_tensors=use_existing_tensors, image_download_headers=image_download_headers, mappings=mappings,
+            model_auth=model_auth
         )
 
     def update_documents(
@@ -342,7 +347,8 @@ class Index:
         non_tensor_fields: List = None,
         use_existing_tensors: bool = False,
         image_download_headers: dict = None,
-        mappings: dict = None
+        mappings: dict = None,
+        model_auth: dict = None
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
 
         error_detected_message = ('Errors detected in add documents call. '
@@ -360,6 +366,7 @@ class Index:
         non_tensor_fields_query_param = utils.convert_list_to_query_params("non_tensor_fields", non_tensor_fields)
         image_download_headers_param = (utils.convert_dict_to_url_params(image_download_headers)
                                         if image_download_headers else '')
+        model_auth_param = (utils.convert_dict_to_url_params(model_auth) if model_auth else '')
         mappings_param = (utils.convert_dict_to_url_params(mappings) if mappings else '')
         query_str_params = (
             f"{f'&device={utils.translate_device_string_for_url(selected_device)}'}"
@@ -369,6 +376,7 @@ class Index:
             f"{f'&{non_tensor_fields_query_param}' if len(non_tensor_fields) > 0 else ''}"
             f"{f'&image_download_headers={image_download_headers_param}' if image_download_headers else ''}"
             f"{f'&mappings={mappings_param}' if mappings else ''}"
+            f"{f'&model_auth={model_auth_param}' if model_auth_param else ''}"
         )
         end_time_client_process = timer()
         total_client_process_time = end_time_client_process - start_time_client_process
