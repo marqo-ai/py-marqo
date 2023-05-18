@@ -9,6 +9,7 @@ import pprint
 import requests
 import random
 import math
+import time
 from tests.marqo_test import MarqoTestCase
 
 
@@ -137,6 +138,7 @@ class TestAddDocuments(MarqoTestCase):
 
         # Ensure that vector search works
         if self.IS_MULTI_INSTANCE:
+            time.sleep(5)
             self.warm_request(self.client.index(self.index_name_1).search,
             "Examples of leadership", search_method=enums.SearchMethods.TENSOR)
 
@@ -375,9 +377,16 @@ class TestAddDocuments(MarqoTestCase):
             add_res = self.client.index(index_name=self.index_name_1).add_documents(
                 docs, auto_refresh=True, non_tensor_fields=[field_to_not_search]
             )
-            if self.IS_MULTI_INSTANCE:
-                self.warm_request(self.client.index(self.index_name_1).search, q='Blah')
+
             search_filter_field = f"filter{filter_char}me"
+            if self.IS_MULTI_INSTANCE:
+                self.warm_request(self.client.index(self.index_name_1).search, 
+                    q="Dog", 
+                    searchable_attributes=[field_to_search, field_to_not_search],
+                    attributes_to_retrieve=[field_to_not_search],
+                    filter_string=f'{search_filter_field}:Walrus'
+                )
+            
             search1_res = self.client.index(index_name=self.index_name_1).search(
                 "Dog", searchable_attributes=[field_to_search, field_to_not_search],
                 attributes_to_retrieve=[field_to_not_search],

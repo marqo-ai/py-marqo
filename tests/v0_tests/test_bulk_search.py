@@ -47,6 +47,13 @@ class TestBulkSearch(MarqoTestCase):
             """
         }
         add_doc_res = self.client.index(self.index_name_1).add_documents([d1])
+
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.bulk_search, [{
+                "index": self.index_name_1,
+                "q": "title about some doc"
+            }])
+
         resp = self.client.bulk_search([{
             "index": self.index_name_1,
             "q": "title about some doc"
@@ -89,6 +96,13 @@ class TestBulkSearch(MarqoTestCase):
                 ({"showHighlights": False}, False),
                 ({"showHighlights": True}, True)
             ]:
+
+            if self.IS_MULTI_INSTANCE:
+                self.warm_request(self.client.bulk_search, [{**{
+                    "index": self.index_name_1,
+                    "q": "title about some doc"
+                }, **params}])
+
             resp = self.client.bulk_search([{**{
                 "index": self.index_name_1,
                 "q": "title about some doc"
@@ -112,6 +126,13 @@ class TestBulkSearch(MarqoTestCase):
         res = self.client.index(self.index_name_1).add_documents([
             d1, d2
         ])
+
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.bulk_search, [{
+                "index": self.index_name_1,
+                "q": "this is a solid doc"
+            }])
+
         resp = self.client.bulk_search([{
             "index": self.index_name_1,
             "q": "this is a solid doc"
@@ -138,6 +159,12 @@ class TestBulkSearch(MarqoTestCase):
         res = self.client.index(self.index_name_1).add_documents([
             d1, d2
         ])
+
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.bulk_search, [{
+                "index": self.index_name_1,
+                "q": "Examples of leadership"
+            }])
 
         # Ensure that vector search works
         resp = self.client.bulk_search([{
@@ -204,6 +231,13 @@ class TestBulkSearch(MarqoTestCase):
             d1, d2
         ],auto_refresh=True)
 
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.bulk_search, [{
+                "index": self.index_name_1,
+                "q": "blah blah",
+                "filter": "(an_int:[0 TO 30] and an_int:2) AND abc-123:(some text)"
+            }])
+
         resp = self.client.bulk_search([{
             "index": self.index_name_1,
             "q": "blah blah",
@@ -237,6 +271,15 @@ class TestBulkSearch(MarqoTestCase):
         atts = ["doc title", "an_int"]
         for search_method in [enums.SearchMethods.TENSOR,
                               enums.SearchMethods.LEXICAL]:
+            
+            if self.IS_MULTI_INSTANCE:
+                self.warm_request(self.client.bulk_search,[{
+                    "index": self.index_name_1,
+                    "q": "blah blah",
+                    "searchMethod": search_method,
+                    "attributesToRetrieve": atts
+                }])
+
             resp = self.client.bulk_search([{
                 "index": self.index_name_1,
                 "q": "blah blah",
