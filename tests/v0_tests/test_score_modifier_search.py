@@ -55,6 +55,9 @@ class TestScoreModifierSearch(MarqoTestCase):
                      }]
             }
 
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(self.index_name_1).search, q = self.query, score_modifiers=None, filter_string="filter:original")
+        
         original_res = self.client.index(self.index_name_1).search(q = self.query, score_modifiers=None,
                                                                      filter_string="filter:original")
         original_score = original_res["hits"][0]["_score"]
