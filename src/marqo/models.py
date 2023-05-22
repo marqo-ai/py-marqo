@@ -26,9 +26,6 @@ class SearchBody(BaseMarqoModel):
 
 class BulkSearchBody(SearchBody):
     index: str
-    # Attributes that are not supported in bulk search
-    context: None = None
-    scoreModifiers: None = None
 
 
 class BulkSearchQuery(BaseMarqoModel):
