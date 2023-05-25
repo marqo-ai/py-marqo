@@ -229,14 +229,26 @@ class TestAddDocuments(MarqoTestCase):
         query = {
             "What are the best pets": 1
         }
-
-        custom_res = self.client.index(self.index_name_1).search(q=query,
-                                                                 context={"tensor": [
-                                                                     {"vector": [1, ] * 512, "weight": 0},
-                                                                     {"vector": [2, ] * 512, "weight": 0}], })
+        context = {"tensor": [
+            {"vector": [1, ] * 512, "weight": 0},
+            {"vector": [2, ] * 512, "weight": 0}]
+        }
 
         original_res = self.client.index(self.index_name_1).search(q=query)
+        custom_res = self.client.index(self.index_name_1).search(q=query, context=context)
+        original_score = original_res["hits"][0]["_score"]
+        custom_score = custom_res["hits"][0]["_score"]
+        self.assertEqual(custom_score, original_score)
 
+        custom_res = self.client.bulk_search([{
+            "index": self.index_name_1,
+            "q": query,
+            "context": context
+        }])["result"][0]
+        original_res = self.client.bulk_search([{
+            "index": self.index_name_1,
+            "q": query
+        }])["result"][0]
         original_score = original_res["hits"][0]["_score"]
         custom_score = custom_res["hits"][0]["_score"]
 
