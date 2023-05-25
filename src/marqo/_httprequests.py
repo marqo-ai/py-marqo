@@ -1,6 +1,6 @@
 import copy
 import json
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import get_args, Any, Callable, Dict, Literal, List, Optional, Tuple, Union
 import requests
 from json.decoder import JSONDecodeError
 from marqo.config import Config
@@ -10,73 +10,54 @@ from marqo.errors import (
     BackendTimeoutError
 )
 
-s = requests.Session()
+HTTP_OPERATIONS = Literal["delete", "get", "post", "put"]
+ALLOWED_OPERATIONS: Tuple[HTTP_OPERATIONS, ...] = get_args(HTTP_OPERATIONS)
 
-ALLOWED_OPERATIONS = {s.delete, s.get, s.post, s.put}
-
-OPERATION_MAPPING = {'delete': s.delete, 'get': s.get,
-                     'post': s.post, 'put': s.put}
+OPERATION_MAPPING = {'delete': lambda s: s.delete, 'get': lambda s: s.get,
+                     'post': lambda s: s.post, 'put': lambda s: s.put}
 
 
 class HttpRequests:
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config: Config, s: requests.session = requests.Session()) -> None:
         self.config = config
         self.session = s
+        self.headers = {'x-api-key': config.api_key} if config.api_key else {}
 
-        if config.api_key:
-            self.headers = {'x-api-key': config.api_key}
-        else:
-            self.headers = dict()
+    def _operation(self, method: HTTP_OPERATIONS) -> Callable:
+        if method not in ALLOWED_OPERATIONS:
+            raise ValueError("{} not an allowed operation {}".format(method, ALLOWED_OPERATIONS))
+
+        return OPERATION_MAPPING[method](self.session)
 
     def send_request(
         self,
-        http_method: Callable,
+        http_operation: HTTP_OPERATIONS,
         path: str,
         body: Optional[Union[Dict[str, Any], List[Dict[str, Any]], List[str], str]] = None,
         content_type: Optional[str] = None,
     ) -> Any:
-        to_verify = True
-
-        if http_method not in ALLOWED_OPERATIONS:
-            raise ValueError("{} not an allowed operation {}".format(http_method, ALLOWED_OPERATIONS))
-
         req_headers = copy.deepcopy(self.headers)
 
-        if content_type is not None and content_type:
+        if content_type:
             req_headers['Content-Type'] = content_type
 
-        try:
-            request_path = self.config.url + '/' + path
-            if isinstance(body, bytes):
-                response = http_method(
-                    url=request_path,
-                    timeout=self.config.timeout,
-                    headers=req_headers,
-                    data=body,
-                    verify=to_verify
-                )
-            elif isinstance(body, str):
-                response = http_method(
-                    url=request_path,
-                    timeout=self.config.timeout,
-                    headers=req_headers,
-                    data=body,
-                    verify=to_verify
-                )
-            else:
-                response = http_method(
-                    url=request_path,
-                    timeout=self.config.timeout,
-                    headers=req_headers,
-                    data=json.dumps(body) if body else None,
-                    verify=to_verify
-                )
-            return self.__validate(response)
+        if not isinstance(body, (bytes, str)) and body is not None:
+            body = json.dumps(body)
 
+        try:
+            response = self._operation(http_operation)(
+                url=f"{self.config.url}/{path}",
+                timeout=self.config.timeout,
+                headers=req_headers,
+                data=body,
+                verify=True
+            )
+            return self.__validate(response)
         except requests.exceptions.Timeout as err:
             raise BackendTimeoutError(str(err)) from err
         except requests.exceptions.ConnectionError as err:
             raise BackendCommunicationError(str(err)) from err
+
 
     def get(
         self, path: str,
@@ -85,7 +66,7 @@ class HttpRequests:
         content_type = None
         if body is not None:
             content_type = 'application/json'
-        return self.send_request(s.get, path=path, body=body, content_type=content_type)
+        return self.send_request('get', path=path, body=body, content_type=content_type)
 
     def post(
         self,
@@ -93,7 +74,7 @@ class HttpRequests:
         body: Optional[Union[Dict[str, Any], List[Dict[str, Any]], List[str], str]] = None,
         content_type: Optional[str] = 'application/json',
     ) -> Any:
-        return self.send_request(s.post, path, body, content_type)
+        return self.send_request('post', path, body, content_type)
 
     def put(
         self,
@@ -103,14 +84,14 @@ class HttpRequests:
     ) -> Any:
         if body is not None:
             content_type = 'application/json'
-        return self.send_request(s.put, path, body, content_type)
+        return self.send_request('put', path, body, content_type)
 
     def delete(
         self,
         path: str,
         body: Optional[Union[Dict[str, Any], List[Dict[str, Any]], List[str]]] = None,
     ) -> Any:
-        return self.send_request(s.delete, path, body)
+        return self.send_request('delete', path, body)
 
     @staticmethod
     def __to_json(
