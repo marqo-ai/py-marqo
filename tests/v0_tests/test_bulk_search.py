@@ -520,7 +520,7 @@ class TestBulkSearch(MarqoTestCase):
             d1, d2
         ], auto_refresh=True)
 
-        context = {"tensor": [{"vector": [1, ] * 3, "weight": 1}, {"vector": [2, ] * 2, "weight": 0}]}
+        context = {"tensor": [{"vector": [1, ] * 2, "weight": 1}, {"vector": [2, ] * 2, "weight": 0}]}
         for search_method in [enums.SearchMethods.TENSOR]:
             if self.IS_MULTI_INSTANCE:
                 try:
@@ -529,6 +529,7 @@ class TestBulkSearch(MarqoTestCase):
                         "q": "blah blah",
                         "context": context,
                     }])
+                    raise AssertionError
                 except MarqoWebError as e:
                     assert "The provided vectors are not in the same dimension of the index" in str(e)
             try:
@@ -538,6 +539,7 @@ class TestBulkSearch(MarqoTestCase):
                     "searchMethod": search_method,
                     "context": context,
                 }])
+                raise AssertionError
             except MarqoWebError as e:
                 assert "The provided vectors are not in the same dimension of the index" in str(e)
 
