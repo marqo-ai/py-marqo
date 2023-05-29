@@ -496,5 +496,3 @@ class TestBulkSearch(MarqoTestCase):
             assert len(search_res['hits']) == 2
             for hit in search_res['hits']:
                 assert hit["_score"] > 2
-    def test_context(self):
-        pass
