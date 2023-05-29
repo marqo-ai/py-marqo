@@ -535,3 +535,4 @@ class TestBulkSearch(MarqoTestCase):
                 "searchMethod": search_method,
                 "context": context,
             }])
+            print(resp)
