@@ -92,9 +92,9 @@ class TestCustomVectorSearch(MarqoTestCase):
             try:
                 self.warm_request(self.client.index(self.index_name_1).search, q=self.query,
                                   context = {"tensor": [{"vector": [1, ] * 200, "weight": 0}, {"vector": [2, ] * 512, "weight": 0}], })
-                raise AssertionError
-            except MarqoWebError as e:
-                assert "The provided vectors are not in the same dimension of the index" in str(e)
+            # we test the expected error in the main test
+            except Exception:
+                pass
         try:
             custom_res = self.client.index(self.index_name_1).search(q=self.query,
                     context = {"tensor": [{"vector": [1, ] * 200, "weight": 0}, {"vector": [2, ] * 512, "weight": 0}], })
