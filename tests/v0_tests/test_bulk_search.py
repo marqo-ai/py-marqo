@@ -4,7 +4,7 @@ from marqo import enums
 from typing import Any, Callable, Dict, List, Optional, Union
 from unittest import mock
 from marqo.client import Client
-from marqo.errors import InvalidArgError, MarqoApiError
+from marqo.errors import InvalidArgError, MarqoApiError, MarqoWebError
 import requests
 import random
 import math
@@ -523,16 +523,21 @@ class TestBulkSearch(MarqoTestCase):
         context = {"tensor": [{"vector": [1, ] * 3, "weight": 1}, {"vector": [2, ] * 2, "weight": 0}]}
         for search_method in [enums.SearchMethods.TENSOR]:
             if self.IS_MULTI_INSTANCE:
-                self.warm_request(self.client.bulk_search, [{
+                try:
+                    self.warm_request(self.client.bulk_search, [{
+                        "index": self.index_name_1,
+                        "q": "blah blah",
+                        "context": context,
+                    }])
+                except MarqoWebError as e:
+                    assert "The provided vectors are not in the same dimension of the index" in str(e)
+            try:
+                resp = self.client.bulk_search([{
                     "index": self.index_name_1,
                     "q": "blah blah",
+                    "searchMethod": search_method,
                     "context": context,
                 }])
-
-            resp = self.client.bulk_search([{
-                "index": self.index_name_1,
-                "q": "blah blah",
-                "searchMethod": search_method,
-                "context": context,
-            }])
+            except MarqoWebError as e:
+                assert "The provided vectors are not in the same dimension of the index" in str(e)
 
