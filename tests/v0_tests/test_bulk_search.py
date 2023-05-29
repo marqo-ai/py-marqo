@@ -520,7 +520,7 @@ class TestBulkSearch(MarqoTestCase):
             d1, d2
         ], auto_refresh=True)
 
-        context = {"tensor": [{"vector": [1, ] * 3, "weight": 0}, {"vector": [2, ] * 2, "weight": 0}]}
+        context = {"tensor": [{"vector": [1, ] * 3, "weight": 1}, {"vector": [2, ] * 2, "weight": 0}]}
         for search_method in [enums.SearchMethods.TENSOR]:
             if self.IS_MULTI_INSTANCE:
                 self.warm_request(self.client.bulk_search, [{
@@ -535,4 +535,4 @@ class TestBulkSearch(MarqoTestCase):
                 "searchMethod": search_method,
                 "context": context,
             }])
-            print(resp)
+
