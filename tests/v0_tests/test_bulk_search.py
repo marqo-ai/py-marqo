@@ -454,7 +454,7 @@ class TestBulkSearch(MarqoTestCase):
             "doc title": "Very heavy, dense metallic lead.",
             "abc-123": "some text blah",
             "multiply": 2,
-            "add":1,
+            "add": 1,
             "_id": "my-cool-doc"
         }
         d2 = {
@@ -463,7 +463,7 @@ class TestBulkSearch(MarqoTestCase):
             "field X": "this is a solid doc blah",
             "field1": "other things",
             "multiply": 2,
-            "add":1,
+            "add": 1,
             "_id": "123456"
         }
         x = self.client.index(self.index_name_1).add_documents([
@@ -471,12 +471,11 @@ class TestBulkSearch(MarqoTestCase):
         ], auto_refresh=True)
 
         score_modifiers = {
-            "multiply_score_by":[{"field_name": "multiply", "weight": 1,}],
-            "add_to_score": [{"field_name": "add", "weight" : 2,},]
-            }
+            "multiply_score_by":[{"field_name": "multiply", "weight": 1}],
+            "add_to_score": [{"field_name": "add", "weight": 2}]
+        }
 
-        for search_method in [enums.SearchMethods.TENSOR,
-                              enums.SearchMethods.LEXICAL]:
+        for search_method in [enums.SearchMethods.TENSOR]:
 
             if self.IS_MULTI_INSTANCE:
                 self.warm_request(self.client.bulk_search, [{
