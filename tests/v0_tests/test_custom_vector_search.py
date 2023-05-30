@@ -96,6 +96,17 @@ class TestCustomVectorSearch(MarqoTestCase):
         except MarqoWebError:
             pass
 
+    def test_context_dimension_have_different_dimensions_to_index(self):
+         correct_context = {"tensor": [{"vector": [1, ] * 384, "weight": 1}, {"vector": [2, ] * 384, "weight": 0}]}
+         wrong_context = {"tensor": [{"vector": [1, ] * 2, "weight": 1}, {"vector": [2, ] * 3, "weight": 0}]}
+         if self.IS_MULTI_INSTANCE:
+             self.warm_request(lambda _: self.search_with_context(correct_context))
+         try:
+             self.search_with_context(wrong_context)
+             raise AssertionError
+         except MarqoWebError as e:
+            assert "The provided vectors are not in the same dimension of the index" in str(e)
+
 
 class TestCustomBulkVectorSearch(TestCustomVectorSearch):
 
