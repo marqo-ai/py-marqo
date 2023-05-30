@@ -524,14 +524,14 @@ class TestBulkSearch(MarqoTestCase):
             self.warm_request(self.client.bulk_search, [{
                 "index": self.index_name_1,
                 "q": "blah blah",
-                "context": wrong_context,
+                "context": correct_context,
             }])
             try:
                 resp = self.client.bulk_search([{
                     "index": self.index_name_1,
                     "q": "blah blah",
                     "searchMethod": search_method,
-                    "context": correct_context,
+                    "context": wrong_context, # the dimension mismatches the index
                 }])
                 raise AssertionError
             except MarqoWebError as e:
