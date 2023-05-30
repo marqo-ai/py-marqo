@@ -119,3 +119,4 @@ class TestCustomBulkVectorSearch(TestCustomVectorSearch):
         if len(resp.get("result", [])) > 0:
             return resp['result'][0]
         return {}
+
