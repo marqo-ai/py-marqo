@@ -520,24 +520,20 @@ class TestBulkSearch(MarqoTestCase):
             d1, d2
         ], auto_refresh=True)
 
-        context = {"tensor": [{"vector": [1, ] * 2, "weight": 1}, {"vector": [2, ] * 2, "weight": 0}]}
+        correct_context = {"tensor": [{"vector": [1, ] * 384, "weight": 1}, {"vector": [2, ] * 384, "weight": 0}]}
+        wrong_context = {"tensor": [{"vector": [1, ] * 2, "weight": 1}, {"vector": [2, ] * 2, "weight": 0}]}
         for search_method in [enums.SearchMethods.TENSOR]:
-            if self.IS_MULTI_INSTANCE:
-                try:
-                    self.warm_request(self.client.bulk_search, [{
-                        "index": self.index_name_1,
-                        "q": "blah blah",
-                        "context": context,
-                    }])
-                    raise AssertionError
-                except MarqoWebError as e:
-                    assert "The provided vectors are not in the same dimension of the index" in str(e)
+            self.warm_request(self.client.bulk_search, [{
+                "index": self.index_name_1,
+                "q": "blah blah",
+                "context": wrong_context,
+            }])
             try:
                 resp = self.client.bulk_search([{
                     "index": self.index_name_1,
                     "q": "blah blah",
                     "searchMethod": search_method,
-                    "context": context,
+                    "context": correct_context,
                 }])
                 raise AssertionError
             except MarqoWebError as e:
