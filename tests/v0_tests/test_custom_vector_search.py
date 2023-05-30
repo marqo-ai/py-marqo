@@ -1,5 +1,7 @@
+from typing import Any, Dict, List, Optional
+
 from marqo.client import Client
-from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
+from marqo.errors import MarqoApiError, MarqoWebError
 from tests.marqo_test import MarqoTestCase
 
 
@@ -36,36 +38,38 @@ class TestCustomVectorSearch(MarqoTestCase):
         except MarqoApiError as s:
             pass
 
-    def test_custome_vector_search_format(self):
+    def search_with_context(self, context_vector: Optional[Dict[str, List[Dict[str, Any]]]] = None) -> Dict[str, Any]:
+        return self.client.index(self.index_name_1).search(
+            q=self.query,
+            context = context_vector
+        )
+
+    def test_custom_vector_search_format(self):
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(self.index_name_1).search, q=self.query,
-                              context = {"tensor": [{"vector": [1, ] * 512, "weight": 0}, {"vector": [2, ] * 512, "weight": 0}], })
+            self.warm_request(lambda _: self.search_with_context({"tensor": [{"vector": [1, ] * 512, "weight": 0}, {"vector": [2, ] * 512, "weight": 0}], }))
 
-        custom_res = self.client.index(self.index_name_1).search(q=self.query,
-                context = {"tensor": [{"vector": [1, ] * 512, "weight": 0}, {"vector": [2, ] * 512, "weight": 0}], })
+        custom_res = self.search_with_context({"tensor": [{"vector": [1, ] * 512, "weight": 0}, {"vector": [2, ] * 512, "weight": 0}], })
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(self.index_name_1).search, q=self.query)
+            self.warm_request(lambda _: self.search_with_context())
 
-        original_res = self.client.index(self.index_name_1).search(q=self.query)
-
-        del custom_res['processingTimeMs']
-        del original_res['processingTimeMs']
+        original_res = self.search_with_context()
+        
+        original_res.pop('processingTimeMs', None)
+        custom_res.pop('processingTimeMs', None)
 
         self.assertEqual(custom_res, original_res)
 
     def test_custom_search_results(self):
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(self.index_name_1).search, q=self.query,
-                              context = {"tensor": [{"vector": [1, ] * 512, "weight": 0}, {"vector": [2, ] * 512, "weight": 0}], })
-
-        custom_res = self.client.index(self.index_name_1).search(q=self.query,
-                context = {"tensor": [{"vector": [1, ] * 512, "weight": 0}, {"vector": [2, ] * 512, "weight": 0}], })
+            self.warm_request(lambda _: self.search_with_context({"tensor": [{"vector": [1, ] * 512, "weight": 0}, {"vector": [2, ] * 512, "weight": 0}], }))
+            
+        custom_res = self.search_with_context({"tensor": [{"vector": [1, ] * 512, "weight": 0}, {"vector": [2, ] * 512, "weight": 0}], })
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(self.index_name_1).search, q=self.query)
+            self.warm_request(lambda _: self.search_with_context())
 
-        original_res = self.client.index(self.index_name_1).search(q=self.query)
+        original_res = self.search_with_context()
 
         original_score = original_res["hits"][0]["_score"]
         custom_score = custom_res["hits"][0]["_score"]
@@ -75,16 +79,32 @@ class TestCustomVectorSearch(MarqoTestCase):
     def test_custom_vector_search_query_format(self):
         try:
             if self.IS_MULTI_INSTANCE:
-                self.warm_request(self.client.index(self.index_name_1).search, q=self.query,
-                                  context={"tensor": [{"vector": [1, ] * 512, "weight": 0},
-                                                      {"vector": [2, ] * 512, "weight": 0}], })
+                self.warm_request(lambda _: self.search_with_context({
+                "tensor": [
+                    {"vector": [1, ] * 512, "weight": 0},
+                    {"vector": [2, ] * 512, "weight": 0}
+                ], 
+            }))
 
-            custom_res = self.client.index(self.index_name_1).search(q=self.query,
-                                                                     context={"tensorsss": [
-                                                                         {"vector": [1, ] * 512, "weight": 0},
-                                                                         {"vector": [2, ] * 512, "weight": 0}], })
+            self.search_with_context({
+                "tensorss": [
+                    {"vector": [1, ] * 512, "weight": 0},
+                    {"vector": [2, ] * 512, "weight": 0}
+                ], 
+            })
             raise AssertionError
         except MarqoWebError:
             pass
 
 
+class TestCustomBulkVectorSearch(TestCustomVectorSearch):
+
+    def search_with_context(self, context_vector: Optional[Dict[str, List[Dict[str, Any]]]] = None) -> Dict[str, Any]:
+        resp = self.client.bulk_search([{
+            "index": self.index_name_1,
+            "q": self.query,
+            "context": context_vector
+        }])
+        if len(resp.get("result", [])) > 0:
+            return resp['result'][0]
+        return {}

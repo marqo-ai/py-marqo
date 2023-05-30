@@ -12,22 +12,25 @@ from marqo.errors import (
 
 HTTP_OPERATIONS = Literal["delete", "get", "post", "put"]
 ALLOWED_OPERATIONS: Tuple[HTTP_OPERATIONS, ...] = get_args(HTTP_OPERATIONS)
+session = requests.Session()
 
-OPERATION_MAPPING = {'delete': lambda s: s.delete, 'get': lambda s: s.get,
-                     'post': lambda s: s.post, 'put': lambda s: s.put}
-
+OPERATION_MAPPING = {
+    'delete': session.delete,
+    'get': session.get,
+    'post': session.post,
+    'put': session.put
+}
 
 class HttpRequests:
-    def __init__(self, config: Config, s: requests.session = requests.Session()) -> None:
+    def __init__(self, config: Config) -> None:
         self.config = config
-        self.session = s
         self.headers = {'x-api-key': config.api_key} if config.api_key else {}
 
     def _operation(self, method: HTTP_OPERATIONS) -> Callable:
         if method not in ALLOWED_OPERATIONS:
             raise ValueError("{} not an allowed operation {}".format(method, ALLOWED_OPERATIONS))
 
-        return OPERATION_MAPPING[method](self.session)
+        return OPERATION_MAPPING[method]
 
     def send_request(
         self,
@@ -38,7 +41,7 @@ class HttpRequests:
     ) -> Any:
         req_headers = copy.deepcopy(self.headers)
 
-        if content_type:
+        if content_type is not None and content_type
             req_headers['Content-Type'] = content_type
 
         if not isinstance(body, (bytes, str)) and body is not None:
