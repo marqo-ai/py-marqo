@@ -1,5 +1,7 @@
+from typing import Any, Dict, List, Optional
+
 from marqo.client import Client
-from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
+from marqo.errors import MarqoApiError, MarqoWebError
 from tests.marqo_test import MarqoTestCase
 
 
@@ -40,6 +42,13 @@ class TestScoreModifierSearch(MarqoTestCase):
             self.client.delete_index(self.index_name_1)
         except MarqoApiError as s:
             pass
+    
+    def search_with_score_modifier(self, score_modifiers: Optional[Dict[str, List[Dict[str, Any]]]] = None, **kwargs) -> Dict[str, Any]:
+        return self.client.index(self.index_name_1).search(
+            q = self.query,
+            score_modifiers = score_modifiers,
+            **kwargs
+        )
 
     def test_score_modifier_search_results(self):
         score_modifiers = {
@@ -56,15 +65,14 @@ class TestScoreModifierSearch(MarqoTestCase):
             }
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(self.index_name_1).search, q = self.query, score_modifiers=None, filter_string="filter:original")
+            self.warm_request(lambda _: self.search_with_score_modifier(score_modifiers=None, filter_string="filter:original"))
         
-        original_res = self.client.index(self.index_name_1).search(q = self.query, score_modifiers=None,
-                                                                     filter_string="filter:original")
+        original_res = self.search_with_score_modifier(score_modifiers=None, filter_string="filter:original")
         original_score = original_res["hits"][0]["_score"]
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(self.index_name_1).search, q = self.query, score_modifiers = score_modifiers)
-        modifiers_res = self.client.index(self.index_name_1).search(q=self.query, score_modifiers=score_modifiers)
+            self.warm_request(lambda _: self.search_with_score_modifier(score_modifiers=score_modifiers))
+        modifiers_res = self.search_with_score_modifier(score_modifiers=score_modifiers)
 
         modifiers_score = modifiers_res["hits"][0]["_score"]
         expected_sore = original_score * 20 * 1 + 1 * -3 + 30 * 1
@@ -85,8 +93,7 @@ class TestScoreModifierSearch(MarqoTestCase):
             }
 
         try:
-            modifiers_res = self.client.index(self.index_name_1).search(q=self.query,
-                                                                        score_modifiers = invalid_score_modifiers)
+            self.search_with_score_modifier(score_modifiers=invalid_score_modifiers)
             raise AssertionError
         except MarqoWebError:
             pass
@@ -100,27 +107,26 @@ class TestScoreModifierSearch(MarqoTestCase):
                     {"field_name": "add_2", "weight": 1,
                      }]
             }
+        self.search_with_score_modifier(score_modifiers=valid_score_modifiers)
 
-        modifiers_res = self.client.index(self.index_name_1).search(q=self.query, score_modifiers=valid_score_modifiers)
+class TestScoreModifierBulkSearch(TestScoreModifierSearch):
+    
+    def map_search_kwargs(self, k: str) -> str:
+        """Convert kwarg keys used in search to their bulk search equivalent."""
+        mapp = {
+            "filter_string": "filter",
+        }
+        if k in mapp.keys():
+            return mapp[k]
+        return k
 
-    def test_bulk_search_error(self):
-        try:
-            resp = self.client.bulk_search([{
-                "index": self.index_name_1,
-                "q": "title about some doc",
-                "scoreModifiers" : {
-                    # typo in multiply score by
-                    "multiply_score_bys":
-                        [{"field_name": "multiply_1",
-                          "weight": 1,},
-                         {"field_name": "multiply_2",}],
-                    "add_to_score": [
-                        {"field_name": "add_1", "weight" : 4,
-                         },
-                        {"field_name": "add_2", "weight": 1,
-                         }]
-                }
-            }])
-            raise AssertionError
-        except MarqoWebError:
-            pass
+    def search_with_score_modifier(self, score_modifiers: Optional[Dict[str, List[Dict[str, Any]]]] = None, **kwargs) -> Dict[str, Any]:
+        resp = self.client.bulk_search([{
+            "index": self.index_name_1,
+            "q": self.index_name_1,
+            "scoreModifiers": score_modifiers,
+            **{self.map_search_kwargs(k): v for k,v in kwargs.items()}
+        }])
+        if len(resp.get("result", [])) > 0:
+            return resp['result'][0]
+        return {}
