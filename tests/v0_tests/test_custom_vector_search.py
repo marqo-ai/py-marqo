@@ -149,7 +149,7 @@ class TestCustomBulkVectorSearch(TestCustomVectorSearch):
         if self.IS_MULTI_INSTANCE:
             self.warm_request(self.client.bulk_search, [{
                 "index": self.index_name_1,
-                "q": "blah blah",
+                "q": {"blah blah" :1},
                 "context": correct_context,
             }])
         try:
@@ -167,13 +167,13 @@ class TestCustomBulkVectorSearch(TestCustomVectorSearch):
         if self.IS_MULTI_INSTANCE:
             self.warm_request(self.client.bulk_search, [{
                 "index": self.index_name_1,
-                "q": "blah blah",
+                "q": {"blah blah" :1},
                 "context": correct_context,
             }])
         try:
             resp = self.client.bulk_search([{
                 "index": self.index_name_1,
-                "q": "blah blah",
+                "q": "blah blah", # this should not be a str
                 "context": correct_context, # the dimension mismatches the index
             }])
             raise AssertionError
