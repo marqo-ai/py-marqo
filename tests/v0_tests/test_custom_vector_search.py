@@ -127,3 +127,21 @@ class TestCustomBulkVectorSearch(TestCustomVectorSearch):
             raise AssertionError
         except MarqoWebError as e:
             assert "The provided vectors are not in the same dimension of the index" in str(e)
+
+    def test_context_with_query_string_in_bulk_search(self):
+        correct_context = {"tensor": [{"vector": [1, ] * 384, "weight": 1}, {"vector": [2, ] * 384, "weight": 0}]}
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.bulk_search, [{
+                "index": self.index_name_1,
+                "q": "blah blah",
+                "context": correct_context,
+            }])
+        try:
+            resp = self.client.bulk_search([{
+                "index": self.index_name_1,
+                "q": "blah blah",
+                "context": correct_context, # the dimension mismatches the index
+            }])
+            raise AssertionError
+        except MarqoWebError as e:
+            assert "This is not supported as the context only works when the query is a dictionary." in str(e)

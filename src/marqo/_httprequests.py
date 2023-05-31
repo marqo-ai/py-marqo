@@ -41,7 +41,7 @@ class HttpRequests:
     ) -> Any:
         req_headers = copy.deepcopy(self.headers)
 
-        if content_type is not None and content_type
+        if content_type is not None and content_type:
             req_headers['Content-Type'] = content_type
 
         if not isinstance(body, (bytes, str)) and body is not None:
