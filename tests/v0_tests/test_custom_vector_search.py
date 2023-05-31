@@ -1,5 +1,7 @@
+from typing import Any, Dict, List, Optional
+
 from marqo.client import Client
-from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
+from marqo.errors import MarqoApiError, MarqoWebError
 from tests.marqo_test import MarqoTestCase
 
 
@@ -36,36 +38,38 @@ class TestCustomVectorSearch(MarqoTestCase):
         except MarqoApiError as s:
             pass
 
-    def test_custome_vector_search_format(self):
+    def search_with_context(self, context_vector: Optional[Dict[str, List[Dict[str, Any]]]] = None) -> Dict[str, Any]:
+        return self.client.index(self.index_name_1).search(
+            q=self.query,
+            context = context_vector
+        )
+
+    def test_custom_vector_search_format(self):
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(self.index_name_1).search, q=self.query,
-                              context = {"tensor": [{"vector": [1, ] * 512, "weight": 0}, {"vector": [2, ] * 512, "weight": 0}], })
+            self.warm_request(lambda _: self.search_with_context({"tensor": [{"vector": [1, ] * 512, "weight": 0}, {"vector": [2, ] * 512, "weight": 0}], }))
 
-        custom_res = self.client.index(self.index_name_1).search(q=self.query,
-                context = {"tensor": [{"vector": [1, ] * 512, "weight": 0}, {"vector": [2, ] * 512, "weight": 0}], })
+        custom_res = self.search_with_context({"tensor": [{"vector": [1, ] * 512, "weight": 0}, {"vector": [2, ] * 512, "weight": 0}], })
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(self.index_name_1).search, q=self.query)
+            self.warm_request(lambda _: self.search_with_context())
 
-        original_res = self.client.index(self.index_name_1).search(q=self.query)
-
-        del custom_res['processingTimeMs']
-        del original_res['processingTimeMs']
+        original_res = self.search_with_context()
+        
+        original_res.pop('processingTimeMs', None)
+        custom_res.pop('processingTimeMs', None)
 
         self.assertEqual(custom_res, original_res)
 
     def test_custom_search_results(self):
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(self.index_name_1).search, q=self.query,
-                              context = {"tensor": [{"vector": [1, ] * 512, "weight": 0}, {"vector": [2, ] * 512, "weight": 0}], })
-
-        custom_res = self.client.index(self.index_name_1).search(q=self.query,
-                context = {"tensor": [{"vector": [1, ] * 512, "weight": 0}, {"vector": [2, ] * 512, "weight": 0}], })
+            self.warm_request(lambda _: self.search_with_context({"tensor": [{"vector": [1, ] * 512, "weight": 0}, {"vector": [2, ] * 512, "weight": 0}], }))
+            
+        custom_res = self.search_with_context({"tensor": [{"vector": [1, ] * 512, "weight": 0}, {"vector": [2, ] * 512, "weight": 0}], })
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(self.index_name_1).search, q=self.query)
+            self.warm_request(lambda _: self.search_with_context())
 
-        original_res = self.client.index(self.index_name_1).search(q=self.query)
+        original_res = self.search_with_context()
 
         original_score = original_res["hits"][0]["_score"]
         custom_score = custom_res["hits"][0]["_score"]
@@ -75,27 +79,103 @@ class TestCustomVectorSearch(MarqoTestCase):
     def test_custom_vector_search_query_format(self):
         try:
             if self.IS_MULTI_INSTANCE:
-                self.warm_request(self.client.index(self.index_name_1).search, q=self.query,
-                                  context={"tensor": [{"vector": [1, ] * 512, "weight": 0},
-                                                      {"vector": [2, ] * 512, "weight": 0}], })
+                self.warm_request(lambda _: self.search_with_context({
+                "tensor": [
+                    {"vector": [1, ] * 512, "weight": 0},
+                    {"vector": [2, ] * 512, "weight": 0}
+                ], 
+            }))
 
-            custom_res = self.client.index(self.index_name_1).search(q=self.query,
-                                                                     context={"tensorsss": [
-                                                                         {"vector": [1, ] * 512, "weight": 0},
-                                                                         {"vector": [2, ] * 512, "weight": 0}], })
+            self.search_with_context({
+                "tensorss": [
+                    {"vector": [1, ] * 512, "weight": 0},
+                    {"vector": [2, ] * 512, "weight": 0}
+                ], 
+            })
             raise AssertionError
         except MarqoWebError:
             pass
 
-    def test_custom_context_with_wrong_dimension(self):
-        correct_dimension = 512
-        wrong_dimension = 200
-        if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(self.index_name_1).search, q=self.query,
-                              context = {"tensor": [{"vector": [1, ] * correct_dimension, "weight": 0}, {"vector": [2, ] * correct_dimension, "weight": 0}], })
+    def test_context_dimension_have_different_dimensions_to_index(self):
+         correct_context = {"tensor": [{"vector": [1, ] * 384, "weight": 1}]}
+         wrong_context = {"tensor": [{"vector": [1, ] * 2, "weight": 1}]}
+         if self.IS_MULTI_INSTANCE:
+             self.warm_request(lambda _: self.search_with_context(correct_context))
+         try:
+             self.search_with_context(wrong_context)
+             raise AssertionError
+         except MarqoWebError as e:
+            assert "The provided vectors are not in the same dimension of the index" in str(e)
+
+    def test_context_dimension_have_inconsistent_dimensions(self):
+         correct_context = {"tensor": [{"vector": [1, ] * 384, "weight": 1}, {"vector": [2, ] * 384, "weight": 0}]}
+         wrong_context = {"tensor": [{"vector": [1, ] * 384, "weight": 1}, {"vector": [2, ] * 385, "weight": 0}]}
+         if self.IS_MULTI_INSTANCE:
+             self.warm_request(lambda _: self.search_with_context(correct_context))
+         try:
+             self.search_with_context(wrong_context)
+             raise AssertionError
+         except MarqoWebError as e:
+            assert "The provided vectors are not in the same dimension of the index" in str(e)
+
+    def test_context_vector_with_flat_query(self):
+        self.query = "What are the best pets"
+        context = {"tensor": [{"vector": [1, ] * 384, "weight": 1}, {"vector": [2, ] * 384, "weight": 0}]}
         try:
-            custom_res = self.client.index(self.index_name_1).search(q=self.query,
-                    context = {"tensor": [{"vector": [1, ] * wrong_dimension, "weight": 0}, {"vector": [2, ] * 512, "weight": 0}], })
+            result = self.search_with_context(context)
+            raise AssertionError(f"The query should not be accepted. Returned: {result}")
+        except MarqoWebError as e:
+            assert "This is not supported as the context only works when the query is a dictionary." in str(e)
+        finally:
+
+            ## Ensure other tests are not affected
+            self.query = {"What are the best pets": 1}
+
+class TestCustomBulkVectorSearch(TestCustomVectorSearch):
+
+    def search_with_context(self, context_vector: Optional[Dict[str, List[Dict[str, Any]]]] = None) -> Dict[str, Any]:
+        resp = self.client.bulk_search([{
+            "index": self.index_name_1,
+            "q": self.query,
+            "context": context_vector
+        }])
+        if len(resp.get("result", [])) > 0:
+            return resp['result'][0]
+        return {}
+
+    def test_context_dimension_error_in_bulk_search(self):
+        correct_context = {"tensor": [{"vector": [1, ] * 384, "weight": 1}, {"vector": [2, ] * 384, "weight": 0}]}
+        wrong_context = {"tensor": [{"vector": [1, ] * 2, "weight": 1}, {"vector": [2, ] * 3, "weight": 0}]}
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.bulk_search, [{
+                "index": self.index_name_1,
+                "q": {"blah blah" :1},
+                "context": correct_context,
+            }])
+        try:
+            resp = self.client.bulk_search([{
+                "index": self.index_name_1,
+                "q": {"blah blah": 1},
+                "context": wrong_context, # the dimension mismatches the index
+            }])
             raise AssertionError
         except MarqoWebError as e:
             assert "The provided vectors are not in the same dimension of the index" in str(e)
+
+    def test_context_with_query_string_in_bulk_search(self):
+        correct_context = {"tensor": [{"vector": [1, ] * 384, "weight": 1}, {"vector": [2, ] * 384, "weight": 0}]}
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.bulk_search, [{
+                "index": self.index_name_1,
+                "q": {"blah blah" :1},
+                "context": correct_context,
+            }])
+        try:
+            resp = self.client.bulk_search([{
+                "index": self.index_name_1,
+                "q": "blah blah",
+                "context": correct_context, # the dimension mismatches the index
+            }])
+            raise AssertionError
+        except MarqoWebError as e:
+            assert "This is not supported as the context only works when the query is a dictionary." in str(e)
