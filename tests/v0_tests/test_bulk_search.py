@@ -447,3 +447,51 @@ class TestBulkSearch(MarqoTestCase):
             # the poodle doc should be lower ranked than the irrelevant doc
             for hit_position, _ in enumerate(res['hits']):
                 assert res['hits'][hit_position]['_id'] == expected_ordering[hit_position]
+
+    def test_score_modifies_in_bulk_search_end_to_end(self):
+        self.client.create_index(index_name=self.index_name_1)
+        d1 = {
+            "doc title": "Very heavy, dense metallic lead.",
+            "abc-123": "some text blah",
+            "multiply": 2,
+            "add": 1,
+            "_id": "my-cool-doc"
+        }
+        d2 = {
+            "doc title": "The captain bravely lead her followers into battle."
+                         " She directed her soldiers to and fro.",
+            "field X": "this is a solid doc blah",
+            "field1": "other things",
+            "multiply": 2,
+            "add": 1,
+            "_id": "123456"
+        }
+        x = self.client.index(self.index_name_1).add_documents([
+            d1, d2
+        ], auto_refresh=True)
+
+        score_modifiers = {
+            "multiply_score_by":[{"field_name": "multiply", "weight": 1}],
+            "add_to_score": [{"field_name": "add", "weight": 2}]
+        }
+
+        for search_method in [enums.SearchMethods.TENSOR]:
+            if self.IS_MULTI_INSTANCE:
+                self.warm_request(self.client.bulk_search, [{
+                    "index": self.index_name_1,
+                    "q": "blah blah",
+                    "searchMethod": search_method,
+                }])
+
+            resp = self.client.bulk_search([{
+                "index": self.index_name_1,
+                "q": "blah blah",
+                "searchMethod": search_method,
+                "scoreModifiers": score_modifiers,
+            }])
+            assert len(resp['result']) == 1
+            search_res = resp['result'][0]
+
+            assert len(search_res['hits']) == 2
+            for hit in search_res['hits']:
+                assert hit["_score"] > 2
