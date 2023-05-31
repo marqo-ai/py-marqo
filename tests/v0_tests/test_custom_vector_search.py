@@ -155,7 +155,7 @@ class TestCustomBulkVectorSearch(TestCustomVectorSearch):
         try:
             resp = self.client.bulk_search([{
                 "index": self.index_name_1,
-                "q": "blah blah",
+                "q": {"blah blah": 1},
                 "context": wrong_context, # the dimension mismatches the index
             }])
             raise AssertionError
