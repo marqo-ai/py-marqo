@@ -96,6 +96,40 @@ class TestCustomVectorSearch(MarqoTestCase):
         except MarqoWebError:
             pass
 
+    def test_context_dimension_have_different_dimensions_to_index(self):
+         correct_context = {"tensor": [{"vector": [1, ] * 384, "weight": 1}]}
+         wrong_context = {"tensor": [{"vector": [1, ] * 2, "weight": 1}]}
+         if self.IS_MULTI_INSTANCE:
+             self.warm_request(lambda _: self.search_with_context(correct_context))
+         try:
+             self.search_with_context(wrong_context)
+             raise AssertionError
+         except MarqoWebError as e:
+            assert "The provided vectors are not in the same dimension of the index" in str(e)
+
+    def test_context_dimension_have_inconsistent_dimensions(self):
+         correct_context = {"tensor": [{"vector": [1, ] * 384, "weight": 1}, {"vector": [2, ] * 384, "weight": 0}]}
+         wrong_context = {"tensor": [{"vector": [1, ] * 384, "weight": 1}, {"vector": [2, ] * 385, "weight": 0}]}
+         if self.IS_MULTI_INSTANCE:
+             self.warm_request(lambda _: self.search_with_context(correct_context))
+         try:
+             self.search_with_context(wrong_context)
+             raise AssertionError
+         except MarqoWebError as e:
+            assert "The provided vectors are not in the same dimension of the index" in str(e)
+
+    def test_context_vector_with_flat_query(self):
+        self.query = "What are the best pets"
+        context = {"tensor": [{"vector": [1, ] * 384, "weight": 1}, {"vector": [2, ] * 384, "weight": 0}]}
+        try:
+            result = self.search_with_context(context)
+            raise AssertionError(f"The query should not be accepted. Returned: {result}")
+        except MarqoWebError as e:
+            assert "This is not supported as the context only works when the query is a dictionary." in str(e)
+        finally:
+
+            ## Ensure other tests are not affected
+            self.query = {"What are the best pets": 1}
 
 class TestCustomBulkVectorSearch(TestCustomVectorSearch):
 
