@@ -448,7 +448,7 @@ class TestBulkSearch(MarqoTestCase):
             for hit_position, _ in enumerate(res['hits']):
                 assert res['hits'][hit_position]['_id'] == expected_ordering[hit_position]
 
-    def test_score_modifies_in_bulk_search_end_to_end(self):
+    def test_score_modifiers_in_bulk_search_end_to_end(self):
         self.client.create_index(index_name=self.index_name_1)
         d1 = {
             "doc title": "Very heavy, dense metallic lead.",
