@@ -1,5 +1,7 @@
+from functools import wraps
+
 from marqo.client import Client
-from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
+from marqo.errors import MarqoApiError, MarqoWebError
 from tests.marqo_test import MarqoTestCase
 
 
@@ -55,15 +57,31 @@ class TestScoreModifierSearch(MarqoTestCase):
                      }]
             }
 
-        original_res = self.client.index(self.index_name_1).search(q = self.query, score_modifiers=None,
-                                                                     filter_string="filter:original")
-        original_score = original_res["hits"][0]["_score"]
-
+        
+        original_res = self.client.index(self.index_name_1).search(q = self.query, score_modifiers=None, filter_string="filter:original")
         modifiers_res = self.client.index(self.index_name_1).search(q=self.query, score_modifiers=score_modifiers)
-
+        
+        original_score = original_res["hits"][0]["_score"]
         modifiers_score = modifiers_res["hits"][0]["_score"]
-        expected_sore = original_score * 20 * 1 + 1 * -3 + 30 * 1
-        assert abs(expected_sore -modifiers_score) < 1e-5
+
+        expected_score = original_score * 20 * 1 + 1 * -3 + 30 * 1
+        assert abs(expected_score -modifiers_score) < 1e-5
+
+        original_res_bulk = self.client.bulk_search([{
+            "index": self.index_name_1,
+            "q": self.query,
+            "scoreModifiers": None,
+            "filter": "filter:original"
+        }])["result"][0]
+        modifiers_res_bulk = self.client.bulk_search([{
+            "index": self.index_name_1,
+            "q": self.query,
+            "scoreModifiers": score_modifiers
+        }])["result"][0]
+
+        expected_score = original_res_bulk["hits"][0]["_score"] * 20 * 1 + 1 * -3 + 30 * 1
+        assert abs(expected_score -modifiers_res_bulk["hits"][0]["_score"]) < 1e-5
+
 
     def test_invalid_score_modifiers_format(self):
         invalid_score_modifiers = {
@@ -82,7 +100,17 @@ class TestScoreModifierSearch(MarqoTestCase):
         try:
             modifiers_res = self.client.index(self.index_name_1).search(q=self.query,
                                                                         score_modifiers = invalid_score_modifiers)
-            raise AssertionError
+            raise AssertionError(modifiers_res)
+        except MarqoWebError:
+            pass
+
+        try:
+            modifiers_res = self.client.bulk_search([{
+                "index": self.index_name_1,
+                "q": self.query,
+                "scoreModifiers": invalid_score_modifiers
+            }])
+            raise AssertionError(modifiers_res)
         except MarqoWebError:
             pass
 
@@ -105,26 +133,9 @@ class TestScoreModifierSearch(MarqoTestCase):
             }]
 
         for valid_score_modifiers in valid_score_modifiers_list:
-            modifiers_res = self.client.index(self.index_name_1).search(q=self.query, score_modifiers=valid_score_modifiers)
-
-    def test_bulk_search_error(self):
-        try:
-            resp = self.client.bulk_search([{
+            self.client.index(self.index_name_1).search(q=self.query, score_modifiers=valid_score_modifiers)
+            self.client.bulk_search([{
                 "index": self.index_name_1,
-                "q": "title about some doc",
-                "scoreModifiers" : {
-                    # typo in multiply score by
-                    "multiply_score_bys":
-                        [{"field_name": "multiply_1",
-                          "weight": 1,},
-                         {"field_name": "multiply_2",}],
-                    "add_to_score": [
-                        {"field_name": "add_1", "weight" : 4,
-                         },
-                        {"field_name": "add_2", "weight": 1,
-                         }]
-                }
+                "q": self.query,
+                "scoreModifiers": valid_score_modifiers
             }])
-            raise AssertionError
-        except MarqoWebError:
-            pass
