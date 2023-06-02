@@ -15,7 +15,7 @@ import pytest
 class TestAddDocuments(MarqoTestCase):
 
     # NOTE: test_search_with_device was removed from these cuda tests
-    # TODO: Try this solo again if needed -> @allow_environments(["CUDA_DIND_MARQO_OS"])
+    # NOTE: Try this solo again if needed -> @allow_environments(["CUDA_DIND_MARQO_OS"])
     def setUp(self) -> None:
         self.client = Client(**self.client_settings)
         self.index_name_1 = "my-test-index-1"
