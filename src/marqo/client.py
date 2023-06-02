@@ -19,9 +19,8 @@ class Client:
     marqo and its permissions.
     """
     def __init__(
-        self, url: str = "http://localhost:8882", main_user: str = None, main_password: str = None,
-        indexing_device: Optional[Union[enums.Devices, str]] = None,
-        search_device: Optional[Union[enums.Devices, str]] = None,
+        self, url: str = "http://localhost:8882", 
+        main_user: str = None, main_password: str = None,
         api_key: str = None
     ) -> None:
         """
@@ -36,7 +35,7 @@ class Client:
             self.url = utils.construct_authorized_url(url_base=url, username=main_user, password=main_password)
         else:
             self.url = url
-        self.config = Config(self.url, indexing_device=indexing_device, search_device=search_device, api_key=api_key)
+        self.config = Config(self.url, api_key=api_key)
         self.http = HttpRequests(self.config)
 
     def create_index(
@@ -139,8 +138,7 @@ class Client:
 
     def enrich(self, documents: List[Dict], enrichment: Dict, device: str = None, ):
         """Enrich documents"""
-        selected_device = device if device is not None else self.config.indexing_device
-        translated = utils.translate_device_string_for_url(selected_device)
+        translated = utils.translate_device_string_for_url(device)
         response = self.http.post(path=f'enrichment?device={translated}', body={
             "documents": documents,
             "enrichment": enrichment
@@ -153,8 +151,7 @@ class Client:
         except error_wrappers.ValidationError as e:
             raise errors.InvalidArgError(f"some parameters in search query(s) are invalid. Errors are: {e.errors()}")
 
-        selected_device = device if device is not None else self.config.search_device
-        translated = utils.translate_device_string_for_url(selected_device)
+        translated = utils.translate_device_string_for_url(device)
         
         return self.http.post(
             f"indexes/bulk/search?device={translated}",

@@ -226,8 +226,6 @@ class TestAddDocuments(MarqoTestCase):
 
     def test_add_documents_with_device(self):
         temp_client = copy.deepcopy(self.client)
-        temp_client.config.search_device = enums.Devices.cpu
-        temp_client.config.indexing_device = enums.Devices.cpu
 
         mock__post = mock.MagicMock()
 
@@ -244,8 +242,6 @@ class TestAddDocuments(MarqoTestCase):
 
     def test_add_documents_with_device_batching(self):
         temp_client = copy.deepcopy(self.client)
-        temp_client.config.search_device = enums.Devices.cpu
-        temp_client.config.indexing_device = enums.Devices.cpu
 
         mock__post = mock.MagicMock()
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)

@@ -137,7 +137,7 @@ class Index:
             show_highlights: True if highlights are to be returned
             reranker:
             device: the device used to index the data. Examples include "cpu",
-                "cuda" and "cuda:2". Overrides the Client's default device.
+                "cuda" and "cuda:2".
             filter_string: a filter string, used to prefilter documents during the
                 search. For example: "car_colour:blue"
             attributes_to_retrieve: a list of document attributes to be
@@ -156,10 +156,9 @@ class Index:
                             "Please use the 'showHighlights' instead. ")
             show_highlights = highlights if show_highlights is True else show_highlights
 
-        selected_device = device if device is not None else self.config.search_device
         path_with_query_str = (
             f"indexes/{self.index_name}/search?"
-            f"&device={utils.translate_device_string_for_url(selected_device)}"
+            f"&device={utils.translate_device_string_for_url(device)}"
         )
         body = {
             "q": q,
@@ -356,7 +355,6 @@ class Index:
         if non_tensor_fields is None:
             non_tensor_fields = []
 
-        selected_device = device if device is not None else self.config.indexing_device
         num_docs = len(documents)
 
         # ADD DOCS TIMER-LOGGER (1)
@@ -369,7 +367,7 @@ class Index:
         model_auth_param = (utils.convert_dict_to_url_params(model_auth) if model_auth else '')
         mappings_param = (utils.convert_dict_to_url_params(mappings) if mappings else '')
         query_str_params = (
-            f"{f'&device={utils.translate_device_string_for_url(selected_device)}'}"
+            f"{f'&device={utils.translate_device_string_for_url(device)}'}"
             f"{f'&processes={processes}' if processes is not None else ''}"
             f"{f'&batch_size={server_batch_size}' if server_batch_size is not None else ''}"
             f"{f'&use_existing_tensors={str(use_existing_tensors).lower()}' if use_existing_tensors is not None else ''}"
