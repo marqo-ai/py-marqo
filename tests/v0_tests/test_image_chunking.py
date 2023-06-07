@@ -16,7 +16,7 @@ class TestImageChunking(MarqoTestCase):
     def setUp(self) -> None:
         client_0 = Client(**self.client_settings)
         
-        self.index_name = 'image-chunk-test'
+        self.index_name = 'test-index'
 
         try:
             client_0.delete_index(self.index_name)
