@@ -189,7 +189,7 @@ class TestDemo(MarqoTestCase):
     def test_readme_example_multimodal_combination_query(self):
         import marqo
         mq = marqo.Client(**self.client_settings)
-        settings = {"treat_urls_and_pointers_as_images": True, "model": "ViT-L/14"}
+        settings = {"treat_urls_and_pointers_as_images": True, "model": "ViT-B/32"}
         mq.create_index("my-first-multimodal-index", **settings)
         mq.index("my-first-multimodal-index").add_documents(
             [

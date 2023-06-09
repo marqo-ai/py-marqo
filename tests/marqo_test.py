@@ -3,6 +3,7 @@
 
 Pass its settings to local_marqo_settings.
 """
+import logging
 from collections import defaultdict
 from functools import wraps
 import json
@@ -11,6 +12,7 @@ from pydantic import BaseModel
 from typing import Any, Callable, Dict, List, Optional, Union
 from unittest import mock, TestCase
 
+import marqo
 from marqo.utils import construct_authorized_url
 from marqo._httprequests import HTTP_OPERATIONS
 from marqo.version import __marqo_version__ as py_marqo_support_version
@@ -114,6 +116,7 @@ class MarqoTestCase(TestCase):
 
         cls.client_settings = local_marqo_settings
         cls.authorized_url = cls.client_settings["url"]
+        cls.generic_test_index_name = 'test-index'
 
         # class property to indicate if test is being run on multi
         cls.IS_MULTI_INSTANCE = (True if os.environ.get("IS_MULTI_INSTANCE", False) in ["True", "TRUE", "true", True] else False)
@@ -124,7 +127,18 @@ class MarqoTestCase(TestCase):
             print(f"MARQO SERVER VERSION -> {marqo_server_version}")
             print(f"PY-MARQO SUPPORTED VERSION -> {py_marqo_support_version}")
 
-
+    @classmethod
+    def tearDownClass(cls) -> None:
+        """Delete commonly used test indexes after all tests are run
+        """
+        client = marqo.Client(**cls.client_settings)
+        commonly_used_ix_name = 'my-test-index-1'
+        indexes_to_tear_down = [cls.generic_test_index_name, commonly_used_ix_name]
+        for ix_name in indexes_to_tear_down:
+            try:
+                client.delete_index(ix_name)
+            except marqo.errors.MarqoApiError as e:
+                logging.debug(f'received error `{e}` from index deletion request.')
 
     def warm_request(self, func, *args, **kwargs):
         '''
