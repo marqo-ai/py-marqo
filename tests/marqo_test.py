@@ -3,6 +3,7 @@
 
 Pass its settings to local_marqo_settings.
 """
+import logging
 from collections import defaultdict
 from functools import wraps
 import json
@@ -136,8 +137,8 @@ class MarqoTestCase(TestCase):
         for ix_name in indexes_to_tear_down:
             try:
                 client.delete_index(ix_name)
-            except marqo.errors.MarqoApiError:
-                pass
+            except marqo.errors.MarqoApiError as e:
+                logging.debug(f'received error `{e}` from index deletion request.')
 
     def warm_request(self, func, *args, **kwargs):
         '''
