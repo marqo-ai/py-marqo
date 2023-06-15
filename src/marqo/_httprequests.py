@@ -48,8 +48,9 @@ class HttpRequests:
             body = json.dumps(body)
 
         try:
+            x= "?" if "?" not in f"{self.config.url}/{path}" else "&"
             response = self._operation(http_operation)(
-                url=f"{self.config.url}/{path}",
+                url=f"{self.config.url}/{path}{x}telemetry=True",
                 timeout=self.config.timeout,
                 headers=req_headers,
                 data=body,
