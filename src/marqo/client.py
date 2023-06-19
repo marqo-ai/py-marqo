@@ -151,10 +151,9 @@ class Client:
         except error_wrappers.ValidationError as e:
             raise errors.InvalidArgError(f"some parameters in search query(s) are invalid. Errors are: {e.errors()}")
 
-        translated = utils.translate_device_string_for_url(device)
-        
+        translated_device_param = f"{f'?&device={utils.translate_device_string_for_url(device)}' if device is not None else ''}"
         return self.http.post(
-            f"indexes/bulk/search?device={translated}",
+            f"indexes/bulk/search{translated_device_param}",
             body=BulkSearchQuery(queries=parsed_queries).json()
         )
 

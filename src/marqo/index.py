@@ -157,8 +157,8 @@ class Index:
             show_highlights = highlights if show_highlights is True else show_highlights
 
         path_with_query_str = (
-            f"indexes/{self.index_name}/search?"
-            f"&device={utils.translate_device_string_for_url(device)}"
+            f"indexes/{self.index_name}/search"
+            f"{f'?&device={utils.translate_device_string_for_url(device)}' if device is not None else ''}"
         )
         body = {
             "q": q,
@@ -367,7 +367,7 @@ class Index:
         model_auth_param = (utils.convert_dict_to_url_params(model_auth) if model_auth else '')
         mappings_param = (utils.convert_dict_to_url_params(mappings) if mappings else '')
         query_str_params = (
-            f"{f'&device={utils.translate_device_string_for_url(device)}'}"
+            f"{f'&device={utils.translate_device_string_for_url(device)}' if device is not None else ''}"
             f"{f'&processes={processes}' if processes is not None else ''}"
             f"{f'&batch_size={server_batch_size}' if server_batch_size is not None else ''}"
             f"{f'&use_existing_tensors={str(use_existing_tensors).lower()}' if use_existing_tensors is not None else ''}"

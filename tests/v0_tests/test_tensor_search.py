@@ -165,10 +165,8 @@ class TestAddDocuments(MarqoTestCase):
             '"captain"')["hits"][0]["_id"] == "123456"
 
     def test_search_with_device(self):
-        """use default as defined in config unless overridden"""
+        """If device not set, do not add it to path"""
         temp_client = copy.deepcopy(self.client)
-        temp_client.config.search_device = "cpu:4"
-        temp_client.config.indexing_device = enums.Devices.cpu
 
         mock__post = mock.MagicMock()
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
@@ -179,7 +177,7 @@ class TestAddDocuments(MarqoTestCase):
         assert run()
         # did we use the defined default device?
         args, kwargs0 = mock__post.call_args_list[0]
-        assert "device=cpu4" in kwargs0["path"]
+        assert "device" not in kwargs0["path"]
         # did we overrride the default device?
         args, kwargs1 = mock__post.call_args_list[1]
         assert "device=cuda2" in kwargs1["path"]

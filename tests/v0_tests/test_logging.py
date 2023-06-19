@@ -61,7 +61,7 @@ class TestLogging(MarqoTestCase):
     def test_add_document_warnings_no_batching(self):
         self._create_img_index(index_name=self.index_name_1)
         with self.assertLogs('marqo', level='INFO') as cm:
-            self.client.index(index_name=self.index_name_1).add_documents(self._get_docs_to_index())
+            self.client.index(index_name=self.index_name_1).add_documents(self._get_docs_to_index(), device="cpu")
             assert len(cm.output) == 1
             assert "errors detected" in cm.output[0].lower()
             assert "info" in cm.output[0].lower()
@@ -87,7 +87,7 @@ class TestLogging(MarqoTestCase):
 
             with self.assertLogs('marqo', level='INFO') as cm:
                 self.client.index(index_name=self.index_name_1).add_documents(
-                    documents=self._get_docs_to_index(), **params)
+                    documents=self._get_docs_to_index(), device="cpu", **params)
                 print(params, expected)
                 assert len(cm.output) == expected['num_log_msgs']
                 error_messages = [msg.lower() for msg in cm.output if "errors detected" in msg.lower()]

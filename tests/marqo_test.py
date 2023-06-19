@@ -51,7 +51,6 @@ def mock_http_traffic(mock_config: List[MockHTTPTraffic], forbid_extra_calls: bo
                 def side_effect(http_operation, path, body=None, content_type=None):
                     if isinstance(body, str):
                         body = json.loads(body)
-
                     for i, config in enumerate(mock_config):
                         if http_operation == config.http_operation and path == config.path and body == config.body and content_type == config.content_type:
                             response = config.response if config.response else {}
