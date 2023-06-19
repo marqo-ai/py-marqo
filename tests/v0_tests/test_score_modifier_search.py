@@ -34,7 +34,6 @@ class TestScoreModifierSearch(MarqoTestCase):
             ], non_tensor_fields=["multiply_1", "multiply_2", "add_1", "add_2",
                                                        "filter"]
         )
-
         self.query = "what is the rider doing?"
 
     def tearDown(self) -> None:
@@ -65,13 +64,13 @@ class TestScoreModifierSearch(MarqoTestCase):
             }
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(lambda _: self.search_with_score_modifier(score_modifiers=None, filter_string="filter:original"))
+            self.warm_request(lambda: self.search_with_score_modifier(score_modifiers=None, filter_string="filter:original"))
         
         original_res = self.search_with_score_modifier(score_modifiers=None, filter_string="filter:original")
         original_score = original_res["hits"][0]["_score"]
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(lambda _: self.search_with_score_modifier(score_modifiers=score_modifiers))
+            self.warm_request(lambda: self.search_with_score_modifier(score_modifiers=score_modifiers))
         modifiers_res = self.search_with_score_modifier(score_modifiers=score_modifiers)
 
         modifiers_score = modifiers_res["hits"][0]["_score"]

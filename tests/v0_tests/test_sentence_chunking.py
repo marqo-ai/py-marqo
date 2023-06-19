@@ -18,7 +18,7 @@ class TestSentenceChunking(MarqoTestCase):
     def setUp(self) -> None:
         client_0 = Client(**self.client_settings)
         
-        self.index_name = 'sentence-chunk-test'
+        self.index_name = self.generic_test_index_name
 
         try:
             client_0.delete_index(self.index_name)
