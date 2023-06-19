@@ -263,6 +263,23 @@ class TestBulkSearch(MarqoTestCase):
 
         args, _ = mock__post.call_args_list[0]
         assert "device=cuda2" in args[0]
+    
+    def test_bulk_search_with_no_device(self):
+        """if no device is set, device should not be in path"""
+        temp_client = copy.deepcopy(self.client)
+
+        mock__post = mock.MagicMock()
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        def run():
+            temp_client.bulk_search([{
+                "index": self.index_name_1,
+                "q": "my search term"
+            }])
+            return True
+        assert run()
+
+        args, _ = mock__post.call_args_list[0]
+        assert "device" not in args[0]
 
     def test_prefiltering(self):
         self.client.create_index(index_name=self.index_name_1)

@@ -255,7 +255,7 @@ class TestAddDocuments(MarqoTestCase):
         for args, kwargs in mock__post.call_args_list[:-1]:
             assert "device=cuda37" in kwargs["path"]
 
-    def test_add_documents_default_device(self):
+    def test_add_documents_device_not_set(self):
         """If no device is set, do not even add device parameter to the API call
         """
         temp_client = copy.deepcopy(self.client)
