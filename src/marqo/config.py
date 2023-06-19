@@ -12,6 +12,7 @@ class Config:
     def __init__(
         self,
         url: str,
+        use_telemetry: bool = False,
         timeout: Optional[int] = None,
         indexing_device: Optional[Union[enums.Devices, str]] = None,
         search_device: Optional[Union[enums.Devices, str]] = None,
@@ -34,6 +35,7 @@ class Config:
         self.search_device = search_device if search_device is not None else default_device
         # suppress warnings until we figure out the dependency issues:
         # warnings.filterwarnings("ignore")
+        self.use_telemetry = use_telemetry
 
     def set_url(self, url):
         """Set the URL, and infers whether that url is remote"""

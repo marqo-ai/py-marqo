@@ -22,6 +22,7 @@ class Client:
         self, url: str = "http://localhost:8882", main_user: str = None, main_password: str = None,
         indexing_device: Optional[Union[enums.Devices, str]] = None,
         search_device: Optional[Union[enums.Devices, str]] = None,
+        return_telemetry: bool = False,
         api_key: str = None
     ) -> None:
         """
@@ -36,7 +37,7 @@ class Client:
             self.url = utils.construct_authorized_url(url_base=url, username=main_user, password=main_password)
         else:
             self.url = url
-        self.config = Config(self.url, indexing_device=indexing_device, search_device=search_device, api_key=api_key)
+        self.config = Config(self.url, use_telemetry=return_telemetry, indexing_device=indexing_device, search_device=search_device, api_key=api_key)
         self.http = HttpRequests(self.config)
 
     def create_index(
