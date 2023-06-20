@@ -24,6 +24,8 @@ class TestAddDocumentsPara(MarqoTestCase):
         self.identifiers = [str(uuid.uuid4()) for i in range(100)] 
         self.data = [{'text':f'somethingelse{i}', 'other_text':i[::-1], '_id':i} for i in self.identifiers]
 
+    """
+    NOTE: Removing multi-process functionality soon
 
     def test_add_documents_parallel_no_create_index_get(self) -> None:
 
@@ -91,3 +93,4 @@ class TestAddDocumentsPara(MarqoTestCase):
 
             res = self.client.index(self.index_name_1).search(text_1, search_method='LEXICAL')
             assert res['hits'][0]['text'] == text_1, f"{res}-{text_1}"
+    """
