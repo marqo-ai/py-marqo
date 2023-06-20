@@ -19,7 +19,7 @@ class Config:
         Parameters
         ----------
         url:
-            The url to the Marqo instance (ex: http://???)
+            The url to the Marqo instance (ex: http://localhost:8882)
         """
         self.cluster_is_remote = False
         self.cluster_is_s2search = False
