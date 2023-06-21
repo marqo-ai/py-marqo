@@ -9,7 +9,7 @@ class TestConstructPath(unittest.TestCase):
 
     def construct_path_helper(self, path, use_telemetry=None):
         r = HttpRequests(config=Config(use_telemetry=use_telemetry, url=self.base_url))
-        return r.construct_path(path)
+        return r._construct_path(path)
 
     def test_construct_path_with_telemetry_enabled(self):
         result = self.construct_path_helper("testpath", True)
