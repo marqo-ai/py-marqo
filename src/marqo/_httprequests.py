@@ -32,6 +32,13 @@ class HttpRequests:
 
         return OPERATION_MAPPING[method]
 
+    def _construct_path(self, path: str) -> str:
+        """Augment the URL request path based if telemetry is required."""
+        if self.config.use_telemetry:
+            delimeter= "?" if "?" not in f"{self.config.url}/{path}" else "&"
+            return f"{self.config.url}/{path}{delimeter}telemetry=True"
+        return f"{self.config.url}/{path}"
+
     def send_request(
         self,
         http_operation: HTTP_OPERATIONS,
@@ -49,7 +56,7 @@ class HttpRequests:
 
         try:
             response = self._operation(http_operation)(
-                url=f"{self.config.url}/{path}",
+                url=self._construct_path(path),
                 timeout=self.config.timeout,
                 headers=req_headers,
                 data=body,
