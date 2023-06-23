@@ -226,8 +226,6 @@ class TestAddDocuments(MarqoTestCase):
 
     def test_add_documents_with_device(self):
         temp_client = copy.deepcopy(self.client)
-        temp_client.config.search_device = enums.Devices.cpu
-        temp_client.config.indexing_device = enums.Devices.cpu
 
         mock__post = mock.MagicMock()
 
@@ -244,8 +242,6 @@ class TestAddDocuments(MarqoTestCase):
 
     def test_add_documents_with_device_batching(self):
         temp_client = copy.deepcopy(self.client)
-        temp_client.config.search_device = enums.Devices.cpu
-        temp_client.config.indexing_device = enums.Devices.cpu
 
         mock__post = mock.MagicMock()
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
@@ -259,14 +255,10 @@ class TestAddDocuments(MarqoTestCase):
         for args, kwargs in mock__post.call_args_list[:-1]:
             assert "device=cuda37" in kwargs["path"]
 
-    def test_add_documents_default_device(self):
-        """do we use the default device defined in the client, if it isn't
-        overridden?
+    def test_add_documents_device_not_set(self):
+        """If no device is set, do not even add device parameter to the API call
         """
         temp_client = copy.deepcopy(self.client)
-        temp_client.config.search_device = enums.Devices.cpu
-        temp_client.config.indexing_device = "cuda:28"
-
         mock__post = mock.MagicMock()
 
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
@@ -278,7 +270,7 @@ class TestAddDocuments(MarqoTestCase):
         assert run()
 
         args, kwargs = mock__post.call_args
-        assert "device=cuda28" in kwargs["path"]
+        assert "device" not in kwargs["path"]
 
     def test_add_documents_set_refresh(self):
         temp_client = copy.deepcopy(self.client)

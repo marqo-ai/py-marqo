@@ -19,11 +19,13 @@ class TestAddDocumentsPara(MarqoTestCase):
         except MarqoApiError as s:
             pass
         
-        self.para_params = {'server_batch_size':10, 'processes':2}
+        self.para_params = {'server_batch_size':10, 'processes':2, 'device': "cpu"}
         self.sleep = 1
         self.identifiers = [str(uuid.uuid4()) for i in range(100)] 
         self.data = [{'text':f'somethingelse{i}', 'other_text':i[::-1], '_id':i} for i in self.identifiers]
 
+
+    #NOTE: Removing multi-process functionality soon
 
     def test_add_documents_parallel_no_create_index_get(self) -> None:
 
