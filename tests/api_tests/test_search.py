@@ -3,13 +3,14 @@ import marqo
 from marqo import enums
 from unittest import mock
 from marqo.client import Client
-from marqo.errors import MarqoApiError
+from marqo.errors import MarqoApiError, MarqoWebError
 import unittest
 import pprint
 from tests.marqo_test import MarqoTestCase
 from tests.utilities import disallow_environments
+import pytest
 
-class TestAddDocuments(MarqoTestCase):
+class TestSearch(MarqoTestCase):
 
     def setUp(self) -> None:
         self.client = Client(**self.client_settings)
@@ -108,11 +109,9 @@ class TestAddDocuments(MarqoTestCase):
         assert self.client.index(self.index_name_1).search(
             '"captain"')["hits"][0]["_id"] == "123456"
 
-    def test_search_with_device(self):
+    def test_search_with_no_device(self):
         """use default as defined in config unless overridden"""
         temp_client = copy.deepcopy(self.client)
-        temp_client.config.search_device = "cpu:4"
-        temp_client.config.indexing_device = enums.Devices.cpu
 
         mock__post = mock.MagicMock()
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
@@ -121,10 +120,10 @@ class TestAddDocuments(MarqoTestCase):
             temp_client.index(self.index_name_1).search(q="my search term", device="cuda:2")
             return True
         assert run()
-        # did we use the defined default device?
+        # no device in path when device is not set
         args, kwargs0 = mock__post.call_args_list[0]
-        assert "device=cpu4" in kwargs0["path"]
-        # did we overrride the default device?
+        assert "device" not in kwargs0["path"]
+        # device in path if it is set
         args, kwargs1 = mock__post.call_args_list[1]
         assert "device=cuda2" in kwargs1["path"]
 
@@ -254,3 +253,32 @@ class TestAddDocuments(MarqoTestCase):
 
         self.assertEqual(custom_score, original_score)
         
+@pytest.mark.cpu_only_test
+class TestSearchCPUOnly(MarqoTestCase):
+
+    def setUp(self) -> None:
+        self.client = Client(**self.client_settings)
+        self.index_name_1 = "my-test-index-1"
+        try:
+            self.client.delete_index(self.index_name_1)
+        except MarqoApiError as s:
+            pass
+
+    def tearDown(self) -> None:
+        try:
+            self.client.delete_index(self.index_name_1)
+        except MarqoApiError as s:
+            pass
+
+    def test_search_device_not_available(self):
+        """
+            Ensures that when cuda is NOT available, an error is thrown when trying to use cuda
+        """
+        self.client.create_index(self.index_name_1)
+
+        # Add docs with CUDA must fail if CUDA is not available
+        try:
+            self.client.index(self.index_name_1).search(q="blah", device="cuda")
+            raise AssertionError
+        except MarqoWebError:
+            pass

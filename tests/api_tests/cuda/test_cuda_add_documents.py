@@ -8,11 +8,11 @@ import unittest
 from tests.marqo_test import MarqoTestCase
 from marqo import enums
 from unittest import mock
+import numpy as np
 
 @pytest.mark.cuda_test
 class TestAddDocuments(MarqoTestCase):
 
-    # NOTE: test_add_documents_default_device has been removed from these cuda tests
     def setUp(self) -> None:
         self.client = Client(**self.client_settings)
         self.index_name_1 = "my-test-index-1"
@@ -160,8 +160,6 @@ class TestAddDocuments(MarqoTestCase):
 
     def test_add_documents_with_device(self):
         temp_client = copy.deepcopy(self.client)
-        temp_client.config.search_device = enums.Devices.cpu
-        temp_client.config.indexing_device = enums.Devices.cpu
 
         mock__post = mock.MagicMock()
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
@@ -177,8 +175,6 @@ class TestAddDocuments(MarqoTestCase):
 
     def test_add_documents_with_device_batching(self):
         temp_client = copy.deepcopy(self.client)
-        temp_client.config.search_device = enums.Devices.cpu
-        temp_client.config.indexing_device = enums.Devices.cpu
 
         mock__post = mock.MagicMock()
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
@@ -194,8 +190,6 @@ class TestAddDocuments(MarqoTestCase):
 
     def test_add_documents_set_refresh(self):
         temp_client = copy.deepcopy(self.client)
-        temp_client.config.search_device = enums.Devices.cpu
-        temp_client.config.indexing_device = enums.Devices.cpu
 
         mock__post = mock.MagicMock()
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
@@ -241,3 +235,33 @@ class TestAddDocuments(MarqoTestCase):
 
         args, kwargs = mock__post.call_args
         assert "processes=12" not in kwargs["path"]
+
+    def test_add_documents_defaults_to_cuda(self):
+        """
+            Ensures that when cuda is available, when we send an add docs request with no device,
+            cuda is selected as default and used for this.
+        """
+        index_settings = {
+            "index_defaults": {
+                # model was chosen due to bigger difference between cuda and cpu vectors
+                "model": "open_clip/ViT-B-32-quickgelu/laion400m_e31",
+                "normalize_embeddings": True
+            }
+        }
+
+        self.client.create_index(self.index_name_1, settings_dict=index_settings)
+
+        self.client.index(self.index_name_1).add_documents([{"_id": "explicit_cpu", "title": "blah"}], device="cpu")
+        self.client.index(self.index_name_1).add_documents([{"_id": "explicit_cuda", "title": "blah"}], device="cuda")
+        self.client.index(self.index_name_1).add_documents([{"_id": "default_device", "title": "blah"}])
+
+        cpu_vec = self.client.index(self.index_name_1).get_document(document_id="explicit_cpu", expose_facets=True)['_tensor_facets'][0]["_embedding"]
+        cuda_vec = self.client.index(self.index_name_1).get_document(document_id="explicit_cuda", expose_facets=True)['_tensor_facets'][0]["_embedding"]
+        default_vec = self.client.index(self.index_name_1).get_document(document_id="default_device", expose_facets=True)['_tensor_facets'][0]["_embedding"]
+
+        # Confirm that CUDA was used by default.
+        # CUDA-computed vectors are slightly different from CPU-computed vectors
+        assert not np.allclose(np.array(cpu_vec), np.array(default_vec), atol=1e-5)
+        assert np.allclose(np.array(cuda_vec), np.array(default_vec), atol=1e-5)
+
+        

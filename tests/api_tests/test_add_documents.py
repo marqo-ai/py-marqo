@@ -6,7 +6,8 @@ import unittest
 from tests.marqo_test import MarqoTestCase
 from marqo import enums
 from unittest import mock
-
+import numpy as np
+import pytest
 
 class TestAddDocuments(MarqoTestCase):
 
@@ -209,8 +210,6 @@ class TestAddDocuments(MarqoTestCase):
 
     def test_add_documents_with_device(self):
         temp_client = copy.deepcopy(self.client)
-        temp_client.config.search_device = enums.Devices.cpu
-        temp_client.config.indexing_device = enums.Devices.cpu
 
         mock__post = mock.MagicMock()
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
@@ -226,8 +225,6 @@ class TestAddDocuments(MarqoTestCase):
 
     def test_add_documents_with_device_batching(self):
         temp_client = copy.deepcopy(self.client)
-        temp_client.config.search_device = enums.Devices.cpu
-        temp_client.config.indexing_device = enums.Devices.cpu
 
         mock__post = mock.MagicMock()
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
@@ -241,13 +238,10 @@ class TestAddDocuments(MarqoTestCase):
         for args, kwargs in mock__post.call_args_list:
             assert "device=cuda37" in kwargs["path"]
 
-    def test_add_documents_default_device(self):
-        """do we use the default device defined in the client, if it isn't
-        overridden?
+    def test_add_documents_no_device(self):
+        """No device should be in path if no device is set
         """
         temp_client = copy.deepcopy(self.client)
-        temp_client.config.search_device = enums.Devices.cpu
-        temp_client.config.indexing_device = "cuda:28"
 
         mock__post = mock.MagicMock()
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
@@ -259,12 +253,10 @@ class TestAddDocuments(MarqoTestCase):
         assert run()
 
         args, kwargs = mock__post.call_args
-        assert "device=cuda28" in kwargs["path"]
+        assert "device" not in kwargs["path"]
 
     def test_add_documents_set_refresh(self):
         temp_client = copy.deepcopy(self.client)
-        temp_client.config.search_device = enums.Devices.cpu
-        temp_client.config.indexing_device = enums.Devices.cpu
 
         mock__post = mock.MagicMock()
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
@@ -310,3 +302,59 @@ class TestAddDocuments(MarqoTestCase):
 
         args, kwargs = mock__post.call_args
         assert "processes=12" not in kwargs["path"]
+
+
+@pytest.mark.cpu_only_test
+class TestAddDocumentsCPUOnly(MarqoTestCase):
+
+    def setUp(self) -> None:
+        self.client = Client(**self.client_settings)
+        self.index_name_1 = "my-test-index-1"
+        try:
+            self.client.delete_index(self.index_name_1)
+        except MarqoApiError as s:
+            pass
+
+    def tearDown(self) -> None:
+        try:
+            self.client.delete_index(self.index_name_1)
+        except MarqoApiError as s:
+            pass
+
+    def test_add_documents_defaults_to_cpu(self):
+        """
+            Ensures that when cuda is NOT available, when we send an add docs request with no device,
+            cuda is selected as default and used for this.
+        """
+        index_settings = {
+            "index_defaults": {
+                # model was chosen due to bigger difference between cuda and cpu vectors
+                "model": "open_clip/ViT-B-32-quickgelu/laion400m_e31",
+                "normalize_embeddings": True
+            }
+        }
+
+        self.client.create_index(self.index_name_1, settings_dict=index_settings)
+
+        self.client.index(self.index_name_1).add_documents([{"_id": "explicit_cpu", "title": "blah"}], device="cpu")
+        self.client.index(self.index_name_1).add_documents([{"_id": "default_device", "title": "blah"}])
+        
+        cpu_vec = self.client.index(self.index_name_1).get_document(document_id="explicit_cpu", expose_facets=True)['_tensor_facets'][0]["_embedding"]
+        default_vec = self.client.index(self.index_name_1).get_document(document_id="default_device", expose_facets=True)['_tensor_facets'][0]["_embedding"]
+
+        # Confirm that CPU was used by default.
+        # CPU-computed vectors are slightly different from CUDA-computed vectors
+        assert np.allclose(np.array(cpu_vec), np.array(default_vec), atol=1e-5)
+
+    def test_add_documents_device_not_available(self):
+        """
+            Ensures that when cuda is NOT available, an error is thrown when trying to use cuda
+        """
+        self.client.create_index(self.index_name_1)
+
+        # Add docs with CUDA must fail if CUDA is not available
+        try:
+            self.client.index(self.index_name_1).add_documents([{"_id": "explicit_cuda", "title": "blah"}], device="cuda")
+            raise AssertionError
+        except MarqoWebError:
+            pass

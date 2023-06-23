@@ -3,12 +3,12 @@ import marqo
 from marqo import enums
 from unittest import mock
 from marqo.client import Client
-from marqo.errors import MarqoApiError
+from marqo.errors import MarqoApiError, MarqoWebError
 import requests
 import random
 import math
 from tests.marqo_test import MarqoTestCase
-
+import pytest
 
 class TestBulkSearch(MarqoTestCase):
 
@@ -148,11 +148,9 @@ class TestBulkSearch(MarqoTestCase):
         assert self.client.index(self.index_name_1).search(
             '"captain"')["hits"][0]["_id"] == "123456"
 
-    def test_search_with_device(self):
-        """use default as defined in config unless overridden"""
+    def test_search_with_no_device(self):
+        """device should not be in path"""
         temp_client = copy.deepcopy(self.client)
-        temp_client.config.search_device = "cpu:4"
-        temp_client.config.indexing_device = enums.Devices.cpu
 
         mock__post = mock.MagicMock()
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
@@ -168,10 +166,10 @@ class TestBulkSearch(MarqoTestCase):
             return True
         assert run()
 
-        # did we use the defined default device?
+        # make sure we did not send any device
         args, _ = mock__post.call_args_list[0]
-        assert "device=cpu4" in args[0]
-        # did we overrride the default device?
+        assert "device" not in args[0]
+        # make sure we do send device (if explicitly set)
         args, _ = mock__post.call_args_list[1]
         assert "device=cuda2" in args[0]
 
@@ -332,3 +330,36 @@ class TestBulkSearch(MarqoTestCase):
             # the poodle doc should be lower ranked than the irrelevant doc
             for hit_position, _ in enumerate(res['hits']):
                 assert res['hits'][hit_position]['_id'] == expected_ordering[hit_position]
+
+@pytest.mark.cpu_only_test
+class TestBulkSearchCPUOnly(MarqoTestCase):
+
+    def setUp(self) -> None:
+        self.client = Client(**self.client_settings)
+        self.index_name_1 = "my-test-index-1"
+        try:
+            self.client.delete_index(self.index_name_1)
+        except MarqoApiError as s:
+            pass
+
+    def tearDown(self) -> None:
+        try:
+            self.client.delete_index(self.index_name_1)
+        except MarqoApiError as s:
+            pass
+
+    def test_bulk_search_device_not_available(self):
+        """
+            Ensures that when cuda is NOT available, an error is thrown when trying to use cuda
+        """
+        self.client.create_index(self.index_name_1)
+
+        # Add docs with CUDA must fail if CUDA is not available
+        try:
+            self.client.bulk_search([{
+                "index": self.index_name_1,
+                "q": "title about some doc"
+            }], device="cuda")
+            raise AssertionError
+        except MarqoWebError:
+            pass
