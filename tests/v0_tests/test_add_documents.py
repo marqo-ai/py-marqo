@@ -663,11 +663,11 @@ class TestAddDocuments(MarqoTestCase):
              patch.object(Index, 'refresh') as mock_refresh:
             for add_documents_kwargs in add_documents_kwargs_list:
                 res = self.client.index(self.index_name_1).add_documents(**add_documents_kwargs)
-                mock_refresh.assert_not_called()
 
         # In client_batch, we always send "refresh=false" in the body and call a refresh at the end if auto_refresh is True
         self.assertIn("refresh=false", mock_post.call_args_list[0][1]['path'])
         self.assertIn("refresh=false", mock_post.call_args_list[1][1]['path'])
+        mock_refresh.assert_not_called()
 
     def test_auto_refresh_true_with_client_batch(self):
         self.client.create_index(index_name=self.index_name_1)
@@ -680,6 +680,7 @@ class TestAddDocuments(MarqoTestCase):
              patch.object(Index, 'refresh') as mock_refresh:
             res = self.client.index(self.index_name_1).add_documents(documents=[d1], auto_refresh=True, client_batch_size=10)
 
+        # In client_batch, we always send "refresh=false" in the body and call a refresh at the end if auto_refresh is True
         self.assertIn("refresh=false", mock_post.call_args_list[0][1]['path'])
         mock_refresh.assert_called_once()
 
