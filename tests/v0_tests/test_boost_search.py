@@ -32,7 +32,7 @@ class TestBoostSearch(MarqoTestCase):
                     "Description": "A history of household pets",
                     "_id": "d2"
                 }
-            ]
+            ], auto_refresh=True
         )
 
         self.query = "What are the best pets"

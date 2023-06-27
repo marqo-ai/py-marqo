@@ -27,7 +27,7 @@ class TestCustomVectorSearch(MarqoTestCase):
                     "Description": "A history of household pets",
                     "_id": "d2"
                 }
-            ]
+            ], auto_refresh=True
         )
         self.vector_dim = 512
 

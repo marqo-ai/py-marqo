@@ -32,7 +32,7 @@ class TestScoreModifierSearch(MarqoTestCase):
                  "filter": "original"
                  },
             ], non_tensor_fields=["multiply_1", "multiply_2", "add_1", "add_2",
-                                                       "filter"]
+                                                       "filter"], auto_refresh=True
         )
         self.query = "what is the rider doing?"
 

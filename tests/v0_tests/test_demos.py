@@ -37,7 +37,7 @@ class TestDemo(MarqoTestCase):
                 S2Search is based in Melbourne. Melbourne has beautiful waterways running through it.
                 """
             },
-        ])
+        ], auto_refresh=True)
         print("\nSearching the phrase 'River' across all fields")
         
         if self.IS_MULTI_INSTANCE:
@@ -68,7 +68,7 @@ class TestDemo(MarqoTestCase):
                                "mobility, life support, and communications for astronauts",
                 "_id": "article_591"
             }
-        ])
+        ], auto_refresh=True)
 
         if self.IS_MULTI_INSTANCE:
             self.warm_request(mq.index("my-first-index").search,
@@ -134,7 +134,7 @@ class TestDemo(MarqoTestCase):
                 "is an extinct carnivorous marsupial."
                 "The last known of its species died in 1936.",
             },
-        ])
+        ], auto_refresh=True)
 
         r1 = mq.index("my-weighted-query-index").get_stats()
         assert r1["numberOfDocuments"] == 3
@@ -223,7 +223,7 @@ class TestDemo(MarqoTestCase):
                         "image": 0.7,
                     },
                 }
-            },
+            }, auto_refresh=True
         )
 
         r1 = mq.index("my-first-multimodal-index").get_stats()

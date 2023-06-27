@@ -176,7 +176,7 @@ class TestBulkSearch(MarqoTestCase):
     def test_search_highlights(self):
         """Tests if show_highlights works and if the deprecation behaviour is expected"""
         self.client.create_index(index_name=self.index_name_1)
-        self.client.index(index_name=self.index_name_1).add_documents([{"f1": "some doc"}])
+        self.client.index(index_name=self.index_name_1).add_documents([{"f1": "some doc"}], auto_refresh=True)
         for params, expected_highlights_presence in [
                 ({}, True),
                 ({"showHighlights": False}, False),

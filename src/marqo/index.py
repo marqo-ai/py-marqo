@@ -239,7 +239,7 @@ class Index:
     def add_documents(
         self,
         documents: List[Dict[str, Any]],
-        auto_refresh=False,
+        auto_refresh: bool = False,
         server_batch_size: int = None,
         client_batch_size: int = None,
         processes: int = None,
