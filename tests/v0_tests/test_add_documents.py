@@ -141,7 +141,7 @@ class TestAddDocuments(MarqoTestCase):
             "completely": "different doc.",
             "field X": "this is a solid doc"
         }
-        self.client.index(self.index_name_1).add_documents([d2])
+        self.client.index(self.index_name_1).add_documents([d2], auto_refresh=True)
         assert d2 == self.client.index(self.index_name_1).get_document("56")
 
     def test_add_batched_documents(self):
@@ -199,7 +199,7 @@ class TestAddDocuments(MarqoTestCase):
 
     def test_delete_docs_empty_ids(self):
         self.client.create_index(index_name=self.index_name_1)
-        self.client.index(self.index_name_1).add_documents([{"abc": "efg", "_id": "123"}])
+        self.client.index(self.index_name_1).add_documents([{"abc": "efg", "_id": "123"}], auto_refresh=True)
         try:
             self.client.index(self.index_name_1).delete_documents([])
             raise AssertionError
@@ -212,7 +212,7 @@ class TestAddDocuments(MarqoTestCase):
     def test_get_document(self):
         my_doc = {"abc": "efg", "_id": "123"}
         self.client.create_index(index_name=self.index_name_1)
-        self.client.index(self.index_name_1).add_documents([my_doc])
+        self.client.index(self.index_name_1).add_documents([my_doc], auto_refresh=True)
         retrieved = self.client.index(self.index_name_1).get_document(document_id='123')
         assert retrieved == my_doc
 
@@ -222,7 +222,7 @@ class TestAddDocuments(MarqoTestCase):
             raise AssertionError
         except MarqoWebError as s:
             assert "index_not_found" == s.code
-        self.client.index(self.index_name_1).add_documents([{"abd": "efg"}])
+        self.client.index(self.index_name_1).add_documents([{"abd": "efg"}], auto_refresh=True)
         # it works:
         self.client.index(self.index_name_1).search("some str")
 
@@ -235,7 +235,7 @@ class TestAddDocuments(MarqoTestCase):
         def run():
             temp_client.index(self.index_name_1).add_documents(documents=[
                 {"d1": "blah"}, {"d2", "some data"}
-            ], device="cuda:45")
+            ], device="cuda:45", auto_refresh=True)
             return True
         assert run()
 
@@ -250,7 +250,7 @@ class TestAddDocuments(MarqoTestCase):
         def run():
             temp_client.index(self.index_name_1).add_documents(documents=[
                 {"d1": "blah"}, {"d2", "some data"}, {"d2331": "blah"}, {"45d2", "some data"}
-            ], client_batch_size=2, device="cuda:37")
+            ], client_batch_size=2, device="cuda:37", auto_refresh=True)
             return True
         assert run()
         assert len(mock__post.call_args_list) == 3
@@ -267,7 +267,7 @@ class TestAddDocuments(MarqoTestCase):
         def run():
             temp_client.index(self.index_name_1).add_documents(documents=[
                 {"d1": "blah"}, {"d2", "some data"}
-            ])
+            ], auto_refresh=True)
             return True
         assert run()
 
