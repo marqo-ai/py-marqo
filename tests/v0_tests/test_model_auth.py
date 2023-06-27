@@ -43,7 +43,7 @@ class TestAddDocuments(MarqoTestCase):
             expected_str = f"&model_auth={convert_dict_to_url_params(mock_s3_model_auth)}"
             self.client.index(index_name=self.index_name_1).add_documents(
                 documents=[{"some": f"data {i}"} for i in range(20)], model_auth=mock_s3_model_auth,
-                client_batch_size=10
+                client_batch_size=10, auto_refresh=True
             )
             for call in mock__post.call_args_list:
                 _, kwargs = call

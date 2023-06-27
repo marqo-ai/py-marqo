@@ -90,7 +90,7 @@ def with_documents(index_to_documents_fn: Callable[[], Dict[str, List[Dict[str, 
                 if len(docs) == 0:
                     continue
                 self.client.create_index(index_name=index_name)
-                self.client.index(index_name).add_documents(docs)
+                self.client.index(index_name).add_documents(docs, auto_refresh=True)
                 if self.IS_MULTI_INSTANCE:
                     self.warm_request(self.client.bulk_search, [{
                         "index": index_name,
