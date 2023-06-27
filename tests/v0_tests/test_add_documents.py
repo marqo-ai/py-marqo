@@ -10,6 +10,9 @@ from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
 from tests.marqo_test import MarqoTestCase
 from marqo import enums
 from unittest import mock
+from tests.marqo_test import mock_http_traffic, with_documents, MockHTTPTraffic, MarqoTestCase
+from unittest.mock import patch
+from marqo.index import Index
 
 
 class TestAddDocuments(MarqoTestCase):
@@ -619,3 +622,109 @@ class TestAddDocuments(MarqoTestCase):
 
         space_tensor_res = self.client.index(self.index_name_1).search("")
         assert space_tensor_res["hits"][0]["_id"] == "111"
+
+    def test_auto_refresh_false_or_default_no_client_batch(self):
+        self.client.create_index(index_name=self.index_name_1)
+        d1 = {
+                "doc title": "Cool Document 1",
+                "field 1": "some extra info",
+            }
+
+        add_documents_kwargs_list = [{"documents": [d1, ], "auto_refresh": False}, {"documents": [d1, ]}]
+        with patch("marqo._httprequests.HttpRequests.post") as mock_post:
+            for add_documents_kwargs in add_documents_kwargs_list:
+                res = self.client.index(self.index_name_1).add_documents(**add_documents_kwargs)
+
+        self.assertIn("refresh=false", mock_post.call_args_list[0][1]['path'])
+        self.assertIn("refresh=false", mock_post.call_args_list[1][1]['path'])
+
+    def test_auto_refresh_true_no_client_batch(self):
+        self.client.create_index(index_name=self.index_name_1)
+        d1 = {
+            "doc title": "Cool Document 1",
+            "field 1": "some extra info",
+        }
+
+        with patch("marqo._httprequests.HttpRequests.post") as mock_post, \
+             patch.object(Index, 'refresh') as mock_refresh:
+            res = self.client.index(self.index_name_1).add_documents(documents=[d1], auto_refresh=True)
+        self.assertIn("refresh=true", mock_post.call_args_list[0][1]['path'])
+
+    def test_auto_refresh_false_or_default_with_client_batch(self):
+        self.client.create_index(index_name=self.index_name_1)
+        d1 = {
+                "doc title": "Cool Document 1",
+                "field 1": "some extra info",
+            }
+
+        add_documents_kwargs_list = [{"documents": [d1, ], "client_batch_size": 10, "auto_refresh": False},
+                                     {"documents": [d1, ],"client_batch_size": 10}]
+        with patch("marqo._httprequests.HttpRequests.post") as mock_post, \
+             patch.object(Index, 'refresh') as mock_refresh:
+            for add_documents_kwargs in add_documents_kwargs_list:
+                res = self.client.index(self.index_name_1).add_documents(**add_documents_kwargs)
+                mock_refresh.assert_not_called()
+
+        # In client_batch, we always send "refresh=false" in the body and call a refresh at the end if auto_refresh is True
+        self.assertIn("refresh=false", mock_post.call_args_list[0][1]['path'])
+        self.assertIn("refresh=false", mock_post.call_args_list[1][1]['path'])
+
+    def test_auto_refresh_true_with_client_batch(self):
+        self.client.create_index(index_name=self.index_name_1)
+        d1 = {
+                "doc title": "Cool Document 1",
+                "field 1": "some extra info",
+            }
+
+        with patch("marqo._httprequests.HttpRequests.post") as mock_post, \
+             patch.object(Index, 'refresh') as mock_refresh:
+            res = self.client.index(self.index_name_1).add_documents(documents=[d1], auto_refresh=True, client_batch_size=10)
+
+        self.assertIn("refresh=false", mock_post.call_args_list[0][1]['path'])
+        mock_refresh.assert_called_once()
+
+    def test_delete_documents_refresh_false_or_default(self):
+        self.client.create_index(index_name=self.index_name_1)
+        d1 = {
+                "doc title": "Cool Document 1",
+                "field 1": "some extra info",
+                "_id" : "123"
+            }
+
+        d2 = {
+            "doc title": "Cool Document 2",
+            "field 1": "some extra info with extra tests",
+            "_id": "456"
+        }
+
+        delete_documents_kwargs_list = [{
+            "ids": ["123"], "auto_refresh": False},
+            {"ids": ["123"]}]
+
+
+        res = self.client.index(self.index_name_1).add_documents(documents=[d1, d2], auto_refresh=True, client_batch_size=10)
+
+        with patch("marqo._httprequests.HttpRequests.post") as mock_post:
+            for delete_documents_kwargs in delete_documents_kwargs_list:
+                res = self.client.index(self.index_name_1).delete_documents(**delete_documents_kwargs)
+
+        self.assertIn("refresh=false", mock_post.call_args_list[0][1]['path'])
+        self.assertIn("refresh=false", mock_post.call_args_list[1][1]['path'])
+
+    def test_delete_documents_refresh_true(self):
+        self.client.create_index(index_name=self.index_name_1)
+        d1 = {
+                "doc title": "Cool Document 1",
+                "field 1": "some extra info",
+                "_id" : "123"
+            }
+
+        res = self.client.index(self.index_name_1).add_documents(documents=[d1], auto_refresh=True, client_batch_size=10)
+
+        with patch("marqo._httprequests.HttpRequests.post") as mock_post:
+            res = self.client.index(self.index_name_1).delete_documents(ids=["123"], auto_refresh=True)
+
+        self.assertIn("refresh=true", mock_post.call_args_list[0][1]['path'])
+
+
+

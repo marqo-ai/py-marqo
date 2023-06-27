@@ -239,7 +239,7 @@ class Index:
     def add_documents(
         self,
         documents: List[Dict[str, Any]],
-        auto_refresh=True,
+        auto_refresh=False,
         server_batch_size: int = None,
         client_batch_size: int = None,
         processes: int = None,
@@ -255,9 +255,9 @@ class Index:
 
         Args:
             documents: List of documents. Each document should be a dictionary.
-            auto_refresh: Automatically refresh the index. If you are making
-                lots of requests, it is advised to set this to False to
-                increase performance.
+            auto_refresh: Whether automatically refresh the index or not, default is False.
+                If you need your documents to be available immediately after indexing,
+                set this to True.
             server_batch_size: if it is set, documents will be indexed into batches
                 on the server as they are indexed. Otherwise documents are unbatched
                 server-side.
@@ -291,7 +291,7 @@ class Index:
     def update_documents(
         self,
         documents: List[Dict[str, Any]],
-        auto_refresh=True,
+        auto_refresh = False,
         server_batch_size: int = None,
         client_batch_size: int = None,
         processes: int = None,
@@ -305,9 +305,9 @@ class Index:
 
         Args:
             documents: List of documents. Each document should be a dictionary.
-            auto_refresh: Automatically refresh the index. If you are making
-                lots of requests, it is advised to turn this to false to
-                increase performance.
+            auto_refresh: Whether automatically refresh the index or not, default is False.
+                If you need your documents to be available immediately after indexing,
+                set this to True.
             server_batch_size: if it is set, documents will be indexed into batches
                 on the server as they are indexed. Otherwise documents are unbatched
                 server-side.
@@ -338,7 +338,7 @@ class Index:
         self,
         update_method: str,
         documents: List[Dict[str, Any]],
-        auto_refresh=True,
+        auto_refresh: bool,
         server_batch_size: int = None,
         client_batch_size: int = None,
         processes: int = None,
@@ -452,7 +452,7 @@ class Index:
         mq_logger.debug(f"add_documents completed. total time taken: {(total_add_docs_time):.3f}s.")
         return res
 
-    def delete_documents(self, ids: List[str], auto_refresh: bool = None) -> Dict[str, int]:
+    def delete_documents(self, ids: List[str], auto_refresh: bool = False) -> Dict[str, int]:
         """Delete documents from this index by a list of their ids.
 
         Args:
@@ -463,7 +463,7 @@ class Index:
             A dict with information about the delete operation.
         """
         base_path = f"indexes/{self.index_name}/documents/delete-batch"
-        path_with_refresh = base_path if auto_refresh is None else base_path + f"?refresh={str(auto_refresh).lower()}"
+        path_with_refresh = base_path + f"?refresh={str(auto_refresh).lower()}"
 
         return self.http.post(
             path=path_with_refresh, body=ids
@@ -490,7 +490,7 @@ class Index:
             self, docs: List[Dict],  base_path: str,
             query_str_params: str,
             update_method: str, verbose: bool = True,
-            auto_refresh: bool = True, batch_size: int = 50
+            auto_refresh: bool = False, batch_size: int = 50
     ) -> List[Dict[str, Any]]:
         """Batches a large chunk of documents to be sent as multiple
         add_documents invocations
