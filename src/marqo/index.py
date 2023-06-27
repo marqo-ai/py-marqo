@@ -280,7 +280,7 @@ class Index:
             non_tensor_fields = []
         if image_download_headers is None:
             image_download_headers = dict()
-        return self._generic_add_update_docs(
+        return self._add_docs_organiser(
             update_method="replace",
             documents=documents, auto_refresh=auto_refresh, server_batch_size=server_batch_size,
             client_batch_size=client_batch_size, processes=processes, device=device, non_tensor_fields=non_tensor_fields,
@@ -288,53 +288,7 @@ class Index:
             model_auth=model_auth
         )
 
-    def update_documents(
-        self,
-        documents: List[Dict[str, Any]],
-        auto_refresh=True,
-        server_batch_size: int = None,
-        client_batch_size: int = None,
-        processes: int = None,
-        device: str = None,
-        non_tensor_fields: List[str] = None,
-    ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
-        """
-        Will be deprecated soon.
-        Add documents to this index. Does a partial updates on existing documents,
-        based on their ID. Adds unseen documents to the index.
-
-        Args:
-            documents: List of documents. Each document should be a dictionary.
-            auto_refresh: Automatically refresh the index. If you are making
-                lots of requests, it is advised to turn this to false to
-                increase performance.
-            server_batch_size: if it is set, documents will be indexed into batches
-                on the server as they are indexed. Otherwise documents are unbatched
-                server-side.
-            client_batch_size: if it is set, documents will be indexed into batches
-                in the client, before being sent of. Otherwise documents are unbatched
-                client-side.
-            processes: number of processes for the server to use, to do indexing,
-            device: the device used to index the data. Examples include "cpu",
-                "cuda" and "cuda:2"
-            non_tensor_fields: fields within documents to not create and store tensors against.
-
-        Returns:
-            Response body outlining indexing result
-        """
-        mq_logger.warning(
-            "`update_documents()` is deprecated and will be removed in a future release. "
-            "To update documents with minimal inference operations, use `add_documents()` "
-            "with use_existing_tensors=True ")
-        if non_tensor_fields is None:
-            non_tensor_fields = []
-        return self._generic_add_update_docs(
-            update_method="update",
-            documents=documents, auto_refresh=auto_refresh, server_batch_size=server_batch_size,
-            client_batch_size=client_batch_size, processes=processes, device=device, non_tensor_fields=non_tensor_fields,
-        )
-
-    def _generic_add_update_docs(
+    def _add_docs_organiser(
         self,
         update_method: str,
         documents: List[Dict[str, Any]],
