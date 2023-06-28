@@ -281,7 +281,6 @@ class Index:
         if image_download_headers is None:
             image_download_headers = dict()
         return self._add_docs_organiser(
-            update_method="replace",
             documents=documents, auto_refresh=auto_refresh, server_batch_size=server_batch_size,
             client_batch_size=client_batch_size, processes=processes, device=device, non_tensor_fields=non_tensor_fields,
             use_existing_tensors=use_existing_tensors, image_download_headers=image_download_headers, mappings=mappings,
@@ -290,7 +289,6 @@ class Index:
 
     def _add_docs_organiser(
         self,
-        update_method: str,
         documents: List[Dict[str, Any]],
         auto_refresh=True,
         server_batch_size: int = None,
@@ -340,7 +338,7 @@ class Index:
                 raise errors.InvalidArgError("Batch size can't be less than 1!")
             res = self._batch_request(
                 base_path=base_path, auto_refresh=auto_refresh,
-                update_method=update_method, docs=documents, verbose=False,
+                docs=documents, verbose=False,
                 query_str_params=query_str_params, batch_size=client_batch_size
             )
 
@@ -352,14 +350,7 @@ class Index:
             # ADD DOCS TIMER-LOGGER (2)
             start_time_client_request = timer()
 
-            if update_method == 'update':
-                res = self.http.put(path=path_with_query_str, body=documents)
-            elif update_method == 'replace':
-                res = self.http.post(path=path_with_query_str, body=documents)
-            else:
-                raise ValueError(f'Received unknown update_method `{update_method}`. '
-                                 f'Allowed update_methods: ["replace", "update"] ')
-
+            res = self.http.post(path=path_with_query_str, body=documents)
 
             end_time_client_request = timer()
             total_client_request_time = end_time_client_request - start_time_client_request
@@ -442,8 +433,7 @@ class Index:
 
     def _batch_request(
             self, docs: List[Dict],  base_path: str,
-            query_str_params: str,
-            update_method: str, verbose: bool = True,
+            query_str_params: str, verbose: bool = True,
             auto_refresh: bool = True, batch_size: int = 50
     ) -> List[Dict[str, Any]]:
         """Batches a large chunk of documents to be sent as multiple
@@ -480,13 +470,8 @@ class Index:
             errors_detected = False
 
             t0 = timer()
-            if update_method == 'replace':
-                res = self.http.post(path=path_with_query_str, body=docs)
-            elif update_method == 'update':
-                res = self.http.put(path=path_with_query_str, body=docs)
-            else:
-                raise ValueError(f'Received unknown update_method `{update_method}`. '
-                                 f'Allowed update_methods: ["replace", "update"] ')
+            res = self.http.post(path=path_with_query_str, body=docs)
+
             total_batch_time = timer() - t0
             num_docs = len(docs)
 
