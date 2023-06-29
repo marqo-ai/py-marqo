@@ -147,6 +147,7 @@ class TestAddDocuments(MarqoTestCase):
             self.client.delete_index(self.index_name_1)
         except MarqoApiError:
             pass
+        self.client.create_index(self.index_name_1)
         ix = self.client.index(index_name=self.index_name_1)
         doc_ids = [str(num) for num in range(0, 100)]
 
@@ -220,6 +221,7 @@ class TestAddDocuments(MarqoTestCase):
             raise AssertionError
         except MarqoWebError as s:
             assert "index_not_found" == s.code
+        self.client.create_index(self.index_name_1)
         self.client.index(self.index_name_1).add_documents([{"abd": "efg"}])
         # it works:
         self.client.index(self.index_name_1).search("some str")
@@ -325,6 +327,7 @@ class TestAddDocuments(MarqoTestCase):
 
     def test_update_documents(self):
         original_doc = {"d1": "blah", "_id": "1234"}
+        self.client.create_index(self.index_name_1)
         self.client.index(self.index_name_1).add_documents(documents=[original_doc])
         assert original_doc == self.client.index(self.index_name_1).get_document(document_id='1234')
         new_doc = {"_id": "brand_new", "Content": "fascinating"}
@@ -478,6 +481,7 @@ class TestAddDocuments(MarqoTestCase):
 
     def test_add_lists_non_tensor(self):
         original_doc = {"d1": "blah", "_id": "1234", 'my list': ['tag-1', 'tag-2']}
+        self.client.create_index(self.index_name_1)
         self.client.index(self.index_name_1).add_documents(documents=[original_doc], non_tensor_fields=['my list'])
 
         if self.IS_MULTI_INSTANCE:
@@ -501,6 +505,7 @@ class TestAddDocuments(MarqoTestCase):
         assert len(bad_res['hits']) == 0
 
     def test_use_existing_fields(self):
+        self.client.create_index(self.index_name_1)
         self.client.index(index_name=self.index_name_1).add_documents(
             documents=[
                 {
