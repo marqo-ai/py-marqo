@@ -354,6 +354,7 @@ class TestSearch(MarqoTestCase):
             "dont#tensorise Me": "Dog",
             "tensorise_me": "quarterly earnings report"
         }]
+        self.client.create_index(index_name=self.index_name_1)
         self.client.index(index_name=self.index_name_1).add_documents(
             docs, auto_refresh=True, non_tensor_fields=["dont#tensorise Me"]
         )
@@ -380,7 +381,8 @@ class TestSearch(MarqoTestCase):
                 filter_field: "Alpaca"
             }
             ]
-            add_res = self.client.index(index_name=self.index_name_1).add_documents(
+            self.client.create_index(self.index_name_1)
+            self.client.index(index_name=self.index_name_1).add_documents(
                 docs, auto_refresh=True, non_tensor_fields=[field_to_not_search]
             )
 

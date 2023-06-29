@@ -18,7 +18,9 @@ class TestAddDocumentsPara(MarqoTestCase):
             self.client.delete_index(self.index_name_1)
         except MarqoApiError as s:
             pass
-        
+
+        self.client.create_index(self.index_name_1)
+
         self.para_params = {'server_batch_size':10, 'processes':2, 'device': "cpu"}
         self.sleep = 1
         self.identifiers = [str(uuid.uuid4()) for i in range(100)] 
@@ -27,13 +29,7 @@ class TestAddDocumentsPara(MarqoTestCase):
 
     #NOTE: Removing multi-process functionality soon
 
-    def test_add_documents_parallel_no_create_index_get(self) -> None:
-
-        try:
-            self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
-            pass
-
+    def test_add_documents_parallel_get(self) -> None:
         identifiers = self.identifiers
         data = self.data
 
@@ -46,13 +42,7 @@ class TestAddDocumentsPara(MarqoTestCase):
             res = self.client.index(self.index_name_1).get_document(_id)
             assert res == data[identifiers.index(_id)]
 
-    def test_add_documents_parallel_no_create_index_search_single_field(self) -> None:
-
-        try:
-            self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
-            pass
-
+    def test_add_documents_parallel_search_single_field(self) -> None:
         identifiers = self.identifiers
         data = self.data
 
@@ -69,13 +59,7 @@ class TestAddDocumentsPara(MarqoTestCase):
             res = self.client.index(self.index_name_1).search(text_1, search_method='LEXICAL', searchable_attributes=['text', 'other_text'])
             assert res['hits'][0]['text'] == text_1, f"{res}-{text_1}"
 
-    def test_add_documents_parallel_no_create_index_search(self) -> None:
-
-        try:
-            self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
-            pass
-
+    def test_add_documents_parallel_search(self) -> None:
         identifiers = self.identifiers
         data = self.data
 
