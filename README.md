@@ -106,6 +106,7 @@ import marqo
 
 mq = marqo.Client(url='http://localhost:8882')
 
+mq.create_index("my-first-index")
 mq.index("my-first-index").add_documents([
     {
         "Title": "The Travels of Marco Polo",
@@ -276,6 +277,7 @@ import pprint
 
 mq = marqo.Client(url="http://localhost:8882")
 
+mq.create_index("my-weighted-query-index")
 mq.index("my-weighted-query-index").add_documents(
     [
         {
