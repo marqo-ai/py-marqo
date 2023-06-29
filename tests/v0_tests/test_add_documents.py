@@ -3,6 +3,8 @@ import functools
 import math
 import pprint
 import random
+
+import pytest
 import requests
 import time
 from marqo.client import Client
@@ -215,17 +217,11 @@ class TestAddDocuments(MarqoTestCase):
         retrieved = self.client.index(self.index_name_1).get_document(document_id='123')
         assert retrieved == my_doc
 
-    def test_add_documents_implicitly_create_index(self):
-        try:
-            self.client.index(self.index_name_1).search("some str")
-            raise AssertionError
-        except MarqoWebError as s:
-            assert "index_not_found" == s.code
-        self.client.create_index(self.index_name_1)
-        self.client.index(self.index_name_1).add_documents([{"abd": "efg"}])
-        # it works:
-        self.client.index(self.index_name_1).search("some str")
+    def test_add_documents_missing_index_fails(self):
+        with pytest.raises(MarqoWebError) as ex:
+            self.client.index(self.index_name_1).add_documents([{"abd": "efg"}])
 
+        assert "index_not_found" == ex.value.code
     def test_add_documents_with_device(self):
         temp_client = copy.deepcopy(self.client)
 
