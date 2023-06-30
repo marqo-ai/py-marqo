@@ -242,7 +242,6 @@ class Index:
         auto_refresh=True,
         server_batch_size: int = None,
         client_batch_size: int = None,
-        processes: int = None,
         device: str = None,
         non_tensor_fields: List[str] = None,
         use_existing_tensors: bool = False,
@@ -264,7 +263,6 @@ class Index:
             client_batch_size: if it is set, documents will be indexed into batches
                 in the client, before being sent off. Otherwise documents are unbatched
                 client-side.
-            processes: number of processes for the server to use, to do indexing,
             device: the device used to index the data. Examples include "cpu",
                 "cuda" and "cuda:2"
             non_tensor_fields: fields within documents to not create and store tensors against.
@@ -282,7 +280,7 @@ class Index:
             image_download_headers = dict()
         return self._add_docs_organiser(
             documents=documents, auto_refresh=auto_refresh, server_batch_size=server_batch_size,
-            client_batch_size=client_batch_size, processes=processes, device=device, non_tensor_fields=non_tensor_fields,
+            client_batch_size=client_batch_size, device=device, non_tensor_fields=non_tensor_fields,
             use_existing_tensors=use_existing_tensors, image_download_headers=image_download_headers, mappings=mappings,
             model_auth=model_auth
         )
@@ -293,7 +291,6 @@ class Index:
         auto_refresh=True,
         server_batch_size: int = None,
         client_batch_size: int = None,
-        processes: int = None,
         device: str = None,
         non_tensor_fields: List = None,
         use_existing_tensors: bool = False,
@@ -320,7 +317,6 @@ class Index:
         mappings_param = (utils.convert_dict_to_url_params(mappings) if mappings else '')
         query_str_params = (
             f"{f'&device={utils.translate_device_string_for_url(device)}' if device is not None else ''}"
-            f"{f'&processes={processes}' if processes is not None else ''}"
             f"{f'&batch_size={server_batch_size}' if server_batch_size is not None else ''}"
             f"{f'&use_existing_tensors={str(use_existing_tensors).lower()}' if use_existing_tensors is not None else ''}"
             f"{f'&{non_tensor_fields_query_param}' if len(non_tensor_fields) > 0 else ''}"
@@ -361,28 +357,13 @@ class Index:
             if server_batch_size is not None:
                 # with Server Batching (show processing time for each batch)
                 mq_logger.debug(f"add_documents Marqo index (server-side batch reports): ")
-
-                if processes is not None and processes > 1:
-                    # for multiprocess, timing messages should be arranged by process, then batch
-                    for process in range(len(res)):
-                        mq_logger.debug(f"   process {process}:")
-
-                        for batch in range(len(res[process])):
-                            server_batch_result_count = len(res[process][batch]["items"])
-                            mq_logger.debug(f"       marqo server batch {batch}: "
-                                            f"processed {server_batch_result_count} docs in {(res[process][batch]['processingTimeMs'] / 1000):.3f}s, "
-                                            f"for an average of {(res[process][batch]['processingTimeMs'] / (1000 * server_batch_result_count)):.3f}s per doc.")
-                            if 'errors' in res[process][batch] and res[process][batch]['errors']:
-                                errors_detected = True
-                else:
-                    # for single process, timing messages should be arranged by batch ONLY
-                    for batch in range(len(res)):
-                        server_batch_result_count = len(res[batch]["items"])
-                        mq_logger.debug(f"   marqo server batch {batch}: "
-                                        f"processed {server_batch_result_count} docs in {(res[batch]['processingTimeMs'] / 1000):.3f}s, "
-                                        f"for an average of {(res[batch]['processingTimeMs'] / (1000 * server_batch_result_count)):.3f}s per doc.")
-                        if 'errors' in res[batch] and res[batch]['errors']:
-                            errors_detected = True
+                for batch in range(len(res)):
+                    server_batch_result_count = len(res[batch]["items"])
+                    mq_logger.debug(f"   marqo server batch {batch}: "
+                                    f"processed {server_batch_result_count} docs in {(res[batch]['processingTimeMs'] / 1000):.3f}s, "
+                                    f"for an average of {(res[batch]['processingTimeMs'] / (1000 * server_batch_result_count)):.3f}s per doc.")
+                    if 'errors' in res[batch] and res[batch]['errors']:
+                        errors_detected = True
             else:
                 # no Server Batching
                 if 'processingTimeMs' in res:       # Only outputs log if response is non-empty
