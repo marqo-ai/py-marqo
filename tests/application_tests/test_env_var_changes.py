@@ -133,4 +133,3 @@ class TestEnvVarChanges(marqo_test.MarqoTestCase):
         # Assert correct models
         res = self.client.get_loaded_models()
         assert set([item["model_name"] for item in res["models"]]) == set(new_models)
-

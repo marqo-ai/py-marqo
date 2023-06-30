@@ -20,6 +20,7 @@ class TestDemo(MarqoTestCase):
 
     def test_demo(self):
         client = Client(**self.client_settings)
+        client.create_index("cool-index-1")
         client.index("cool-index-1").add_documents([
             {
                 "Title": "The Legend of the River",
@@ -49,6 +50,8 @@ class TestDemo(MarqoTestCase):
         import marqo
 
         mq = marqo.Client(url=self.authorized_url, main_user="admin", main_password="admin")
+
+        mq.create_index("my-first-index")
 
         mq.index("my-first-index").add_documents([
             {

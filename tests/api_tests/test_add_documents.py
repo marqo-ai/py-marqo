@@ -139,6 +139,7 @@ class TestAddDocuments(MarqoTestCase):
         assert d2 == self.client.index(self.index_name_1).get_document("56")
 
     def test_add_batched_documents(self):
+        self.client.create_index(index_name=self.index_name_1)
         ix = self.client.index(index_name=self.index_name_1)
         doc_ids = [str(num) for num in range(0, 100)]
         docs = [
@@ -198,15 +199,11 @@ class TestAddDocuments(MarqoTestCase):
 
     # user experience tests:
 
-    def test_add_documents_implicitly_create_index(self):
-        try:
-            self.client.index(self.index_name_1).search("some str")
-            raise AssertionError
-        except MarqoWebError as s:
-            assert "index_not_found" == s.code
-        self.client.index(self.index_name_1).add_documents([{"abd": "efg"}])
-        # it works:
-        self.client.index(self.index_name_1).search("some str")
+    def test_add_documents_missing_index_fails(self):
+        with pytest.raises(MarqoWebError) as ex:
+            self.client.index(self.index_name_1).add_documents([{"abd": "efg"}])
+
+        assert "index_not_found" == ex.value.code
 
     def test_add_documents_with_device(self):
         temp_client = copy.deepcopy(self.client)

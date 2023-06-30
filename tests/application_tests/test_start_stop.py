@@ -35,6 +35,7 @@ class TestStartStop(marqo_test.MarqoTestCase):
 
             d1 = {"Title": "The colour of plants", "_id": "fact_1"}
             d2 = {"Title": "some frogs", "_id": "fact_2"}
+            self.client.create_index(self.index_name_1)
             self.client.index(self.index_name_1).add_documents(documents=[d1, d2])
             search_res_0 = self.client.index(self.index_name_1).search(q="General nature facts")
             assert (search_res_0["hits"][0]["_id"] == "fact_1") or (search_res_0["hits"][0]["_id"] == "fact_2")

@@ -35,7 +35,9 @@ class TestAddDocumentsPara(MarqoTestCase):
         identifiers = self.identifiers
         data = self.data
 
-        res = self.client.index(self.index_name_1).add_documents(data, **self.para_params)
+        self.client.create_index(self.index_name_1)
+
+        self.client.index(self.index_name_1).add_documents(data, **self.para_params)
 
         time.sleep(self.sleep)
 
@@ -54,7 +56,9 @@ class TestAddDocumentsPara(MarqoTestCase):
         identifiers = self.identifiers
         data = self.data
 
-        res = self.client.index(self.index_name_1).add_documents(data, **self.para_params)
+        self.client.create_index(self.index_name_1)
+
+        self.client.index(self.index_name_1).add_documents(data, **self.para_params)
 
         time.sleep(self.sleep)
 

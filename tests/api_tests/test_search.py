@@ -162,6 +162,7 @@ class TestSearch(MarqoTestCase):
             "dont#tensorise Me": "Dog",
             "tensorise_me": "quarterly earnings report"
         }]
+        self.client.create_index(self.index_name_1)
         self.client.index(index_name=self.index_name_1).add_documents(
             docs, auto_refresh=True, non_tensor_fields=["dont#tensorise Me"]
         )
