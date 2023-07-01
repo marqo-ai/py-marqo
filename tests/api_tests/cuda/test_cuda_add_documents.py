@@ -89,6 +89,7 @@ class TestAddDocuments(MarqoTestCase):
         assert d2 == self.client.index(self.index_name_1).get_document("56")
 
     def test_add_batched_documents(self):
+        self.client.create_index(self.index_name_1)
         ix = self.client.index(index_name=self.index_name_1)
         doc_ids = [str(num) for num in range(0, 100)]
         docs = [
@@ -148,16 +149,6 @@ class TestAddDocuments(MarqoTestCase):
 
     # user experience tests:
 
-    def test_add_documents_implicitly_create_index(self):
-        try:
-            self.client.index(self.index_name_1).search("some str", device="cuda")
-            raise AssertionError
-        except MarqoWebError as s:
-            assert "index_not_found" == s.code
-        self.client.index(self.index_name_1).add_documents([{"abd": "efg"}], device="cuda")
-        # it works:
-        self.client.index(self.index_name_1).search("some str", device="cuda")
-
     def test_add_documents_with_device(self):
         temp_client = copy.deepcopy(self.client)
 
@@ -207,20 +198,6 @@ class TestAddDocuments(MarqoTestCase):
         assert "refresh=false" in kwargs0["path"]
         args, kwargs1 = mock__post.call_args_list[1]
         assert "refresh=true" in kwargs1["path"]
-
-    def test_add_documents_with_processes(self):
-        mock__post = mock.MagicMock()
-
-        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
-        def run():
-            self.client.index(self.index_name_1).add_documents(documents=[
-                {"d1": "blah"}, {"d2", "some data"}
-            ], device="cuda", processes=12)
-            return True
-        assert run()
-
-        args, kwargs = mock__post.call_args
-        assert "processes=12" in kwargs["path"]
 
     def test_add_documents_with_no_processes(self):
         mock__post = mock.MagicMock()

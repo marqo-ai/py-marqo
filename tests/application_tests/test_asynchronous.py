@@ -34,16 +34,16 @@ class TestAsync (marqo_test.MarqoTestCase):
             "field X": "this is a solid doc",
             "_id": "56"
         }
+        self.client.create_index(self.index_name_1)
         self.client.index(self.index_name_1).add_documents([d1])
         assert self.client.index(self.index_name_1).get_stats()['numberOfDocuments'] == 1
-
 
         def significant_ingestion():
             docs = [{"Title": " ".join(random.choices(population=vocab, k=10)),
                           "Description": " ".join(random.choices(population=vocab, k=25)),
                           } for _ in range(num_docs)]
             self.client.index(self.index_name_1).add_documents(
-                auto_refresh=True, documents=docs, server_batch_size=1, processes=1)
+                auto_refresh=True, documents=docs, server_batch_size=1)
 
         cache_update_thread = threading.Thread(
             target=significant_ingestion)

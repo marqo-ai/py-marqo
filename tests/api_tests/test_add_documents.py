@@ -272,20 +272,6 @@ class TestAddDocuments(MarqoTestCase):
         args, kwargs1 = mock__post.call_args_list[1]
         assert "refresh=true" in kwargs1["path"]
 
-    def test_add_documents_with_processes(self):
-        mock__post = mock.MagicMock()
-
-        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
-        def run():
-            self.client.index(self.index_name_1).add_documents(documents=[
-                {"d1": "blah"}, {"d2", "some data"}
-            ], processes=12)
-            return True
-        assert run()
-
-        args, kwargs = mock__post.call_args
-        assert "processes=12" in kwargs["path"]
-
     def test_add_documents_with_no_processes(self):
         mock__post = mock.MagicMock()
 
