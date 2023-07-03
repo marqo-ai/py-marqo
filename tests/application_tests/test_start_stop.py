@@ -12,6 +12,9 @@ class TestStartStop(marqo_test.MarqoTestCase):
     def setUp(self) -> None:
         self.client = Client(**self.client_settings)
         self.index_name_1 = "my-test-index-1"
+        self._delete_index()
+
+    def _delete_index(self):
         try:
             self.client.delete_index(self.index_name_1)
         except MarqoApiError as s:
@@ -35,6 +38,7 @@ class TestStartStop(marqo_test.MarqoTestCase):
 
             d1 = {"Title": "The colour of plants", "_id": "fact_1"}
             d2 = {"Title": "some frogs", "_id": "fact_2"}
+            self._delete_index()
             self.client.create_index(self.index_name_1)
             self.client.index(self.index_name_1).add_documents(documents=[d1, d2])
             search_res_0 = self.client.index(self.index_name_1).search(q="General nature facts")
