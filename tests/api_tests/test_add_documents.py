@@ -148,7 +148,7 @@ class TestAddDocuments(MarqoTestCase):
              "_id": doc_id}
             for doc_id in doc_ids]
 
-        ix.add_documents(docs, server_batch_size=20)
+        ix.add_documents(docs)
         ix.refresh()
         # TODO we should do a count in here...
         # takes too long to search for all
@@ -219,21 +219,6 @@ class TestAddDocuments(MarqoTestCase):
 
         args, kwargs = mock__post.call_args
         assert "device=cuda45" in kwargs["path"]
-
-    def test_add_documents_with_device_batching(self):
-        temp_client = copy.deepcopy(self.client)
-
-        mock__post = mock.MagicMock()
-        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
-        def run():
-            temp_client.index(self.index_name_1).add_documents(documents=[
-                {"d1": "blah"}, {"d2", "some data"}, {"d2331": "blah"}, {"45d2", "some data"}
-            ], server_batch_size=2, device="cuda:37")
-            return True
-        assert run()
-        assert len(mock__post.call_args_list) == 1
-        for args, kwargs in mock__post.call_args_list:
-            assert "device=cuda37" in kwargs["path"]
 
     def test_add_documents_no_device(self):
         """No device should be in path if no device is set
