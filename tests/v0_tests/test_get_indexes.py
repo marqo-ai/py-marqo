@@ -1,11 +1,8 @@
-import pprint
-import time
-import marqo.index
 from marqo.client import Client
-from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
-import unittest
+from marqo.errors import MarqoApiError
 from tests.marqo_test import MarqoTestCase
-
+import time
+from typing import Dict, List
 
 class TestAddDocuments(MarqoTestCase):
 
@@ -27,9 +24,9 @@ class TestAddDocuments(MarqoTestCase):
             except MarqoApiError:
                 pass
 
-    def _is_index_name_in_get_indexes_response(self, index_name, get_indexes_response):
+    def _is_index_name_in_get_indexes_response(self, index_name: str, get_indexes_response: Dict[str, List[Dict[str, str]]]):
         for found_index in get_indexes_response['results']:
-            if index_name == found_index.index_name:
+            if index_name == found_index["index_name"]:
                 return True
         return False
 
@@ -53,31 +50,4 @@ class TestAddDocuments(MarqoTestCase):
         assert len(ix_1['results']) > len(ix_0['results'])
 
         for found_index in ix_2['results']:
-            assert isinstance(found_index, marqo.index.Index)
-
-    def test_get_indexes_usable(self):
-        """Are the indices we get back usable? """
-        self.client.create_index(self.index_name_1)
-        get_ixes_res = self.client.get_indexes()
-        assert self._is_index_name_in_get_indexes_response(self.index_name_1, get_ixes_res)
-
-        my_ix = None
-        for found_index in get_ixes_res['results']:
-            if self.index_name_1 == found_index.index_name:
-                my_ix = found_index
-
-        if my_ix is None:
-            raise AssertionError
-
-        assert my_ix.get_stats()['numberOfDocuments'] == 0
-        my_ix.add_documents([{'some doc': 'gold fish'}])
-
-        if self.IS_MULTI_INSTANCE:
-            time.sleep(1)
-
-        assert my_ix.get_stats()['numberOfDocuments'] == 1
-
-        if self.IS_MULTI_INSTANCE:
-            self.warm_request(my_ix.search,q='aquatic animal')
-
-        assert len(my_ix.search(q='aquatic animal')['hits']) == 1
+            assert isinstance(found_index, dict)
