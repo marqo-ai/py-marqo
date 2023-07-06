@@ -71,11 +71,9 @@ class TestLogging(MarqoTestCase):
         params_expected = [
             # so no client batching, that means no batch info output,  and therefore only 1 warning
             ({}, {"num_log_msgs": 1, "num_errors_msgs": 1}),
-            ({'server_batch_size': 5}, {"num_log_msgs": 1, "num_errors_msgs": 1}),
 
             # one error message, one regular info message per client batch
             ({"client_batch_size": 5}, {"num_log_msgs": 6, "num_errors_msgs": 2}),
-            ({"client_batch_size": 10, 'server_batch_size': 5}, {"num_log_msgs": 4, "num_errors_msgs": 2}),
         ]
         for params, expected in params_expected:
 
