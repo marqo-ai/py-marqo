@@ -2,6 +2,7 @@ from typing import Optional, Union
 from marqo import enums, utils
 import urllib3
 import warnings
+from marqo.marqo_url_resolver import MarqoUrlResolver
 
 
 class Config:
@@ -24,9 +25,11 @@ class Config:
         """
         self.cluster_is_remote = False
         self.cluster_is_s2search = False
+        self.cluster_is_marqo = False
+        self.marqo_url_resolver = None
+        self.api_key = api_key
         self.url = self.set_url(url)
         self.timeout = timeout
-        self.api_key = api_key
         # suppress warnings until we figure out the dependency issues:
         # warnings.filterwarnings("ignore")
         self.use_telemetry = use_telemetry
@@ -43,5 +46,15 @@ class Config:
             self.cluster_is_remote = True
             if "s2search.io" in lowered_url:
                 self.cluster_is_s2search = True
+            if "api.marqo.ai" in lowered_url:
+                self.cluster_is_marqo = True
+                self.marqo_url_resolver = MarqoUrlResolver(api_key=self.api_key, expiration_time=60)
         self.url = url
         return self.url
+
+    def get_url(self, index_name=None,):
+        if not self.cluster_is_marqo:
+            return self.url
+        if self.cluster_is_marqo and not index_name:
+            return self.url + "/api"
+        return self.marqo_url_resolver.urls_mapping[index_name]

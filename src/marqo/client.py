@@ -46,7 +46,9 @@ class Client:
         sentences_per_chunk=2,
         sentence_overlap=0,
         image_preprocessing_method=None,
-        settings_dict=None
+        settings_dict=None,
+        inference_type="marqo.small",
+        storage_type="marqo.medium",
     ) -> Dict[str, Any]:
         """Create the index.
 
@@ -61,6 +63,8 @@ class Client:
             settings_dict: if specified, overwrites all other setting
                 parameters, and is passed directly as the index's
                 index_settings
+            inference_type:
+            storage_type:
         Returns:
             Response body, containing information about index creation result
         """
@@ -70,7 +74,7 @@ class Client:
             model=model, normalize_embeddings=normalize_embeddings,
             sentences_per_chunk=sentences_per_chunk, sentence_overlap=sentence_overlap,
             image_preprocessing_method=image_preprocessing_method,
-            settings_dict=settings_dict
+            settings_dict=settings_dict, inference_type=inference_type, storage_type=storage_type,
         )
 
     def delete_index(self, index_name: str) -> Dict[str, Any]:
@@ -101,7 +105,7 @@ class Client:
         """
         ix = Index(self.config, index_name)
         # verify it exists:
-        self.http.get(path=f"indexes/{index_name}/stats")
+        self.http.get(path=f"indexes/{index_name}/stats", index_name=index_name)
         return ix
 
     def index(self, index_name: str) -> Index:
@@ -170,18 +174,14 @@ class Client:
     def health(self):
         return self.http.get(path="health")
 
-
     def eject_model(self, model_name:str, model_device:str):
         return self.http.delete(path=f"models?model_name={model_name}&model_device={model_device}")
-
 
     def get_loaded_models(self):
         return self.http.get(path="models")
 
-
     def get_cuda_info(self):
         return self.http.get(path="device/cuda")
-
 
     def get_cpu_info(self):
         return self.http.get(path="device/cpu")
