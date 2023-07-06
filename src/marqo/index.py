@@ -239,8 +239,7 @@ class Index:
     def add_documents(
         self,
         documents: List[Dict[str, Any]],
-        auto_refresh=True,
-        server_batch_size: int = None,
+        auto_refresh: bool = True,
         client_batch_size: int = None,
         device: str = None,
         non_tensor_fields: List[str] = None,
@@ -257,9 +256,6 @@ class Index:
             auto_refresh: Automatically refresh the index. If you are making
                 lots of requests, it is advised to set this to False to
                 increase performance.
-            server_batch_size: if it is set, documents will be indexed into batches
-                on the server as they are indexed. Otherwise documents are unbatched
-                server-side.
             client_batch_size: if it is set, documents will be indexed into batches
                 in the client, before being sent off. Otherwise documents are unbatched
                 client-side.
@@ -279,7 +275,7 @@ class Index:
         if image_download_headers is None:
             image_download_headers = dict()
         return self._add_docs_organiser(
-            documents=documents, auto_refresh=auto_refresh, server_batch_size=server_batch_size,
+            documents=documents, auto_refresh=auto_refresh,
             client_batch_size=client_batch_size, device=device, non_tensor_fields=non_tensor_fields,
             use_existing_tensors=use_existing_tensors, image_download_headers=image_download_headers, mappings=mappings,
             model_auth=model_auth
@@ -289,7 +285,6 @@ class Index:
         self,
         documents: List[Dict[str, Any]],
         auto_refresh=True,
-        server_batch_size: int = None,
         client_batch_size: int = None,
         device: str = None,
         non_tensor_fields: List = None,
@@ -317,7 +312,6 @@ class Index:
         mappings_param = (utils.convert_dict_to_url_params(mappings) if mappings else '')
         query_str_params = (
             f"{f'&device={utils.translate_device_string_for_url(device)}' if device is not None else ''}"
-            f"{f'&batch_size={server_batch_size}' if server_batch_size is not None else ''}"
             f"{f'&use_existing_tensors={str(use_existing_tensors).lower()}' if use_existing_tensors is not None else ''}"
             f"{f'&{non_tensor_fields_query_param}' if len(non_tensor_fields) > 0 else ''}"
             f"{f'&image_download_headers={image_download_headers_param}' if image_download_headers else ''}"
@@ -354,23 +348,12 @@ class Index:
             mq_logger.debug(f"add_documents roundtrip: took {(total_client_request_time):.3f}s to send {num_docs} "
                             f"docs to Marqo (roundtrip, unbatched), for an average of {(total_client_request_time / num_docs):.3f}s per doc.")
             errors_detected = False
-            if server_batch_size is not None:
-                # with Server Batching (show processing time for each batch)
-                mq_logger.debug(f"add_documents Marqo index (server-side batch reports): ")
-                for batch in range(len(res)):
-                    server_batch_result_count = len(res[batch]["items"])
-                    mq_logger.debug(f"   marqo server batch {batch}: "
-                                    f"processed {server_batch_result_count} docs in {(res[batch]['processingTimeMs'] / 1000):.3f}s, "
-                                    f"for an average of {(res[batch]['processingTimeMs'] / (1000 * server_batch_result_count)):.3f}s per doc.")
-                    if 'errors' in res[batch] and res[batch]['errors']:
-                        errors_detected = True
-            else:
-                # no Server Batching
-                if 'processingTimeMs' in res:       # Only outputs log if response is non-empty
-                    mq_logger.debug(f"add_documents Marqo index: took {(res['processingTimeMs'] / 1000):.3f}s for Marqo to process & index {num_docs} "
-                                    f"docs (server unbatched), for an average of {(res['processingTimeMs'] / (1000 * num_docs)):.3f}s per doc.")
-                if 'errors' in res and res['errors']:
-                    mq_logger.info(error_detected_message)
+
+            if 'processingTimeMs' in res:       # Only outputs log if response is non-empty
+                mq_logger.debug(f"add_documents Marqo index: took {(res['processingTimeMs'] / 1000):.3f}s for Marqo to process & index {num_docs} "
+                                f"docs (server unbatched), for an average of {(res['processingTimeMs'] / (1000 * num_docs)):.3f}s per doc.")
+            if 'errors' in res and res['errors']:
+                mq_logger.info(error_detected_message)
 
             if errors_detected:
                 mq_logger.info(error_detected_message)
