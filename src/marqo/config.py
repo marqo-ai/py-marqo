@@ -53,6 +53,9 @@ class Config:
         return self.url
 
     def get_url(self, index_name=None,):
+        """Get the URL, and infers whether that url is marqo cloud,
+        and if it is targeting a specific index,
+        kicks off the url resolver refresh process if needed"""
         if not self.cluster_is_marqo:
             return self.url
         if self.cluster_is_marqo and not index_name:

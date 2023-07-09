@@ -47,10 +47,11 @@ class Client:
         sentence_overlap=0,
         image_preprocessing_method=None,
         settings_dict=None,
-        inference_type="marqo.small",
-        storage_type="marqo.medium",
+        inference_node_type=None,
+        storage_node_type=None,
+        inference_node_count=1,
     ) -> Dict[str, Any]:
-        """Create the index.
+        """Create the index. Please refer to the marqo cloud to see options for inference and storage node types.
 
         Args:
             index_name: name of the index.
@@ -63,8 +64,9 @@ class Client:
             settings_dict: if specified, overwrites all other setting
                 parameters, and is passed directly as the index's
                 index_settings
-            inference_type:
-            storage_type:
+            inference_node_type:
+            storage_node_type:
+            inference_node_count;
         Returns:
             Response body, containing information about index creation result
         """
@@ -74,7 +76,8 @@ class Client:
             model=model, normalize_embeddings=normalize_embeddings,
             sentences_per_chunk=sentences_per_chunk, sentence_overlap=sentence_overlap,
             image_preprocessing_method=image_preprocessing_method,
-            settings_dict=settings_dict, inference_type=inference_type, storage_type=storage_type,
+            settings_dict=settings_dict, inference_node_type=inference_node_type, storage_node_type=storage_node_type,
+            inference_node_count=inference_node_count
         )
 
     def delete_index(self, index_name: str) -> Dict[str, Any]:

@@ -201,3 +201,12 @@ class TestIndex(MarqoTestCase):
         index_setting = self.client.index(self.index_name_1).get_settings()
         print(index_setting)
         assert intended_replicas == index_setting['number_of_replicas']
+
+    @mock.patch("marqo._httprequests.HttpRequests.post", return_value="Record added to DynamoDB table successfully")
+    @mock.patch("marqo._httprequests.HttpRequests.get", return_value={"index_status": "READY"})
+    def test_create_marqo_cloud_index(self, mock_post, mock_get):
+        self.client.config.url = "https://api.marqo.ai"
+        self.client.config.api_key = 'some-super-secret-API-key'
+        self.client.config.cluster_is_marqo = True
+        result = self.client.create_index(index_name=self.index_name_1)
+        assert result == "Record added to DynamoDB table successfully"

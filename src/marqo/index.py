@@ -57,8 +57,9 @@ class Index:
                sentence_overlap=0,
                image_preprocessing_method=None,
                settings_dict: dict = None,
-               inference_type: str = "marqo.CPU",
-               storage_type: str = "marqo.medium",
+               inference_node_type: str = None,
+               storage_node_type: str = None,
+               inference_node_count: int = 1,
                ) -> Dict[str, Any]:
         """Create the index.
 
@@ -74,8 +75,9 @@ class Index:
             settings_dict: if specified, overwrites all other setting
                 parameters, and is passed directly as the index's
                 index_settings
-            inference_type: inference type for the index
-            storage_type: storage type for the index
+            inference_node_type: inference type for the index
+            storage_node_type: storage type for the index
+            inference_node_count: number of inference nodes for the index
         Returns:
             Response body, containing information about index creation result
         """
@@ -99,15 +101,16 @@ class Index:
             cl_img_preprocessing['patch_method'] = image_preprocessing_method
             if not config.cluster_is_marqo:
                 return req.post(f"indexes/{index_name}", body=cl_settings)
-            cl_settings['inference_type'] = inference_type
-            cl_settings['storage_type'] = storage_type
-            req.post(f"indexes/{index_name}", body=cl_settings)
+            cl_settings['inference_type'] = inference_node_type
+            cl_settings['storage_class'] = storage_node_type
+            cl_settings['inference_node_count'] = inference_node_count
+            response = req.post(f"indexes/{index_name}", body=cl_settings)
             creation = req.get(f"indexes/{index_name}/status")
             while creation['index_status'] != 'READY':
                 time.sleep(10)
                 creation = req.get(f"indexes/{index_name}/status")
-                mq_logger.info(f"Index creation status: {creation['status']}")
-            return creation
+                mq_logger.info(f"Index creation status: {creation['index_status']}")
+            return response
 
         return req.post(f"indexes/{index_name}", body={
             "index_defaults": {
