@@ -60,4 +60,5 @@ class Config:
             return self.url
         if self.cluster_is_marqo and not index_name:
             return self.url + "/api"
+        self.marqo_url_resolver.refresh_urls_if_needed(index_name)
         return self.marqo_url_resolver.urls_mapping[index_name]

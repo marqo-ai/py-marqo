@@ -11,15 +11,14 @@ class MarqoUrlResolver:
         self.api_key = api_key
         self.expiration_time = expiration_time
 
-    def refresh_urls_if_needed(self):
-        if time.time() - self.timestamp > self.expiration_time:
+    def refresh_urls_if_needed(self, index_name):
+        if index_name not in self._urls_mapping and time.time() - self.timestamp > self.expiration_time:
             self._refresh_urls()
             if self._urls_mapping:
                 self.timestamp = time.time()
 
     @property
     def urls_mapping(self):
-        self.refresh_urls_if_needed()
         return self._urls_mapping
 
     def _refresh_urls(self):

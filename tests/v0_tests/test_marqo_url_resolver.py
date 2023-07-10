@@ -18,7 +18,7 @@ class TestMarqoUrlResolver(MarqoTestCase):
         # Wait for more than the expiration time
         time.sleep(0.1)
 
-        resolver.refresh_urls_if_needed()
+        resolver.refresh_urls_if_needed("index1")
 
         # Check that the timestamp has been updated
         print(resolver.timestamp, initial_timestamp)
@@ -39,10 +39,10 @@ class TestMarqoUrlResolver(MarqoTestCase):
         resolver = MarqoUrlResolver(api_key="your-api-key", expiration_time=60)
 
         # Call refresh_urls_if_needed without waiting
-        resolver.refresh_urls_if_needed()
+        resolver.refresh_urls_if_needed("index1")
         initial_timestamp = resolver.timestamp
         time.sleep(0.1)
-        resolver.refresh_urls_if_needed()
+        resolver.refresh_urls_if_needed("index2")
 
         # Check that the timestamp has not been updated
         assert resolver.timestamp == initial_timestamp
@@ -62,6 +62,7 @@ class TestMarqoUrlResolver(MarqoTestCase):
         resolver = MarqoUrlResolver(api_key="your-api-key", expiration_time=60)
 
         # Access the urls_mapping property
+        resolver.refresh_urls_if_needed("index1")
         urls_mapping = resolver.urls_mapping
 
         # Check that the URLs mapping has been initially populated
