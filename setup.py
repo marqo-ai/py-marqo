@@ -12,7 +12,7 @@ setup(
         "pydantic"
     ],
     tests_require=[
-        "pytest",
+        "pytest<2.0.0",
         "tox"
     ],
     name="marqo",
