@@ -48,7 +48,7 @@ class Config:
                 self.cluster_is_s2search = True
             if "api.marqo.ai" in lowered_url:
                 self.cluster_is_marqo = True
-                self.marqo_url_resolver = MarqoUrlResolver(api_key=self.api_key, expiration_time=60)
+                self.marqo_url_resolver = MarqoUrlResolver(api_key=self.api_key, expiration_time=15)
         self.url = url
         return self.url
 
