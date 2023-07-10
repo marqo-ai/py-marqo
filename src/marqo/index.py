@@ -319,7 +319,7 @@ class Index:
             "use_existing_tensors" : use_existing_tensors,
             "image_download_headers" : image_download_headers,
             "mappings" : mappings,
-            model_auth: model_auth,
+            "model_auth": model_auth,
         }
 
         end_time_client_process = timer()
