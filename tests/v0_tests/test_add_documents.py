@@ -13,7 +13,9 @@ from marqo import enums
 from unittest import mock
 
 
-class TestAddDocuments(MarqoTestCase):
+class TestDepreciatedAddDocuments(MarqoTestCase):
+    """Tests for the deprecitade add_documents method for back compatibility
+    """
 
     def setUp(self) -> None:
         self.client = Client(**self.client_settings)
@@ -96,7 +98,7 @@ class TestAddDocuments(MarqoTestCase):
                 "field X": "this is a solid doc",
                 "_id": "123456"
         }
-        res = self.client.index(self.index_name_1).add_documents([
+        res = self.client.index(self.index_name_1)._depreciated_add_documents([
             d1, d2
         ])
         retrieved_d1 = self.client.index(self.index_name_1).get_document(document_id="e197e580-0393-4f4e-90e9-8cdf4b17e339")
@@ -115,7 +117,7 @@ class TestAddDocuments(MarqoTestCase):
                 "doc title": "Just Your Average Doc",
                 "field X": "this is a solid doc"
             }
-        res = self.client.index(self.index_name_1).add_documents([d1, d2])
+        res = self.client.index(self.index_name_1)._depreciated_add_documents([d1, d2])
         ids = [item["_id"] for item in res["items"]]
         assert len(ids) == 2
         assert ids[0] != ids[1]
@@ -133,14 +135,14 @@ class TestAddDocuments(MarqoTestCase):
             "field X": "this is a solid doc",
             "_id": "56"
         }
-        self.client.index(self.index_name_1).add_documents([d1])
+        self.client.index(self.index_name_1)._depreciated_add_documents([d1])
         assert d1 == self.client.index(self.index_name_1).get_document("56")
         d2 = {
             "_id": "56",
             "completely": "different doc.",
             "field X": "this is a solid doc"
         }
-        self.client.index(self.index_name_1).add_documents([d2])
+        self.client.index(self.index_name_1)._depreciated_add_documents([d2])
         assert d2 == self.client.index(self.index_name_1).get_document("56")
 
     def test_add_batched_documents(self):
@@ -158,7 +160,7 @@ class TestAddDocuments(MarqoTestCase):
              "_id": doc_id}
             for doc_id in doc_ids]
         assert len(docs) == 100
-        ix.add_documents(docs, client_batch_size=4)
+        ix._depreciated_add_documents(docs, client_batch_size=4)
         ix.refresh()
         # takes too long to search for all...
         for _id in [0, 19, 20, 99]:
@@ -176,7 +178,7 @@ class TestAddDocuments(MarqoTestCase):
 
     def test_delete_docs(self):
         self.client.create_index(index_name=self.index_name_1)
-        self.client.index(self.index_name_1).add_documents([
+        self.client.index(self.index_name_1)._depreciated_add_documents([
             {"abc": "wow camel", "_id": "123"},
             {"abc": "camels are cool", "_id": "foo"}
         ])
@@ -199,7 +201,7 @@ class TestAddDocuments(MarqoTestCase):
 
     def test_delete_docs_empty_ids(self):
         self.client.create_index(index_name=self.index_name_1)
-        self.client.index(self.index_name_1).add_documents([{"abc": "efg", "_id": "123"}])
+        self.client.index(self.index_name_1)._depreciated_add_documents([{"abc": "efg", "_id": "123"}])
         try:
             self.client.index(self.index_name_1).delete_documents([])
             raise AssertionError
@@ -212,13 +214,13 @@ class TestAddDocuments(MarqoTestCase):
     def test_get_document(self):
         my_doc = {"abc": "efg", "_id": "123"}
         self.client.create_index(index_name=self.index_name_1)
-        self.client.index(self.index_name_1).add_documents([my_doc])
+        self.client.index(self.index_name_1)._depreciated_add_documents([my_doc])
         retrieved = self.client.index(self.index_name_1).get_document(document_id='123')
         assert retrieved == my_doc
 
     def test_add_documents_missing_index_fails(self):
         with pytest.raises(MarqoWebError) as ex:
-            self.client.index(self.index_name_1).add_documents([{"abd": "efg"}])
+            self.client.index(self.index_name_1)._depreciated_add_documents([{"abd": "efg"}])
 
         assert "index_not_found" == ex.value.code
     def test_add_documents_with_device(self):
@@ -228,7 +230,7 @@ class TestAddDocuments(MarqoTestCase):
 
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
         def run():
-            temp_client.index(self.index_name_1).add_documents(documents=[
+            temp_client.index(self.index_name_1)._depreciated_add_documents(documents=[
                 {"d1": "blah"}, {"d2", "some data"}
             ], device="cuda:45")
             return True
@@ -243,7 +245,7 @@ class TestAddDocuments(MarqoTestCase):
         mock__post = mock.MagicMock()
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
         def run():
-            temp_client.index(self.index_name_1).add_documents(documents=[
+            temp_client.index(self.index_name_1)._depreciated_add_documents(documents=[
                 {"d1": "blah"}, {"d2", "some data"}, {"d2331": "blah"}, {"45d2", "some data"}
             ], client_batch_size=2, device="cuda:37")
             return True
@@ -260,7 +262,7 @@ class TestAddDocuments(MarqoTestCase):
 
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
         def run():
-            temp_client.index(self.index_name_1).add_documents(documents=[
+            temp_client.index(self.index_name_1)._depreciated_add_documents(documents=[
                 {"d1": "blah"}, {"d2", "some data"}
             ])
             return True
@@ -278,10 +280,10 @@ class TestAddDocuments(MarqoTestCase):
 
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
         def run():
-            temp_client.index(self.index_name_1).add_documents(documents=[
+            temp_client.index(self.index_name_1)._depreciated_add_documents(documents=[
                 {"d1": "blah"}, {"d2", "some data"}
             ], auto_refresh=False)
-            temp_client.index(self.index_name_1).add_documents(documents=[
+            temp_client.index(self.index_name_1)._depreciated_add_documents(documents=[
                 {"d1": "blah"}, {"d2", "some data"}
             ], auto_refresh=True)
             return True
@@ -297,7 +299,7 @@ class TestAddDocuments(MarqoTestCase):
 
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
         def run():
-            self.client.index(self.index_name_1).add_documents(documents=[
+            self.client.index(self.index_name_1)._depreciated_add_documents(documents=[
                 {"d1": "blah"}, {"d2", "some data"}
             ])
             return True
@@ -316,7 +318,7 @@ class TestAddDocuments(MarqoTestCase):
         d1 = {"d1": "blah", "_id": "1234"}
         d2 = {"d2": "blah", "_id": "5678"}
         docs = [d1,  {"content": "some terrible doc", "d3": "blah", "_id": 12345}, d2]
-        self.client.index(self.index_name_1).add_documents(documents=docs)
+        self.client.index(self.index_name_1)._depreciated_add_documents(documents=docs)
 
         if self.IS_MULTI_INSTANCE:
             time.sleep(1)
@@ -347,7 +349,7 @@ class TestAddDocuments(MarqoTestCase):
                 mock__post.return_value = dict()
                 @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
                 def run():
-                    res = self.client.index(self.index_name_1).add_documents(
+                    res = self.client.index(self.index_name_1)._depreciated_add_documents(
                         auto_refresh=auto_refresh, documents=docs, client_batch_size=client_batch_size,)
                     if client_batch_size is not None:
                         assert isinstance(res, list)
@@ -373,7 +375,7 @@ class TestAddDocuments(MarqoTestCase):
     def test_add_lists_non_tensor(self):
         original_doc = {"d1": "blah", "_id": "1234", 'my list': ['tag-1', 'tag-2']}
         self.client.create_index(self.index_name_1)
-        self.client.index(self.index_name_1).add_documents(documents=[original_doc], non_tensor_fields=['my list'])
+        self.client.index(self.index_name_1)._depreciated_add_documents(documents=[original_doc], non_tensor_fields=['my list'])
 
         if self.IS_MULTI_INSTANCE:
             self.warm_request(self.client.index(self.index_name_1).search,
@@ -397,7 +399,7 @@ class TestAddDocuments(MarqoTestCase):
 
     def test_use_existing_fields(self):
         self.client.create_index(self.index_name_1)
-        self.client.index(index_name=self.index_name_1).add_documents(
+        self.client.index(index_name=self.index_name_1)._depreciated_add_documents(
             documents=[
                 {
                     "_id": "123",
@@ -415,7 +417,7 @@ class TestAddDocuments(MarqoTestCase):
                  document_id="123", expose_facets=True)["_tensor_facets"]]
         )
 
-        self.client.index(index_name=self.index_name_1).add_documents(
+        self.client.index(index_name=self.index_name_1)._depreciated_add_documents(
             documents=[
                 {
                     "_id": "123",
@@ -439,7 +441,7 @@ class TestAddDocuments(MarqoTestCase):
         }
         self.client.create_index(index_name=self.index_name_1,**settings)
 
-        self.client.index(index_name=self.index_name_1).add_documents(
+        self.client.index(index_name=self.index_name_1)._depreciated_add_documents(
             documents=[
                 {
                     "combo_text_image": {
