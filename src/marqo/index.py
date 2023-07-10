@@ -305,19 +305,23 @@ class Index:
         t0 = timer()
         start_time_client_process = timer()
         base_path = f"indexes/{self.index_name}/documents"
-        non_tensor_fields_query_param = utils.convert_list_to_query_params("non_tensor_fields", non_tensor_fields)
-        image_download_headers_param = (utils.convert_dict_to_url_params(image_download_headers)
-                                        if image_download_headers else '')
-        model_auth_param = (utils.convert_dict_to_url_params(model_auth) if model_auth else '')
-        mappings_param = (utils.convert_dict_to_url_params(mappings) if mappings else '')
         query_str_params = (
             f"{f'&device={utils.translate_device_string_for_url(device)}' if device is not None else ''}"
-            f"{f'&use_existing_tensors={str(use_existing_tensors).lower()}' if use_existing_tensors is not None else ''}"
-            f"{f'&{non_tensor_fields_query_param}' if len(non_tensor_fields) > 0 else ''}"
-            f"{f'&image_download_headers={image_download_headers_param}' if image_download_headers else ''}"
-            f"{f'&mappings={mappings_param}' if mappings else ''}"
-            f"{f'&model_auth={model_auth_param}' if model_auth_param else ''}"
+           # f"{f'&use_existing_tensors={str(use_existing_tensors).lower()}' if use_existing_tensors is not None else ''}"
+           # f"{f'&{non_tensor_fields_query_param}' if len(non_tensor_fields) > 0 else ''}"
+           # f"{f'&image_download_headers={image_download_headers_param}' if image_download_headers else ''}"
+           # f"{f'&mappings={mappings_param}' if mappings else ''}"
+           # f"{f'&model_auth={model_auth_param}' if model_auth_param else ''}"
         )
+
+        base_body = {
+            "non_tensor_fields" : non_tensor_fields,
+            "use_existing_tensors" : use_existing_tensors,
+            "image_download_headers" : image_download_headers,
+            "mappings" : mappings,
+            model_auth: model_auth,
+        }
+
         end_time_client_process = timer()
         total_client_process_time = end_time_client_process - start_time_client_process
         mq_logger.debug(f"add_documents pre-processing: took {(total_client_process_time):.3f}s for {num_docs} docs, "
@@ -329,7 +333,7 @@ class Index:
             res = self._batch_request(
                 base_path=base_path, auto_refresh=auto_refresh,
                 docs=documents, verbose=False,
-                query_str_params=query_str_params, batch_size=client_batch_size
+                query_str_params=query_str_params, batch_size=client_batch_size, base_body = base_body
             )
 
         else:
@@ -340,7 +344,8 @@ class Index:
             # ADD DOCS TIMER-LOGGER (2)
             start_time_client_request = timer()
 
-            res = self.http.post(path=path_with_query_str, body=documents)
+            body = {"documents": documents, **base_body}
+            res = self.http.post(path=path_with_query_str, body=body)
 
             end_time_client_request = timer()
             total_client_request_time = end_time_client_request - start_time_client_request
@@ -396,6 +401,230 @@ class Index:
             return parsed_date
 
     def _batch_request(
+            self, docs: List[Dict],  base_path: str,
+            query_str_params: str, base_body: dict, verbose: bool = True,
+            auto_refresh: bool = True, batch_size: int = 50,
+    ) -> List[Dict[str, Any]]:
+        """Batches a large chunk of documents to be sent as multiple
+        add_documents invocations
+
+        Args:
+            docs: A list of documents
+            batch_size: Size of a batch passed into a single add_documents
+                call
+            verbose: If true, prints out info about the documents
+
+        Returns:
+            A list of responses, which have information about the batch
+            operation
+        """
+        path_with_query_str = f"{base_path}?refresh=false{query_str_params}"
+
+        mq_logger.debug(f"starting batch ingestion with batch size {batch_size}")
+        error_detected_message = ('Errors detected in add documents call. '
+                                  'Please examine the returned result object for more information.')
+
+        deeper = ((doc, i, batch_size) for i, doc in enumerate(docs))
+        def batch_requests(gathered, doc_tuple):
+            doc, i, the_batch_size = doc_tuple
+            if i % the_batch_size == 0:
+                gathered.append([doc, ])
+            else:
+                gathered[-1].append(doc)
+            return gathered
+
+        batched = functools.reduce(lambda x, y: batch_requests(x, y), deeper, [])
+
+        def verbosely_add_docs(i, docs):
+            errors_detected = False
+
+            t0 = timer()
+            body = {"documents": docs, **base_body}
+            res = self.http.post(path=path_with_query_str, body=body)
+
+            total_batch_time = timer() - t0
+            num_docs = len(docs)
+
+            if isinstance(res, list):
+                # with Server Batching (show processing time for each batch)
+                mq_logger.info(
+                    f"    add_documents batch {i} roundtrip: took {(total_batch_time):.3f}s to add {num_docs} docs, "
+                    f"for an average of {(total_batch_time / num_docs):.3f}s per doc.")
+
+                if isinstance(res[0], list):
+                    # for multiprocess, timing messages should be arranged by process, then batch
+                    for process in range(len(res)):
+                        mq_logger.debug(f"       process {process}:")
+
+                        for batch in range(len(res[process])):
+                            server_batch_result_count = len(res[process][batch]["items"])
+                            mq_logger.debug(f"           marqo server batch {batch}: "
+                                            f"processed {server_batch_result_count} docs in {(res[process][batch]['processingTimeMs'] / 1000):.3f}s, "
+                                            f"for an average of {(res[process][batch]['processingTimeMs'] / (1000 * server_batch_result_count)):.3f}s per doc.")
+                            if 'errors' in res[process][batch] and res[process][batch]['errors']:
+                                errors_detected = True
+
+                else:
+                    # for single process, timing messages should be arranged by batch ONLY
+                    for batch in range(len(res)):
+                        server_batch_result_count = len(res[batch]["items"])
+                        mq_logger.debug(f"       marqo server batch {batch}: "
+                                        f"processed {server_batch_result_count} docs in {(res[batch]['processingTimeMs'] / 1000):.3f}s, "
+                                        f"for an average of {(res[batch]['processingTimeMs'] / (1000 * server_batch_result_count)):.3f}s per doc.")
+                        if 'errors' in res[batch] and res[batch]['errors']:
+                            errors_detected = True
+            else:
+                # no Server Batching
+                if 'processingTimeMs' in res:       # Only outputs log if response is non-empty
+                    mq_logger.info(
+                        f"    add_documents batch {i}: took {(res['processingTimeMs'] / 1000):.3f}s for Marqo to process & index {num_docs} "
+                        f"docs (server unbatched), for an average of {(res['processingTimeMs'] / (1000 * num_docs)):.3f}s per doc."
+                        f" Roundtrip time: {(total_batch_time):.3f}s")
+                    if 'errors' in res and res['errors']:
+                        errors_detected = True
+
+            if errors_detected:
+                mq_logger.info(f"    add_documents batch {i}: {error_detected_message}")
+            if verbose:
+                mq_logger.info(f"results from indexing batch {i}: {res}")
+            return res
+
+        results = [verbosely_add_docs(i, docs) for i, docs in enumerate(batched)]
+        if auto_refresh:
+            self.refresh()
+        mq_logger.debug('completed batch ingestion.')
+        return results
+
+    def get_settings(self) -> dict:
+        """Get all settings of the index"""
+        return self.http.get(path=f"indexes/{self.index_name}/settings")
+
+    def _depreciated_add_documents(
+        self,
+        documents: List[Dict[str, Any]],
+        auto_refresh: bool = True,
+        client_batch_size: int = None,
+        device: str = None,
+        non_tensor_fields: List[str] = None,
+        use_existing_tensors: bool = False,
+        image_download_headers: dict = None,
+        mappings: dict = None,
+        model_auth: dict = None
+    ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
+        """Add documents to this index. Does a partial update on existing documents,
+        based on their ID. Adds unseen documents to the index.
+
+        Args:
+            documents: List of documents. Each document should be a dictionary.
+            auto_refresh: Automatically refresh the index. If you are making
+                lots of requests, it is advised to set this to False to
+                increase performance.
+            client_batch_size: if it is set, documents will be indexed into batches
+                in the client, before being sent off. Otherwise documents are unbatched
+                client-side.
+            device: the device used to index the data. Examples include "cpu",
+                "cuda" and "cuda:2"
+            non_tensor_fields: fields within documents to not create and store tensors against.
+            use_existing_tensors: use vectors that already exist in the docs.
+            image_download_headers: a dictionary of headers to be passed while downloading images,
+                for URLs found in documents
+            mappings: a dictionary to help handle the object fields. e.g., multimodal_combination field
+            model_auth: used to authorise a private model
+        Returns:
+            Response body outlining indexing result
+        """
+        if non_tensor_fields is None:
+            non_tensor_fields = []
+        if image_download_headers is None:
+            image_download_headers = dict()
+        return self._depreciated_add_docs_organiser(
+            documents=documents, auto_refresh=auto_refresh,
+            client_batch_size=client_batch_size, device=device, non_tensor_fields=non_tensor_fields,
+            use_existing_tensors=use_existing_tensors, image_download_headers=image_download_headers, mappings=mappings,
+            model_auth=model_auth
+        )
+
+    def _depreciated_add_docs_organiser(
+        self,
+        documents: List[Dict[str, Any]],
+        auto_refresh=True,
+        client_batch_size: int = None,
+        device: str = None,
+        non_tensor_fields: List = None,
+        use_existing_tensors: bool = False,
+        image_download_headers: dict = None,
+        mappings: dict = None,
+        model_auth: dict = None
+    ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
+
+        error_detected_message = ('Errors detected in add documents call. '
+                                  'Please examine the returned result object for more information.')
+        if non_tensor_fields is None:
+            non_tensor_fields = []
+
+        num_docs = len(documents)
+
+        # ADD DOCS TIMER-LOGGER (1)
+        t0 = timer()
+        start_time_client_process = timer()
+        base_path = f"indexes/{self.index_name}/documents"
+        non_tensor_fields_query_param = utils.convert_list_to_query_params("non_tensor_fields", non_tensor_fields)
+        image_download_headers_param = (utils.convert_dict_to_url_params(image_download_headers)
+                                        if image_download_headers else '')
+        model_auth_param = (utils.convert_dict_to_url_params(model_auth) if model_auth else '')
+        mappings_param = (utils.convert_dict_to_url_params(mappings) if mappings else '')
+        query_str_params = (
+            f"{f'&device={utils.translate_device_string_for_url(device)}' if device is not None else ''}"
+            f"{f'&use_existing_tensors={str(use_existing_tensors).lower()}' if use_existing_tensors is not None else ''}"
+            f"{f'&{non_tensor_fields_query_param}' if len(non_tensor_fields) > 0 else ''}"
+            f"{f'&image_download_headers={image_download_headers_param}' if image_download_headers else ''}"
+            f"{f'&mappings={mappings_param}' if mappings else ''}"
+            f"{f'&model_auth={model_auth_param}' if model_auth_param else ''}"
+        )
+        end_time_client_process = timer()
+        total_client_process_time = end_time_client_process - start_time_client_process
+        mq_logger.debug(f"add_documents pre-processing: took {(total_client_process_time):.3f}s for {num_docs} docs, "
+                       f"for an average of {(total_client_process_time / num_docs):.3f}s per doc.")
+
+        if client_batch_size is not None:
+            if client_batch_size <= 0:
+                raise errors.InvalidArgError("Batch size can't be less than 1!")
+            res = self._depreciated_batch_request(
+                base_path=base_path, auto_refresh=auto_refresh,
+                docs=documents, verbose=False,
+                query_str_params=query_str_params, batch_size=client_batch_size
+            )
+
+        else:
+            # no Client Batching
+            refresh_option = f"?refresh={str(auto_refresh).lower()}"
+            path_with_query_str = f"{base_path}{refresh_option}{query_str_params}"
+
+            # ADD DOCS TIMER-LOGGER (2)
+            start_time_client_request = timer()
+
+            res = self.http.post(path=path_with_query_str, body=documents)
+
+            end_time_client_request = timer()
+            total_client_request_time = end_time_client_request - start_time_client_request
+
+            mq_logger.debug(f"add_documents roundtrip: took {(total_client_request_time):.3f}s to send {num_docs} "
+                            f"docs to Marqo (roundtrip, unbatched), for an average of {(total_client_request_time / num_docs):.3f}s per doc.")
+            errors_detected = False
+
+            if 'processingTimeMs' in res:       # Only outputs log if response is non-empty
+                mq_logger.debug(f"add_documents Marqo index: took {(res['processingTimeMs'] / 1000):.3f}s for Marqo to process & index {num_docs} "
+                                f"docs (server unbatched), for an average of {(res['processingTimeMs'] / (1000 * num_docs)):.3f}s per doc.")
+            if 'errors' in res and res['errors']:
+                mq_logger.info(error_detected_message)
+
+            if errors_detected:
+                mq_logger.info(error_detected_message)
+        total_add_docs_time = timer() - t0
+        mq_logger.debug(f"add_documents completed. total time taken: {(total_add_docs_time):.3f}s.")
+        return res
+
+    def _depreciated_batch_request(
             self, docs: List[Dict],  base_path: str,
             query_str_params: str, verbose: bool = True,
             auto_refresh: bool = True, batch_size: int = 50
@@ -488,7 +717,3 @@ class Index:
             self.refresh()
         mq_logger.debug('completed batch ingestion.')
         return results
-
-    def get_settings(self) -> dict:
-        """Get all settings of the index"""
-        return self.http.get(path=f"indexes/{self.index_name}/settings")
