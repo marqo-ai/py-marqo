@@ -307,11 +307,6 @@ class Index:
         base_path = f"indexes/{self.index_name}/documents"
         query_str_params = (
             f"{f'&device={utils.translate_device_string_for_url(device)}' if device is not None else ''}"
-           # f"{f'&use_existing_tensors={str(use_existing_tensors).lower()}' if use_existing_tensors is not None else ''}"
-           # f"{f'&{non_tensor_fields_query_param}' if len(non_tensor_fields) > 0 else ''}"
-           # f"{f'&image_download_headers={image_download_headers_param}' if image_download_headers else ''}"
-           # f"{f'&mappings={mappings_param}' if mappings else ''}"
-           # f"{f'&model_auth={model_auth_param}' if model_auth_param else ''}"
         )
 
         base_body = {
