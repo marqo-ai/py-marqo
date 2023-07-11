@@ -23,6 +23,7 @@ def construct_authorized_url(url_base: str, username: str, password: str) -> str
     http_part, domain_part = url_split
     return f"{http_part}{http_sep}{username}:{password}@{domain_part}"
 
+
 def translate_device_string_for_url(device: Optional[str]) -> Optional[str]:
     """Translates a device string for use as a URL param
 
@@ -65,3 +66,14 @@ def convert_dict_to_url_params(d: dict) -> str:
     url_encoded = urllib.parse.quote_plus(as_str)
     return url_encoded
 
+
+def check_minimum_supported_version(func):
+    """
+    A decorator that checks if the client meets the minimum supported version of marqo.
+    """
+
+    def wrapper(self, *args, **kwargs):
+        self._marqo_minimum_supported_version_check()
+        return func(self, *args, **kwargs)
+
+    return wrapper

@@ -9,7 +9,7 @@ from marqo.models import BulkSearchBody, BulkSearchQuery
 from marqo._httprequests import HttpRequests
 from marqo import utils, enums
 from marqo import errors
-from marqo.version import __minimum_supported_marqo_version__
+from marqo.version import __minimum_supported_marqo_version__, __marqo_version__
 from marqo.marqo_logging import mq_logger
 
 
@@ -192,6 +192,6 @@ class Client:
 
     def _marqo_minimum_supported_version_check(self):
         if self.cached_marqo_version < __minimum_supported_marqo_version__:
-            mq_logger.warning(f"Your Marqo version ({self.cached_marqo_version}) "
+            mq_logger.warning(f"Your Client (py-Marqo) version "
                               f"is lower than the minimum supported version ({__minimum_supported_marqo_version__}). "
                               f"Please upgrade your Marqo instance to avoid potential errors.")

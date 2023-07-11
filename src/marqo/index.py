@@ -13,6 +13,7 @@ from marqo.config import Config
 from marqo.enums import SearchMethods, Devices
 from marqo import errors, utils
 from marqo.marqo_logging import mq_logger
+from marqo.utils import check_minimum_supported_version
 
 
 class Index:
@@ -236,6 +237,7 @@ class Index:
             body=document_ids
         )
 
+    @check_minimum_supported_version
     def add_documents(
         self,
         documents: List[Dict[str, Any]],
