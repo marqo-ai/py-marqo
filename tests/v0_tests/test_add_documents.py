@@ -257,7 +257,6 @@ class TestDepreciatedAddDocuments(MarqoTestCase):
             pass
 
     # Create index tests
-
     def test_create_index(self):
         self.client.create_index(index_name=self.index_name_1)
 
