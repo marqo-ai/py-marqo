@@ -54,11 +54,10 @@ class Config:
 
     def get_url(self, index_name=None,):
         """Get the URL, and infers whether that url is marqo cloud,
-        and if it is targeting a specific index,
-        kicks off the url resolver refresh process if needed"""
+        and if it is targeting a specific index resolves the index-specific url"""
         if not self.cluster_is_marqo:
             return self.url
         if self.cluster_is_marqo and not index_name:
             return self.url + "/api"
-        self.marqo_url_resolver.refresh_urls_if_needed(index_name)
+        # calls resolver to get index-specific url for when cluster is marqo and index_name is not None
         return self.marqo_url_resolver[index_name]

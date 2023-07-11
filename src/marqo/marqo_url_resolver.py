@@ -1,7 +1,8 @@
+import logging
 import time
 import requests
 
-from marqo.errors import MarqoIndexNotFoundError, MarqoIndexNotReadyError
+from marqo.errors import MarqoCloudIndexNotFoundError, MarqoCloudIndexNotReadyError
 
 
 class MarqoUrlResolver:
@@ -18,20 +19,23 @@ class MarqoUrlResolver:
             self._refresh_urls()
         if index_name in self._urls_mapping['READY'] and time.time() - self.timestamp > 360:
             # slow refresh in case index was deleted
-            self._refresh_urls()
+            self._refresh_urls(timeout=3)
 
     def __getitem__(self, item):
         self.refresh_urls_if_needed(item)
         if item in self._urls_mapping['READY']:
             return self._urls_mapping['READY'][item]
         if item in self._urls_mapping['CREATING']:
-            raise MarqoIndexNotReadyError(item)
-        raise MarqoIndexNotFoundError(item)
+            raise MarqoCloudIndexNotReadyError(item)
+        raise MarqoCloudIndexNotFoundError(item)
 
-    def _refresh_urls(self):
+    def _refresh_urls(self, timeout=None):
         response = requests.get('https://api.marqo.ai/api/indexes',
-                                headers={"x-api-key": self.api_key}).json()
-        for index in response['indices']:
+                                headers={"x-api-key": self.api_key}, timeout=timeout)
+        if not response.ok:
+            logging.warning(response.text)
+        response_json = response.json()
+        for index in response_json['indices']:
             if index.get('index_status') in ["READY", "CREATING"]:
                 self._urls_mapping[index['index_status']][index['index_name']] = index.get('load_balancer_dns_name')
         if self._urls_mapping:

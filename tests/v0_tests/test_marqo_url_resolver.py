@@ -25,7 +25,7 @@ class TestMarqoUrlResolver(MarqoTestCase):
         assert resolver.timestamp > initial_timestamp
 
         # Check that the URLs mapping has been refreshed
-        assert resolver.urls_mapping == {
+        assert resolver._urls_mapping["READY"] == {
             "index1": "example.com",
             "index2": "example2.com",
         }
@@ -48,7 +48,7 @@ class TestMarqoUrlResolver(MarqoTestCase):
         assert resolver.timestamp == initial_timestamp
 
         # Check that the URLs mapping has been initially populated
-        assert resolver.urls_mapping == {
+        assert resolver._urls_mapping["READY"] == {
             "index1": "example.com",
             "index2": "example2.com",
         }
@@ -63,9 +63,9 @@ class TestMarqoUrlResolver(MarqoTestCase):
 
         # Access the urls_mapping property
         resolver.refresh_urls_if_needed("index1")
-        urls_mapping = resolver.urls_mapping
+        urls_mapping = resolver._urls_mapping
 
         # Check that the URLs mapping has been initially populated
-        assert urls_mapping == {
+        assert urls_mapping["READY"] == {
             "index1": "example.com",
         }
