@@ -41,7 +41,7 @@ class Client:
             self.url = url
         self.config = Config(self.url, use_telemetry=return_telemetry, api_key=api_key)
         self.http = HttpRequests(self.config)
-        self.cache_marqo_version = self._get_marqo_version()
+        self.cached_marqo_version = self._get_marqo_version()
         self._marqo_minimum_supported_version_check()
 
     def create_index(
@@ -190,9 +190,8 @@ class Client:
     def _get_marqo_version(self) -> str:
         return self.get_marqo()['version']
 
-    @staticmethod
-    def _marqo_minimum_supported_version_check():
-        if Client.cached_marqo_version < __minimum_supported_marqo_version__:
-            mq_logger.warning(f"Your Marqo version ({Client.cached_marqo_version}) "
+    def _marqo_minimum_supported_version_check(self):
+        if self.cached_marqo_version < __minimum_supported_marqo_version__:
+            mq_logger.warning(f"Your Marqo version ({self.cached_marqo_version}) "
                               f"is lower than the minimum supported version ({__minimum_supported_marqo_version__}). "
                               f"Please upgrade your Marqo instance to avoid potential errors.")
