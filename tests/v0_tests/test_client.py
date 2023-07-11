@@ -34,6 +34,7 @@ class TestClient(MarqoTestCase):
         assert 'status' in res
         assert 'status' in res['backend']
 
+
 class TestMinimumSupportedMarqoVersion(MarqoTestCase):
 
     def setUp(self) -> None:
