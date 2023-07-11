@@ -9,6 +9,8 @@ from marqo.models import BulkSearchBody, BulkSearchQuery
 from marqo._httprequests import HttpRequests
 from marqo import utils, enums
 from marqo import errors
+from marqo.version import __minimum_supported_marqo_version__
+from marqo.marqo_logging import mq_logger
 
 
 class Client:
@@ -18,11 +20,12 @@ class Client:
     A client instance is needed for every marqo API method to know the location of
     marqo and its permissions.
     """
+
     def __init__(
-        self, url: str = "http://localhost:8882", 
-        main_user: str = None, main_password: str = None,
-        return_telemetry: bool = False,
-        api_key: str = None
+            self, url: str = "http://localhost:8882",
+            main_user: str = None, main_password: str = None,
+            return_telemetry: bool = False,
+            api_key: str = None
     ) -> None:
         """
         Parameters
@@ -38,15 +41,17 @@ class Client:
             self.url = url
         self.config = Config(self.url, use_telemetry=return_telemetry, api_key=api_key)
         self.http = HttpRequests(self.config)
+        self.cache_marqo_version = self._get_marqo_version()
+        self._marqo_minimum_supported_version_check()
 
     def create_index(
-        self, index_name: str,
-        treat_urls_and_pointers_as_images=False, model=None,
-        normalize_embeddings=True,
-        sentences_per_chunk=2,
-        sentence_overlap=0,
-        image_preprocessing_method=None,
-        settings_dict=None
+            self, index_name: str,
+            treat_urls_and_pointers_as_images=False, model=None,
+            normalize_embeddings=True,
+            sentences_per_chunk=2,
+            sentence_overlap=0,
+            image_preprocessing_method=None,
+            settings_dict=None
     ) -> Dict[str, Any]:
         """Create the index.
 
@@ -160,7 +165,7 @@ class Client:
 
     @staticmethod
     def _base64url_encode(
-        data: bytes
+            data: bytes
     ) -> str:
         return base64.urlsafe_b64encode(data).decode('utf-8').replace('=', '')
 
@@ -170,20 +175,24 @@ class Client:
     def health(self):
         return self.http.get(path="health")
 
-
-    def eject_model(self, model_name:str, model_device:str):
+    def eject_model(self, model_name: str, model_device: str):
         return self.http.delete(path=f"models?model_name={model_name}&model_device={model_device}")
-
 
     def get_loaded_models(self):
         return self.http.get(path="models")
 
-
     def get_cuda_info(self):
         return self.http.get(path="device/cuda")
-
 
     def get_cpu_info(self):
         return self.http.get(path="device/cpu")
 
+    def _get_marqo_version(self) -> str:
+        return self.get_marqo()['version']
 
+    @staticmethod
+    def _marqo_minimum_supported_version_check():
+        if Client.cached_marqo_version < __minimum_supported_marqo_version__:
+            mq_logger.warning(f"Your Marqo version ({Client.cached_marqo_version}) "
+                              f"is lower than the minimum supported version ({__minimum_supported_marqo_version__}). "
+                              f"Please upgrade your Marqo instance to avoid potential errors.")
