@@ -122,6 +122,7 @@ class Client:
         Returns:
             An Index instance.
         """
+        self._marqo_minimum_supported_version_check()
         if index_name is not None:
             return Index(self.config, index_name=index_name)
         raise Exception('The index UID should not be None')
