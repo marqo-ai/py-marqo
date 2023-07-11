@@ -26,7 +26,7 @@ class TestAddDocuments(MarqoTestCase):
             self.client.index(index_name=self.index_name_1).add_documents(
                 documents=[{"some": "data"}], model_auth=mock_s3_model_auth)
             args, kwargs = mock__post.call_args
-            assert "model_auth" in kwargs['body']
+            assert "modelAuth" in kwargs['body']
             assert kwargs['body']['model_auth'] == mock_s3_model_auth
 
             return True
