@@ -74,7 +74,7 @@ class TestMinimumSupportedMarqoVersion(MarqoTestCase):
                 client.create_index(self.index_name_1)
                 client.index(self.index_name_1).add_documents([{"name": "test"}])
 
-        # Ensure get_marqo is only called once
+        # Ensure get_marqo API is only called once
         mock_get_marqo.assert_called_once()
 
         # Check the warning was called twice
