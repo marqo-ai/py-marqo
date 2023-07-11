@@ -310,11 +310,11 @@ class Index:
         )
 
         base_body = {
-            "non_tensor_fields" : non_tensor_fields,
-            "use_existing_tensors" : use_existing_tensors,
-            "image_download_headers" : image_download_headers,
+            "nonTensorFields" : non_tensor_fields,
+            "useExistingTensors" : use_existing_tensors,
+            "imageDownloadHeaders" : image_download_headers,
             "mappings" : mappings,
-            "model_auth": model_auth,
+            "modelAuth": model_auth,
         }
 
         end_time_client_process = timer()
