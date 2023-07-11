@@ -239,7 +239,7 @@ class TestAddDocuments(MarqoTestCase):
 
 
 class TestDepreciatedAddDocuments(MarqoTestCase):
-    """Tests for the deprecitade add_documents method for back compatibility
+    """Tests for the depreciated add_documents method for back compatibility
     """
 
     def setUp(self) -> None:
