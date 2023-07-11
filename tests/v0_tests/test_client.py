@@ -70,8 +70,8 @@ class TestMinimumSupportedMarqoVersion(MarqoTestCase):
             with mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo:
                 mock_get_marqo.return_value = {'version': '0.0.0'}
                 client = Client(**self.client_settings)
-                client.create_index("my_test_index")
-                client.index("my_test_index").add_documents([{"name": "test"}])
+                client.create_index(self.index_name_1)
+                client.index(self.index_name_1).add_documents([{"name": "test"}])
 
         # Ensure get_marqo is only called once
         mock_get_marqo.assert_called_once()
