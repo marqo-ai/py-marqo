@@ -2,6 +2,8 @@ import functools
 import json
 import logging
 import pprint
+import time
+
 from marqo import defaults
 import typing
 from urllib import parse
@@ -54,7 +56,10 @@ class Index:
                sentences_per_chunk=2,
                sentence_overlap=0,
                image_preprocessing_method=None,
-               settings_dict: dict = None
+               settings_dict: dict = None,
+               inference_node_type: str = None,
+               storage_node_type: str = None,
+               inference_node_count: int = 1,
                ) -> Dict[str, Any]:
         """Create the index.
 
@@ -70,6 +75,9 @@ class Index:
             settings_dict: if specified, overwrites all other setting
                 parameters, and is passed directly as the index's
                 index_settings
+            inference_node_type: inference type for the index
+            storage_node_type: storage type for the index
+            inference_node_count: number of inference nodes for the index
         Returns:
             Response body, containing information about index creation result
         """
@@ -91,7 +99,19 @@ class Index:
             cl_text_preprocessing['split_length'] = sentences_per_chunk
             cl_img_preprocessing = cl_ix_defaults['image_preprocessing']
             cl_img_preprocessing['patch_method'] = image_preprocessing_method
-            return req.post(f"indexes/{index_name}", body=cl_settings)
+            if not config.cluster_is_marqo:
+                return req.post(f"indexes/{index_name}", body=cl_settings)
+            cl_settings['inference_type'] = inference_node_type
+            cl_settings['storage_class'] = storage_node_type
+            cl_settings['inference_node_count'] = inference_node_count
+            response = req.post(f"indexes/{index_name}", body=cl_settings)
+            index = Index(config, index_name)
+            creation = index.get_status()
+            while creation['index_status'] != 'READY':
+                time.sleep(10)
+                creation = index.get_status()
+                mq_logger.info(f"Index creation status: {creation['index_status']}")
+            return response
 
         return req.post(f"indexes/{index_name}", body={
             "index_defaults": {
@@ -111,7 +131,11 @@ class Index:
 
     def refresh(self):
         """refreshes the index"""
-        return self.http.post(path=F"indexes/{self.index_name}/refresh")
+        return self.http.post(path=F"indexes/{self.index_name}/refresh", index_name=self.index_name,)
+
+    def get_status(self):
+        """gets the status of the index"""
+        return self.http.get(path=F"indexes/{self.index_name}/status")
 
     def search(self, q: Union[str, dict], searchable_attributes: Optional[List[str]] = None,
                limit: int = 10, offset: int = 0, search_method: Union[SearchMethods.TENSOR, str] = SearchMethods.TENSOR,
@@ -184,7 +208,8 @@ class Index:
             body["modelAuth"] = model_auth
         res = self.http.post(
             path=path_with_query_str,
-            body=body
+            body=body,
+            index_name=self.index_name,
         )
 
         num_results = len(res["hits"])
@@ -214,7 +239,7 @@ class Index:
         url_string = f"indexes/{self.index_name}/documents/{document_id}"
         if expose_facets is not None:
             url_string += f"?expose_facets={expose_facets}"
-        return self.http.get(url_string)
+        return self.http.get(url_string, index_name=self.index_name,)
 
     def get_documents(self, document_ids: List[str], expose_facets=None) -> Dict[str, Any]:
         """Gets a selection of documents based on their IDs.
@@ -233,7 +258,8 @@ class Index:
             url_string += f"?expose_facets={expose_facets}"
         return self.http.get(
             url_string,
-            body=document_ids
+            body=document_ids,
+            index_name=self.index_name,
         )
 
     def add_documents(
@@ -340,7 +366,9 @@ class Index:
             # ADD DOCS TIMER-LOGGER (2)
             start_time_client_request = timer()
 
-            res = self.http.post(path=path_with_query_str, body=documents)
+            res = self.http.post(
+                path=path_with_query_str, body=documents, index_name=self.index_name,
+            )
 
             end_time_client_request = timer()
             total_client_request_time = end_time_client_request - start_time_client_request
@@ -374,13 +402,11 @@ class Index:
         base_path = f"indexes/{self.index_name}/documents/delete-batch"
         path_with_refresh = base_path if auto_refresh is None else base_path + f"?refresh={str(auto_refresh).lower()}"
 
-        return self.http.post(
-            path=path_with_refresh, body=ids
-        )
+        return self.http.post(path=path_with_refresh, body=ids, index_name=self.index_name,)
 
     def get_stats(self) -> Dict[str, Any]:
         """Get stats about the index"""
-        return self.http.get(path=f"indexes/{self.index_name}/stats")
+        return self.http.get(path=f"indexes/{self.index_name}/stats", index_name=self.index_name,)
 
     @staticmethod
     def _maybe_datetime(the_date: Optional[Union[datetime, str]]) -> Optional[datetime]:
@@ -434,7 +460,7 @@ class Index:
             errors_detected = False
 
             t0 = timer()
-            res = self.http.post(path=path_with_query_str, body=docs)
+            res = self.http.post(path=path_with_query_str, body=docs, index_name=self.index_name,)
 
             total_batch_time = timer() - t0
             num_docs = len(docs)
@@ -491,4 +517,4 @@ class Index:
 
     def get_settings(self) -> dict:
         """Get all settings of the index"""
-        return self.http.get(path=f"indexes/{self.index_name}/settings")
+        return self.http.get(path=f"indexes/{self.index_name}/settings", index_name=self.index_name,)

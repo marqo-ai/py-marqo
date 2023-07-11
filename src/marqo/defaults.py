@@ -18,6 +18,6 @@ def get_cloud_default_index_settings():
                 "patch_method": None
             }
         },
-        "number_of_shards": 2,
-        "number_of_replicas": 1,
+        "number_of_shards": 1,
+        "number_of_replicas": 0,
     }
