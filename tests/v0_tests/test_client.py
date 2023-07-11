@@ -37,6 +37,7 @@ class TestClient(MarqoTestCase):
 class TestMinimumSupportedMarqoVersion(MarqoTestCase):
 
     def setUp(self) -> None:
+        self.client =   Client(**self.client_settings)
         self.index_name_1 = "my-test-index-1"
         try:
             self.client.delete_index(self.index_name_1)
