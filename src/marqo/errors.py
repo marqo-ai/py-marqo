@@ -165,3 +165,27 @@ class BackendTimeoutError(InternalError):
     def __init__(self, message: str,) -> None:
         self.message = f"Timeout error communicating with Marqo: {message}"
 
+
+class MarqoIndexNotReadyError(__InvalidRequestError):
+    """Error when Marqo index is not ready"""
+    code = "index_not_ready_cloud"
+    status_code = HTTPStatus.NOT_FOUND
+
+    def __init__(self, index_name: str,) -> None:
+        self.message = f"The Python client could not resolve the endpoint for the index name {index_name}. " \
+                       f"This could be due to the index is still in the process of being created," \
+                       f" or that the client's cache has not yet been updated.\n" \
+                       f"- Please try again in a couple of minutes, " \
+                       f"or you can query the index status with get_status function to see when index is ready.\n" \
+                       f"- If the problem persists, please contact marqo support at support@marqo.ai"
+
+
+class MarqoIndexNotFoundError(__InvalidRequestError):
+    """Error when Marqo index is not ready"""
+    code = "index_not_found_cloud"
+    status_code = HTTPStatus.NOT_FOUND
+
+    def __init__(self, index_name: str,) -> None:
+        self.message = f"The index name {index_name} does not exist in the Marqo cloud or client's cache" \
+                       f" has not yet been updated. Please check the index name and try again.\n" \
+                       f"- If the problem persists, please contact marqo support at support@marqo.ai"

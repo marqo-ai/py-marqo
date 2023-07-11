@@ -105,10 +105,11 @@ class Index:
             cl_settings['storage_class'] = storage_node_type
             cl_settings['inference_node_count'] = inference_node_count
             response = req.post(f"indexes/{index_name}", body=cl_settings)
-            creation = req.get(f"indexes/{index_name}/status")
+            index = Index(config, index_name)
+            creation = index.get_status()
             while creation['index_status'] != 'READY':
                 time.sleep(10)
-                creation = req.get(f"indexes/{index_name}/status")
+                creation = index.get_status()
                 mq_logger.info(f"Index creation status: {creation['index_status']}")
             return response
 
@@ -131,6 +132,10 @@ class Index:
     def refresh(self):
         """refreshes the index"""
         return self.http.post(path=F"indexes/{self.index_name}/refresh", index_name=self.index_name,)
+
+    def get_status(self):
+        """gets the status of the index"""
+        return self.http.get(path=F"indexes/{self.index_name}/status")
 
     def search(self, q: Union[str, dict], searchable_attributes: Optional[List[str]] = None,
                limit: int = 10, offset: int = 0, search_method: Union[SearchMethods.TENSOR, str] = SearchMethods.TENSOR,
