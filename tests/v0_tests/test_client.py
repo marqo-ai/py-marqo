@@ -79,19 +79,14 @@ class TestMinimumSupportedMarqoVersion(MarqoTestCase):
         mock_get_marqo.assert_called_once()
         mock_get_marqo.reset_mock()
 
-        print("staring for loop")
-        print(marqo_url_and_version_cache)
         for _ in range(10):
             with mock.patch("marqo.client.mq_logger.warning") as mock_warning, \
-                 mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo, \
-                 mock.patch("marqo.client.Client._marqo_minimum_supported_version_check") as mock_version_check:
-                print(_)
+                 mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo:
+
                 client = Client(**self.client_settings)
 
             mock_get_marqo.assert_not_called()
-            mock_version_check.assert_called_once()
             mock_warning.assert_called_once()
 
             mock_get_marqo.reset_mock()
-            mock_version_check.reset_mock()
             mock_warning.reset_mock()
