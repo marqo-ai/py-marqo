@@ -66,14 +66,3 @@ def convert_dict_to_url_params(d: dict) -> str:
     url_encoded = urllib.parse.quote_plus(as_str)
     return url_encoded
 
-
-def check_minimum_supported_version(func):
-    """
-    A decorator that checks if the client meets the minimum supported version of marqo.
-    """
-
-    def wrapper(self, *args, **kwargs):
-        self._marqo_minimum_supported_version_check()
-        return func(self, *args, **kwargs)
-
-    return wrapper
