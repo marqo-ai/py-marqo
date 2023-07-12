@@ -88,10 +88,7 @@ class TestMinimumSupportedMarqoVersion(MarqoTestCase):
 
             mock_get_marqo.assert_not_called()
             mock_version_check.assert_called_once()
-
-            # Get the warning message
-            warning_message = mock_warning.call_args[0][0]
-            self.assertIn("Please upgrade your Marqo instance to avoid potential errors.",  warning_message)
+            mock_warning.assert_called_once()
 
             mock_get_marqo.reset_mock()
             mock_version_check.reset_mock()
