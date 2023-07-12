@@ -369,7 +369,7 @@ class TestAddDocuments(MarqoTestCase):
                     else:
                         assert isinstance(res, dict)
                         # One huge request is made, if there is no client_side_batching:
-                        assert all([len(d[1]['body']) == docs_to_add for d in mock__post.call_args_list])
+                        assert all([len(d[1]['body']["documents"]) == docs_to_add for d in mock__post.call_args_list])
 
                     assert all(['batch' not in d[1]['path'] for d in mock__post.call_args_list])
 
