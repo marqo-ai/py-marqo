@@ -9,8 +9,11 @@ from marqo.models import BulkSearchBody, BulkSearchQuery
 from marqo._httprequests import HttpRequests
 from marqo import utils, enums
 from marqo import errors
-from marqo.version import __minimum_supported_marqo_version__, __marqo_version__
+from marqo.version import __minimum_supported_marqo_version__
 from marqo.marqo_logging import mq_logger
+
+# A dictionary to cache the marqo url and version for compatibility check
+marqo_url_and_version_cache = {}
 
 
 class Client:
@@ -41,7 +44,6 @@ class Client:
             self.url = url
         self.config = Config(self.url, use_telemetry=return_telemetry, api_key=api_key)
         self.http = HttpRequests(self.config)
-        self.cached_marqo_version = self._get_marqo_version()
         self._marqo_minimum_supported_version_check()
 
     def create_index(
@@ -129,7 +131,6 @@ class Client:
         Returns:
             An Index instance.
         """
-        self._marqo_minimum_supported_version_check()
         if index_name is not None:
             return Index(self.config, index_name=index_name)
         raise Exception('The index UID should not be None')
@@ -195,11 +196,13 @@ class Client:
     def get_cpu_info(self):
         return self.http.get(path="device/cpu")
 
-    def _get_marqo_version(self) -> str:
-        return self.get_marqo()['version']
-
     def _marqo_minimum_supported_version_check(self):
-        if self.cached_marqo_version < __minimum_supported_marqo_version__:
-            mq_logger.warning(f"Your Client (py-Marqo) version "
-                              f"is lower than the minimum supported version ({__minimum_supported_marqo_version__}). "
-                              f"Please upgrade your Marqo instance to avoid potential errors.")
+        if self.url not in marqo_url_and_version_cache:
+            marqo_url_and_version_cache[self.url] = self.get_marqo()["version"]
+        marqo_version = marqo_url_and_version_cache[self.url]
+        if marqo_version < __minimum_supported_marqo_version__:
+            mq_logger.warning(f"Your Marqo python client requires a minimum Marqo version of "
+                              f"{__minimum_supported_marqo_version__} to function properly, while your Marqo version is {self.cached_marqo_version}. "
+                              f"Please upgrade your Marqo instance to avoid potential errors. "
+                              f"If you have already upgraded your Marqo instance but still having this warning, please import you Marqo python client again and retry.")
+
