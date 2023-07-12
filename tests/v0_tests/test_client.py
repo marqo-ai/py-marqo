@@ -79,6 +79,7 @@ class TestMinimumSupportedMarqoVersion(MarqoTestCase):
         mock_get_marqo.assert_called_once()
         mock_get_marqo.reset_mock()
 
+        print("staring for loop")
         for _ in range(10):
             with mock.patch("marqo.client.mq_logger.warning") as mock_warning, \
                  mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo, \
