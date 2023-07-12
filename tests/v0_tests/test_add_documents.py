@@ -238,7 +238,7 @@ class TestAddDocuments(MarqoTestCase):
         assert run()
 
 
-class TestAddDocumentsImageDownloadHeaders(MarqoTestCase)
+class TestAddDocumentsImageDownloadHeaders(MarqoTestCase):
     def setUp(self) -> None:
         self.client = Client(**self.client_settings)
         self.index_name_1 = "my-test-index-1"
