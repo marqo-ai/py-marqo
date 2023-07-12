@@ -198,6 +198,7 @@ class Client:
 
     def _marqo_minimum_supported_version_check(self):
         if self.url not in marqo_url_and_version_cache:
+            print("we are updating the cache")
             marqo_url_and_version_cache[self.url] = self.get_marqo()["version"]
         marqo_version = marqo_url_and_version_cache[self.url]
         print(marqo_version)
