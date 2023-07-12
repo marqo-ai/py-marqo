@@ -201,6 +201,7 @@ class Client:
             marqo_url_and_version_cache[self.url] = self.get_marqo()["version"]
         marqo_version = marqo_url_and_version_cache[self.url]
         if marqo_version < __minimum_supported_marqo_version__:
+            print("yes, smaller")
             mq_logger.warning(f"Your Marqo python client requires a minimum Marqo version of "
                               f"{__minimum_supported_marqo_version__} to function properly, while your Marqo version is {marqo_version}. "
                               f"Please upgrade your Marqo instance to avoid potential errors. "
