@@ -83,6 +83,7 @@ class TestMinimumSupportedMarqoVersion(MarqoTestCase):
             with mock.patch("marqo.client.mq_logger.warning") as mock_warning:
                 with mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo:
                     with mock.patch("marqo.client.Client._marqo_minimum_supported_version_check") as mock_version_check:
+                        mock_get_marqo.return_value = {'version': '0.0.0'}
                         client = Client(**self.client_settings)
 
             mock_get_marqo.assert_not_called()
