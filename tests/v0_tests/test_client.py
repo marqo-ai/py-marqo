@@ -80,18 +80,19 @@ class TestMinimumSupportedMarqoVersion(MarqoTestCase):
         mock_get_marqo.reset_mock()
 
         for _ in range(10):
-            with mock.patch("marqo.client.mq_logger.warning") as mock_warning:
-                with mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo:
-                    with mock.patch("marqo.client.Client._marqo_minimum_supported_version_check") as mock_version_check:
-                        client = Client(**self.client_settings)
+            with mock.patch("marqo.client.mq_logger.warning") as mock_warning, \
+                 mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo, \
+                 mock.patch("marqo.client.Client._marqo_minimum_supported_version_check") as mock_version_check:
 
-                        mock_get_marqo.assert_not_called()
-                        mock_version_check.assert_called_once()
+                client = Client(**self.client_settings)
 
-                        # Get the warning message
-                        warning_message = mock_warning.call_args[0][0]
-                        self.assertIn("Please upgrade your Marqo instance to avoid potential errors.",  warning_message)
+            mock_get_marqo.assert_not_called()
+            mock_version_check.assert_called_once()
 
-                        mock_get_marqo.reset_mock()
-                        mock_version_check.reset_mock()
-                        mock_warning.reset_mock()
+            # Get the warning message
+            warning_message = mock_warning.call_args[0][0]
+            self.assertIn("Please upgrade your Marqo instance to avoid potential errors.",  warning_message)
+
+            mock_get_marqo.reset_mock()
+            mock_version_check.reset_mock()
+            mock_warning.reset_mock()
