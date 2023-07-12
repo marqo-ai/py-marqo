@@ -6,4 +6,4 @@ pillow
 numpy
 pytest
 dataclasses
-pydantic
+pydantic<2.0.0

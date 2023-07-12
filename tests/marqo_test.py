@@ -48,7 +48,7 @@ def mock_http_traffic(mock_config: List[MockHTTPTraffic], forbid_extra_calls: bo
             call_count = defaultdict(int)  # Used to ensure expected_calls for each MockHTTPTraffic
 
             with mock.patch("marqo._httprequests.HttpRequests.send_request") as mock_send_request:
-                def side_effect(http_operation, path, body=None, content_type=None):
+                def side_effect(http_operation, path, body=None, content_type=None, index_name=""):
                     if isinstance(body, str):
                         body = json.loads(body)
                     for i, config in enumerate(mock_config):

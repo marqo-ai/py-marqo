@@ -149,8 +149,8 @@ class TestIndex(MarqoTestCase):
             test_client.create_index(index_name=self.index_name_1)
             args, kwargs = mock__post.call_args
             # this is specific to cloud
-            assert kwargs['body']['number_of_shards'] == 2
-            assert kwargs['body']['number_of_replicas'] == 1
+            assert kwargs['body']['number_of_shards'] == 1
+            assert kwargs['body']['number_of_replicas'] == 0
             assert kwargs['body']['index_defaults']['treat_urls_and_pointers_as_images'] is False
             return True
         assert run()
@@ -166,8 +166,8 @@ class TestIndex(MarqoTestCase):
                 index_name=self.index_name_1, model='sentence-transformers/stsb-xlm-r-multilingual')
             args, kwargs = mock__post.call_args
             assert kwargs['body']['index_defaults']['model'] == 'sentence-transformers/stsb-xlm-r-multilingual'
-            assert kwargs['body']['number_of_shards'] == 2
-            assert kwargs['body']['number_of_replicas'] == 1
+            assert kwargs['body']['number_of_shards'] == 1
+            assert kwargs['body']['number_of_replicas'] == 0
             assert kwargs['body']['index_defaults']['treat_urls_and_pointers_as_images'] is False
             return True
         assert run()
@@ -201,3 +201,97 @@ class TestIndex(MarqoTestCase):
         index_setting = self.client.index(self.index_name_1).get_settings()
         print(index_setting)
         assert intended_replicas == index_setting['number_of_replicas']
+
+    @mock.patch("marqo._httprequests.HttpRequests.post", return_value={"acknowledged": True})
+    @mock.patch("marqo._httprequests.HttpRequests.get", return_value={"index_status": "READY"})
+    def test_create_marqo_cloud_index(self, mock_get, mock_post):
+        self.client.config.url = "https://api.marqo.ai"
+        self.client.config.api_key = 'some-super-secret-API-key'
+        self.client.config.cluster_is_marqo = True
+
+        result = self.client.create_index(
+            index_name=self.index_name_1, inference_node_type="marqo.CPU", inference_node_count=1,
+            storage_node_type="marqo.basic"
+        )
+
+        mock_post.assert_called_with('indexes/my-test-index-1', body={
+            'index_defaults': {
+                'treat_urls_and_pointers_as_images': False, 'model': None, 'normalize_embeddings': True,
+                'text_preprocessing': {'split_length': 2, 'split_overlap': 0, 'split_method': 'sentence'},
+                'image_preprocessing': {'patch_method': None}
+            },
+            'number_of_shards': 1, 'number_of_replicas': 0,
+            'inference_type': "marqo.CPU", 'storage_class': "marqo.basic", 'inference_node_count': 1})
+        mock_get.assert_called_with(path="indexes/my-test-index-1/status")
+        assert result == {"acknowledged": True}
+
+    @mock.patch("marqo._httprequests.HttpRequests.post", return_value={"error": "inference_type is required"})
+    @mock.patch("marqo._httprequests.HttpRequests.get", return_value={"index_status": "READY"})
+    def test_create_marqo_cloud_index_wrong_inference_settings(self, mock_get, mock_post):
+        self.client.config.url = "https://api.marqo.ai"
+        self.client.config.api_key = 'some-super-secret-API-key'
+        self.client.config.cluster_is_marqo = True
+
+        result = self.client.create_index(
+            index_name=self.index_name_1, inference_node_type=None, inference_node_count=1,
+            storage_node_type="marqo.basic"
+        )
+
+        mock_post.assert_called_with('indexes/my-test-index-1', body={
+            'index_defaults': {
+                'treat_urls_and_pointers_as_images': False, 'model': None, 'normalize_embeddings': True,
+                'text_preprocessing': {'split_length': 2, 'split_overlap': 0, 'split_method': 'sentence'},
+                'image_preprocessing': {'patch_method': None}
+            },
+            'number_of_shards': 1, 'number_of_replicas': 0,
+            'inference_type': None, 'storage_class': "marqo.basic", 'inference_node_count': 1})
+        mock_get.assert_called_with(path="indexes/my-test-index-1/status")
+        assert result == {"error": "inference_type is required"}
+
+    @mock.patch("marqo._httprequests.HttpRequests.post", return_value={"error": "storage_class is required"})
+    @mock.patch("marqo._httprequests.HttpRequests.get", return_value={"index_status": "READY"})
+    def test_create_marqo_cloud_index_wrong_storage_settings(self, mock_get, mock_post):
+        self.client.config.url = "https://api.marqo.ai"
+        self.client.config.api_key = 'some-super-secret-API-key'
+        self.client.config.cluster_is_marqo = True
+
+        result = self.client.create_index(
+            index_name=self.index_name_1, inference_node_type="marqo.CPU", inference_node_count=1,
+            storage_node_type=None
+        )
+
+        mock_post.assert_called_with('indexes/my-test-index-1', body={
+            'index_defaults': {
+                'treat_urls_and_pointers_as_images': False, 'model': None, 'normalize_embeddings': True,
+                'text_preprocessing': {'split_length': 2, 'split_overlap': 0, 'split_method': 'sentence'},
+                'image_preprocessing': {'patch_method': None}
+            },
+            'number_of_shards': 1, 'number_of_replicas': 0,
+            'inference_type': "marqo.CPU", 'storage_class': None, 'inference_node_count': 1})
+        mock_get.assert_called_with(path="indexes/my-test-index-1/status")
+        assert result == {"error": "storage_class is required"}
+
+    @mock.patch("marqo._httprequests.HttpRequests.post",
+                return_value={"error": "inference_node_count must be greater than 0"})
+    @mock.patch("marqo._httprequests.HttpRequests.get", return_value={"index_status": "READY"})
+    def test_create_marqo_cloud_index_wrong_inference_node_count(self, mock_get, mock_post):
+        self.client.config.url = "https://api.marqo.ai"
+        self.client.config.api_key = 'some-super-secret-API-key'
+        self.client.config.cluster_is_marqo = True
+
+        result = self.client.create_index(
+            index_name=self.index_name_1, inference_node_type="marqo.CPU", inference_node_count=-1,
+            storage_node_type="marqo.basic"
+        )
+
+        mock_post.assert_called_with('indexes/my-test-index-1', body={
+            'index_defaults': {
+                'treat_urls_and_pointers_as_images': False, 'model': None, 'normalize_embeddings': True,
+                'text_preprocessing': {'split_length': 2, 'split_overlap': 0, 'split_method': 'sentence'},
+                'image_preprocessing': {'patch_method': None}
+            },
+            'number_of_shards': 1, 'number_of_replicas': 0,
+            'inference_type': "marqo.CPU", 'storage_class': "marqo.basic", 'inference_node_count': -1})
+        mock_get.assert_called_with(path="indexes/my-test-index-1/status")
+        assert result == {"error": "inference_node_count must be greater than 0"}
+

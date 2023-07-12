@@ -21,6 +21,7 @@ OPERATION_MAPPING = {
     'put': session.put
 }
 
+
 class HttpRequests:
     def __init__(self, config: Config) -> None:
         self.config = config
@@ -32,12 +33,13 @@ class HttpRequests:
 
         return OPERATION_MAPPING[method]
 
-    def _construct_path(self, path: str) -> str:
+    def _construct_path(self, path: str, index_name="") -> str:
         """Augment the URL request path based if telemetry is required."""
+        url = f"{self.config.get_url(index_name=index_name)}/{path}"
         if self.config.use_telemetry:
             delimeter= "?" if "?" not in f"{self.config.url}/{path}" else "&"
-            return f"{self.config.url}/{path}{delimeter}telemetry=True"
-        return f"{self.config.url}/{path}"
+            return url + f"{delimeter}telemetry=True"
+        return url
 
     def send_request(
         self,
@@ -45,6 +47,7 @@ class HttpRequests:
         path: str,
         body: Optional[Union[Dict[str, Any], List[Dict[str, Any]], List[str], str]] = None,
         content_type: Optional[str] = None,
+        index_name: str = ""
     ) -> Any:
         req_headers = copy.deepcopy(self.headers)
 
@@ -56,7 +59,7 @@ class HttpRequests:
 
         try:
             response = self._operation(http_operation)(
-                url=self._construct_path(path),
+                url=self._construct_path(path, index_name),
                 timeout=self.config.timeout,
                 headers=req_headers,
                 data=body,
@@ -68,40 +71,43 @@ class HttpRequests:
         except requests.exceptions.ConnectionError as err:
             raise BackendCommunicationError(str(err)) from err
 
-
     def get(
         self, path: str,
         body: Optional[Union[Dict[str, Any], List[Dict[str, Any]], List[str], str]] = None,
+        index_name: str = ""
     ) -> Any:
         content_type = None
         if body is not None:
             content_type = 'application/json'
-        return self.send_request('get', path=path, body=body, content_type=content_type)
+        return self.send_request('get', path=path, body=body, content_type=content_type,index_name=index_name)
 
     def post(
         self,
         path: str,
         body: Optional[Union[Dict[str, Any], List[Dict[str, Any]], List[str], str]] = None,
         content_type: Optional[str] = 'application/json',
+        index_name: str = ""
     ) -> Any:
-        return self.send_request('post', path, body, content_type)
+        return self.send_request('post', path, body, content_type, index_name=index_name)
 
     def put(
         self,
         path: str,
         body: Optional[Union[Dict[str, Any], List[Dict[str, Any]], List[str], str]] = None,
         content_type: Optional[str] = None,
+        index_name: str = ""
     ) -> Any:
         if body is not None:
             content_type = 'application/json'
-        return self.send_request('put', path, body, content_type)
+        return self.send_request('put', path, body, content_type, index_name=index_name)
 
     def delete(
         self,
         path: str,
         body: Optional[Union[Dict[str, Any], List[Dict[str, Any]], List[str]]] = None,
+        index_name: str = ""
     ) -> Any:
-        return self.send_request('delete', path, body)
+        return self.send_request('delete', path, body, index_name=index_name)
 
     @staticmethod
     def __to_json(
