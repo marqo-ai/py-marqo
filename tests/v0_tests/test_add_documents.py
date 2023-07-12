@@ -237,6 +237,296 @@ class TestAddDocuments(MarqoTestCase):
 
         assert run()
 
+        args, kwargs = mock__post.call_args
+        assert "device=cuda45" in kwargs["path"]
+
+    def test_add_documents_with_device_batching(self):
+        temp_client = copy.deepcopy(self.client)
+
+        mock__post = mock.MagicMock()
+
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        def run():
+            temp_client.index(self.index_name_1).add_documents(documents=[
+                {"d1": "blah"}, {"d2", "some data"}, {"d2331": "blah"}, {"45d2", "some data"}
+            ], client_batch_size=2, device="cuda:37")
+            return True
+
+        assert run()
+        assert len(mock__post.call_args_list) == 3
+        for args, kwargs in mock__post.call_args_list[:-1]:
+            assert "device=cuda37" in kwargs["path"]
+
+    def test_add_documents_device_not_set(self):
+        """If no device is set, do not even add device parameter to the API call
+        """
+        temp_client = copy.deepcopy(self.client)
+        mock__post = mock.MagicMock()
+
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        def run():
+            temp_client.index(self.index_name_1).add_documents(documents=[
+                {"d1": "blah"}, {"d2", "some data"}
+            ])
+            return True
+
+        assert run()
+
+        args, kwargs = mock__post.call_args
+        assert "device" not in kwargs["path"]
+
+    def test_add_documents_set_refresh(self):
+        temp_client = copy.deepcopy(self.client)
+        temp_client.config.search_device = enums.Devices.cpu
+        temp_client.config.indexing_device = enums.Devices.cpu
+
+        mock__post = mock.MagicMock()
+
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        def run():
+            temp_client.index(self.index_name_1).add_documents(documents=[
+                {"d1": "blah"}, {"d2", "some data"}
+            ], auto_refresh=False)
+            temp_client.index(self.index_name_1).add_documents(documents=[
+                {"d1": "blah"}, {"d2", "some data"}
+            ], auto_refresh=True)
+            return True
+
+        assert run()
+
+        args, kwargs0 = mock__post.call_args_list[0]
+        assert "refresh=false" in kwargs0["path"]
+        args, kwargs1 = mock__post.call_args_list[1]
+        assert "refresh=true" in kwargs1["path"]
+
+    def test_add_documents_with_no_processes(self):
+        mock__post = mock.MagicMock()
+
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        def run():
+            self.client.index(self.index_name_1).add_documents(documents=[
+                {"d1": "blah"}, {"d2", "some data"}
+            ])
+            return True
+
+        assert run()
+
+        args, kwargs = mock__post.call_args
+        assert "processes=12" not in kwargs["path"]
+
+    def test_resilient_indexing(self):
+        self.client.create_index(self.index_name_1)
+
+        if self.IS_MULTI_INSTANCE:
+            time.sleep(1)
+
+        assert 0 == self.client.index(self.index_name_1).get_stats()['numberOfDocuments']
+        d1 = {"d1": "blah", "_id": "1234"}
+        d2 = {"d2": "blah", "_id": "5678"}
+        docs = [d1, {"content": "some terrible doc", "d3": "blah", "_id": 12345}, d2]
+        self.client.index(self.index_name_1).add_documents(documents=docs)
+
+        if self.IS_MULTI_INSTANCE:
+            time.sleep(1)
+
+        assert 2 == self.client.index(self.index_name_1).get_stats()['numberOfDocuments']
+        assert d1 == self.client.index(self.index_name_1).get_document(document_id='1234')
+        assert d2 == self.client.index(self.index_name_1).get_document(document_id='5678')
+
+        if self.IS_MULTI_INSTANCE:
+            time.sleep(1)
+        assert {"1234", "5678"} == {d['_id'] for d in
+                                    self.client.index(self.index_name_1).search("blah", limit=3)['hits']}
+
+    def test_batching_add_docs(self):
+
+        vocab_source = "https://www.mit.edu/~ecprice/wordlist.10000"
+        docs_to_add = 250
+        vocab = requests.get(vocab_source).text.splitlines()
+        docs = [{"Title": " ".join(random.choices(population=vocab, k=10)),
+                 "Description": " ".join(random.choices(population=vocab, k=25)),
+                 } for _ in range(docs_to_add)]
+
+        batches = [None, 1, 2, 50]
+        for auto_refresh in (None, True, False):
+            for client_batch_size in batches:
+                mock__post = mock.MagicMock()
+                mock__post.return_value = dict()
+
+                @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+                def run():
+                    res = self.client.index(self.index_name_1).add_documents(
+                        auto_refresh=auto_refresh, documents=docs, client_batch_size=client_batch_size, )
+                    if client_batch_size is not None:
+                        assert isinstance(res, list)
+                        assert len(res) == math.ceil(docs_to_add / client_batch_size)
+                        # should only refresh on the last call, if auto_refresh=True
+                        assert all([f'refresh=false' in d[1]['path'] for d in
+                                    mock__post.call_args_list][:-1])
+                        if auto_refresh:
+                            assert [f"{self.index_name_1}/refresh" in d[1]['path']
+                                    for d in mock__post.call_args_list][-1]
+                    else:
+                        assert isinstance(res, dict)
+                        # One huge request is made, if there is no client_side_batching:
+                        assert all([len(d[1]['body']) == docs_to_add for d in mock__post.call_args_list])
+
+                    assert all(['batch' not in d[1]['path'] for d in mock__post.call_args_list])
+
+                    assert all(['processes' not in d[1]['path'] for d in mock__post.call_args_list])
+
+                    return True
+
+                assert run()
+
+    def test_add_lists_non_tensor(self):
+        original_doc = {"d1": "blah", "_id": "1234", 'my list': ['tag-1', 'tag-2']}
+        self.client.create_index(self.index_name_1)
+        self.client.index(self.index_name_1).add_documents(documents=[original_doc], non_tensor_fields=['my list'])
+
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(self.index_name_1).search,
+                              q='something', filter_string='my\ list:tag-1'
+                              )
+
+        res = self.client.index(self.index_name_1).search(
+            q='something', filter_string='my\ list:tag-1'
+        )
+        assert res['hits'][0]['_id'] == '1234'
+
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(self.index_name_1).search,
+                              q='something', filter_string='my\ list:tag-non-existent'
+                              )
+
+        bad_res = self.client.index(self.index_name_1).search(
+            q='something', filter_string='my\ list:tag-non-existent'
+        )
+        assert len(bad_res['hits']) == 0
+
+    def test_use_existing_fields(self):
+        self.client.create_index(self.index_name_1)
+        self.client.index(index_name=self.index_name_1).add_documents(
+            documents=[
+                {
+                    "_id": "123",
+                    "title 1": "content 1",
+                    "desc 2": "content 2. blah blah blah",
+                    "old": "some other cool thing"
+                }],
+            non_tensor_fields=["desc 2"]
+        )
+
+        assert {"title 1", "_embedding", "old"} == functools.reduce(
+            lambda x, y: x.union(y),
+            [set(facet.keys()) for facet in
+             self.client.index(index_name=self.index_name_1).get_document(
+                 document_id="123", expose_facets=True)["_tensor_facets"]]
+        )
+
+        self.client.index(index_name=self.index_name_1).add_documents(
+            documents=[
+                {
+                    "_id": "123",
+                    "title 1": "content 1",
+                    "desc 2": "content 2. blah blah blah",
+                    "new f": "12345 "
+                }], use_existing_tensors=True
+        )
+        # we don't get desc 2 facets, because it was already a non_tensor_field
+        assert {"title 1", "_embedding", "new f"} == functools.reduce(
+            lambda x, y: x.union(y),
+            [set(facet.keys()) for facet in
+             self.client.index(index_name=self.index_name_1).get_document(
+                 document_id="123", expose_facets=True)["_tensor_facets"]]
+        )
+
+    def test_multimodal_combination_doc(self):
+        settings = {
+            "treat_urls_and_pointers_as_images": True,
+            "model": "ViT-B/32",
+        }
+        self.client.create_index(index_name=self.index_name_1, **settings)
+
+        self.client.index(index_name=self.index_name_1).add_documents(
+            documents=[
+                {
+                    "combo_text_image": {
+                        # a space at the end
+                        "text_0 ": "A rider is riding a horse jumping over the barrier_0.",
+                        "text_1": "A rider is riding a horse jumping over the barrier_1.",
+                        "text_2": "A rider is riding a horse jumping over the barrier_2.",
+                        "text_3": "A rider is riding a horse jumping over the barrier_3.",
+                        "text_4": "A rider is riding a horse jumping over the barrier_4.",
+                        "image_0": "https://raw.githubusercontent.com/marqo-ai/marqo/mainline/examples/ImageSearchGuide/data/image0.jpg",
+                        "image_1": "https://raw.githubusercontent.com/marqo-ai/marqo/mainline/examples/ImageSearchGuide/data/image1.jpg",
+                        "image_2": "https://raw.githubusercontent.com/marqo-ai/marqo/mainline/examples/ImageSearchGuide/data/image2.jpg",
+                        "image_3": "https://raw.githubusercontent.com/marqo-ai/marqo/mainline/examples/ImageSearchGuide/data/image3.jpg",
+                        "image_4": "https://raw.githubusercontent.com/marqo-ai/marqo/mainline/examples/ImageSearchGuide/data/image4.jpg",
+                    },
+                    "space field": {
+                        "space child 1": "search this with space",
+                        "space child 2": "test space",
+                    },
+                    "_id": "111",
+                },
+
+            ], mappings={"combo_text_image": {"type": "multimodal_combination", "weights": {
+                "text_0 ": 0.1, "text_1": 0.1, "text_2": 0.1, "text_3": 0.1, "text_4": 0.1,
+                "image_0": 0.1, "image_1": 0.1, "image_2": 0.1, "image_3": 0.1, "image_4": 0.1,
+            }}, "space field": {
+                "type": "multimodal_combination", "weights": {
+                    "space child 1": 0.5,
+                    "space child 2": 0.5,
+                }}}, auto_refresh=True)
+
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(self.index_name_1).search,
+                              "A rider is riding a horse jumping over the barrier_0", search_method="lexical")
+
+        lexical_res = self.client.index(self.index_name_1).search(
+            "A rider is riding a horse jumping over the barrier_0", search_method="lexical")
+        assert lexical_res["hits"][0]["_id"] == "111"
+
+        # a space at the end
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(self.index_name_1).search,
+                              "",
+                              filter_string="combo_text_image.text_0\ : (A rider is riding a horse jumping over the barrier_0.)")
+
+        filtering_res = self.client.index(self.index_name_1).search(
+            "", filter_string="combo_text_image.text_0\ : (A rider is riding a horse jumping over the barrier_0.)")
+        assert filtering_res["hits"][0]["_id"] == "111"
+
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(self.index_name_1).search, "")
+
+        tensor_res = self.client.index(self.index_name_1).search("")
+        assert tensor_res["hits"][0]["_id"] == "111"
+
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(self.index_name_1).search,
+                              "search this with space", search_method="lexical")
+
+        space_lexical_res = self.client.index(self.index_name_1).search(
+            "search this with space", search_method="lexical")
+        assert space_lexical_res["hits"][0]["_id"] == "111"
+
+        # A space in the middle
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(self.index_name_1).search,
+                              "", filter_string="space\ field.space\ child\ 1:(search this with space)")
+
+        space_filtering_res = self.client.index(self.index_name_1).search(
+            "", filter_string="space\ field.space\ child\ 1:(search this with space)")
+        assert space_filtering_res["hits"][0]["_id"] == "111"
+
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(self.index_name_1).search, "")
+
+        space_tensor_res = self.client.index(self.index_name_1).search("")
+        assert space_tensor_res["hits"][0]["_id"] == "111"
+
 
 class TestAddDocumentsImageDownloadHeaders(MarqoTestCase):
     def setUp(self) -> None:
