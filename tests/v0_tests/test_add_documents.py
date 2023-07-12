@@ -236,3 +236,34 @@ class TestAddDocuments(MarqoTestCase):
             return True
 
         assert run()
+
+
+class TestAddDocumentsImageDownloadHeaders(MarqoTestCase)
+    def setUp(self) -> None:
+        self.client = Client(**self.client_settings)
+        self.index_name_1 = "my-test-index-1"
+        try:
+            self.client.delete_index(self.index_name_1)
+        except MarqoApiError as s:
+            pass
+
+    def tearDown(self) -> None:
+        try:
+            self.client.delete_index(self.index_name_1)
+        except MarqoApiError as s:
+            pass
+
+    def test_add_docs_image_download_headers(self):
+        mock__post = mock.MagicMock()
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        def run():
+            image_download_headers = {"Authentication": "my-secret-key"}
+            self.client.index(index_name=self.index_name_1).add_documents(
+                documents=[{"some": "data"}], image_download_headers=image_download_headers)
+            args, kwargs = mock__post.call_args
+            assert "imageDownloadHeaders" in kwargs['body']
+            assert kwargs['body']['imageDownloadHeaders'] == image_download_headers
+
+            return True
+
+        assert run()

@@ -6,7 +6,7 @@ from marqo.utils import convert_dict_to_url_params
 from unittest import mock
 
 
-class TestAddDocuments(MarqoTestCase):
+class TestAddDocumentsModelAuth(MarqoTestCase):
 
     def setUp(self) -> None:
         self.client = Client(**self.client_settings)
