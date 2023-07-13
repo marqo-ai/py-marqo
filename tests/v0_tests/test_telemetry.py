@@ -2,6 +2,7 @@ from marqo.client import Client
 from tests.marqo_test import MarqoTestCase
 from marqo.errors import MarqoApiError
 import math
+from tests.marqo_test import with_documents
 
 
 class TestTelemetry(MarqoTestCase):
@@ -34,6 +35,9 @@ class TestTelemetry(MarqoTestCase):
             {"documents": doc, "auto_refresh": False, "client_batch_size": 3, "non_tensor_fields": ["Title"]},
         ]
 
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(self.index_name_1).add_documents, **kwargs_list[0])
+
         for kwargs in kwargs_list:
             res = self.client.index(self.index_name_1).add_documents(**kwargs)
             if kwargs["client_batch_size"] is not None:
@@ -46,23 +50,26 @@ class TestTelemetry(MarqoTestCase):
     def test_telemetry_search(self):
         search_kwargs_list = [
             {"q": "marqo is good"},
-            {"q": "good search","limit": 5,},
-            {"q": "try search me","filter_string": "filter expression"},
-            {"q": "try search me","show_highlights": False},
-            {"q": "search query","search_method": "LEXICAL"},
-            {"q": "search query","searchable_attributes": ["Description"]}]
+            {"q": "good search", "limit": 5, },
+            {"q": "try search me", "filter_string": "filter expression"},
+            {"q": "try search me", "show_highlights": False},
+            {"q": "search query", "search_method": "LEXICAL"},
+            {"q": "search query", "searchable_attributes": ["Description"]}]
 
         self.client.create_index(self.index_name_1)
-        self.client.index(self.index_name_1).add_documents([{"Title": "A dummy document",}])
+        self.client.index(self.index_name_1).add_documents([{"Title": "A dummy document", }])
+
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(self.index_name_1).search, **search_kwargs_list[0])
 
         for kwargs in search_kwargs_list:
             res = self.client.index(self.index_name_1).search(**kwargs)
             self.assertIn("telemetry", res)
             self.assertIn("timesMs", res["telemetry"])
 
-    def test_telemetry_bulk_search(self):
-        self.client.create_index(self.index_name_1)
-        self.client.index(self.index_name_1).add_documents([{"Title": "A dummy document",}])
+    @with_documents(lambda self: {self.index_name_1: [{"Title": "A dummy document", }] * 10},
+                    warmup_query="this is a solid doc")
+    def test_telemetry_bulk_search(self, _):
         res = self.client.bulk_search([
             {
                 "index": self.index_name_1,
@@ -90,20 +97,16 @@ class TestTelemetry(MarqoTestCase):
                            'bulk_search.vector.postprocess', 'bulk_search.rerank', 'POST /indexes/bulk/search']
         assert all([field in res["telemetry"]["timesMs"] for field in expected_fields])
 
-
     def test_telemetry_get_document(self):
         self.client.create_index(self.index_name_1)
-        self.client.index(self.index_name_1).add_documents([{"_id": "123321", "Title": "Marqo is useful",}])
+        self.client.index(self.index_name_1).add_documents([{"_id": "123321", "Title": "Marqo is useful", }])
         res = self.client.index(self.index_name_1).get_document("123321")
         self.assertIn("telemetry", res)
         self.assertEqual(res["telemetry"], dict())
 
-
     def test_delete_documents(self):
         self.client.create_index(self.index_name_1)
-        self.client.index(self.index_name_1).add_documents([{"_id": "123321", "Title": "Marqo is useful",}])
+        self.client.index(self.index_name_1).add_documents([{"_id": "123321", "Title": "Marqo is useful", }])
         res = self.client.index(self.index_name_1).delete_documents(["123321"])
         self.assertIn("telemetry", res)
         self.assertEqual(res["telemetry"], dict())
-
-
