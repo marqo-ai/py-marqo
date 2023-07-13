@@ -11,6 +11,7 @@ from marqo import utils, enums
 from marqo import errors
 from marqo.version import minimum_supported_marqo_version
 from marqo.marqo_logging import mq_logger
+from packaging import version
 
 # A dictionary to cache the marqo url and version for compatibility check
 marqo_url_and_version_cache = {}
@@ -200,7 +201,7 @@ class Client:
         if self.url not in marqo_url_and_version_cache:
             marqo_url_and_version_cache[self.url] = self.get_marqo()["version"]
         marqo_version = marqo_url_and_version_cache[self.url]
-        if marqo_version < minimum_supported_marqo_version():
+        if version.parse(marqo_version) < version(minimum_supported_marqo_version()):
             mq_logger.warning(f"Your Marqo Python client requires a minimum Marqo version of "
                               f"{minimum_supported_marqo_version()} to function properly, while your Marqo version is {marqo_version}. "
                               f"Please upgrade your Marqo instance to avoid potential errors. "
