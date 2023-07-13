@@ -1,9 +1,7 @@
-import pprint
 from marqo.client import Client
 from tests.marqo_test import MarqoTestCase
 from marqo.errors import MarqoApiError
 import math
-
 
 
 class TestTelemetry(MarqoTestCase):
