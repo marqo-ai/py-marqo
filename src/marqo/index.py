@@ -460,7 +460,7 @@ class Index:
 
             t0 = timer()
             body = {"documents": docs, **base_body}
-            res = self.http.post(path=path_with_query_str, body=body)
+            res = self.http.post(path=path_with_query_str, body=body, index_name=self.index_name)
 
             total_batch_time = timer() - t0
             num_docs = len(docs)
@@ -514,10 +514,6 @@ class Index:
             self.refresh()
         mq_logger.debug('completed batch ingestion.')
         return results
-
-    def get_settings(self) -> dict:
-        """Get all settings of the index"""
-        return self.http.get(path=f"indexes/{self.index_name}/settings")
 
     def get_settings(self) -> dict:
         """Get all settings of the index"""
