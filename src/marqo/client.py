@@ -9,6 +9,12 @@ from marqo.models import BulkSearchBody, BulkSearchQuery
 from marqo._httprequests import HttpRequests
 from marqo import utils, enums
 from marqo import errors
+from marqo.version import minimum_supported_marqo_version
+from marqo.marqo_logging import mq_logger
+from packaging import version
+
+# A dictionary to cache the marqo url and version for compatibility check
+marqo_url_and_version_cache = {}
 
 
 class Client:
@@ -18,11 +24,12 @@ class Client:
     A client instance is needed for every marqo API method to know the location of
     marqo and its permissions.
     """
+
     def __init__(
-        self, url: str = "http://localhost:8882", 
-        main_user: str = None, main_password: str = None,
-        return_telemetry: bool = False,
-        api_key: str = None
+            self, url: str = "http://localhost:8882",
+            main_user: str = None, main_password: str = None,
+            return_telemetry: bool = False,
+            api_key: str = None
     ) -> None:
         """
         Parameters
@@ -38,6 +45,7 @@ class Client:
             self.url = url
         self.config = Config(self.url, use_telemetry=return_telemetry, api_key=api_key)
         self.http = HttpRequests(self.config)
+        self._marqo_minimum_supported_version_check()
 
     def create_index(
         self, index_name: str,
@@ -167,7 +175,7 @@ class Client:
 
     @staticmethod
     def _base64url_encode(
-        data: bytes
+            data: bytes
     ) -> str:
         return base64.urlsafe_b64encode(data).decode('utf-8').replace('=', '')
 
@@ -177,7 +185,7 @@ class Client:
     def health(self):
         return self.http.get(path="health")
 
-    def eject_model(self, model_name:str, model_device:str):
+    def eject_model(self, model_name: str, model_device: str):
         return self.http.delete(path=f"models?model_name={model_name}&model_device={model_device}")
 
     def get_loaded_models(self):
@@ -189,4 +197,13 @@ class Client:
     def get_cpu_info(self):
         return self.http.get(path="device/cpu")
 
+    def _marqo_minimum_supported_version_check(self):
+        if self.url not in marqo_url_and_version_cache:
+            marqo_url_and_version_cache[self.url] = self.get_marqo()["version"]
+        marqo_version = marqo_url_and_version_cache[self.url]
+        if version.parse(marqo_version) < version(minimum_supported_marqo_version()):
+            mq_logger.warning(f"Your Marqo Python client requires a minimum Marqo version of "
+                              f"{minimum_supported_marqo_version()} to function properly, while your Marqo version is {marqo_version}. "
+                              f"Please upgrade your Marqo instance to avoid potential errors. "
+                              f"If you have already upgraded your Marqo instance but still having this warning, please import you Marqo Python client again and retry.")
 

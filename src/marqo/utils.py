@@ -23,6 +23,7 @@ def construct_authorized_url(url_base: str, username: str, password: str) -> str
     http_part, domain_part = url_split
     return f"{http_part}{http_sep}{username}:{password}@{domain_part}"
 
+
 def translate_device_string_for_url(device: Optional[str]) -> Optional[str]:
     """Translates a device string for use as a URL param
 
