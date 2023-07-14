@@ -49,6 +49,6 @@ class MarqoUrlResolver:
         response_json = response.json()
         for index in response_json['indices']:
             if index.get('index_status') in ["READY", "CREATING"]:
-                self._urls_mapping[index['index_status']][index['index_name']] = index.get('load_balancer_dns_name')
+                self._urls_mapping[index['index_status']][index['index_name']] = index.get('endpoint')
         if self._urls_mapping:
             self.timestamp = time.time()
