@@ -31,8 +31,8 @@ class TestConfig(MarqoTestCase):
     @mock.patch("requests.get")
     def test_get_url_when_cluster_is_marqo_and_index_name_specified(self, mock_get):
         mock_get.return_value.json.return_value = {"indices": [
-            {"index_name": "index1", "load_balancer_dns_name": "example.com", "index_status": "READY"},
-            {"index_name": "index2", "load_balancer_dns_name": "example2.com", "index_status": "READY"}
+            {"index_name": "index1", "endpoint": "example.com", "index_status": "READY"},
+            {"index_name": "index2", "endpoint": "example2.com", "index_status": "READY"}
         ]}
         c = config.Config(url="https://api.marqo.ai")
         print(c.marqo_url_resolver._urls_mapping)
