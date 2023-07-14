@@ -6,7 +6,7 @@ from marqo.utils import convert_dict_to_url_params
 from unittest import mock
 
 
-class TestAddDocuments(MarqoTestCase):
+class TestAddDocumentsModelAuth(MarqoTestCase):
 
     def setUp(self) -> None:
         self.client = Client(**self.client_settings)
@@ -23,11 +23,11 @@ class TestAddDocuments(MarqoTestCase):
         def run():
             mock_s3_model_auth = {'s3': {'aws_access_key_id': 'some_acc_key',
                                          'aws_secret_access_key': 'some_sec_acc_key'}}
-            expected_str = f"&model_auth={convert_dict_to_url_params(mock_s3_model_auth)}"
             self.client.index(index_name=self.index_name_1).add_documents(
                 documents=[{"some": "data"}], model_auth=mock_s3_model_auth)
             args, kwargs = mock__post.call_args
-            assert expected_str in kwargs['path']
+            assert "modelAuth" in kwargs['body']
+            assert kwargs['body']['modelAuth'] == mock_s3_model_auth
 
             return True
 

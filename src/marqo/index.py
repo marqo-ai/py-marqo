@@ -331,19 +331,18 @@ class Index:
         t0 = timer()
         start_time_client_process = timer()
         base_path = f"indexes/{self.index_name}/documents"
-        non_tensor_fields_query_param = utils.convert_list_to_query_params("non_tensor_fields", non_tensor_fields)
-        image_download_headers_param = (utils.convert_dict_to_url_params(image_download_headers)
-                                        if image_download_headers else '')
-        model_auth_param = (utils.convert_dict_to_url_params(model_auth) if model_auth else '')
-        mappings_param = (utils.convert_dict_to_url_params(mappings) if mappings else '')
         query_str_params = (
             f"{f'&device={utils.translate_device_string_for_url(device)}' if device is not None else ''}"
-            f"{f'&use_existing_tensors={str(use_existing_tensors).lower()}' if use_existing_tensors is not None else ''}"
-            f"{f'&{non_tensor_fields_query_param}' if len(non_tensor_fields) > 0 else ''}"
-            f"{f'&image_download_headers={image_download_headers_param}' if image_download_headers else ''}"
-            f"{f'&mappings={mappings_param}' if mappings else ''}"
-            f"{f'&model_auth={model_auth_param}' if model_auth_param else ''}"
         )
+
+        base_body = {
+            "nonTensorFields" : non_tensor_fields,
+            "useExistingTensors" : use_existing_tensors,
+            "imageDownloadHeaders" : image_download_headers,
+            "mappings" : mappings,
+            "modelAuth": model_auth,
+        }
+
         end_time_client_process = timer()
         total_client_process_time = end_time_client_process - start_time_client_process
         mq_logger.debug(f"add_documents pre-processing: took {(total_client_process_time):.3f}s for {num_docs} docs, "
@@ -355,7 +354,7 @@ class Index:
             res = self._batch_request(
                 base_path=base_path, auto_refresh=auto_refresh,
                 docs=documents, verbose=False,
-                query_str_params=query_str_params, batch_size=client_batch_size
+                query_str_params=query_str_params, batch_size=client_batch_size, base_body = base_body
             )
 
         else:
@@ -366,10 +365,10 @@ class Index:
             # ADD DOCS TIMER-LOGGER (2)
             start_time_client_request = timer()
 
+            body = {"documents": documents, **base_body}
             res = self.http.post(
-                path=path_with_query_str, body=documents, index_name=self.index_name,
+                path=path_with_query_str, body=body, index_name=self.index_name,
             )
-
             end_time_client_request = timer()
             total_client_request_time = end_time_client_request - start_time_client_request
 
@@ -423,8 +422,8 @@ class Index:
 
     def _batch_request(
             self, docs: List[Dict],  base_path: str,
-            query_str_params: str, verbose: bool = True,
-            auto_refresh: bool = True, batch_size: int = 50
+            query_str_params: str, base_body: dict, verbose: bool = True,
+            auto_refresh: bool = True, batch_size: int = 50,
     ) -> List[Dict[str, Any]]:
         """Batches a large chunk of documents to be sent as multiple
         add_documents invocations
@@ -460,7 +459,8 @@ class Index:
             errors_detected = False
 
             t0 = timer()
-            res = self.http.post(path=path_with_query_str, body=docs, index_name=self.index_name,)
+            body = {"documents": docs, **base_body}
+            res = self.http.post(path=path_with_query_str, body=body, index_name=self.index_name)
 
             total_batch_time = timer() - t0
             num_docs = len(docs)

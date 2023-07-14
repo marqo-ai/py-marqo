@@ -1,8 +1,11 @@
-import logging
 import time
+from marqo.marqo_logging import mq_logger
 import requests
-
-from marqo.errors import MarqoCloudIndexNotFoundError, MarqoCloudIndexNotReadyError
+from requests.exceptions import Timeout
+from marqo.errors import (
+    MarqoCloudIndexNotFoundError,
+    MarqoCloudIndexNotReadyError,
+)
 
 
 class MarqoUrlResolver:
@@ -30,13 +33,22 @@ class MarqoUrlResolver:
         raise MarqoCloudIndexNotFoundError(item)
 
     def _refresh_urls(self, timeout=None):
-        response = requests.get('https://api.marqo.ai/api/indexes',
-                                headers={"x-api-key": self.api_key}, timeout=timeout)
+        try:
+            response = requests.get('https://api.marqo.ai/api/indexes',
+                                    headers={"x-api-key": self.api_key}, timeout=timeout)
+        except Timeout:
+            mq_logger.warning(
+                f"Timeout getting and caching URLs for Marqo Cloud indexes from the"
+                f" /api/indexes/ endpoint. Please contact marqo support at support@marqo.ai if this message"
+                f" persists."
+            )
+            return None
+
         if not response.ok:
-            logging.warning(response.text)
+            mq_logger.warning(response.text)
         response_json = response.json()
         for index in response_json['indices']:
             if index.get('index_status') in ["READY", "CREATING"]:
-                self._urls_mapping[index['index_status']][index['index_name']] = index.get('load_balancer_dns_name')
+                self._urls_mapping[index['index_status']][index['index_name']] = index.get('endpoint')
         if self._urls_mapping:
             self.timestamp = time.time()

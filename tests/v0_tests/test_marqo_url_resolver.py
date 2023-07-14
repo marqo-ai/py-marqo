@@ -9,8 +9,8 @@ class TestMarqoUrlResolver(MarqoTestCase):
     @patch("requests.get")
     def test_refresh_urls_if_needed(self, mock_get):
         mock_get.return_value.json.return_value = {"indices": [
-            {"index_name": "index1", "load_balancer_dns_name": "example.com", "index_status": "READY"},
-            {"index_name": "index2", "load_balancer_dns_name": "example2.com", "index_status": "READY"}
+            {"index_name": "index1", "endpoint": "example.com", "index_status": "READY"},
+            {"index_name": "index2", "endpoint": "example2.com", "index_status": "READY"}
         ]}
         resolver = MarqoUrlResolver(api_key="your-api-key", expiration_time=60)
         initial_timestamp = resolver.timestamp
@@ -33,8 +33,8 @@ class TestMarqoUrlResolver(MarqoTestCase):
     @patch("requests.get")
     def test_refresh_urls_if_not_needed(self, mock_get):
         mock_get.return_value.json.return_value = {"indices": [
-            {"index_name": "index1", "load_balancer_dns_name": "example.com", "index_status": "READY"},
-            {"index_name": "index2", "load_balancer_dns_name": "example2.com", "index_status": "READY"}
+            {"index_name": "index1", "endpoint": "example.com", "index_status": "READY"},
+            {"index_name": "index2", "endpoint": "example2.com", "index_status": "READY"}
         ]}
         resolver = MarqoUrlResolver(api_key="your-api-key", expiration_time=60)
 
@@ -56,8 +56,8 @@ class TestMarqoUrlResolver(MarqoTestCase):
     @patch("requests.get")
     def test_refresh_includes_only_ready(self, mock_get):
         mock_get.return_value.json.return_value = {"indices": [
-            {"index_name": "index1", "load_balancer_dns_name": "example.com", "index_status": "READY"},
-            {"index_name": "index2", "load_balancer_dns_name": "example2.com", "index_status": "NOT READY"}
+            {"index_name": "index1", "endpoint": "example.com", "index_status": "READY"},
+            {"index_name": "index2", "endpoint": "example2.com", "index_status": "NOT READY"}
         ]}
         resolver = MarqoUrlResolver(api_key="your-api-key", expiration_time=60)
 
@@ -69,3 +69,21 @@ class TestMarqoUrlResolver(MarqoTestCase):
         assert urls_mapping["READY"] == {
             "index1": "example.com",
         }
+
+    def test_refresh_urls_graceful_timeout_handling(self):
+        resolver = MarqoUrlResolver(api_key="your-api-key", expiration_time=60)
+        # use ridiculously low timeout
+        with self.assertLogs('marqo', level='WARNING') as cm:
+            resolver._refresh_urls(timeout=0.0000000001)
+            assert "timeout" in cm.output[0].lower()
+            assert "marqo cloud indexes" in cm.output[0].lower()
+
+    @patch("requests.get")
+    def test_refresh_urls_graceful_timeout_handling_http_timeout(self, mock_get):
+        from requests.exceptions import Timeout
+        mock_get.side_effect = Timeout
+        resolver = MarqoUrlResolver(api_key="your-api-key", expiration_time=60)
+        with self.assertLogs('marqo', level='WARNING') as cm:
+            resolver._refresh_urls(timeout=5)
+            assert "timeout" in cm.output[0].lower()
+            assert "marqo cloud indexes" in cm.output[0].lower()

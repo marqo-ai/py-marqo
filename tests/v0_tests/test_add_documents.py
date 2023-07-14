@@ -52,14 +52,13 @@ class TestAddDocuments(MarqoTestCase):
             }
         })
         assert self.client.get_index(self.index_name_1).get_settings() \
-            ["index_defaults"]["ann_parameters"]["parameters"]["m"] == 24
+                   ["index_defaults"]["ann_parameters"]["parameters"]["m"] == 24
 
         # Ensure non-specified values are in default
         assert self.client.get_index(self.index_name_1).get_settings() \
-            ["index_defaults"]["ann_parameters"]["parameters"]["ef_construction"] == 128
+                   ["index_defaults"]["ann_parameters"]["parameters"]["ef_construction"] == 128
         assert self.client.get_index(self.index_name_1).get_settings() \
-            ["index_defaults"]["ann_parameters"]["space_type"] == "cosinesimil"
-
+                   ["index_defaults"]["ann_parameters"]["space_type"] == "cosinesimil"
 
     # Delete index tests:
 
@@ -87,19 +86,20 @@ class TestAddDocuments(MarqoTestCase):
     def test_add_documents_with_ids(self):
         self.client.create_index(index_name=self.index_name_1)
         d1 = {
-                "doc title": "Cool Document 1",
-                "field 1": "some extra info",
-                "_id": "e197e580-0393-4f4e-90e9-8cdf4b17e339"
-            }
+            "doc title": "Cool Document 1",
+            "field 1": "some extra info",
+            "_id": "e197e580-0393-4f4e-90e9-8cdf4b17e339"
+        }
         d2 = {
-                "doc title": "Just Your Average Doc",
-                "field X": "this is a solid doc",
-                "_id": "123456"
+            "doc title": "Just Your Average Doc",
+            "field X": "this is a solid doc",
+            "_id": "123456"
         }
         res = self.client.index(self.index_name_1).add_documents([
             d1, d2
         ])
-        retrieved_d1 = self.client.index(self.index_name_1).get_document(document_id="e197e580-0393-4f4e-90e9-8cdf4b17e339")
+        retrieved_d1 = self.client.index(self.index_name_1).get_document(
+            document_id="e197e580-0393-4f4e-90e9-8cdf4b17e339")
         assert retrieved_d1 == d1
         retrieved_d2 = self.client.index(self.index_name_1).get_document(document_id="123456")
         assert retrieved_d2 == d2
@@ -108,13 +108,13 @@ class TestAddDocuments(MarqoTestCase):
         """indexes the documents and retrieves the documents with the generated IDs"""
         self.client.create_index(index_name=self.index_name_1)
         d1 = {
-                "doc title": "Cool Document 1",
-                "field 1": "some extra info"
-            }
+            "doc title": "Cool Document 1",
+            "field 1": "some extra info"
+        }
         d2 = {
-                "doc title": "Just Your Average Doc",
-                "field X": "this is a solid doc"
-            }
+            "doc title": "Just Your Average Doc",
+            "field X": "this is a solid doc"
+        }
         res = self.client.index(self.index_name_1).add_documents([d1, d2])
         ids = [item["_id"] for item in res["items"]]
         assert len(ids) == 2
@@ -169,6 +169,7 @@ class TestAddDocuments(MarqoTestCase):
     def test_add_documents_long_fields(self):
         """TODO
         """
+
     def test_update_docs_updates_chunks(self):
         """TODO"""
 
@@ -180,10 +181,10 @@ class TestAddDocuments(MarqoTestCase):
             {"abc": "wow camel", "_id": "123"},
             {"abc": "camels are cool", "_id": "foo"}
         ])
-        
+
         if self.IS_MULTI_INSTANCE:
             self.warm_request(self.client.index(self.index_name_1).search, "wow camel")
-            
+
         res0 = self.client.index(self.index_name_1).search("wow camel")
         print("res0res0")
         pprint.pprint(res0)
@@ -221,6 +222,7 @@ class TestAddDocuments(MarqoTestCase):
             self.client.index(self.index_name_1).add_documents([{"abd": "efg"}])
 
         assert "index_not_found" == ex.value.code
+
     def test_add_documents_with_device(self):
         temp_client = copy.deepcopy(self.client)
 
@@ -232,6 +234,7 @@ class TestAddDocuments(MarqoTestCase):
                 {"d1": "blah"}, {"d2", "some data"}
             ], device="cuda:45")
             return True
+
         assert run()
 
         args, kwargs = mock__post.call_args
@@ -241,12 +244,14 @@ class TestAddDocuments(MarqoTestCase):
         temp_client = copy.deepcopy(self.client)
 
         mock__post = mock.MagicMock()
+
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
         def run():
             temp_client.index(self.index_name_1).add_documents(documents=[
                 {"d1": "blah"}, {"d2", "some data"}, {"d2331": "blah"}, {"45d2", "some data"}
             ], client_batch_size=2, device="cuda:37")
             return True
+
         assert run()
         assert len(mock__post.call_args_list) == 3
         for args, kwargs in mock__post.call_args_list[:-1]:
@@ -264,6 +269,7 @@ class TestAddDocuments(MarqoTestCase):
                 {"d1": "blah"}, {"d2", "some data"}
             ])
             return True
+
         assert run()
 
         args, kwargs = mock__post.call_args
@@ -285,6 +291,7 @@ class TestAddDocuments(MarqoTestCase):
                 {"d1": "blah"}, {"d2", "some data"}
             ], auto_refresh=True)
             return True
+
         assert run()
 
         args, kwargs0 = mock__post.call_args_list[0]
@@ -301,6 +308,7 @@ class TestAddDocuments(MarqoTestCase):
                 {"d1": "blah"}, {"d2", "some data"}
             ])
             return True
+
         assert run()
 
         args, kwargs = mock__post.call_args
@@ -315,7 +323,7 @@ class TestAddDocuments(MarqoTestCase):
         assert 0 == self.client.index(self.index_name_1).get_stats()['numberOfDocuments']
         d1 = {"d1": "blah", "_id": "1234"}
         d2 = {"d2": "blah", "_id": "5678"}
-        docs = [d1,  {"content": "some terrible doc", "d3": "blah", "_id": 12345}, d2]
+        docs = [d1, {"content": "some terrible doc", "d3": "blah", "_id": 12345}, d2]
         self.client.index(self.index_name_1).add_documents(documents=docs)
 
         if self.IS_MULTI_INSTANCE:
@@ -324,7 +332,6 @@ class TestAddDocuments(MarqoTestCase):
         assert 2 == self.client.index(self.index_name_1).get_stats()['numberOfDocuments']
         assert d1 == self.client.index(self.index_name_1).get_document(document_id='1234')
         assert d2 == self.client.index(self.index_name_1).get_document(document_id='5678')
-
 
         if self.IS_MULTI_INSTANCE:
             time.sleep(1)
@@ -337,21 +344,22 @@ class TestAddDocuments(MarqoTestCase):
         docs_to_add = 250
         vocab = requests.get(vocab_source).text.splitlines()
         docs = [{"Title": " ".join(random.choices(population=vocab, k=10)),
-          "Description": " ".join(random.choices(population=vocab, k=25)),
-          } for _ in range(docs_to_add)]
+                 "Description": " ".join(random.choices(population=vocab, k=25)),
+                 } for _ in range(docs_to_add)]
 
         batches = [None, 1, 2, 50]
         for auto_refresh in (None, True, False):
             for client_batch_size in batches:
                 mock__post = mock.MagicMock()
                 mock__post.return_value = dict()
+
                 @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
                 def run():
                     res = self.client.index(self.index_name_1).add_documents(
-                        auto_refresh=auto_refresh, documents=docs, client_batch_size=client_batch_size,)
+                        auto_refresh=auto_refresh, documents=docs, client_batch_size=client_batch_size, )
                     if client_batch_size is not None:
                         assert isinstance(res, list)
-                        assert len(res) == math.ceil(docs_to_add/client_batch_size)
+                        assert len(res) == math.ceil(docs_to_add / client_batch_size)
                         # should only refresh on the last call, if auto_refresh=True
                         assert all([f'refresh=false' in d[1]['path'] for d in
                                     mock__post.call_args_list][:-1])
@@ -361,13 +369,14 @@ class TestAddDocuments(MarqoTestCase):
                     else:
                         assert isinstance(res, dict)
                         # One huge request is made, if there is no client_side_batching:
-                        assert all([len(d[1]['body']) == docs_to_add for d in mock__post.call_args_list])
+                        assert all([len(d[1]['body']["documents"]) == docs_to_add for d in mock__post.call_args_list])
 
                     assert all(['batch' not in d[1]['path'] for d in mock__post.call_args_list])
 
                     assert all(['processes' not in d[1]['path'] for d in mock__post.call_args_list])
 
                     return True
+
                 assert run()
 
     def test_add_lists_non_tensor(self):
@@ -377,8 +386,8 @@ class TestAddDocuments(MarqoTestCase):
 
         if self.IS_MULTI_INSTANCE:
             self.warm_request(self.client.index(self.index_name_1).search,
-                q='something', filter_string='my\ list:tag-1'
-            )
+                              q='something', filter_string='my\ list:tag-1'
+                              )
 
         res = self.client.index(self.index_name_1).search(
             q='something', filter_string='my\ list:tag-1'
@@ -387,8 +396,8 @@ class TestAddDocuments(MarqoTestCase):
 
         if self.IS_MULTI_INSTANCE:
             self.warm_request(self.client.index(self.index_name_1).search,
-                q='something', filter_string='my\ list:tag-non-existent'
-            )
+                              q='something', filter_string='my\ list:tag-non-existent'
+                              )
 
         bad_res = self.client.index(self.index_name_1).search(
             q='something', filter_string='my\ list:tag-non-existent'
@@ -434,10 +443,10 @@ class TestAddDocuments(MarqoTestCase):
 
     def test_multimodal_combination_doc(self):
         settings = {
-            "treat_urls_and_pointers_as_images":True,
+            "treat_urls_and_pointers_as_images": True,
             "model": "ViT-B/32",
         }
-        self.client.create_index(index_name=self.index_name_1,**settings)
+        self.client.create_index(index_name=self.index_name_1, **settings)
 
         self.client.index(index_name=self.index_name_1).add_documents(
             documents=[
@@ -455,9 +464,9 @@ class TestAddDocuments(MarqoTestCase):
                         "image_3": "https://raw.githubusercontent.com/marqo-ai/marqo/mainline/examples/ImageSearchGuide/data/image3.jpg",
                         "image_4": "https://raw.githubusercontent.com/marqo-ai/marqo/mainline/examples/ImageSearchGuide/data/image4.jpg",
                     },
-                    "space field":{
-                        "space child 1" : "search this with space",
-                        "space child 2" : "test space",
+                    "space field": {
+                        "space child 1": "search this with space",
+                        "space child 2": "test space",
                     },
                     "_id": "111",
                 },
@@ -466,36 +475,38 @@ class TestAddDocuments(MarqoTestCase):
                 "text_0 ": 0.1, "text_1": 0.1, "text_2": 0.1, "text_3": 0.1, "text_4": 0.1,
                 "image_0": 0.1, "image_1": 0.1, "image_2": 0.1, "image_3": 0.1, "image_4": 0.1,
             }}, "space field": {
-                "type":"multimodal_combination", "weights":{
-                    "space child 1" : 0.5,
-                    "space child 2" : 0.5,
+                "type": "multimodal_combination", "weights": {
+                    "space child 1": 0.5,
+                    "space child 2": 0.5,
                 }}}, auto_refresh=True)
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(self.index_name_1).search,"A rider is riding a horse jumping over the barrier_0", search_method="lexical")
+            self.warm_request(self.client.index(self.index_name_1).search,
+                              "A rider is riding a horse jumping over the barrier_0", search_method="lexical")
 
-        lexical_res = self.client.index(self.index_name_1).search("A rider is riding a horse jumping over the barrier_0", search_method="lexical")
+        lexical_res = self.client.index(self.index_name_1).search(
+            "A rider is riding a horse jumping over the barrier_0", search_method="lexical")
         assert lexical_res["hits"][0]["_id"] == "111"
 
         # a space at the end
         if self.IS_MULTI_INSTANCE:
             self.warm_request(self.client.index(self.index_name_1).search,
-            "", filter_string="combo_text_image.text_0\ : (A rider is riding a horse jumping over the barrier_0.)")
+                              "",
+                              filter_string="combo_text_image.text_0\ : (A rider is riding a horse jumping over the barrier_0.)")
 
         filtering_res = self.client.index(self.index_name_1).search(
             "", filter_string="combo_text_image.text_0\ : (A rider is riding a horse jumping over the barrier_0.)")
         assert filtering_res["hits"][0]["_id"] == "111"
 
-
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(self.index_name_1).search,"")
+            self.warm_request(self.client.index(self.index_name_1).search, "")
 
         tensor_res = self.client.index(self.index_name_1).search("")
         assert tensor_res["hits"][0]["_id"] == "111"
 
         if self.IS_MULTI_INSTANCE:
             self.warm_request(self.client.index(self.index_name_1).search,
-            "search this with space", search_method="lexical")
+                              "search this with space", search_method="lexical")
 
         space_lexical_res = self.client.index(self.index_name_1).search(
             "search this with space", search_method="lexical")
@@ -504,14 +515,32 @@ class TestAddDocuments(MarqoTestCase):
         # A space in the middle
         if self.IS_MULTI_INSTANCE:
             self.warm_request(self.client.index(self.index_name_1).search,
-            "", filter_string="space\ field.space\ child\ 1:(search this with space)")
+                              "", filter_string="space\ field.space\ child\ 1:(search this with space)")
 
         space_filtering_res = self.client.index(self.index_name_1).search(
             "", filter_string="space\ field.space\ child\ 1:(search this with space)")
         assert space_filtering_res["hits"][0]["_id"] == "111"
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(self.index_name_1).search,"")
+            self.warm_request(self.client.index(self.index_name_1).search, "")
 
         space_tensor_res = self.client.index(self.index_name_1).search("")
         assert space_tensor_res["hits"][0]["_id"] == "111"
+
+    def test_add_docs_image_download_headers(self):
+        mock__post = mock.MagicMock()
+
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        def run():
+            image_download_headers = {"Authentication": "my-secret-key"}
+            self.client.index(index_name=self.index_name_1).add_documents(
+                documents=[{"some": "data"}], image_download_headers=image_download_headers)
+            args, kwargs = mock__post.call_args
+            assert "imageDownloadHeaders" in kwargs['body']
+            assert kwargs['body']['imageDownloadHeaders'] == image_download_headers
+
+            return True
+
+        assert run()
+
+
