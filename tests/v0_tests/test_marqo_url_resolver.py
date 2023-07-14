@@ -69,3 +69,21 @@ class TestMarqoUrlResolver(MarqoTestCase):
         assert urls_mapping["READY"] == {
             "index1": "example.com",
         }
+
+    def test_refresh_urls_graceful_timeout_handling(self):
+        resolver = MarqoUrlResolver(api_key="your-api-key", expiration_time=60)
+        # use ridiculously low timeout
+        with self.assertLogs('marqo', level='WARNING') as cm:
+            resolver._refresh_urls(timeout=0.0000000001)
+            assert "timeout" in cm.output[0].lower()
+            assert "marqo cloud indexes" in cm.output[0].lower()
+
+    @patch("requests.get")
+    def test_refresh_urls_graceful_timeout_handling_http_timeout(self, mock_get):
+        from requests.exceptions import Timeout
+        mock_get.side_effect = Timeout
+        resolver = MarqoUrlResolver(api_key="your-api-key", expiration_time=60)
+        with self.assertLogs('marqo', level='WARNING') as cm:
+            resolver._refresh_urls(timeout=5)
+            assert "timeout" in cm.output[0].lower()
+            assert "marqo cloud indexes" in cm.output[0].lower()

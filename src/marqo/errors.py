@@ -166,6 +166,8 @@ class BackendTimeoutError(InternalError):
         self.message = f"Timeout error communicating with Marqo: {message}"
 
 
+# NON HTTP ERRORS:
+
 class MarqoCloudIndexNotReadyError(MarqoError):
     """Error when Marqo index is not ready"""
     code = "index_not_ready_cloud"
