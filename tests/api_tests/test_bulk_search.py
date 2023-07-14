@@ -195,7 +195,8 @@ class TestBulkSearch(MarqoTestCase):
         resp = self.client.bulk_search([{
             "index": self.index_name_1,
             "q": "blah blah",
-            "filter": "(an_int:[0 TO 30] and an_int:2) AND abc-123:(some text)"
+            # note: filter has escaped character (-)
+            "filter": "(an_int:[0 TO 30] and an_int:2) AND abc\\-123:(some text)"
         }])
         assert len(resp['result']) == 1
         search_res = resp['result'][0]

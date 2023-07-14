@@ -12,7 +12,7 @@ import pytest
 
 
 @pytest.mark.cuda_test
-class TestAddDocuments(MarqoTestCase):
+class TestSearch(MarqoTestCase):
 
     # NOTE: test_search_with_device was removed from these cuda tests
     # NOTE: Try this solo again if needed -> @allow_environments(["CUDA_DIND_MARQO_OS"])
@@ -134,7 +134,8 @@ class TestAddDocuments(MarqoTestCase):
         ], device="cuda",auto_refresh=True)
         search_res = self.client.index(self.index_name_1).search(
             "blah blah",
-            filter_string="(an_int:[0 TO 30] and an_int:2) AND abc-123:(some text)",
+            # NOTE: There is an escaped dash in the filter string
+            filter_string="(an_int:[0 TO 30] and an_int:2) AND abc\\-123:(some text)",
             device="cuda")
         assert len(search_res["hits"]) == 1
         pprint.pprint(search_res)
