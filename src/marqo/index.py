@@ -308,7 +308,7 @@ class Index:
 
         if tensor_fields is None and non_tensor_fields is None:
             raise errors.InvalidArgError('You must include the `tensor_fields` parameter. '
-                                         'Use tensorFields=[] to index for lexical-only search.')
+                                         'Use `tensor_fields=[]` to index for lexical-only search.')
 
         if non_tensor_fields is not None:
             logging.warning('The `non_tensor_fields` parameter has been deprecated and will be removed in Marqo 2.0.0. '
@@ -360,7 +360,7 @@ class Index:
             "mappings" : mappings,
             "modelAuth": model_auth,
         }
-        if tensor_fields:
+        if tensor_fields is not None:
             base_body['tensorFields'] = tensor_fields
         else:
             base_body['nonTensorFields'] = non_tensor_fields

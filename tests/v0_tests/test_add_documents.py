@@ -97,7 +97,7 @@ class TestAddDocuments(MarqoTestCase):
         }
         res = self.client.index(self.index_name_1).add_documents([
             d1, d2
-        ])
+        ], tensor_fields=["field X", "field 1", "doc title"])
         retrieved_d1 = self.client.index(self.index_name_1).get_document(
             document_id="e197e580-0393-4f4e-90e9-8cdf4b17e339")
         assert retrieved_d1 == d1
@@ -115,7 +115,7 @@ class TestAddDocuments(MarqoTestCase):
             "doc title": "Just Your Average Doc",
             "field X": "this is a solid doc"
         }
-        res = self.client.index(self.index_name_1).add_documents([d1, d2])
+        res = self.client.index(self.index_name_1).add_documents([d1, d2], tensor_fields=["field X", "field 1", "doc title"])
         ids = [item["_id"] for item in res["items"]]
         assert len(ids) == 2
         assert ids[0] != ids[1]
@@ -133,14 +133,14 @@ class TestAddDocuments(MarqoTestCase):
             "field X": "this is a solid doc",
             "_id": "56"
         }
-        self.client.index(self.index_name_1).add_documents([d1])
+        self.client.index(self.index_name_1).add_documents([d1], tensor_fields=["field X", "doc title"])
         assert d1 == self.client.index(self.index_name_1).get_document("56")
         d2 = {
             "_id": "56",
             "completely": "different doc.",
             "field X": "this is a solid doc"
         }
-        self.client.index(self.index_name_1).add_documents([d2])
+        self.client.index(self.index_name_1).add_documents([d2], tensor_fields=["field X", "completely"])
         assert d2 == self.client.index(self.index_name_1).get_document("56")
 
     def test_add_batched_documents(self):
@@ -158,7 +158,7 @@ class TestAddDocuments(MarqoTestCase):
              "_id": doc_id}
             for doc_id in doc_ids]
         assert len(docs) == 100
-        ix.add_documents(docs, client_batch_size=4)
+        ix.add_documents(docs, client_batch_size=4, tensor_fields=["Title", "Generic text"])
         ix.refresh()
         # takes too long to search for all...
         for _id in [0, 19, 20, 99]:
@@ -180,7 +180,7 @@ class TestAddDocuments(MarqoTestCase):
         self.client.index(self.index_name_1).add_documents([
             {"abc": "wow camel", "_id": "123"},
             {"abc": "camels are cool", "_id": "foo"}
-        ])
+        ], tensor_fields=["abc"])
 
         if self.IS_MULTI_INSTANCE:
             self.warm_request(self.client.index(self.index_name_1).search, "wow camel")
@@ -200,7 +200,7 @@ class TestAddDocuments(MarqoTestCase):
 
     def test_delete_docs_empty_ids(self):
         self.client.create_index(index_name=self.index_name_1)
-        self.client.index(self.index_name_1).add_documents([{"abc": "efg", "_id": "123"}])
+        self.client.index(self.index_name_1).add_documents([{"abc": "efg", "_id": "123"}], tensor_fields=["abc"])
         try:
             self.client.index(self.index_name_1).delete_documents([])
             raise AssertionError
@@ -213,13 +213,13 @@ class TestAddDocuments(MarqoTestCase):
     def test_get_document(self):
         my_doc = {"abc": "efg", "_id": "123"}
         self.client.create_index(index_name=self.index_name_1)
-        self.client.index(self.index_name_1).add_documents([my_doc])
+        self.client.index(self.index_name_1).add_documents([my_doc], tensor_fields=["abc"])
         retrieved = self.client.index(self.index_name_1).get_document(document_id='123')
         assert retrieved == my_doc
 
     def test_add_documents_missing_index_fails(self):
         with pytest.raises(MarqoWebError) as ex:
-            self.client.index(self.index_name_1).add_documents([{"abd": "efg"}])
+            self.client.index(self.index_name_1).add_documents([{"abd": "efg"}], tensor_fields=["abc"])
 
         assert "index_not_found" == ex.value.code
 
@@ -232,7 +232,7 @@ class TestAddDocuments(MarqoTestCase):
         def run():
             temp_client.index(self.index_name_1).add_documents(documents=[
                 {"d1": "blah"}, {"d2", "some data"}
-            ], device="cuda:45")
+            ], device="cuda:45", tensor_fields=["d1", "d2"])
             return True
 
         assert run()
@@ -249,7 +249,7 @@ class TestAddDocuments(MarqoTestCase):
         def run():
             temp_client.index(self.index_name_1).add_documents(documents=[
                 {"d1": "blah"}, {"d2", "some data"}, {"d2331": "blah"}, {"45d2", "some data"}
-            ], client_batch_size=2, device="cuda:37")
+            ], client_batch_size=2, device="cuda:37", tensor_fields=["d1", "d2", "d2331", "45d2"])
             return True
 
         assert run()
@@ -267,7 +267,7 @@ class TestAddDocuments(MarqoTestCase):
         def run():
             temp_client.index(self.index_name_1).add_documents(documents=[
                 {"d1": "blah"}, {"d2", "some data"}
-            ])
+            ], tensor_fields=["d1", "d2"])
             return True
 
         assert run()
@@ -286,10 +286,10 @@ class TestAddDocuments(MarqoTestCase):
         def run():
             temp_client.index(self.index_name_1).add_documents(documents=[
                 {"d1": "blah"}, {"d2", "some data"}
-            ], auto_refresh=False)
+            ], auto_refresh=False, tensor_fields=["d1", "d2"])
             temp_client.index(self.index_name_1).add_documents(documents=[
                 {"d1": "blah"}, {"d2", "some data"}
-            ], auto_refresh=True)
+            ], auto_refresh=True, tensor_fields=["d1", "d2"])
             return True
 
         assert run()
@@ -306,7 +306,7 @@ class TestAddDocuments(MarqoTestCase):
         def run():
             self.client.index(self.index_name_1).add_documents(documents=[
                 {"d1": "blah"}, {"d2", "some data"}
-            ])
+            ], tensor_fields=["d1", "d2"])
             return True
 
         assert run()
@@ -324,7 +324,7 @@ class TestAddDocuments(MarqoTestCase):
         d1 = {"d1": "blah", "_id": "1234"}
         d2 = {"d2": "blah", "_id": "5678"}
         docs = [d1, {"content": "some terrible doc", "d3": "blah", "_id": 12345}, d2]
-        self.client.index(self.index_name_1).add_documents(documents=docs)
+        self.client.index(self.index_name_1).add_documents(documents=docs, tensor_fields=["d1", "d2", "d3", "content"])
 
         if self.IS_MULTI_INSTANCE:
             time.sleep(1)
@@ -356,7 +356,8 @@ class TestAddDocuments(MarqoTestCase):
                 @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
                 def run():
                     res = self.client.index(self.index_name_1).add_documents(
-                        auto_refresh=auto_refresh, documents=docs, client_batch_size=client_batch_size, )
+                        auto_refresh=auto_refresh, documents=docs, client_batch_size=client_batch_size,
+                        tensor_fields=["Title", "Description"])
                     if client_batch_size is not None:
                         assert isinstance(res, list)
                         assert len(res) == math.ceil(docs_to_add / client_batch_size)
@@ -431,7 +432,7 @@ class TestAddDocuments(MarqoTestCase):
                     "title 1": "content 1",
                     "desc 2": "content 2. blah blah blah",
                     "new f": "12345 "
-                }], use_existing_tensors=True
+                }], use_existing_tensors=True, tensor_fields=["desc 2", "new f", "title 1"]
         )
         # we don't get desc 2 facets, because it was already a non_tensor_field
         assert {"title 1", "_embedding", "new f"} == functools.reduce(
@@ -478,7 +479,7 @@ class TestAddDocuments(MarqoTestCase):
                 "type": "multimodal_combination", "weights": {
                     "space child 1": 0.5,
                     "space child 2": 0.5,
-                }}}, auto_refresh=True)
+                }}}, auto_refresh=True, tensor_fields=["combo_text_image", "space field"])
 
         if self.IS_MULTI_INSTANCE:
             self.warm_request(self.client.index(self.index_name_1).search,
@@ -534,7 +535,7 @@ class TestAddDocuments(MarqoTestCase):
         def run():
             image_download_headers = {"Authentication": "my-secret-key"}
             self.client.index(index_name=self.index_name_1).add_documents(
-                documents=[{"some": "data"}], image_download_headers=image_download_headers)
+                documents=[{"some": "data"}], image_download_headers=image_download_headers, tensor_fields=["some"])
             args, kwargs = mock__post.call_args
             assert "imageDownloadHeaders" in kwargs['body']
             assert kwargs['body']['imageDownloadHeaders'] == image_download_headers
