@@ -268,6 +268,7 @@ class Index:
         auto_refresh: bool = True,
         client_batch_size: int = None,
         device: str = None,
+        tensor_fields: List[str] = None,
         non_tensor_fields: List[str] = None,
         use_existing_tensors: bool = False,
         image_download_headers: dict = None,
@@ -287,7 +288,11 @@ class Index:
                 client-side.
             device: the device used to index the data. Examples include "cpu",
                 "cuda" and "cuda:2"
-            non_tensor_fields: fields within documents to not create and store tensors against.
+            tensor_fields: fields within documents to create and store tensors against.
+            non_tensor_fields: fields within documents to not create and store tensors against. Cannot be used with
+                tensor_fields.
+                .. deprecated:: 2.0.0
+                    This parameter has been deprecated and will be removed in Marqo 2.0.0. User tensor_fields instead.
             use_existing_tensors: use vectors that already exist in the docs.
             image_download_headers: a dictionary of headers to be passed while downloading images,
                 for URLs found in documents
@@ -296,15 +301,26 @@ class Index:
         Returns:
             Response body outlining indexing result
         """
-        if non_tensor_fields is None:
-            non_tensor_fields = []
+        if tensor_fields is not None and non_tensor_fields is not None:
+            raise errors.InvalidArgError('Cannot define `non_tensor_fields` when `tensor_fields` is defined. '
+                                         '`non_tensor_fields` has been deprecated and will be removed in Marqo 2.0.0. '
+                                         'Its use is discouraged.')
+
+        if tensor_fields is None and non_tensor_fields is None:
+            raise errors.InvalidArgError('You must include the `tensor_fields` parameter. '
+                                         'Use tensorFields=[] to index for lexical-only search.')
+
+        if non_tensor_fields is not None:
+            logging.warning('The `non_tensor_fields` parameter has been deprecated and will be removed in Marqo 2.0.0. '
+                            'Use `tensor_fields` instead.')
+
         if image_download_headers is None:
             image_download_headers = dict()
         return self._add_docs_organiser(
             documents=documents, auto_refresh=auto_refresh,
-            client_batch_size=client_batch_size, device=device, non_tensor_fields=non_tensor_fields,
-            use_existing_tensors=use_existing_tensors, image_download_headers=image_download_headers, mappings=mappings,
-            model_auth=model_auth
+            client_batch_size=client_batch_size, device=device, tensor_fields=tensor_fields,
+            non_tensor_fields=non_tensor_fields, use_existing_tensors=use_existing_tensors,
+            image_download_headers=image_download_headers, mappings=mappings, model_auth=model_auth
         )
 
     def _add_docs_organiser(
@@ -313,6 +329,7 @@ class Index:
         auto_refresh=True,
         client_batch_size: int = None,
         device: str = None,
+        tensor_fields: List = None,
         non_tensor_fields: List = None,
         use_existing_tensors: bool = False,
         image_download_headers: dict = None,
@@ -320,10 +337,12 @@ class Index:
         model_auth: dict = None
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
 
+        if (tensor_fields is None and non_tensor_fields is None) \
+                or (tensor_fields is not None and non_tensor_fields is not None):
+            raise ValueError("Exactly one of tensor_fields or non_tensor_fields must be provided.")
+
         error_detected_message = ('Errors detected in add documents call. '
                                   'Please examine the returned result object for more information.')
-        if non_tensor_fields is None:
-            non_tensor_fields = []
 
         num_docs = len(documents)
 
@@ -336,12 +355,15 @@ class Index:
         )
 
         base_body = {
-            "nonTensorFields" : non_tensor_fields,
             "useExistingTensors" : use_existing_tensors,
             "imageDownloadHeaders" : image_download_headers,
             "mappings" : mappings,
             "modelAuth": model_auth,
         }
+        if tensor_fields:
+            base_body['tensorFields'] = tensor_fields
+        else:
+            base_body['nonTensorFields'] = non_tensor_fields
 
         end_time_client_process = timer()
         total_client_process_time = end_time_client_process - start_time_client_process
