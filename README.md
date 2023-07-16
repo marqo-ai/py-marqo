@@ -107,17 +107,19 @@ import marqo
 mq = marqo.Client(url='http://localhost:8882')
 
 mq.create_index("my-first-index")
-mq.index("my-first-index").add_documents([
-    {
-        "Title": "The Travels of Marco Polo",
-        "Description": "A 13th-century travelogue describing Polo's travels"
-    }, 
-    {
-        "Title": "Extravehicular Mobility Unit (EMU)",
-        "Description": "The EMU is a spacesuit that provides environmental protection, "
-                       "mobility, life support, and communications for astronauts",
-        "_id": "article_591"
-    }]
+mq.index("my-first-index").add_documents(
+    [
+        {
+            "Title": "The Travels of Marco Polo",
+            "Description": "A 13th-century travelogue describing Polo's travels"},
+        {
+            "Title": "Extravehicular Mobility Unit (EMU)",
+            "Description": "The EMU is a spacesuit that provides environmental protection, "
+                           "mobility, life support, and communications for astronauts",
+            "_id": "article_591"
+        }
+    ], 
+    tensor_fields=["Title", "Description"]
 )
 
 results = mq.index("my-first-index").search(
@@ -278,8 +280,7 @@ import pprint
 mq = marqo.Client(url="http://localhost:8882")
 
 mq.create_index("my-weighted-query-index")
-mq.index("my-weighted-query-index").add_documents(
-    [
+mq.index("my-weighted-query-index").add_documents([
         {
             "Title": "Smartphone",
             "Description": "A smartphone is a portable computer device that combines mobile telephone "
@@ -296,7 +297,8 @@ mq.index("my-weighted-query-index").add_documents(
             "is an extinct carnivorous marsupial."
             "The last known of its species died in 1936.",
         },
-    ]
+    ],
+    tensor_fields=["Title", "Description"]
 )
 
 # initially we ask for a type of communications device which is popular in the 21st century
@@ -371,9 +373,6 @@ mq.index("my-first-multimodal-index").add_documents(
             },
         },
     ],
-    # Create the mappings, here we define our captioned_image mapping 
-    # which weights the image more heavily than the caption - these pairs 
-    # will be represented by a single vector in the index
     mappings={
         "captioned_image": {
             "type": "multimodal_combination",
@@ -383,6 +382,7 @@ mq.index("my-first-multimodal-index").add_documents(
             },
         }
     },
+    tensor_fields=["captioned_image"],
 )
 
 # Search this index with a simple text query
