@@ -3,6 +3,7 @@ from marqo.client import Client
 from tests.marqo_test import MarqoTestCase
 from marqo.errors import MarqoApiError
 from marqo.client import marqo_url_and_version_cache
+from json import JSONDecodeError
 
 
 class TestClient(MarqoTestCase):
@@ -33,16 +34,6 @@ class TestClient(MarqoTestCase):
         assert 'status' in res['backend']
 
     def test_version_check_instantiation(self):
-        with mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo:
-
-            mock_get_marqo.return_value = {'version': '0.0.0'}
-            client = Client(url="https://api.marqo.ai")
-
-            mock_get_marqo.assert_not_called()
-
-            assert marqo_url_and_version_cache == dict()
-
-    def test_skip_version_check_for_cloud_v2(self):
         with mock.patch("marqo.client.mq_logger.warning") as mock_warning,\
             mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo:
 
@@ -63,6 +54,39 @@ class TestClient(MarqoTestCase):
             # Assert the url is in the cache
             self.assertIn(self.client_settings['url'], marqo_url_and_version_cache)
             assert marqo_url_and_version_cache[self.client_settings['url']] == '0.0.0'
+
+    def test_skip_version_check_for_cloud_v2(self):
+        for url in ["https://api.marqo.ai", "https://cloud.marqo.ai"]:
+            with mock.patch("marqo.client.mq_logger.warning") as mock_warning,\
+                mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo:
+
+                mock_get_marqo.return_value = {'version': '0.0.0'}
+                client = Client(url = url)
+
+                mock_get_marqo.assert_not_called()
+
+                print(marqo_url_and_version_cache)
+                assert url in marqo_url_and_version_cache
+                assert marqo_url_and_version_cache[url] == '_skipped'
+
+    def test_error_handling_in_version_check(self):
+        with mock.patch("marqo.client.mq_logger.warning") as mock_warning, \
+                mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo:
+            mock_get_marqo.side_effect = JSONDecodeError("test", "test", 0)
+            client = Client(**self.client_settings)
+
+            mock_get_marqo.assert_called_once()
+
+            # Check the warning was logged
+            mock_warning.assert_called_once()
+
+            # Get the warning message
+            warning_message = mock_warning.call_args[0][0]
+
+            # Assert the message is what you expect
+            self.assertIn("Marqo encountered an error when trying to check the Marqo version for url", warning_message)
+            self.assertEqual(marqo_url_and_version_cache, dict({self.client_settings["url"] : "_skipped"}))
+
 
     def test_version_check_multiple_instantiation(self):
         """Ensure that duplicated instantiation of the client does not result in multiple APIs calls of get_marqo()"""

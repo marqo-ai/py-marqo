@@ -13,6 +13,7 @@ from marqo.version import minimum_supported_marqo_version
 from marqo.marqo_logging import mq_logger
 # we want to avoid name conflicts with marqo.version
 from packaging import version as versioning_helpers
+from json import JSONDecodeError
 
 # A dictionary to cache the marqo url and version for compatibility check
 marqo_url_and_version_cache = {}
@@ -199,16 +200,34 @@ class Client:
         return self.http.get(path="device/cpu")
 
     def _marqo_minimum_supported_version_check(self):
-        # Skip the check for Marqo Cloud V2 right now
-        skip_version_check_url = ["https://api.marqo.ai"]
-        if self.url in skip_version_check_url:
+        min_ver = minimum_supported_marqo_version()
+
+        # Skip the check if the url is previously labelled as "_skipped"
+        if self.url in marqo_url_and_version_cache and marqo_url_and_version_cache[self.url] == "_skipped":
             return
-        if self.url not in marqo_url_and_version_cache:
-            marqo_url_and_version_cache[self.url] = self.get_marqo()["version"]
-        marqo_version = marqo_url_and_version_cache[self.url]
-        if versioning_helpers.parse(marqo_version) < versioning_helpers.parse(minimum_supported_marqo_version()):
-            mq_logger.warning(f"Your Marqo Python client requires a minimum Marqo version of "
-                              f"{minimum_supported_marqo_version()} to function properly, while your Marqo version is {marqo_version}. "
-                              f"Please upgrade your Marqo instance to avoid potential errors. "
-                              f"If you have already upgraded your Marqo instance but still having this warning, please import you Marqo Python client again and retry.")
+
+        # Skip the check for Marqo CloudV2 APIs right now
+        skip_version_check_url = ["https://api.marqo.ai", "https://cloud.marqo.ai"]
+        if self.url in skip_version_check_url:
+            marqo_url_and_version_cache[self.url] = "_skipped"
+            return
+
+        # Do version check
+        try:
+            if self.url not in marqo_url_and_version_cache:
+                marqo_url_and_version_cache[self.url] = self.get_marqo()["version"]
+            marqo_version = marqo_url_and_version_cache[self.url]
+            if versioning_helpers.parse(marqo_version) < versioning_helpers.parse(min_ver):
+                mq_logger.warning(f"Your Marqo Python client requires a minimum Marqo version of "
+                                  f"{minimum_supported_marqo_version()} to function properly, while your Marqo version is {marqo_version}. "
+                                  f"Please upgrade your Marqo instance to avoid potential errors. "
+                                  f"If you have already upgraded your Marqo instance but still having this warning, please import you Marqo Python client again and retry.")
+        except JSONDecodeError as e:
+            mq_logger.warning(
+                f"Marqo encountered an error when trying to check the Marqo version for url = `{self.url}`. "
+                f"The client is still created and functional, but you may encounter errors if your Marqo version "
+                f"is lower than {minimum_supported_marqo_version()}. The original error message is {e}.")
+            marqo_url_and_version_cache[self.url] = "_skipped"
+        return
+
 
