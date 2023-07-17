@@ -176,8 +176,8 @@ class Index:
 
         start_time_client_request = timer()
         if highlights is not None:
-            logging.warning("Deprecation warning for parameter 'highlights'. "
-                            "Please use the 'showHighlights' instead. ")
+            mq_logger.warning("Deprecation warning for parameter 'highlights'. "
+                              "Please use the 'showHighlights' instead. ")
             show_highlights = highlights if show_highlights is True else show_highlights
 
         path_with_query_str = (
@@ -311,8 +311,8 @@ class Index:
                                          'Use `tensor_fields=[]` to index for lexical-only search.')
 
         if non_tensor_fields is not None:
-            logging.warning('The `non_tensor_fields` parameter has been deprecated and will be removed in Marqo 2.0.0. '
-                            'Use `tensor_fields` instead.')
+            mq_logger.warning('The `non_tensor_fields` parameter has been deprecated and will be removed in '
+                              'Marqo 2.0.0. Use `tensor_fields` instead.')
 
         if image_download_headers is None:
             image_download_headers = dict()
