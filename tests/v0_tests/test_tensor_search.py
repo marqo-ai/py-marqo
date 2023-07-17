@@ -288,27 +288,97 @@ class TestSearch(MarqoTestCase):
         self.client.create_index(index_name=self.index_name_1)
         docs = [
             {
-                "_id": "",
-                "field_a": "random content",
-                "str_for_filtering": "apple",
-                "int_for_filtering": 0,
+                "_id": "filter_in_tag",
+                "content": "search for me",
+                "combined_text_field": {
+                    "tag": "TO_FILTER",
+                    "title": "garbage",
+                    "description": "garbage"
+                }
             },
             {
-                "_id": "1",
-                "field_b": "random content",
-                "str_for_filtering": "banana",
-                "int_for_filtering": 0,
+                "_id": "filter_in_title",
+                "content": "search for me",
+                "combined_text_field": {
+                    "tag": "garbage",
+                    "title": "TO_FILTER",
+                    "description": "garbage"
+                }
             },
             {
-                "_id": "2",
-                "field_a": "random content",
-                "field_b": "random content",
-                "str_for_filtering": "apple",
-                "int_for_filtering": 1,
-            },
+                "_id": "filter_in_all",
+                "content": "search for me",
+                "combined_text_field": {
+                    "tag": "TO_FILTER",
+                    "title": "TO_FILTER",
+                    "description": "TO_FILTER"
+                }
+            }
         ]
-        # TODO: write tests for nested docs here
-        pass
+        mappings_object= {
+            "combined_text_field": {
+                "type": "multimodal_combination",
+                "weights": {
+                    "tag": 0.3,
+                    "title": 0.3,
+                    "description": 0.4
+                }
+            }
+        }
+        self.client.index(self.index_name_1).add_documents(docs, mappings=mappings_object, auto_refresh=True)
+
+        test_cases = (
+            { # Test where only "tag" field contains "TO_FILTER"
+                "query": "search for me", 
+                "filter_string": "combined_text_field.tag:TO_FILTER", 
+                "expected": ["filter_in_tag", "filter_in_all"]
+            },
+            # Test where only "title" field contains "TO_FILTER"
+            {
+                "query": "search for me", 
+                "filter_string": "combined_text_field.title:TO_FILTER", 
+                "expected": ["filter_in_title", "filter_in_all"]
+            },
+            # Test where "tag" and "title" fields contain "TO_FILTER"
+            {
+                "query": "search for me", 
+                "filter_string": "combined_text_field.tag:TO_FILTER AND combined_text_field.title:TO_FILTER", 
+                "expected": ["filter_in_all"]
+            },
+            # Test where none of the fields contains "TO_FILTER"
+            {
+                "query": "search for me", 
+                "filter_string": "NOT combined_text_field:TO_FILTER", 
+                "expected": []
+            },
+            # description contains FILTER
+            {
+                "query": "search for me",
+                "filter_string": "combined_text_field.description:TO_FILTER",
+                "expected": ["filter_in_all"]
+            },
+            # FILTER in title but not in description
+            {
+                "query": "search for me",
+                "filter_string": "combined_text_field.title:TO_FILTER AND NOT combined_text_field.description:TO_FILTER",
+                "expected": ["filter_in_title"]
+            },
+            # Test with no filter
+            {
+                "query": "search for me", 
+                "filter_string": "", 
+                "expected": ["filter_in_tag", "filter_in_title", "filter_in_all"]
+            }
+        )
+        
+        for case in test_cases[0:3]:
+            print(f"THE CASE IS: {case}")
+            search_res = self.client.index(self.index_name_1).search(
+                case["query"],
+                filter_string=case.get("filter_string", ""),
+            )
+            assert len(search_res["hits"]) == len(case["expected"])
+            assert set([hit["_id"] for hit in search_res["hits"]]) == set(case["expected"])
 
     def test_attributes_to_retrieve(self):
         self.client.create_index(index_name=self.index_name_1)
