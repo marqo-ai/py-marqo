@@ -65,7 +65,6 @@ class TestClient(MarqoTestCase):
 
                 mock_get_marqo.assert_not_called()
 
-                print(marqo_url_and_version_cache)
                 assert url in marqo_url_and_version_cache
                 assert marqo_url_and_version_cache[url] == '_skipped'
 
