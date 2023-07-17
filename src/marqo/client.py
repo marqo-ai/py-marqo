@@ -224,8 +224,10 @@ class Client:
                                   f"If you have already upgraded your Marqo instance but still having this warning, please import you Marqo Python client again and retry.")
         except JSONDecodeError as e:
             mq_logger.warning(
-                f"Marqo encountered a problem when trying to check the Marqo version for url = `{self.url}`. "
-                f"The client is still created and functional. The minimum supported marqo version for you client is {min_ver}.")
+                f"Marqo encountered a problem trying to check the Marqo version found at `{self.url}`. "
+                f"The minimum supported Marqo version for this client is {min_ver}. "
+                f"If you are sure the Marqo version is compatible with this client you can ignore this message. "
+            )
             marqo_url_and_version_cache[self.url] = "_skipped"
         return
 
