@@ -24,7 +24,7 @@ class TestAddDocumentsModelAuth(MarqoTestCase):
             mock_s3_model_auth = {'s3': {'aws_access_key_id': 'some_acc_key',
                                          'aws_secret_access_key': 'some_sec_acc_key'}}
             self.client.index(index_name=self.index_name_1).add_documents(
-                documents=[{"some": "data"}], model_auth=mock_s3_model_auth)
+                documents=[{"some": "data"}], model_auth=mock_s3_model_auth, tensor_fields=["some"])
             args, kwargs = mock__post.call_args
             assert "modelAuth" in kwargs['body']
             assert kwargs['body']['modelAuth'] == mock_s3_model_auth
@@ -43,7 +43,7 @@ class TestAddDocumentsModelAuth(MarqoTestCase):
             expected_str = f"&model_auth={convert_dict_to_url_params(mock_s3_model_auth)}"
             self.client.index(index_name=self.index_name_1).add_documents(
                 documents=[{"some": f"data {i}"} for i in range(20)], model_auth=mock_s3_model_auth,
-                client_batch_size=10
+                client_batch_size=10, tensor_fields=["some"]
             )
             for call in mock__post.call_args_list:
                 _, kwargs = call

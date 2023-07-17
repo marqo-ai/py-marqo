@@ -32,7 +32,8 @@ class TestBoostSearch(MarqoTestCase):
                     "Description": "A history of household pets",
                     "_id": "d2"
                 }
-            ]
+            ],
+            tensor_fields=["Title", "Description"]
         )
 
         self.query = "What are the best pets"

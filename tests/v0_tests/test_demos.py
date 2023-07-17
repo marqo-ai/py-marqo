@@ -38,7 +38,7 @@ class TestDemo(MarqoTestCase):
                 S2Search is based in Melbourne. Melbourne has beautiful waterways running through it.
                 """
             },
-        ])
+        ], tensor_fields=["Title", "Description", "Key Points"])
         print("\nSearching the phrase 'River' across all fields")
         
         if self.IS_MULTI_INSTANCE:
@@ -60,17 +60,20 @@ class TestDemo(MarqoTestCase):
         mq = marqo.Client(**self.client_settings)
 
         mq.create_index("my-first-index")
-        mq.index("my-first-index").add_documents([
-            {
-                "Title": "The Travels of Marco Polo",
-                "Description": "A 13th-century travelogue describing Polo's travels"},
-            {
-                "Title": "Extravehicular Mobility Unit (EMU)",
-                "Description": "The EMU is a spacesuit that provides environmental protection, "
-                               "mobility, life support, and communications for astronauts",
-                "_id": "article_591"
-            }
-        ])
+        mq.index("my-first-index").add_documents(
+            [
+                {
+                    "Title": "The Travels of Marco Polo",
+                    "Description": "A 13th-century travelogue describing Polo's travels"},
+                {
+                    "Title": "Extravehicular Mobility Unit (EMU)",
+                    "Description": "The EMU is a spacesuit that provides environmental protection, "
+                                   "mobility, life support, and communications for astronauts",
+                    "_id": "article_591"
+                }
+            ],
+            tensor_fields=["Title", "Description"]
+        )
 
         if self.IS_MULTI_INSTANCE:
             self.warm_request(mq.index("my-first-index").search,
@@ -121,23 +124,25 @@ class TestDemo(MarqoTestCase):
         mq = marqo.Client(**self.client_settings)
         mq.create_index("my-weighted-query-index")
         mq.index("my-weighted-query-index").add_documents([
-            {
-                "Title": "Smartphone",
-                "Description": "A smartphone is a portable computer device that combines mobile telephone "
-                "functions and computing functions into one unit.",
-            },
-            {
-                "Title": "Telephone",
-                "Description": "A telephone is a telecommunications device that permits two or more users to"
-                "conduct a conversation when they are too far apart to be easily heard directly.",
-            },
-            {
-                "Title": "Thylacine",
-                "Description": "The thylacine, also commonly known as the Tasmanian tiger or Tasmanian wolf, "
-                "is an extinct carnivorous marsupial."
-                "The last known of its species died in 1936.",
-            },
-        ])
+                {
+                    "Title": "Smartphone",
+                    "Description": "A smartphone is a portable computer device that combines mobile telephone "
+                    "functions and computing functions into one unit.",
+                },
+                {
+                    "Title": "Telephone",
+                    "Description": "A telephone is a telecommunications device that permits two or more users to"
+                    "conduct a conversation when they are too far apart to be easily heard directly.",
+                },
+                {
+                    "Title": "Thylacine",
+                    "Description": "The thylacine, also commonly known as the Tasmanian tiger or Tasmanian wolf, "
+                    "is an extinct carnivorous marsupial."
+                    "The last known of its species died in 1936.",
+                },
+            ],
+            tensor_fields=["Title", "Description"]
+        )
 
         r1 = mq.index("my-weighted-query-index").get_stats()
         assert r1["numberOfDocuments"] == 3
@@ -227,6 +232,7 @@ class TestDemo(MarqoTestCase):
                     },
                 }
             },
+            tensor_fields=["captioned_image"],
         )
 
         r1 = mq.index("my-first-multimodal-index").get_stats()

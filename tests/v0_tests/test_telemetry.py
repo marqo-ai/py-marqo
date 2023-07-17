@@ -28,9 +28,9 @@ class TestTelemetry(MarqoTestCase):
                 "Description": "Marqo is a very useful tool"}, ] * number_of_docs
 
         kwargs_list = [
-            {"documents": doc, "auto_refresh": True, "client_batch_size": None, "non_tensor_fields": None},
-            {"documents": doc, "auto_refresh": True, "client_batch_size": 5, "non_tensor_fields": None},
-            {"documents": doc, "auto_refresh": False, "client_batch_size": None, "non_tensor_fields": None},
+            {"documents": doc, "auto_refresh": True, "client_batch_size": None, "non_tensor_fields": []},
+            {"documents": doc, "auto_refresh": True, "client_batch_size": 5, "non_tensor_fields": []},
+            {"documents": doc, "auto_refresh": False, "client_batch_size": None, "non_tensor_fields": []},
             {"documents": doc, "auto_refresh": True, "client_batch_size": 2, "non_tensor_fields": ["Description"]},
             {"documents": doc, "auto_refresh": False, "client_batch_size": 3, "non_tensor_fields": ["Title"]},
         ]
@@ -57,7 +57,7 @@ class TestTelemetry(MarqoTestCase):
             {"q": "search query","searchable_attributes": ["Description"]}]
 
         self.client.create_index(self.index_name_1)
-        self.client.index(self.index_name_1).add_documents([{"Title": "A dummy document",}])
+        self.client.index(self.index_name_1).add_documents([{"Title": "A dummy document",}], tensor_fields=["Title"])
 
         if self.IS_MULTI_INSTANCE:
             self.warm_request(self.client.index(self.index_name_1).search, **search_kwargs_list[0])
@@ -69,7 +69,7 @@ class TestTelemetry(MarqoTestCase):
 
     def test_telemetry_bulk_search(self):
         self.client.create_index(self.index_name_1)
-        self.client.index(self.index_name_1).add_documents([{"Title": "A dummy document",}])
+        self.client.index(self.index_name_1).add_documents([{"Title": "A dummy document",}], tensor_fields=["Title"])
         bulk_search_query = [
             {
                 "index": self.index_name_1,
@@ -104,7 +104,8 @@ class TestTelemetry(MarqoTestCase):
 
     def test_telemetry_get_document(self):
         self.client.create_index(self.index_name_1)
-        self.client.index(self.index_name_1).add_documents([{"_id": "123321", "Title": "Marqo is useful",}])
+        self.client.index(self.index_name_1).add_documents([{"_id": "123321", "Title": "Marqo is useful",}],
+                                                           tensor_fields=["Title"])
         res = self.client.index(self.index_name_1).get_document("123321")
         self.assertIn("telemetry", res)
         self.assertEqual(res["telemetry"], dict())
@@ -112,7 +113,8 @@ class TestTelemetry(MarqoTestCase):
 
     def test_delete_documents(self):
         self.client.create_index(self.index_name_1)
-        self.client.index(self.index_name_1).add_documents([{"_id": "123321", "Title": "Marqo is useful",}])
+        self.client.index(self.index_name_1).add_documents([{"_id": "123321", "Title": "Marqo is useful",}],
+                                                           tensor_fields=["Title"])
         res = self.client.index(self.index_name_1).delete_documents(["123321"])
         self.assertIn("telemetry", res)
         self.assertEqual(res["telemetry"], dict())
