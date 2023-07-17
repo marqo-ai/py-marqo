@@ -90,7 +90,7 @@ class TestClient(MarqoTestCase):
             warning_message = mock_warning.call_args[0][0]
 
             # Assert the message is what you expect
-            self.assertIn("Marqo encountered an error when trying to check the Marqo version for url", warning_message)
+            self.assertIn("Marqo encountered a problem when trying to check the Marqo version for url", warning_message)
             self.assertEqual(marqo_url_and_version_cache, dict({self.client_settings["url"] : "_skipped"}))
 
     def test_version_check_multiple_instantiation(self):
