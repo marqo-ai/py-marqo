@@ -226,7 +226,7 @@ class Client:
             mq_logger.warning(
                 f"Marqo encountered a problem trying to check the Marqo version found at `{self.url}`. "
                 f"The minimum supported Marqo version for this client is {min_ver}. "
-                f"If you are sure the Marqo version is compatible with this client you can ignore this message. "
+                f"If you are sure the Marqo version is compatible with this client, you can ignore this message. "
             )
             marqo_url_and_version_cache[self.url] = "_skipped"
         return
