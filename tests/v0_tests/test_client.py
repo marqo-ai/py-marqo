@@ -79,7 +79,8 @@ class TestClient(MarqoTestCase):
             mock_get_marqo.assert_not_called()
 
     def test_error_handling_in_version_check(self):
-        side_effect_list = [JSONDecodeError("test", "test", 0), BackendCommunicationError("test"), BackendTimeoutError("test")]
+        side_effect_list = [JSONDecodeError("test", "test", 0), BackendCommunicationError("test"),
+                            BackendTimeoutError("test"), requests.exceptions.RequestException("test")]
         for i, side_effect in enumerate(side_effect_list):
             with mock.patch("marqo.client.mq_logger.warning") as mock_warning, \
                     mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo:

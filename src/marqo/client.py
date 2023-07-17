@@ -224,7 +224,7 @@ class Client:
                                   f"{minimum_supported_marqo_version()} to function properly, but your Marqo version is {marqo_version}. "
                                   f"Please upgrade your Marqo instance to avoid potential errors. "
                                   f"If you have already changed your Marqo instance but still get this warning, please restart your Marqo client Python interpreter.")
-        except (JSONDecodeError, BackendTimeoutError, BackendCommunicationError) as e:
+        except (JSONDecodeError, BackendTimeoutError, BackendCommunicationError,requests.exceptions.RequestException) as e:
             mq_logger.warning(
                 f"Marqo encountered a problem trying to check the Marqo version found at `{self.url}`. "
                 f"The minimum supported Marqo version for this client is {min_ver}. "
