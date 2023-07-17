@@ -544,4 +544,12 @@ class TestAddDocuments(MarqoTestCase):
 
         assert run()
 
+    def test_add_docs_logs_deprecation_warning_if_non_tensor_fields(self):
+        # Arrange
+        documents = [{'id': 'doc1', 'text': 'Test document'}]
+        non_tensor_fields = ['text']
 
+        with self.assertLogs('marqo', level='WARNING') as cm:
+            self.client.create_index(self.index_name_1)
+            self.client.index(self.index_name_1).add_documents(documents=documents, non_tensor_fields=non_tensor_fields)
+            self.assertTrue({'`non_tensor_fields`', 'Marqo', '2.0.0.'}.issubset(set(cm.output[0].split(" "))))
