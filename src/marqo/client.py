@@ -199,6 +199,10 @@ class Client:
         return self.http.get(path="device/cpu")
 
     def _marqo_minimum_supported_version_check(self):
+        # Skip the check for Marqo Cloud V2 right now
+        skip_version_check_url = ["https://api.marqo.ai"]
+        if self.url in skip_version_check_url:
+            return
         if self.url not in marqo_url_and_version_cache:
             marqo_url_and_version_cache[self.url] = self.get_marqo()["version"]
         marqo_version = marqo_url_and_version_cache[self.url]

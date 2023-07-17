@@ -33,6 +33,16 @@ class TestClient(MarqoTestCase):
         assert 'status' in res['backend']
 
     def test_version_check_instantiation(self):
+        with mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo:
+
+            mock_get_marqo.return_value = {'version': '0.0.0'}
+            client = Client(url="https://api.marqo.ai")
+
+            mock_get_marqo.assert_not_called()
+
+            assert marqo_url_and_version_cache == dict()
+
+    def test_skip_version_check_for_cloud_v2(self):
         with mock.patch("marqo.client.mq_logger.warning") as mock_warning,\
             mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo:
 
