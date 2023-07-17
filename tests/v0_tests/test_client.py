@@ -1,9 +1,12 @@
+import requests
+from json import JSONDecodeError
 from unittest import mock
+
 from marqo.client import Client
 from tests.marqo_test import MarqoTestCase
 from marqo.errors import MarqoApiError
 from marqo.client import marqo_url_and_version_cache
-from json import JSONDecodeError
+from marqo.errors import BackendTimeoutError, BackendCommunicationError
 
 
 class TestClient(MarqoTestCase):
@@ -76,22 +79,26 @@ class TestClient(MarqoTestCase):
             mock_get_marqo.assert_not_called()
 
     def test_error_handling_in_version_check(self):
-        with mock.patch("marqo.client.mq_logger.warning") as mock_warning, \
-                mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo:
-            mock_get_marqo.side_effect = JSONDecodeError("test", "test", 0)
-            client = Client(**self.client_settings)
+        side_effect_list = [JSONDecodeError("test", "test", 0), BackendCommunicationError("test"), BackendTimeoutError("test")]
+        for i, side_effect in enumerate(side_effect_list):
+            with mock.patch("marqo.client.mq_logger.warning") as mock_warning, \
+                    mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo:
+                mock_get_marqo.side_effect = side_effect
+                client = Client(**self.client_settings)
 
-            mock_get_marqo.assert_called_once()
+                mock_get_marqo.assert_called_once()
 
-            # Check the warning was logged
-            mock_warning.assert_called_once()
+                # Check the warning was logged
+                mock_warning.assert_called_once()
 
-            # Get the warning message
-            warning_message = mock_warning.call_args[0][0]
+                # Get the warning message
+                warning_message = mock_warning.call_args[0][0]
 
-            # Assert the message is what you expect
-            self.assertIn("Marqo encountered a problem trying to check the Marqo version found", warning_message)
-            self.assertEqual(marqo_url_and_version_cache, dict({self.client_settings["url"] : "_skipped"}))
+                # Assert the message is what you expect
+                self.assertIn("Marqo encountered a problem trying to check the Marqo version found", warning_message)
+                self.assertEqual(marqo_url_and_version_cache, dict({self.client_settings["url"] : "_skipped"}))
+
+                marqo_url_and_version_cache.clear()
 
     def test_version_check_multiple_instantiation(self):
         """Ensure that duplicated instantiation of the client does not result in multiple APIs calls of get_marqo()"""

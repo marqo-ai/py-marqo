@@ -2,6 +2,7 @@ import base64
 from typing import Any, Dict, List, Optional, Union
 
 from pydantic import error_wrappers
+import requests
 
 from marqo.index import Index
 from marqo.config import Config
@@ -11,6 +12,7 @@ from marqo import utils, enums
 from marqo import errors
 from marqo.version import minimum_supported_marqo_version
 from marqo.marqo_logging import mq_logger
+from marqo.errors import BackendTimeoutError, BackendCommunicationError
 # we want to avoid name conflicts with marqo.version
 from packaging import version as versioning_helpers
 from json import JSONDecodeError
@@ -222,7 +224,7 @@ class Client:
                                   f"{minimum_supported_marqo_version()} to function properly, but your Marqo version is {marqo_version}. "
                                   f"Please upgrade your Marqo instance to avoid potential errors. "
                                   f"If you have already changed your Marqo instance but still get this warning, please restart your Marqo client Python interpreter.")
-        except JSONDecodeError as e:
+        except (JSONDecodeError, BackendTimeoutError, BackendCommunicationError) as e:
             mq_logger.warning(
                 f"Marqo encountered a problem trying to check the Marqo version found at `{self.url}`. "
                 f"The minimum supported Marqo version for this client is {min_ver}. "
