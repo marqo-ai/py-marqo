@@ -68,6 +68,13 @@ class TestClient(MarqoTestCase):
                 assert url in marqo_url_and_version_cache
                 assert marqo_url_and_version_cache[url] == '_skipped'
 
+    def test_skip_version_check_for_previously_labelled_url(self):
+        with mock.patch.dict("marqo.client.marqo_url_and_version_cache", {self.client_settings["url"]:"_skipped"}) as mock_cache,\
+            mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo:
+            client = Client(**self.client_settings)
+
+            mock_get_marqo.assert_not_called()
+
     def test_error_handling_in_version_check(self):
         with mock.patch("marqo.client.mq_logger.warning") as mock_warning, \
                 mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo:
