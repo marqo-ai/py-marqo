@@ -219,9 +219,9 @@ class Client:
             marqo_version = marqo_url_and_version_cache[self.url]
             if versioning_helpers.parse(marqo_version) < versioning_helpers.parse(min_ver):
                 mq_logger.warning(f"Your Marqo Python client requires a minimum Marqo version of "
-                                  f"{minimum_supported_marqo_version()} to function properly, while your Marqo version is {marqo_version}. "
+                                  f"{minimum_supported_marqo_version()} to function properly, but your Marqo version is {marqo_version}. "
                                   f"Please upgrade your Marqo instance to avoid potential errors. "
-                                  f"If you have already upgraded your Marqo instance but still having this warning, please import you Marqo Python client again and retry.")
+                                  f"If you have already changed your Marqo instance but still get this warning, please restart your Marqo client Python interpreter.")
         except JSONDecodeError as e:
             mq_logger.warning(
                 f"Marqo encountered a problem trying to check the Marqo version found at `{self.url}`. "
