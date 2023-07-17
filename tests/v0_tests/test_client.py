@@ -87,7 +87,6 @@ class TestClient(MarqoTestCase):
             self.assertIn("Marqo encountered an error when trying to check the Marqo version for url", warning_message)
             self.assertEqual(marqo_url_and_version_cache, dict({self.client_settings["url"] : "_skipped"}))
 
-
     def test_version_check_multiple_instantiation(self):
         """Ensure that duplicated instantiation of the client does not result in multiple APIs calls of get_marqo()"""
         with mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo:
