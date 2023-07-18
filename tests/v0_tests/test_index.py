@@ -68,7 +68,7 @@ class TestIndex(MarqoTestCase):
         }
         self.client.index(self.index_name_1).add_documents([
             d1, d2
-        ])
+        ], tensor_fields=["Blurb", "Title"])
         res = self.client.index(self.index_name_1).get_documents(
             ["article_152", "article_490", "article_985"]
         )
@@ -99,7 +99,7 @@ class TestIndex(MarqoTestCase):
         }
         self.client.index(self.index_name_1).add_documents([
             d1, d2
-        ])
+        ], tensor_fields=["Blurb", "Title"])
         res = self.client.index(self.index_name_1).get_documents(
             ["article_152", "article_490", "article_985"],
             expose_facets=True
@@ -128,7 +128,7 @@ class TestIndex(MarqoTestCase):
         }
         self.client.index(self.index_name_1).add_documents([
             d1
-        ])
+        ], tensor_fields=["Blurb", "Title"])
         doc_res = self.client.index(self.index_name_1).get_document(
             document_id="article_152",
             expose_facets=True
