@@ -176,7 +176,7 @@ class TestBulkSearch(MarqoTestCase):
     def test_search_highlights(self):
         """Tests if show_highlights works and if the deprecation behaviour is expected"""
         self.client.create_index(index_name=self.index_name_1)
-        self.client.index(index_name=self.index_name_1).add_documents([{"f1": "some doc"}])
+        self.client.index(index_name=self.index_name_1).add_documents([{"f1": "some doc"}], tensor_fields=["f1"])
         for params, expected_highlights_presence in [
                 ({}, True),
                 ({"showHighlights": False}, False),
@@ -298,7 +298,7 @@ class TestBulkSearch(MarqoTestCase):
         }
         res = self.client.index(self.index_name_1).add_documents([
             d1, d2
-        ],auto_refresh=True)
+        ], auto_refresh=True, tensor_fields=["doc title", "field X", "abc-123", "field1", "an_int"])
 
         if self.IS_MULTI_INSTANCE:
             self.warm_request(self.client.bulk_search, [{
@@ -336,7 +336,7 @@ class TestBulkSearch(MarqoTestCase):
         }
         x = self.client.index(self.index_name_1).add_documents([
             d1, d2
-        ], auto_refresh=True)
+        ], auto_refresh=True, tensor_fields=["doc title", "field X", "abc-123", "field1", "an_int"])
         atts = ["doc title", "an_int"]
         for search_method in [enums.SearchMethods.TENSOR,
                               enums.SearchMethods.LEXICAL]:
@@ -376,7 +376,7 @@ class TestBulkSearch(MarqoTestCase):
                         for i in range(num_docs)]
         
         self.client.index(index_name=self.index_name_1).add_documents(
-            docs, auto_refresh=False, client_batch_size=50
+            docs, auto_refresh=False, client_batch_size=50, tensor_fields=["Title"]
         )
         self.client.index(index_name=self.index_name_1).refresh()
 
@@ -432,7 +432,7 @@ class TestBulkSearch(MarqoTestCase):
         }
         self.client.create_index(index_name=self.index_name_1, settings_dict=image_index_config)
         self.client.index(index_name=self.index_name_1).add_documents(
-            documents=docs, auto_refresh=True
+            documents=docs, auto_refresh=True, tensor_fields=["loc a", "loc b"]
         )
         queries_expected_ordering = [
             ({"Nature photography": 2.0, "Artefact": -2}, ['realistic_hippo', 'artefact_hippo']),
@@ -475,7 +475,7 @@ class TestBulkSearch(MarqoTestCase):
         }
         x = self.client.index(self.index_name_1).add_documents([
             d1, d2
-        ], auto_refresh=True)
+        ], auto_refresh=True, tensor_fields=["doc title", "abc-123", "field X", "field1"])
 
         score_modifiers = {
             "multiply_score_by":[{"field_name": "multiply", "weight": 1}],
