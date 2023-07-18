@@ -119,3 +119,24 @@ class TestClient(MarqoTestCase):
 
                 mock_get_marqo.assert_not_called()
                 mock_warning.assert_called_once()
+
+    def test_skipped_version_check_multiple_instantiation(self):
+        """Ensure that the url labelled as `_skipped` only call get_marqo() once"""
+        url = "https://dummy/url"
+        with mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo:
+            mock_get_marqo.side_effect = requests.exceptions.RequestException("test")
+            client = Client(url = url)
+
+            mock_get_marqo.assert_called_once()
+            mock_get_marqo.reset_mock()
+            assert marqo_url_and_version_cache[url] == '_skipped'
+
+        for _ in range(10):
+            with mock.patch("marqo.client.mq_logger.warning") as mock_warning, \
+                 mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo:
+
+                client = Client(url = url)
+
+                mock_get_marqo.assert_not_called()
+                # Check the warning was logged every instantiation
+                mock_warning.assert_called_once()
