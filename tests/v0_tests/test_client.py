@@ -37,9 +37,8 @@ class TestClient(MarqoTestCase):
         assert 'status' in res['backend']
 
     def test_version_check_instantiation(self):
-        with mock.patch("marqo.client.mq_logger.warning") as mock_warning,\
-            mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo:
-
+        with mock.patch("marqo.client.mq_logger.warning") as mock_warning, \
+                mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo:
             mock_get_marqo.return_value = {'version': '0.0.0'}
             client = Client(**self.client_settings)
 
@@ -52,7 +51,7 @@ class TestClient(MarqoTestCase):
             warning_message = mock_warning.call_args[0][0]
 
             # Assert the message is what you expect
-            self.assertIn("Please upgrade your Marqo instance to avoid potential errors.",  warning_message)
+            self.assertIn("Please upgrade your Marqo instance to avoid potential errors.", warning_message)
 
             # Assert the url is in the cache
             self.assertIn(self.client_settings['url'], marqo_url_and_version_cache)
@@ -60,11 +59,10 @@ class TestClient(MarqoTestCase):
 
     def test_skip_version_check_for_cloud_v2(self):
         for url in ["https://api.marqo.ai", "https://cloud.marqo.ai"]:
-            with mock.patch("marqo.client.mq_logger.warning") as mock_warning,\
-                mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo:
-
+            with mock.patch("marqo.client.mq_logger.warning") as mock_warning, \
+                    mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo:
                 mock_get_marqo.return_value = {'version': '0.0.0'}
-                client = Client(url = url)
+                client = Client(url=url)
 
                 mock_get_marqo.assert_not_called()
 
@@ -72,8 +70,9 @@ class TestClient(MarqoTestCase):
                 assert marqo_url_and_version_cache[url] == '_skipped'
 
     def test_skip_version_check_for_previously_labelled_url(self):
-        with mock.patch.dict("marqo.client.marqo_url_and_version_cache", {self.client_settings["url"]:"_skipped"}) as mock_cache,\
-            mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo:
+        with mock.patch.dict("marqo.client.marqo_url_and_version_cache",
+                             {self.client_settings["url"]: "_skipped"}) as mock_cache, \
+                mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo:
             client = Client(**self.client_settings)
 
             mock_get_marqo.assert_not_called()
@@ -98,7 +97,7 @@ class TestClient(MarqoTestCase):
 
                 # Assert the message is what you expect
                 self.assertIn("Marqo encountered a problem trying to check the Marqo version found", warning_message)
-                self.assertEqual(marqo_url_and_version_cache, dict({self.client_settings["url"] : "_skipped"}))
+                self.assertEqual(marqo_url_and_version_cache, dict({self.client_settings["url"]: "_skipped"}))
 
                 marqo_url_and_version_cache.clear()
 
@@ -113,8 +112,7 @@ class TestClient(MarqoTestCase):
 
         for _ in range(10):
             with mock.patch("marqo.client.mq_logger.warning") as mock_warning, \
-                 mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo:
-
+                    mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo:
                 client = Client(**self.client_settings)
 
                 mock_get_marqo.assert_not_called()
@@ -125,7 +123,7 @@ class TestClient(MarqoTestCase):
         url = "https://dummy/url"
         with mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo:
             mock_get_marqo.side_effect = requests.exceptions.RequestException("test")
-            client = Client(url = url)
+            client = Client(url=url)
 
             mock_get_marqo.assert_called_once()
             mock_get_marqo.reset_mock()
@@ -133,9 +131,8 @@ class TestClient(MarqoTestCase):
 
         for _ in range(10):
             with mock.patch("marqo.client.mq_logger.warning") as mock_warning, \
-                 mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo:
-
-                client = Client(url = url)
+                    mock.patch("marqo.client.Client.get_marqo") as mock_get_marqo:
+                client = Client(url=url)
 
                 mock_get_marqo.assert_not_called()
                 # Check the warning was logged every instantiation
