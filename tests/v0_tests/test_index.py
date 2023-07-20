@@ -221,7 +221,7 @@ class TestIndex(MarqoTestCase):
                 'image_preprocessing': {'patch_method': None}
             },
             'number_of_shards': 1, 'number_of_replicas': 0,
-            'inference_type': "marqo.CPU", 'storage_class': "marqo.basic", 'inference_node_count': 1})
+            'inference_type': "marqo.CPU", 'storage_class': "marqo.basic", 'number_of_inferences': 1})
         mock_get.assert_called_with(path="indexes/my-test-index-1/status")
         assert result == {"acknowledged": True}
 
@@ -244,7 +244,7 @@ class TestIndex(MarqoTestCase):
                 'image_preprocessing': {'patch_method': None}
             },
             'number_of_shards': 1, 'number_of_replicas': 0,
-            'inference_type': None, 'storage_class': "marqo.basic", 'inference_node_count': 1})
+            'inference_type': None, 'storage_class': "marqo.basic", 'number_of_inferences': 1})
         mock_get.assert_called_with(path="indexes/my-test-index-1/status")
         assert result == {"error": "inference_type is required"}
 
@@ -267,7 +267,7 @@ class TestIndex(MarqoTestCase):
                 'image_preprocessing': {'patch_method': None}
             },
             'number_of_shards': 1, 'number_of_replicas': 0,
-            'inference_type': "marqo.CPU", 'storage_class': None, 'inference_node_count': 1})
+            'inference_type': "marqo.CPU", 'storage_class': None, 'number_of_inferences': 1})
         mock_get.assert_called_with(path="indexes/my-test-index-1/status")
         assert result == {"error": "storage_class is required"}
 
@@ -291,7 +291,7 @@ class TestIndex(MarqoTestCase):
                 'image_preprocessing': {'patch_method': None}
             },
             'number_of_shards': 1, 'number_of_replicas': 0,
-            'inference_type': "marqo.CPU", 'storage_class': "marqo.basic", 'inference_node_count': -1})
+            'inference_type': "marqo.CPU", 'storage_class': "marqo.basic", 'number_of_inferences': -1})
         mock_get.assert_called_with(path="indexes/my-test-index-1/status")
         assert result == {"error": "inference_node_count must be greater than 0"}
 
