@@ -109,7 +109,7 @@ class Index:
             cl_settings['storage_class'] = storage_node_type
             cl_settings['number_of_inferences'] = inference_node_count
             cl_settings['number_of_replicas'] = replicas_count
-            cl_settings['number_of_shatds'] = storage_node_count
+            cl_settings['number_of_shards'] = storage_node_count
             response = req.post(f"indexes/{index_name}", body=cl_settings)
             index = Index(config, index_name)
             creation = index.get_status()
