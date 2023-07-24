@@ -47,7 +47,7 @@ class TestImageChunking(MarqoTestCase):
             'description': 'the image chunking can (optionally) chunk the image into sub-patches (aking to segmenting text) by using either a learned model or simple box generation and cropping',
             'location': temp_file_name}
 
-        client.index(self.index_name).add_documents([document1], device='cuda')
+        client.index(self.index_name).add_documents([document1], device='cuda', non_tensor_fields=[])
 
         # test the search works
         results = client.index(self.index_name).search('a', device="cuda")
@@ -90,7 +90,7 @@ class TestImageChunking(MarqoTestCase):
             'description': 'the image chunking can (optionally) chunk the image into sub-patches (akin to segmenting text) by using either a learned model or simple box generation and cropping',
             'location': temp_file_name}
 
-        client.index(self.index_name).add_documents([document1], device='cuda')
+        client.index(self.index_name).add_documents([document1], device='cuda', non_tensor_fields=[])
 
         # test the search works
         results = client.index(self.index_name).search('a', device="cuda")

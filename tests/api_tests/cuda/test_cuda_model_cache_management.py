@@ -74,7 +74,7 @@ class TestAddDocuments(MarqoTestCase):
             "doc title": "Cool Document 1",
             "field 1": "some extra info"
         }
-        self.client.index(self.index_name).add_documents([d1], device="cuda")
+        self.client.index(self.index_name).add_documents([d1], device="cuda", non_tensor_fields=[])
         self.client.eject_model(self.MODEL, "cuda")
 
 

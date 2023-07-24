@@ -64,7 +64,7 @@ class TestModelEject(MarqoTestCase):
                     "Description": "The EMU is a spacesuit that provides environmental protection, "
                                    "mobility, life support, and communications for astronauts",
                     "_id": "article_591"
-                }], auto_refresh=True, device=cls.device)
+                }], auto_refresh=True, device=cls.device, non_tensor_fields=[])
 
         time.sleep(10)
 
@@ -136,7 +136,7 @@ class TestConcurrencyRequestsBlock(MarqoTestCase):
                 "Description": "The EMU is a spacesuit that provides environmental protection, "
                                "mobility, life support, and communications for astronauts",
                 "_id": "article_591"
-            }], auto_refresh=True, device=self.device)
+            }], auto_refresh=True, device=self.device, non_tensor_fields=[])
 
     def tearDown(self) -> None:
         try:

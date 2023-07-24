@@ -106,7 +106,7 @@ class TestFiltering(MarqoTestCase):
         add_docs_kwargs_to_test = [
             {"non_tensor_fields": ["filteringField"]},
             # all tensor fields:
-            dict()
+            {"non_tensor_fields": []}
         ]
         for add_docs_kwargs in add_docs_kwargs_to_test:
             for special_str in self.special_str_sequences:
@@ -128,7 +128,7 @@ class TestFiltering(MarqoTestCase):
         add_docs_kwargs_to_test = [
             {"non_tensor_fields": ["filteringField"]},
             # all tensor fields:
-            dict()
+            {"non_tensor_fields": []}
         ]
         # These search filter strings don't yet work. They will be skipped during the test
         filter_strs_that_dont_yet_work = [
@@ -465,6 +465,7 @@ class TestSpecialCharsFieldNames(MarqoTestCase):
         add_docs_result = self.client.index(self.index_name_1).add_documents(
             documents=docs,
             auto_refresh=True,
+            non_tensor_fields=[]
         )
         if add_docs_result['errors']:
             raise AssertionError(f"Error adding documents: {add_docs_result}, docs: {repr(docs)}")

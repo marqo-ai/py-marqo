@@ -40,7 +40,7 @@ class TestStartStop(marqo_test.MarqoTestCase):
             d2 = {"Title": "some frogs", "_id": "fact_2"}
             self._delete_index()
             self.client.create_index(self.index_name_1)
-            self.client.index(self.index_name_1).add_documents(documents=[d1, d2])
+            self.client.index(self.index_name_1).add_documents(documents=[d1, d2], non_tensor_fields=[])
             search_res_0 = self.client.index(self.index_name_1).search(q="General nature facts")
             assert (search_res_0["hits"][0]["_id"] == "fact_1") or (search_res_0["hits"][0]["_id"] == "fact_2")
             assert len(search_res_0["hits"]) == 2

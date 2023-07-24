@@ -54,7 +54,7 @@ class TestImageReranking(MarqoTestCase):
             'location': 'https://raw.githubusercontent.com/marqo-ai/marqo-api-tests/mainline/assets/ai_hippo_statue.png'},
         ]
 
-        client.index(self.index_name).add_documents(documents)
+        client.index(self.index_name).add_documents(documents, non_tensor_fields=[])
 
         ###### proper way to search over images
         # test the search works
@@ -125,7 +125,7 @@ class TestImageReranking(MarqoTestCase):
             'location': 'https://raw.githubusercontent.com/marqo-ai/marqo-api-tests/mainline/assets/ai_hippo_statue.png'},
         ]
 
-        client.index(self.index_name).add_documents(documents)
+        client.index(self.index_name).add_documents(documents, non_tensor_fields=[])
 
         # test Errors
         # # test the search works with the reranking and no searchable attributes
@@ -165,7 +165,7 @@ class TestImageReranking(MarqoTestCase):
             'location': 'https://raw.githubusercontent.com/marqo-ai/marqo-api-tests/mainline/assets/ai_hippo_statue.png'},
         ]
 
-        res = client.index(self.index_name).add_documents(documents)
+        res = client.index(self.index_name).add_documents(documents, non_tensor_fields=[])
         print(res)
 
         # test Errors
@@ -208,7 +208,7 @@ class TestImageReranking(MarqoTestCase):
             'location': 'https://raw.githubusercontent.com/marqo-ai/marqo-api-tests/mainline/assets/ai_hippo_statue.png'},
         ]
 
-        client.index(self.index_name).add_documents(documents)
+        client.index(self.index_name).add_documents(documents, non_tensor_fields=[])
 
         ###### proper way to search over images
         # test the search works

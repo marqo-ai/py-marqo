@@ -46,7 +46,7 @@ class TestBulkSearch(MarqoTestCase):
             The editor-in-chief Katharine Viner succeeded Alan Rusbridger in 2015.[10][11] Since 2018, the paper's main newsprint sections have been published in tabloid format. As of July 2021, its print edition had a daily circulation of 105,134.[4] The newspaper has an online edition, TheGuardian.com, as well as two international websites, Guardian Australia (founded in 2013) and Guardian US (founded in 2011). The paper's readership is generally on the mainstream left of British political opinion,[12][13][14][15] and the term "Guardian reader" is used to imply a stereotype of liberal, left-wing or "politically correct" views.[3] Frequent typographical errors during the age of manual typesetting led Private Eye magazine to dub the paper the "Grauniad" in the 1960s, a nickname still used occasionally by the editors for self-mockery.[16]
             """
         }
-        add_doc_res = self.client.index(self.index_name_1).add_documents([d1])
+        add_doc_res = self.client.index(self.index_name_1).add_documents([d1], non_tensor_fields=[])
         resp = self.client.bulk_search([{
             "index": self.index_name_1,
             "q": "title about some doc"
@@ -73,7 +73,7 @@ class TestBulkSearch(MarqoTestCase):
     def test_search_highlights(self):
         """Tests if show_highlights works and if the deprecation behaviour is expected"""
         self.client.create_index(index_name=self.index_name_1)
-        self.client.index(index_name=self.index_name_1).add_documents([{"f1": "some doc"}])
+        self.client.index(index_name=self.index_name_1).add_documents([{"f1": "some doc"}], non_tensor_fields=[])
         for params, expected_highlights_presence in [
                 ({}, True),
                 ({"showHighlights": False}, False),
@@ -101,7 +101,7 @@ class TestBulkSearch(MarqoTestCase):
         }
         res = self.client.index(self.index_name_1).add_documents([
             d1, d2
-        ])
+        ], non_tensor_fields=[])
         resp = self.client.bulk_search([{
             "index": self.index_name_1,
             "q": "this is a solid doc"
@@ -127,7 +127,7 @@ class TestBulkSearch(MarqoTestCase):
         }
         res = self.client.index(self.index_name_1).add_documents([
             d1, d2
-        ])
+        ], non_tensor_fields=[])
 
         # Ensure that vector search works
         resp = self.client.bulk_search([{
@@ -190,7 +190,7 @@ class TestBulkSearch(MarqoTestCase):
         }
         res = self.client.index(self.index_name_1).add_documents([
             d1, d2
-        ],auto_refresh=True)
+        ],auto_refresh=True, non_tensor_fields=[])
 
         resp = self.client.bulk_search([{
             "index": self.index_name_1,
@@ -222,7 +222,7 @@ class TestBulkSearch(MarqoTestCase):
         }
         x = self.client.index(self.index_name_1).add_documents([
             d1, d2
-        ], auto_refresh=True)
+        ], auto_refresh=True, non_tensor_fields=[])
         atts = ["doc title", "an_int"]
         for search_method in [enums.SearchMethods.TENSOR,
                               enums.SearchMethods.LEXICAL]:
@@ -253,7 +253,7 @@ class TestBulkSearch(MarqoTestCase):
                         for i in range(num_docs)]
         
         self.client.index(index_name=self.index_name_1).add_documents(
-            docs, auto_refresh=False, client_batch_size=50
+            docs, auto_refresh=False, client_batch_size=50, non_tensor_fields=[]
         )
         self.client.index(index_name=self.index_name_1).refresh()
 
@@ -309,7 +309,7 @@ class TestBulkSearch(MarqoTestCase):
         }
         self.client.create_index(index_name=self.index_name_1, settings_dict=image_index_config)
         self.client.index(index_name=self.index_name_1).add_documents(
-            documents=docs, auto_refresh=True
+            documents=docs, auto_refresh=True, non_tensor_fields=[]
         )
         queries_expected_ordering = [
             ({"Nature photography": 2.0, "Artefact": -2}, ['realistic_hippo', 'artefact_hippo']),

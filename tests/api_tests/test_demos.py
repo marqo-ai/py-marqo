@@ -38,7 +38,7 @@ class TestDemo(MarqoTestCase):
                 S2Search is based in Melbourne. Melbourne has beautiful waterways running through it.
                 """
             },
-        ])
+        ], non_tensor_fields=[])
         print("\nSearching the phrase 'River' across all fields")
         pprint.pprint(client.index("cool-index-1").search("River"))
         # then we search specific searchable attributes. We can see how powerful semantic search is
@@ -63,7 +63,7 @@ class TestDemo(MarqoTestCase):
                                "mobility, life support, and communications for astronauts",
                 "_id": "article_591"
             }
-        ])
+        ], non_tensor_fields=[])
 
         results = mq.index("my-first-index").search(
             q="What is the best outfit to wear on the moon?"
