@@ -60,6 +60,8 @@ class Index:
                inference_node_type: str = None,
                storage_node_type: str = None,
                inference_node_count: int = 1,
+               storage_node_count: int = 1,
+               replicas_count: int = 0,
                ) -> Dict[str, Any]:
         """Create the index.
 
@@ -78,6 +80,8 @@ class Index:
             inference_node_type: inference type for the index
             storage_node_type: storage type for the index
             inference_node_count: number of inference nodes for the index
+            storage_node_count: number of storage nodes for the index
+            replicas_count: number of replicas for the index
         Returns:
             Response body, containing information about index creation result
         """
@@ -103,7 +107,9 @@ class Index:
                 return req.post(f"indexes/{index_name}", body=cl_settings)
             cl_settings['inference_type'] = inference_node_type
             cl_settings['storage_class'] = storage_node_type
-            cl_settings['inference_node_count'] = inference_node_count
+            cl_settings['number_of_inferences'] = inference_node_count
+            cl_settings['number_of_replicas'] = replicas_count
+            cl_settings['number_of_shards'] = storage_node_count
             response = req.post(f"indexes/{index_name}", body=cl_settings)
             index = Index(config, index_name)
             creation = index.get_status()

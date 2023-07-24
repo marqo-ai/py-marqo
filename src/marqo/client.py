@@ -62,6 +62,8 @@ class Client:
         inference_node_type=None,
         storage_node_type=None,
         inference_node_count=1,
+        storage_node_count=1,
+        replicas_count=0,
     ) -> Dict[str, Any]:
         """Create the index. Please refer to the marqo cloud to see options for inference and storage node types.
 
@@ -79,6 +81,8 @@ class Client:
             inference_node_type:
             storage_node_type:
             inference_node_count;
+            storage_node_count:
+            replicas_count:
         Returns:
             Response body, containing information about index creation result
         """
@@ -89,7 +93,8 @@ class Client:
             sentences_per_chunk=sentences_per_chunk, sentence_overlap=sentence_overlap,
             image_preprocessing_method=image_preprocessing_method,
             settings_dict=settings_dict, inference_node_type=inference_node_type, storage_node_type=storage_node_type,
-            inference_node_count=inference_node_count
+            storage_node_count=storage_node_count, replicas_count=replicas_count,
+            inference_node_count=inference_node_count,
         )
 
     def delete_index(self, index_name: str) -> Dict[str, Any]:
