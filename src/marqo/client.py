@@ -192,6 +192,9 @@ class Client:
         return self.http.get(path="")
 
     def health(self):
+        mq_logger.warning('The `client.health()` API has been deprecated and will be removed in '
+                          'Marqo 2.0.0. Use `client.index(index_name).health()` instead. '
+                          'Check `https://docs.marqo.ai/latest/API-Reference/indexes/` for more details.')
         return self.http.get(path="health")
 
     def eject_model(self, model_name: str, model_device: str):

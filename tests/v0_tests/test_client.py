@@ -1,6 +1,7 @@
 import requests
 from json import JSONDecodeError
 from unittest import mock
+from unittest.mock import patch
 
 from marqo.client import Client
 from tests.marqo_test import MarqoTestCase
@@ -35,6 +36,28 @@ class TestClient(MarqoTestCase):
         res = self.client.health()
         assert 'status' in res
         assert 'status' in res['backend']
+
+    def test_health_deprecation_warning(self):
+        with mock.patch("marqo.client.mq_logger.warning") as mock_warning:
+            res = self.client.health()
+
+            # Check the warning was logged
+            mock_warning.assert_called_once()
+            warning_message = mock_warning.call_args[0][0]
+            self.assertIn("The `client.health()` API has been deprecated and will be removed in", warning_message)
+
+    def test_check_index_health_response(self):
+        self.client.create_index(self.index_name_1)
+        res = self.client.index(self.index_name_1).health()
+        assert 'status' in res
+        assert 'status' in res['backend']
+
+    def test_check_index_health_query(self):
+        with patch("marqo._httprequests.HttpRequests.get") as mock_get:
+            self.client.create_index(self.index_name_1)
+            res = self.client.index(self.index_name_1).health()
+            args, kwargs = mock_get.call_args
+            self.assertIn(f"/{self.index_name_1}/health", kwargs["path"])
 
     def test_version_check_instantiation(self):
         with mock.patch("marqo.client.mq_logger.warning") as mock_warning, \
