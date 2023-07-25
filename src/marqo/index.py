@@ -548,5 +548,5 @@ class Index:
         return self.http.get(path=f"indexes/{self.index_name}/settings", index_name=self.index_name,)
 
     def health(self) -> dict:
-        """Check the health of a specific index"""
+        """Check the health of an index"""
         return self.http.get(path=f"indexes/{self.index_name}/health", index_name=self.index_name)
