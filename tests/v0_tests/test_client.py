@@ -59,7 +59,7 @@ class TestClient(MarqoTestCase):
                     res = client.health()
 
                 # Assert the error message is what you expect
-                self.assertIn("It is likely you are trying to check the health on Marqo Cloud V2", cm.exception.message)
+                self.assertIn("If you are trying to check the health on Marqo Cloud", cm.exception.message)
 
     def test_check_index_health_response(self):
         self.client.create_index(self.index_name_1)
