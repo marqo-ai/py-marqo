@@ -52,18 +52,18 @@ class Client:
         self._marqo_minimum_supported_version_check()
 
     def create_index(
-        self, index_name: str,
-        treat_urls_and_pointers_as_images=False, model=None,
-        normalize_embeddings=True,
-        sentences_per_chunk=2,
-        sentence_overlap=0,
-        image_preprocessing_method=None,
-        settings_dict=None,
-        inference_node_type=None,
-        storage_node_type=None,
-        inference_node_count=1,
-        storage_node_count=1,
-        replicas_count=0,
+            self, index_name: str,
+            treat_urls_and_pointers_as_images=False, model=None,
+            normalize_embeddings=True,
+            sentences_per_chunk=2,
+            sentence_overlap=0,
+            image_preprocessing_method=None,
+            settings_dict=None,
+            inference_node_type=None,
+            storage_node_type=None,
+            inference_node_count=1,
+            storage_node_count=1,
+            replicas_count=0,
     ) -> Dict[str, Any]:
         """Create the index. Please refer to the marqo cloud to see options for inference and storage node types.
 
@@ -195,7 +195,14 @@ class Client:
         mq_logger.warning('The `client.health()` API has been deprecated and will be removed in '
                           'Marqo 2.0.0. Use `client.index(index_name).health()` instead. '
                           'Check `https://docs.marqo.ai/latest/API-Reference/indexes/` for more details.')
-        return self.http.get(path="health")
+        try:
+            return self.http.get(path="health")
+        except (MarqoWebError, RequestException, TypeError, KeyError) as e:
+            raise errors.BadRequestError("Marqo encountered an error trying to check the health of the Marqo instance. "
+                                         "It is likely you are trying to check the health on Marqo Cloud V2. "
+                                         "The `client.health()` API is not supported on Marqo Cloud V2 and will be removed in"
+                                         "Marqo 2.0.0. Please Use `client.index(index_name).health()` instead. "
+                                         "Check `https://docs.marqo.ai/latest/API-Reference/indexes/` for more details.")
 
     def eject_model(self, model_name: str, model_device: str):
         return self.http.delete(path=f"models?model_name={model_name}&model_device={model_device}")
@@ -242,5 +249,3 @@ class Client:
             mq_logger.warning(skip_warning_message)
             marqo_url_and_version_cache[self.url] = "_skipped"
         return
-
-

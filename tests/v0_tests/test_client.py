@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from marqo.client import Client
 from tests.marqo_test import MarqoTestCase
-from marqo.errors import MarqoApiError
+from marqo.errors import MarqoApiError, BadRequestError
 from marqo.client import marqo_url_and_version_cache
 from marqo.errors import BackendTimeoutError, BackendCommunicationError
 
@@ -45,6 +45,21 @@ class TestClient(MarqoTestCase):
             mock_warning.assert_called_once()
             warning_message = mock_warning.call_args[0][0]
             self.assertIn("The `client.health()` API has been deprecated and will be removed in", warning_message)
+
+    def test_error_handling_in_health_check(self):
+        client = Client(**self.client_settings)
+        side_effect_list = [requests.exceptions.JSONDecodeError("test", "test", 1), BackendCommunicationError("test"),
+                            BackendTimeoutError("test"), requests.exceptions.RequestException("test"),
+                            KeyError("test"), KeyError("test"), requests.exceptions.Timeout("test")]
+        for i, side_effect in enumerate(side_effect_list):
+            with mock.patch("marqo._httprequests.HttpRequests.get") as mock_get:
+                mock_get.side_effect = side_effect
+
+                with self.assertRaises(BadRequestError) as cm:
+                    res = client.health()
+
+                # Assert the error message is what you expect
+                self.assertIn("It is likely you are trying to check the health on Marqo Cloud V2", cm.exception.message)
 
     def test_check_index_health_response(self):
         self.client.create_index(self.index_name_1)
