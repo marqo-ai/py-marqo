@@ -8,7 +8,7 @@ from tests.marqo_test import MarqoTestCase
 class TestMarqoUrlResolver(MarqoTestCase):
     @patch("requests.get")
     def test_refresh_urls_if_needed(self, mock_get):
-        mock_get.return_value.json.return_value = {"indices": [
+        mock_get.return_value.json.return_value = {"results": [
             {"index_name": "index1", "endpoint": "example.com", "index_status": "READY"},
             {"index_name": "index2", "endpoint": "example2.com", "index_status": "READY"}
         ]}
@@ -32,7 +32,7 @@ class TestMarqoUrlResolver(MarqoTestCase):
 
     @patch("requests.get")
     def test_refresh_urls_if_not_needed(self, mock_get):
-        mock_get.return_value.json.return_value = {"indices": [
+        mock_get.return_value.json.return_value = {"results": [
             {"index_name": "index1", "endpoint": "example.com", "index_status": "READY"},
             {"index_name": "index2", "endpoint": "example2.com", "index_status": "READY"}
         ]}
@@ -55,7 +55,7 @@ class TestMarqoUrlResolver(MarqoTestCase):
 
     @patch("requests.get")
     def test_refresh_includes_only_ready(self, mock_get):
-        mock_get.return_value.json.return_value = {"indices": [
+        mock_get.return_value.json.return_value = {"results": [
             {"index_name": "index1", "endpoint": "example.com", "index_status": "READY"},
             {"index_name": "index2", "endpoint": "example2.com", "index_status": "NOT READY"}
         ]}

@@ -47,7 +47,7 @@ class MarqoUrlResolver:
         if not response.ok:
             mq_logger.warning(response.text)
         response_json = response.json()
-        for index in response_json['indices']:
+        for index in response_json['results']:
             if index.get('index_status') in ["READY", "CREATING"]:
                 self._urls_mapping[index['index_status']][index['index_name']] = index.get('endpoint')
         if self._urls_mapping:
