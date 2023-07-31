@@ -5,8 +5,10 @@ from pydantic import error_wrappers
 from requests.exceptions import RequestException
 from typing_extensions import deprecated
 
+from marqo.default_instance_mappings import DefaultInstanceMappings
 from marqo.index import Index
 from marqo.config import Config
+from marqo.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
 from marqo.models import BulkSearchBody, BulkSearchQuery
 from marqo._httprequests import HttpRequests
 from marqo.instance_mapping import MarqoInstanceMappings
@@ -32,7 +34,7 @@ class Client:
     """
 
     def __init__(
-            self, url: str = "http://localhost:8882",
+            self, url: Optional[str] = "http://localhost:8882",
             instance_mappings: Optional[MarqoInstanceMappings] = None,
             main_user: str = None, main_password: str = None,
             return_telemetry: bool = False,
@@ -44,14 +46,22 @@ class Client:
         url:
             The url to the S2Search API (ex: http://localhost:8882)
         """
-        self.main_user = main_user
-        self.main_password = main_password
-        if (main_user is not None) and (main_password is not None):
-            self.url = utils.construct_authorized_url(url_base=url, username=main_user, password=main_password)
-        else:
-            self.url = url
+        if url is not None and instance_mappings is not None:
+            raise ValueError("Cannot specify both url and instance_mappings")
+
+        is_marqo_cloud = False
+        if url is not None:
+            if url.lower().startswith("https://api.marqo.ai") or url.lower().startswith("http://api.marqo.ai"):
+                instance_mappings = MarqoCloudInstanceMappings(api_key=api_key)
+                is_marqo_cloud = True
+            else:
+                instance_mappings = DefaultInstanceMappings(url, main_user, main_password)
+
         self.config = Config(
-            self.url, use_telemetry=return_telemetry, api_key=api_key, instance_mappings=instance_mappings
+            instance_mappings=instance_mappings,
+            is_marqo_cloud=is_marqo_cloud,
+            use_telemetry=return_telemetry,
+            api_key=api_key
         )
         self.http = HttpRequests(self.config)
         self._marqo_minimum_supported_version_check()

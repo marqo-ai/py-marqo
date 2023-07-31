@@ -1,39 +1,47 @@
 import time
-from marqo.marqo_logging import mq_logger
+from typing import Optional
+
 import requests
 from requests.exceptions import Timeout
+
 from marqo.errors import (
     MarqoCloudIndexNotFoundError,
     MarqoCloudIndexNotReadyError,
 )
+from marqo.instance_mappings import InstanceMappings
+from marqo.marqo_logging import mq_logger
 
 
-class MarqoUrlResolver:
+class MarqoCloudInstanceMappings(InstanceMappings):
+    _MARQO_CLOUD_URL = "https://api.marqo.ai"
+
     def __init__(self, api_key=None, expiration_time: int = 15):
-        """ URL Resolver is a cache for urls that are resolved to their respective indices only for marqo cloud. """
         self.timestamp = time.time() - expiration_time
         self._urls_mapping = {"READY": {}, "CREATING": {}}
         self.api_key = api_key
         self.expiration_time = expiration_time
 
-    def refresh_urls_if_needed(self, index_name):
+    def get_control_url(self, index_name: Optional[str]) -> str:
+        return f"{MarqoCloudInstanceMappings._MARQO_CLOUD_URL}/api"
+
+    def get_url(self, index_name: str) -> str:
+        self._refresh_urls_if_needed(index_name)
+        if index_name in self._urls_mapping['READY']:
+            return self._urls_mapping['READY'][index_name]
+        if index_name in self._urls_mapping['CREATING']:
+            raise MarqoCloudIndexNotReadyError(index_name)
+        raise MarqoCloudIndexNotFoundError(index_name)
+
+    def is_remote(self):
+        return True
+
+    def _refresh_urls_if_needed(self, index_name):
         if index_name not in self._urls_mapping['READY'] and time.time() - self.timestamp > self.expiration_time:
             # fast refresh to catch if index was created
             self._refresh_urls()
         if index_name in self._urls_mapping['READY'] and time.time() - self.timestamp > 360:
             # slow refresh in case index was deleted
             self._refresh_urls(timeout=3)
-
-    def __getitem__(self, item):
-        self.refresh_urls_if_needed(item)
-        if item in self._urls_mapping['READY']:
-            return self._urls_mapping['READY'][item]
-        if item in self._urls_mapping['CREATING']:
-            raise MarqoCloudIndexNotReadyError(item)
-        raise MarqoCloudIndexNotFoundError(item)
-
-    def get_mappings(self):
-        return self._urls_mapping['READY']
 
     def _refresh_urls(self, timeout=None):
         try:

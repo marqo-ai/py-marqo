@@ -103,7 +103,7 @@ class Index:
             cl_text_preprocessing['split_length'] = sentences_per_chunk
             cl_img_preprocessing = cl_ix_defaults['image_preprocessing']
             cl_img_preprocessing['patch_method'] = image_preprocessing_method
-            if not config.cluster_is_marqo:
+            if not config.is_marqo_cloud:
                 return req.post(f"indexes/{index_name}", body=cl_settings)
             cl_settings['inference_type'] = inference_node_type
             cl_settings['storage_class'] = storage_node_type
