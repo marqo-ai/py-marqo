@@ -20,7 +20,7 @@ class DefaultInstanceMappings(InstanceMappings):
     def get_url(self, index_name: str) -> str:
         return self._url
 
-    def get_control_url(self, index_name: Optional[str]) -> str:
+    def get_control_url(self) -> str:
         return self._url
 
     def is_remote(self):

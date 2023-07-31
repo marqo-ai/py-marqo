@@ -21,7 +21,7 @@ class MarqoCloudInstanceMappings(InstanceMappings):
         self.api_key = api_key
         self.expiration_time = expiration_time
 
-    def get_control_url(self, index_name: Optional[str]) -> str:
+    def get_control_url(self) -> str:
         return f"{MarqoCloudInstanceMappings._MARQO_CLOUD_URL}/api"
 
     def get_url(self, index_name: str) -> str:
