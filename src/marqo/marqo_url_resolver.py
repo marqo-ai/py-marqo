@@ -32,6 +32,9 @@ class MarqoUrlResolver:
             raise MarqoCloudIndexNotReadyError(item)
         raise MarqoCloudIndexNotFoundError(item)
 
+    def get_mappings(self):
+        return self._urls_mapping['READY']
+
     def _refresh_urls(self, timeout=None):
         try:
             response = requests.get('https://api.marqo.ai/api/indexes',

@@ -3,11 +3,13 @@ from typing import Any, Dict, List, Optional, Union
 
 from pydantic import error_wrappers
 from requests.exceptions import RequestException
+from typing_extensions import deprecated
 
 from marqo.index import Index
 from marqo.config import Config
 from marqo.models import BulkSearchBody, BulkSearchQuery
 from marqo._httprequests import HttpRequests
+from marqo.instance_mapping import MarqoInstanceMappings
 from marqo import utils, enums
 from marqo import errors
 from marqo.version import minimum_supported_marqo_version
@@ -31,6 +33,7 @@ class Client:
 
     def __init__(
             self, url: str = "http://localhost:8882",
+            instance_mappings: Optional[MarqoInstanceMappings] = None,
             main_user: str = None, main_password: str = None,
             return_telemetry: bool = False,
             api_key: str = None
@@ -47,7 +50,9 @@ class Client:
             self.url = utils.construct_authorized_url(url_base=url, username=main_user, password=main_password)
         else:
             self.url = url
-        self.config = Config(self.url, use_telemetry=return_telemetry, api_key=api_key)
+        self.config = Config(
+            self.url, use_telemetry=return_telemetry, api_key=api_key, instance_mappings=instance_mappings
+        )
         self.http = HttpRequests(self.config)
         self._marqo_minimum_supported_version_check()
 
@@ -161,6 +166,10 @@ class Client:
         ]
         return response
 
+    @deprecated(
+        "This method is deprecated and will be removed in Marqo 2.0.0"
+        ", instead use 'client.index(index_name).enrich()"
+    )
     def enrich(self, documents: List[Dict], enrichment: Dict, device: str = None, ):
         """Enrich documents"""
         translated = utils.translate_device_string_for_url(device)
@@ -188,6 +197,10 @@ class Client:
     ) -> str:
         return base64.urlsafe_b64encode(data).decode('utf-8').replace('=', '')
 
+    @deprecated(
+        "This method is deprecated and will be removed in Marqo 2.0.0"
+        ", instead use 'client.index(index_name).get_marqo()"
+    )
     def get_marqo(self):
         return self.http.get(path="")
 
@@ -204,15 +217,31 @@ class Client:
                                          "Marqo 2.0.0. Please Use `client.index('your-index-name').health()` instead. "
                                          "Check `https://docs.marqo.ai/1.1.0/API-Reference/indexes/` for more details.")
 
+    @deprecated(
+        "This method is deprecated and will be removed in Marqo 2.0.0"
+        ", instead use 'client.index(index_name).eject_model()"
+    )
     def eject_model(self, model_name: str, model_device: str):
         return self.http.delete(path=f"models?model_name={model_name}&model_device={model_device}")
 
+    @deprecated(
+        "This method is deprecated and will be removed in Marqo 2.0.0"
+        ", instead use 'client.index(index_name).get_loaded_models()"
+    )
     def get_loaded_models(self):
         return self.http.get(path="models")
 
+    @deprecated(
+        "This method is deprecated and will be removed in Marqo 2.0.0"
+        ", instead use 'client.index(index_name).get_cuda_info()"
+    )
     def get_cuda_info(self):
         return self.http.get(path="device/cuda")
 
+    @deprecated(
+        "This method is deprecated and will be removed in Marqo 2.0.0"
+        ", instead use 'client.index(index_name).get_cpu_info()"
+    )
     def get_cpu_info(self):
         return self.http.get(path="device/cpu")
 

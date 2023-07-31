@@ -2,6 +2,8 @@ from typing import Optional, Union
 from marqo import enums, utils
 import urllib3
 import warnings
+
+from marqo.instance_mapping import MarqoInstanceMappings
 from marqo.marqo_url_resolver import MarqoUrlResolver
 
 
@@ -13,6 +15,7 @@ class Config:
     def __init__(
         self,
         url: str,
+        instance_mappings: Optional[MarqoInstanceMappings] = None,
         use_telemetry: bool = False,
         timeout: Optional[int] = None,
         api_key: str = None
@@ -29,6 +32,13 @@ class Config:
         self.marqo_url_resolver = None
         self.api_key = api_key
         self.url = self.set_url(url)
+        self.instance_mapping = instance_mappings
+        if self.cluster_is_marqo:
+            self.marqo_url_resolver = MarqoUrlResolver(api_key=self.api_key, expiration_time=15)
+            self.instance_mapping = MarqoInstanceMappings(
+                url_resolver=self.marqo_url_resolver, prioritize_resolver=True
+            )
+
         self.timeout = timeout
         # suppress warnings until we figure out the dependency issues:
         # warnings.filterwarnings("ignore")
@@ -48,16 +58,13 @@ class Config:
                 self.cluster_is_s2search = True
             if "api.marqo.ai" in lowered_url:
                 self.cluster_is_marqo = True
-                self.marqo_url_resolver = MarqoUrlResolver(api_key=self.api_key, expiration_time=15)
+                url += "/api"
         self.url = url
         return self.url
 
-    def get_url(self, index_name=None,):
-        """Get the URL, and infers whether that url is marqo cloud,
+    def get_url(self, index_name: str = None):
+        """Get the URL, and infers whether that url requires index_mapping resolution
         and if it is targeting a specific index resolves the index-specific url"""
-        if not self.cluster_is_marqo:
-            return self.url
-        if self.cluster_is_marqo and not index_name:
-            return self.url + "/api"
-        # calls resolver to get index-specific url for when cluster is marqo and index_name is not None
-        return self.marqo_url_resolver[index_name]
+        if index_name and self.instance_mapping is not None:
+            return self.instance_mapping[index_name]
+        return self.url

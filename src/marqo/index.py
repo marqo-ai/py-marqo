@@ -550,3 +550,30 @@ class Index:
     def health(self) -> dict:
         """Check the health of an index"""
         return self.http.get(path=f"indexes/{self.index_name}/health", index_name=self.index_name)
+
+    def enrich(self, documents: List[Dict], enrichment: Dict, device: str = None, ):
+        """Enrich documents"""
+        translated = utils.translate_device_string_for_url(device)
+        response = self.http.post(path=f'enrichment?device={translated}', body={
+            "documents": documents,
+            "enrichment": enrichment
+        }, index_name=self.index_name)
+        return response
+
+    def get_loaded_models(self):
+        return self.http.get(path="models", index_name=self.index_name)
+
+    def get_cuda_info(self):
+        return self.http.get(path="device/cuda", index_name=self.index_name)
+
+    def get_cpu_info(self):
+        return self.http.get(path="device/cpu", index_name=self.index_name)
+
+    def get_marqo(self):
+        return self.http.get(path="", index_name=self.index_name)
+
+    def eject_model(self, model_name: str, model_device: str):
+        return self.http.delete(
+            path=f"models?model_name={model_name}&model_device={model_device}", index_name=self.index_name
+        )
+
