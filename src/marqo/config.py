@@ -1,6 +1,6 @@
 from typing import Optional
 
-from marqo.instance_mapping import MarqoInstanceMappings
+from marqo.instance_mappings import InstanceMappings
 
 
 class Config:
@@ -10,7 +10,7 @@ class Config:
 
     def __init__(
             self,
-            instance_mappings: Optional[MarqoInstanceMappings] = None,
+            instance_mappings: Optional[InstanceMappings] = None,
             is_marqo_cloud: bool = False,
             use_telemetry: bool = False,
             timeout: Optional[int] = None,

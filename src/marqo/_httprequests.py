@@ -35,7 +35,9 @@ class HttpRequests:
 
     def _construct_path(self, path: str, index_name="") -> str:
         """Augment the URL request path based if telemetry is required."""
-        url = f"{self.config.get_url(index_name=index_name)}/{path}"
+        base_url = self.config.instance_mapping.get_url(index_name=index_name) if index_name \
+            else self.config.instance_mapping.get_control_url()
+        url = f"{base_url}/{path}"
         if self.config.use_telemetry:
             delimeter= "?" if "?" not in f"{self.config.url}/{path}" else "&"
             return url + f"{delimeter}telemetry=True"
