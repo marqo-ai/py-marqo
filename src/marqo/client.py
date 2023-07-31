@@ -8,10 +8,10 @@ from typing_extensions import deprecated
 from marqo.default_instance_mappings import DefaultInstanceMappings
 from marqo.index import Index
 from marqo.config import Config
+from marqo.instance_mappings import InstanceMappings
 from marqo.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
 from marqo.models import BulkSearchBody, BulkSearchQuery
 from marqo._httprequests import HttpRequests
-from marqo.instance_mapping import MarqoInstanceMappings
 from marqo import utils, enums
 from marqo import errors
 from marqo.version import minimum_supported_marqo_version
@@ -35,7 +35,7 @@ class Client:
 
     def __init__(
             self, url: Optional[str] = "http://localhost:8882",
-            instance_mappings: Optional[MarqoInstanceMappings] = None,
+            instance_mappings: Optional[InstanceMappings] = None,
             main_user: str = None, main_password: str = None,
             return_telemetry: bool = False,
             api_key: str = None
