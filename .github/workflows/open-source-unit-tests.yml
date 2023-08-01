@@ -106,6 +106,8 @@ jobs:
           docker run --name marqo -d --privileged -p 8882:8882 --add-host host.docker.internal:host-gateway \
             ${{ steps.prepare.outputs.registry }}/${{ steps.prepare.outputs.image_repo }}:${{ steps.prepare.outputs.image_tag }}
           
+          echo Finished run Marqo command
+          
           LOGS_PID=$(docker logs -f marqo & echo $!) # capture the pid of `docker logs` command
     
           # wait for marqo to start with timeout of 10 minutes
