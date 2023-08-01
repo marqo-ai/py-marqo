@@ -1,12 +1,25 @@
-name: py-marqo-unit-tests
+name: Py-marqo open source unit tests
 
 on:
   workflow_dispatch:
+    inputs:
+      push_to:
+        description: 'Docker registry location. Options: "ECR" or "DockerHub"'
+        required: true
+        default: 'DockerHub'
+      image_repo:
+        description: 'Marqo docker image repo name'
+        required: true
+        default: 'marqo'
+      image_tag:
+        description: 'Marqo image tag. Examples: "1.1.0", "test" "latest"'
+        required: true
   push:
-    branches:
-      mainline
-    paths-ignore:
-      - '**.md'
+    branches: 
+      - mainline
+  pull_request:
+    branches: 
+      - mainline
 
 permissions:
   contents: read
@@ -36,16 +49,15 @@ jobs:
           subnet-id: ${{ secrets.AMD_SUBNET_ID }}
           security-group-id: ${{ secrets.AMD_SECURITY_GROUP_ID }}
 
-  Test-Marqo:
-    name: Run Marqo Test Suite
-    needs: Start-Runner # required to start the main job when the runner is ready
-    runs-on: ${{ needs.start-runner.outputs.label }} # run the job on the newly created runner
-                
-    environment: marqo-test-suite 
+  Test-Py-Marqo:
+    name: Run Py-Marqo Test Suite
+    needs: Start-Runner
+    runs-on: ${{ needs.start-runner.outputs.label }}
     
+    environment: py-marqo-test-suite
+
     steps:
-       
-      - name: Checkout marqo repo
+      - name: Checkout py-marqo repo
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
@@ -55,58 +67,47 @@ jobs:
         with:
           python-version: "3.8"
           cache: "pip"
-          
-      - name: Install Dependencies
-        run: |
-          #pip install -r requirements.txt
-          pip install tox==3.26
-          pip install flake8
-      
-      # TODO: Figure out how to make linting work on self-hosted runner
-      # usual error: $HOME not set
-      #- name: Get Changed Directories
-      #  id: changed-dir
-      #  uses: tj-actions/changed-files@v29.0.1
-      #  with:
-      #    dir_names: true
-      #  run:  |
-      #    export HOME=$pwd
-      
-      #- name: Lint Changed Directories with flake8
-      #  run: |
-      #    for dir in ${{ steps.changed-dir.outputs.all_changed_files }}; do
-      #      echo "$dir was changed"
-            # stop the build if there are Python syntax errors or undefined names
-      #      flake8 $dir --count --select=E9,F63,F7,F82 --show-source --statistics --filename *.py
-            # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-      #      flake8 $dir --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --filename *.py
-      #    done
-  
-      - name: Checkout marqo-api-tests repo
-        uses: actions/checkout@v3
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        if: github.event.inputs.push_to == 'DockerHub'
         with:
-          repository: marqo-ai/marqo-api-tests
-          
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-          
-      - name: Set up Environment
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Login to ECR
+        uses: docker/login-action@v1
+        if: github.event.inputs.push_to == 'ECR'
+        with:
+          registry: ${{ secrets.AWS_ACCOUNT_NUMBER }}.dkr.ecr.us-east-1.amazonaws.com/${{ github.event.inputs.image_repo }}
+          username: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Set registry and image repo
+        id: prepare
         run: |
-          # Set up conf file
-          echo 'export MARQO_API_TESTS_ROOT="${{ github.workspace }}"' >> conf
-          
-      - name: Run Unit Tests
+          if [[ "${{ github.event.inputs.push_to }}" == "ECR" ]]; then
+            echo "::set-output name=registry::${{ secrets.AWS_ACCOUNT_NUMBER }}.dkr.ecr.us-east-1.amazonaws.com"
+          else
+            echo "::set-output name=registry::marqoai"
+          fi
+
+      - name: Run Py-Marqo Tests
         run: |
-          export MQ_API_TEST_BRANCH=$(echo "${GITHUB_REF}" | cut -d'/' -f3-)
-          tox -e py3-local_os_unit_tests_w_requirements
-  
+          docker pull ${{ steps.prepare.outputs.registry }}/${{ github.event.inputs.image_repo }}:${{ github.event.inputs.image_tag }}
+          docker run --name marqo -it --privileged -p 8882:8882 --add-host host.docker.internal:host-gateway \
+            ${{ steps.prepare.outputs.registry }}/${{ github.event.inputs.image_repo }}:${{ github.event.inputs.image_tag }}
+          python -m pip install --upgrade pip
+          pip install tox
+          tox
+
   Stop-Runner:
     name: Stop self-hosted EC2 runner
     needs:
-      - Start-Runner # required to get output from the start-runner job
-      - Test-Marqo # required to wait when the main job is done
+      - Start-Runner
+      - Test-Py-Marqo
     runs-on: ubuntu-latest
-    if: ${{ always() }} # required to stop the runner even if the error happened in the previous jobs
+    if: ${{ always() }}
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
