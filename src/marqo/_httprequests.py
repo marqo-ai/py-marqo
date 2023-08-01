@@ -39,7 +39,7 @@ class HttpRequests:
             else self.config.instance_mapping.get_control_url()
         url = f"{base_url}/{path}"
         if self.config.use_telemetry:
-            delimeter= "?" if "?" not in f"{self.config.url}/{path}" else "&"
+            delimeter= "?" if "?" not in f"{base_url}/{path}" else "&"
             return url + f"{delimeter}telemetry=True"
         return url
 

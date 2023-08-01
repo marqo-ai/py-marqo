@@ -1,9 +1,9 @@
 import time
 from unittest.mock import patch
 
-from marqo.marqo_url_resolver import MarqoUrlResolver
+from marqo.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
 from tests.marqo_test import MarqoTestCase
-
+from marqo.errors import MarqoCloudIndexNotFoundError,MarqoCloudIndexNotReadyError
 
 class TestMarqoUrlResolver(MarqoTestCase):
     @patch("requests.get")
@@ -12,20 +12,20 @@ class TestMarqoUrlResolver(MarqoTestCase):
             {"index_name": "index1", "endpoint": "example.com", "index_status": "READY"},
             {"index_name": "index2", "endpoint": "example2.com", "index_status": "READY"}
         ]}
-        resolver = MarqoUrlResolver(api_key="your-api-key", expiration_time=60)
-        initial_timestamp = resolver.timestamp
+        mapping = MarqoCloudInstanceMappings(api_key="your-api-key", expiration_time=60)
+        initial_timestamp = mapping.timestamp
 
         # Wait for more than the expiration time
         time.sleep(0.1)
 
-        resolver.refresh_urls_if_needed("index1")
+        mapping._refresh_urls_if_needed("index1")
 
         # Check that the timestamp has been updated
-        print(resolver.timestamp, initial_timestamp)
-        assert resolver.timestamp > initial_timestamp
+        print(mapping.timestamp, initial_timestamp)
+        assert mapping.timestamp > initial_timestamp
 
         # Check that the URLs mapping has been refreshed
-        assert resolver._urls_mapping["READY"] == {
+        assert mapping._urls_mapping["READY"] == {
             "index1": "example.com",
             "index2": "example2.com",
         }
@@ -36,19 +36,19 @@ class TestMarqoUrlResolver(MarqoTestCase):
             {"index_name": "index1", "endpoint": "example.com", "index_status": "READY"},
             {"index_name": "index2", "endpoint": "example2.com", "index_status": "READY"}
         ]}
-        resolver = MarqoUrlResolver(api_key="your-api-key", expiration_time=60)
+        mapping = MarqoCloudInstanceMappings(api_key="your-api-key", expiration_time=60)
 
         # Call refresh_urls_if_needed without waiting
-        resolver.refresh_urls_if_needed("index1")
-        initial_timestamp = resolver.timestamp
+        mapping._refresh_urls_if_needed("index1")
+        initial_timestamp = mapping.timestamp
         time.sleep(0.1)
-        resolver.refresh_urls_if_needed("index2")
+        mapping._refresh_urls_if_needed("index2")
 
         # Check that the timestamp has not been updated
-        assert resolver.timestamp == initial_timestamp
+        assert mapping.timestamp == initial_timestamp
 
         # Check that the URLs mapping has been initially populated
-        assert resolver._urls_mapping["READY"] == {
+        assert mapping._urls_mapping["READY"] == {
             "index1": "example.com",
             "index2": "example2.com",
         }
@@ -59,11 +59,11 @@ class TestMarqoUrlResolver(MarqoTestCase):
             {"index_name": "index1", "endpoint": "example.com", "index_status": "READY"},
             {"index_name": "index2", "endpoint": "example2.com", "index_status": "NOT READY"}
         ]}
-        resolver = MarqoUrlResolver(api_key="your-api-key", expiration_time=60)
+        mapping = MarqoCloudInstanceMappings(api_key="your-api-key", expiration_time=60)
 
         # Access the urls_mapping property
-        resolver.refresh_urls_if_needed("index1")
-        urls_mapping = resolver._urls_mapping
+        mapping._refresh_urls_if_needed("index1")
+        urls_mapping = mapping._urls_mapping
 
         # Check that the URLs mapping has been initially populated
         assert urls_mapping["READY"] == {
@@ -71,10 +71,10 @@ class TestMarqoUrlResolver(MarqoTestCase):
         }
 
     def test_refresh_urls_graceful_timeout_handling(self):
-        resolver = MarqoUrlResolver(api_key="your-api-key", expiration_time=60)
+        mapping = MarqoCloudInstanceMappings(api_key="your-api-key", expiration_time=60)
         # use ridiculously low timeout
         with self.assertLogs('marqo', level='WARNING') as cm:
-            resolver._refresh_urls(timeout=0.0000000001)
+            mapping._refresh_urls(timeout=0.0000000001)
             assert "timeout" in cm.output[0].lower()
             assert "marqo cloud indexes" in cm.output[0].lower()
 
@@ -82,8 +82,28 @@ class TestMarqoUrlResolver(MarqoTestCase):
     def test_refresh_urls_graceful_timeout_handling_http_timeout(self, mock_get):
         from requests.exceptions import Timeout
         mock_get.side_effect = Timeout
-        resolver = MarqoUrlResolver(api_key="your-api-key", expiration_time=60)
+        mapping = MarqoCloudInstanceMappings(api_key="your-api-key", expiration_time=60)
         with self.assertLogs('marqo', level='WARNING') as cm:
-            resolver._refresh_urls(timeout=5)
+            mapping._refresh_urls(timeout=5)
             assert "timeout" in cm.output[0].lower()
             assert "marqo cloud indexes" in cm.output[0].lower()
+
+    @patch("requests.get")
+    def test_request_of_creating_index_raises_error(self, mock_get):
+        mock_get.return_value.json.return_value = {"results": [
+            {"index_name": "index1", "endpoint": "example.com", "index_status": "READY"},
+            {"index_name": "index2", "endpoint": "example2.com", "index_status": "CREATING"}
+        ]}
+        mapping = MarqoCloudInstanceMappings(api_key="your-api-key", expiration_time=15)
+        with self.assertRaises(MarqoCloudIndexNotReadyError):
+            mapping.get_url("index2")
+
+    @patch("requests.get")
+    def test_request_of_not_existing_index_raises_error(self, mock_get):
+        mock_get.return_value.json.return_value = {"results": [
+            {"index_name": "index1", "endpoint": "example.com", "index_status": "READY"},
+        ]}
+        mapping = MarqoCloudInstanceMappings(api_key="your-api-key", expiration_time=15)
+        with self.assertRaises(MarqoCloudIndexNotFoundError):
+            mapping.get_url("index2")
+

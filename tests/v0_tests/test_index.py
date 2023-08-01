@@ -6,6 +6,7 @@ import unittest
 from tests.marqo_test import MarqoTestCase
 from unittest import mock
 import requests
+from marqo.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
 
 
 class TestIndex(MarqoTestCase):
@@ -205,9 +206,9 @@ class TestIndex(MarqoTestCase):
     @mock.patch("marqo._httprequests.HttpRequests.post", return_value={"acknowledged": True})
     @mock.patch("marqo._httprequests.HttpRequests.get", return_value={"index_status": "READY"})
     def test_create_marqo_cloud_index(self, mock_get, mock_post):
-        self.client.config.url = "https://api.marqo.ai"
+        self.client.config.instance_mapping = MarqoCloudInstanceMappings("https://api.marqo.ai")
         self.client.config.api_key = 'some-super-secret-API-key'
-        self.client.config.cluster_is_marqo = True
+        self.client.config.is_marqo_cloud = True
 
         result = self.client.create_index(
             index_name=self.index_name_1, inference_node_type="marqo.CPU", inference_node_count=1,
@@ -228,9 +229,9 @@ class TestIndex(MarqoTestCase):
     @mock.patch("marqo._httprequests.HttpRequests.post", return_value={"error": "inference_type is required"})
     @mock.patch("marqo._httprequests.HttpRequests.get", return_value={"index_status": "READY"})
     def test_create_marqo_cloud_index_wrong_inference_settings(self, mock_get, mock_post):
-        self.client.config.url = "https://api.marqo.ai"
+        self.client.config.instance_mapping = MarqoCloudInstanceMappings("https://api.marqo.ai")
         self.client.config.api_key = 'some-super-secret-API-key'
-        self.client.config.cluster_is_marqo = True
+        self.client.config.is_marqo_cloud = True
 
         result = self.client.create_index(
             index_name=self.index_name_1, inference_node_type=None, inference_node_count=1,
@@ -251,9 +252,9 @@ class TestIndex(MarqoTestCase):
     @mock.patch("marqo._httprequests.HttpRequests.post", return_value={"error": "storage_class is required"})
     @mock.patch("marqo._httprequests.HttpRequests.get", return_value={"index_status": "READY"})
     def test_create_marqo_cloud_index_wrong_storage_settings(self, mock_get, mock_post):
-        self.client.config.url = "https://api.marqo.ai"
+        self.client.config.instance_mapping = MarqoCloudInstanceMappings("https://api.marqo.ai")
         self.client.config.api_key = 'some-super-secret-API-key'
-        self.client.config.cluster_is_marqo = True
+        self.client.config.is_marqo_cloud = True
 
         result = self.client.create_index(
             index_name=self.index_name_1, inference_node_type="marqo.CPU", inference_node_count=1,
@@ -275,9 +276,9 @@ class TestIndex(MarqoTestCase):
                 return_value={"error": "inference_node_count must be greater than 0"})
     @mock.patch("marqo._httprequests.HttpRequests.get", return_value={"index_status": "READY"})
     def test_create_marqo_cloud_index_wrong_inference_node_count(self, mock_get, mock_post):
-        self.client.config.url = "https://api.marqo.ai"
+        self.client.config.instance_mapping = MarqoCloudInstanceMappings("https://api.marqo.ai")
         self.client.config.api_key = 'some-super-secret-API-key'
-        self.client.config.cluster_is_marqo = True
+        self.client.config.is_marqo_cloud = True
 
         result = self.client.create_index(
             index_name=self.index_name_1, inference_node_type="marqo.CPU", inference_node_count=-1,

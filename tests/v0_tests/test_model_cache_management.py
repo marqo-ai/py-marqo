@@ -32,7 +32,9 @@ class TestModelCacheManagement(MarqoTestCase):
 
     def test_get_cuda_info(self) -> None:
         try:
-            res = self.client.get_cuda_info()
+            settings = {"model": self.MODEL}
+            self.client.create_index(index_name=self.index_name, **settings)
+            res = self.client.index(self.index_name).get_cuda_info()
             if "cuda_devices" not in res:
                 raise AssertionError
         # catch error if no cuda device in marqo
@@ -41,7 +43,9 @@ class TestModelCacheManagement(MarqoTestCase):
 
 
     def test_get_cpu_info(self) -> None:
-        res = self.client.get_cpu_info()
+        settings = {"model": self.MODEL}
+        self.client.create_index(index_name=self.index_name, **settings)
+        res = self.client.index(self.index_name).get_cpu_info()
 
         if "cpu_usage_percent" not in res:
             raise AssertionError
@@ -54,20 +58,22 @@ class TestModelCacheManagement(MarqoTestCase):
 
 
     def test_get_loaded_models(self) -> None:
-        res = self.client.get_loaded_models()
+        settings = {"model": self.MODEL}
+        self.client.create_index(index_name=self.index_name, **settings)
+        res = self.client.index(self.index_name).get_loaded_models()
 
         if "models" not in res:
             raise AssertionError
 
-
     def test_eject_no_cached_model(self) -> None:
         # test a model that is not cached
         try:
-            res = self.client.eject_model("void_model", "void_device")
+            settings = {"model": self.MODEL}
+            self.client.create_index(index_name=self.index_name, **settings)
+            res = self.client.index(self.index_name).eject_model("void_model", "void_device")
             raise AssertionError
         except MarqoWebError:
             pass
-
 
     def test_eject_model(self) -> None:
         if self.IS_MULTI_INSTANCE:
@@ -81,7 +87,7 @@ class TestModelCacheManagement(MarqoTestCase):
             "field 1": "some extra info"
         }
         self.client.index(self.index_name).add_documents([d1], device="cpu", tensor_fields=["doc title", "field 1"])
-        res = self.client.eject_model(self.MODEL, "cpu")
+        res = self.client.index(self.index_name).eject_model(self.MODEL, "cpu")
         assert res["result"] == "success"
         assert res["message"].startswith("successfully eject")
 

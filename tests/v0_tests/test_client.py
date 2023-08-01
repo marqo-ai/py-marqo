@@ -103,7 +103,8 @@ class TestClient(MarqoTestCase):
                 client = Client(url=url)
 
                 mock_get_marqo.assert_not_called()
-
+                if url == "https://api.marqo.ai":
+                    url += '/api'
                 assert url in marqo_url_and_version_cache
                 assert marqo_url_and_version_cache[url] == '_skipped'
 

@@ -269,7 +269,7 @@ class Client:
 
         # Skip the check for Marqo CloudV2 APIs right now
         skip_version_check_url = ["https://api.marqo.ai", "https://cloud.marqo.ai"]
-        if url in skip_version_check_url:
+        if any(url.startswith(skip_url) for skip_url in skip_version_check_url):
             marqo_url_and_version_cache[url] = "_skipped"
             mq_logger.warning(skip_warning_message)
             return
