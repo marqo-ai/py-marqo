@@ -1,4 +1,4 @@
-name: Py-marqo open source unit tests
+name: py_marqo open source unit tests
 
 on:
   workflow_dispatch:
