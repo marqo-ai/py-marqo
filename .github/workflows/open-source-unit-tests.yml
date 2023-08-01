@@ -103,7 +103,7 @@ jobs:
       - name: Run Py-Marqo Tests
         run: |
           docker pull ${{ steps.prepare.outputs.registry }}/${{ steps.prepare.outputs.image_repo }}:${{ steps.prepare.outputs.image_tag }}
-          docker run --name marqo -it --privileged -p 8882:8882 --add-host host.docker.internal:host-gateway \
+          docker run --name marqo -t --privileged -p 8882:8882 --add-host host.docker.internal:host-gateway \
             ${{ steps.prepare.outputs.registry }}/${{ steps.prepare.outputs.image_repo }}:${{ steps.prepare.outputs.image_tag }}
           python -m pip install --upgrade pip
           pip install tox
