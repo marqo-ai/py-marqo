@@ -84,6 +84,11 @@ jobs:
           else
             echo "::set-output name=registry::marqoai"
           fi
+          echo "::set-output name=image_tag::${{ github.event.inputs.image_tag }}"
+          echo "::set-output name=image_repo::${{ github.event.inputs.image_repo }}"
+          if [[ "${{ github.event.inputs.image_tag }}" == "" ]]; then
+            echo "::set-output name=image_tag::${{ steps.marqo_version.outputs.version }}"
+          fi
 
       - name: Run Py-Marqo Tests
         run: |
