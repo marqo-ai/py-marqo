@@ -68,14 +68,7 @@ jobs:
           python-version: "3.8"
           cache: "pip"
 
-      - name: Login to DockerHub
-        uses: docker/login-action@v1
-        if: github.event.inputs.push_to == 'DockerHub'
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Login to ECR
+      - name: Log into ECR
         uses: docker/login-action@v1
         if: github.event.inputs.push_to == 'ECR'
         with:
