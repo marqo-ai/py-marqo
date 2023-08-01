@@ -35,8 +35,8 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.AWS_EC2_GH_RUNNER_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_EC2_GH_RUNNER_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
       - name: Start EC2 runner
         id: start-ec2-runner
@@ -73,8 +73,8 @@ jobs:
         if: github.event.inputs.push_to == 'ECR'
         with:
           registry: ${{ secrets.AWS_ACCOUNT_NUMBER }}.dkr.ecr.us-east-1.amazonaws.com/${{ github.event.inputs.image_repo }}
-          username: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          username: ${{ secrets.ECR_READER_AWS_ACCESS_KEY_ID }}
+          password: ${{ secrets.ECR_READER_AWS_SECRET_ACCESS_KEY }}
 
       - name: Set registry and image repo
         id: prepare
@@ -105,8 +105,8 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.AWS_EC2_GH_RUNNER_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_EC2_GH_RUNNER_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
       - name: Stop EC2 runner
         uses: machulav/ec2-github-runner@v2
