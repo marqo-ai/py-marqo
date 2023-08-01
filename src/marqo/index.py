@@ -551,15 +551,6 @@ class Index:
         """Check the health of an index"""
         return self.http.get(path=f"indexes/{self.index_name}/health", index_name=self.index_name)
 
-    def enrich(self, documents: List[Dict], enrichment: Dict, device: str = None, ):
-        """Enrich documents"""
-        translated = utils.translate_device_string_for_url(device)
-        response = self.http.post(path=f'enrichment?device={translated}', body={
-            "documents": documents,
-            "enrichment": enrichment
-        }, index_name=self.index_name)
-        return response
-
     def get_loaded_models(self):
         return self.http.get(path="models", index_name=self.index_name)
 

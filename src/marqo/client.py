@@ -176,19 +176,6 @@ class Client:
         ]
         return response
 
-    @deprecated(
-        "This method is deprecated and will be removed in Marqo 2.0.0"
-        ", instead use 'client.index(index_name).enrich()"
-    )
-    def enrich(self, documents: List[Dict], enrichment: Dict, device: str = None, ):
-        """Enrich documents"""
-        translated = utils.translate_device_string_for_url(device)
-        response = self.http.post(path=f'enrichment?device={translated}', body={
-            "documents": documents,
-            "enrichment": enrichment
-        })
-        return response
-
     def bulk_search(self, queries: List[Dict[str, Any]], device: Optional[str] = None) -> Dict[str, Any]:
         try:
             parsed_queries = [BulkSearchBody(**q) for q in queries]
@@ -213,12 +200,12 @@ class Client:
     )
     def get_marqo(self):
         if isinstance(self.config.instance_mapping, MarqoCloudInstanceMappings):
-            self.raise_error_for_cloud()
+            self.raise_error_for_cloud("get_marqo")
         return self.http.get(path="")
 
     def health(self):
         if isinstance(self.config.instance_mapping, MarqoCloudInstanceMappings):
-            self.raise_error_for_cloud()
+            self.raise_error_for_cloud("health")
         mq_logger.warning('The `client.health()` API has been deprecated and will be removed in '
                           'Marqo 2.0.0. Use `client.index(index_name).health()` instead. '
                           'Check `https://docs.marqo.ai/latest/API-Reference/indexes/` for more details.')
@@ -237,7 +224,7 @@ class Client:
     )
     def eject_model(self, model_name: str, model_device: str):
         if isinstance(self.config.instance_mapping, MarqoCloudInstanceMappings):
-            self.raise_error_for_cloud()
+            self.raise_error_for_cloud("eject_model")
         return self.http.delete(path=f"models?model_name={model_name}&model_device={model_device}")
 
     @deprecated(
@@ -246,7 +233,7 @@ class Client:
     )
     def get_loaded_models(self):
         if isinstance(self.config.instance_mapping, MarqoCloudInstanceMappings):
-            self.raise_error_for_cloud()
+            self.raise_error_for_cloud("get_loaded_models")
         return self.http.get(path="models")
 
     @deprecated(
@@ -255,7 +242,7 @@ class Client:
     )
     def get_cuda_info(self):
         if isinstance(self.config.instance_mapping, MarqoCloudInstanceMappings):
-            self.raise_error_for_cloud()
+            self.raise_error_for_cloud("get_cuda_info")
         return self.http.get(path="device/cuda")
 
     @deprecated(
@@ -264,7 +251,7 @@ class Client:
     )
     def get_cpu_info(self):
         if isinstance(self.config.instance_mapping, MarqoCloudInstanceMappings):
-            self.raise_error_for_cloud()
+            self.raise_error_for_cloud("get_cpu_info")
         return self.http.get(path="device/cpu")
 
     def _marqo_minimum_supported_version_check(self):
@@ -303,9 +290,9 @@ class Client:
         return
 
     @staticmethod
-    def raise_error_for_cloud():
+    def raise_error_for_cloud(function_name: str = None):
         raise errors.BadRequestError(
-            "The `client` API is not supported on Marqo Cloud and will be removed in "
-            "Marqo 2.0.0. Please Use `client.index('your-index-name')` instead. "
+            f"The `client.{function_name}()` API is not supported on Marqo Cloud and will be removed in "
+            f"Marqo 2.0.0. Please Use `client.index('your-index-name').{function_name}()` instead. "
             "Check `https://docs.marqo.ai/1.1.0/API-Reference/indexes/` for more details.")
 
