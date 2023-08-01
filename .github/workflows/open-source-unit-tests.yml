@@ -86,20 +86,18 @@ jobs:
       - name: Set registry and image repo
         id: prepare
         run: |
-          if [[ "${{ github.event.inputs.push_to }}" == "ECR" ]]; then
-            echo "::set-output name=registry::${{ secrets.AWS_ACCOUNT_NUMBER }}.dkr.ecr.us-east-1.amazonaws.com"
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            if [[ "${{ github.event.inputs.push_to }}" == "ECR" ]]; then
+              echo "::set-output name=registry::${{ secrets.AWS_ACCOUNT_NUMBER }}.dkr.ecr.us-east-1.amazonaws.com"
+            else
+              echo "::set-output name=registry::marqoai"
+            fi
+            echo "::set-output name=image_repo::${{ github.event.inputs.image_repo }}"
+            echo "::set-output name=image_tag::${{ github.event.inputs.image_tag }}"
           else
             echo "::set-output name=registry::marqoai"
-          fi
-          if [[ "${{ github.event.inputs.image_repo }}" == "" ]]; then
             echo "::set-output name=image_repo::marqo"
-          else
-            echo "::set-output name=image_repo::${{ github.event.inputs.image_repo }}"
-          fi
-          if [[ "${{ github.event.inputs.image_tag }}" == "" ]]; then
             echo "::set-output name=image_tag::${{ steps.get_default_marqo_version.outputs.version }}"
-          else
-            echo "::set-output name=image_tag::${{ github.event.inputs.image_tag }}"
           fi
 
       - name: Run Py-Marqo Tests
