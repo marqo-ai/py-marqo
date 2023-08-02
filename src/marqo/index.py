@@ -4,6 +4,8 @@ import logging
 import pprint
 import time
 
+from requests import RequestException
+
 from marqo import defaults
 import typing
 from urllib import parse
@@ -14,7 +16,12 @@ from marqo._httprequests import HttpRequests
 from marqo.config import Config
 from marqo.enums import SearchMethods, Devices
 from marqo import errors, utils
+from marqo.errors import MarqoWebError
 from marqo.marqo_logging import mq_logger
+from marqo.version import minimum_supported_marqo_version
+from packaging import version as versioning_helpers
+
+marqo_url_and_version_cache: Dict[str, str] = {}
 
 
 class Index:
@@ -42,6 +49,7 @@ class Index:
         self.index_name = index_name
         self.created_at = self._maybe_datetime(created_at)
         self.updated_at = self._maybe_datetime(updated_at)
+        self._marqo_minimum_supported_version_check()
 
     def delete(self) -> Dict[str, Any]:
         """Delete the index.
@@ -111,11 +119,10 @@ class Index:
             cl_settings['number_of_replicas'] = replicas_count
             cl_settings['number_of_shards'] = storage_node_count
             response = req.post(f"indexes/{index_name}", body=cl_settings)
-            index = Index(config, index_name)
-            creation = index.get_status()
+            creation = req.get(f"indexes/{index_name}/status")
             while creation['index_status'] != 'READY':
                 time.sleep(10)
-                creation = index.get_status()
+                creation = req.get(f"indexes/{index_name}/status")
                 mq_logger.info(f"Index creation status: {creation['index_status']}")
             return response
 
@@ -567,4 +574,32 @@ class Index:
         return self.http.delete(
             path=f"models?model_name={model_name}&model_device={model_device}", index_name=self.index_name
         )
+
+    def _marqo_minimum_supported_version_check(self):
+        min_ver = minimum_supported_marqo_version()
+        url = self.config.instance_mapping.get_index_base_url(self.index_name)
+        skip_warning_message = (
+            f"Marqo encountered a problem trying to check the Marqo version found at `{url}`. "
+            f"The minimum supported Marqo version for this client is {min_ver}. "
+            f"If you are sure your Marqo version is compatible with this client, you can ignore this message. ")
+
+        # Skip the check if the url is previously labelled as "_skipped"
+        if url in marqo_url_and_version_cache and marqo_url_and_version_cache[url] == "_skipped":
+            mq_logger.warning(skip_warning_message)
+            return
+
+        # Do version check
+        try:
+            if url not in marqo_url_and_version_cache:
+                marqo_url_and_version_cache[url] = self.get_marqo()["version"]
+            marqo_version = marqo_url_and_version_cache[url]
+            if versioning_helpers.parse(marqo_version) < versioning_helpers.parse(min_ver):
+                mq_logger.warning(f"Your Marqo Python client requires a minimum Marqo version of "
+                                  f"{minimum_supported_marqo_version()} to function properly, but your Marqo version is {marqo_version}. "
+                                  f"Please upgrade your Marqo instance to avoid potential errors. "
+                                  f"If you have already changed your Marqo instance but still get this warning, please restart your Marqo client Python interpreter.")
+        except (MarqoWebError, RequestException, TypeError, KeyError) as e:
+            mq_logger.warning(skip_warning_message)
+            marqo_url_and_version_cache[url] = "_skipped"
+        return
 

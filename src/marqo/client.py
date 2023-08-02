@@ -1,4 +1,5 @@
 import base64
+import os
 from typing import Any, Dict, List, Optional, Union
 
 from pydantic import error_wrappers
@@ -14,15 +15,12 @@ from marqo.models import BulkSearchBody, BulkSearchQuery
 from marqo._httprequests import HttpRequests
 from marqo import utils, enums
 from marqo import errors
-from marqo.version import minimum_supported_marqo_version
 from marqo.marqo_logging import mq_logger
 from marqo.errors import MarqoWebError
 # we want to avoid name conflicts with marqo.version
-from packaging import version as versioning_helpers
 from json import JSONDecodeError
 
 # A dictionary to cache the marqo url and version for compatibility check
-marqo_url_and_version_cache = {}
 
 
 class Client:
@@ -51,8 +49,8 @@ class Client:
 
         is_marqo_cloud = False
         if url is not None:
-            if url.lower().startswith("https://api.marqo.ai") or url.lower().startswith("http://api.marqo.ai"):
-                instance_mappings = MarqoCloudInstanceMappings(api_key=api_key)
+            if url.lower().startswith(os.environ.get("MARQO_CLOUD_URL", "https://api.marqo.ai")):
+                instance_mappings = MarqoCloudInstanceMappings(control_base_url=url, api_key=api_key)
                 is_marqo_cloud = True
             else:
                 instance_mappings = DefaultInstanceMappings(url, main_user, main_password)
@@ -64,7 +62,6 @@ class Client:
             api_key=api_key
         )
         self.http = HttpRequests(self.config)
-        self._marqo_minimum_supported_version_check()
 
     def create_index(
             self, index_name: str,
@@ -195,16 +192,22 @@ class Client:
         return base64.urlsafe_b64encode(data).decode('utf-8').replace('=', '')
 
     @deprecated(
-        "This method is deprecated and will be removed in Marqo 2.0.0"
-        ", instead use 'client.index(index_name).get_marqo()"
+        "This method is deprecated and will be removed in Marqo 2.0.0. "
+        "Please use `client.index(index_name).get_marqo()` instead. "
+        "Check `https://docs.marqo.ai/latest/API-Reference/indexes/` for more details."
     )
     def get_marqo(self):
-        if isinstance(self.config.instance_mapping, MarqoCloudInstanceMappings):
+        if self.config.is_marqo_cloud:
             self.raise_error_for_cloud("get_marqo")
         return self.http.get(path="")
 
+    @deprecated(
+        "This method is deprecated and will be removed in Marqo 2.0.0. "
+        "Please use `client.index(index_name).health()` instead. "
+        "Check `https://docs.marqo.ai/latest/API-Reference/indexes/` for more details."
+    )
     def health(self):
-        if isinstance(self.config.instance_mapping, MarqoCloudInstanceMappings):
+        if self.config.is_marqo_cloud:
             self.raise_error_for_cloud("health")
         mq_logger.warning('The `client.health()` API has been deprecated and will be removed in '
                           'Marqo 2.0.0. Use `client.index(index_name).health()` instead. '
@@ -219,80 +222,49 @@ class Client:
                                          "Check `https://docs.marqo.ai/1.1.0/API-Reference/indexes/` for more details.")
 
     @deprecated(
-        "This method is deprecated and will be removed in Marqo 2.0.0"
-        ", instead use 'client.index(index_name).eject_model()"
+        "This method is deprecated and will be removed in Marqo 2.0.0. "
+        "Please use 'mq.index(index_name).eject_model() instead. "
+        "Check `https://docs.marqo.ai/latest/API-Reference/indexes/` for more details."
     )
     def eject_model(self, model_name: str, model_device: str):
-        if isinstance(self.config.instance_mapping, MarqoCloudInstanceMappings):
+        if self.config.is_marqo_cloud:
             self.raise_error_for_cloud("eject_model")
         return self.http.delete(path=f"models?model_name={model_name}&model_device={model_device}")
 
     @deprecated(
-        "This method is deprecated and will be removed in Marqo 2.0.0"
-        ", instead use 'client.index(index_name).get_loaded_models()"
+        "This method is deprecated and will be removed in Marqo 2.0.0. "
+        "Please use 'mq.index(index_name).get_loaded_models() instead. "
+        "Check `https://docs.marqo.ai/latest/API-Reference/indexes/` for more details."
     )
     def get_loaded_models(self):
-        if isinstance(self.config.instance_mapping, MarqoCloudInstanceMappings):
+        if self.config.is_marqo_cloud:
             self.raise_error_for_cloud("get_loaded_models")
         return self.http.get(path="models")
 
     @deprecated(
-        "This method is deprecated and will be removed in Marqo 2.0.0"
-        ", instead use 'client.index(index_name).get_cuda_info()"
+        "This method is deprecated and will be removed in Marqo 2.0.0. "
+        "Please use 'mq.index(index_name).get_cuda_info() instead. "
+        "Check `https://docs.marqo.ai/latest/API-Reference/indexes/` for more details."
     )
     def get_cuda_info(self):
-        if isinstance(self.config.instance_mapping, MarqoCloudInstanceMappings):
+        if self.config.is_marqo_cloud:
             self.raise_error_for_cloud("get_cuda_info")
         return self.http.get(path="device/cuda")
 
     @deprecated(
-        "This method is deprecated and will be removed in Marqo 2.0.0"
-        ", instead use 'client.index(index_name).get_cpu_info()"
+        "This method is deprecated and will be removed in Marqo 2.0.0. "
+        "Please use 'mq.index(index_name).get_cpu_info() instead. "
+        "Check `https://docs.marqo.ai/latest/API-Reference/indexes/` for more details."
     )
     def get_cpu_info(self):
-        if isinstance(self.config.instance_mapping, MarqoCloudInstanceMappings):
+        if self.config.is_marqo_cloud:
             self.raise_error_for_cloud("get_cpu_info")
         return self.http.get(path="device/cpu")
-
-    def _marqo_minimum_supported_version_check(self):
-        min_ver = minimum_supported_marqo_version()
-        url = self.config.instance_mapping.get_control_url()
-        skip_warning_message = (
-            f"Marqo encountered a problem trying to check the Marqo version found at `{url}`. "
-            f"The minimum supported Marqo version for this client is {min_ver}. "
-            f"If you are sure your Marqo version is compatible with this client, you can ignore this message. ")
-
-        # Skip the check if the url is previously labelled as "_skipped"
-        if url in marqo_url_and_version_cache and marqo_url_and_version_cache[url] == "_skipped":
-            mq_logger.warning(skip_warning_message)
-            return
-
-        # Skip the check for Marqo CloudV2 APIs right now
-        skip_version_check_url = ["https://api.marqo.ai", "https://cloud.marqo.ai"]
-        if any(url.startswith(skip_url) for skip_url in skip_version_check_url):
-            marqo_url_and_version_cache[url] = "_skipped"
-            mq_logger.warning(skip_warning_message)
-            return
-
-        # Do version check
-        try:
-            if url not in marqo_url_and_version_cache:
-                marqo_url_and_version_cache[url] = self.get_marqo()["version"]
-            marqo_version = marqo_url_and_version_cache[url]
-            if versioning_helpers.parse(marqo_version) < versioning_helpers.parse(min_ver):
-                mq_logger.warning(f"Your Marqo Python client requires a minimum Marqo version of "
-                                  f"{minimum_supported_marqo_version()} to function properly, but your Marqo version is {marqo_version}. "
-                                  f"Please upgrade your Marqo instance to avoid potential errors. "
-                                  f"If you have already changed your Marqo instance but still get this warning, please restart your Marqo client Python interpreter.")
-        except (MarqoWebError, RequestException, TypeError, KeyError) as e:
-            mq_logger.warning(skip_warning_message)
-            marqo_url_and_version_cache[url] = "_skipped"
-        return
 
     @staticmethod
     def raise_error_for_cloud(function_name: str = None):
         raise errors.BadRequestError(
-            f"The `client.{function_name}()` API is not supported on Marqo Cloud and will be removed in "
-            f"Marqo 2.0.0. Please Use `client.index('your-index-name').{function_name}()` instead. "
-            "Check `https://docs.marqo.ai/1.1.0/API-Reference/indexes/` for more details.")
+            f"The `mq.{function_name}()` API is not supported on Marqo Cloud. "
+            f"Please Use `mq.index('your-index-name').{function_name}()` instead. "
+            "Check `https://docs.marqo.ai/latest/API-Reference/indexes/` for more details.")
 

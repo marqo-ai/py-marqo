@@ -1,8 +1,10 @@
 import copy
 import pprint
 from marqo.client import Client
-from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
+from marqo.errors import MarqoApiError, MarqoError, MarqoWebError, BackendCommunicationError, BackendTimeoutError
 import unittest
+
+from marqo.index import marqo_url_and_version_cache
 from tests.marqo_test import MarqoTestCase
 from unittest import mock
 import requests
@@ -18,12 +20,14 @@ class TestIndex(MarqoTestCase):
             self.client.delete_index(self.index_name_1)
         except MarqoApiError as s:
             pass
+        marqo_url_and_version_cache.clear()
 
     def tearDown(self) -> None:
         try:
             self.client.delete_index(self.index_name_1)
         except MarqoApiError as s:
             pass
+        marqo_url_and_version_cache.clear()
 
     def test_create_index_settings_dict(self):
         """if settings_dict exists, it should override existing params"""
@@ -223,7 +227,7 @@ class TestIndex(MarqoTestCase):
             },
             'number_of_shards': 1, 'number_of_replicas': 0,
             'inference_type': "marqo.CPU", 'storage_class': "marqo.basic", 'number_of_inferences': 1})
-        mock_get.assert_called_with(path="indexes/my-test-index-1/status")
+        mock_get.assert_called_with("indexes/my-test-index-1/status")
         assert result == {"acknowledged": True}
 
     @mock.patch("marqo._httprequests.HttpRequests.post", return_value={"error": "inference_type is required"})
@@ -246,7 +250,7 @@ class TestIndex(MarqoTestCase):
             },
             'number_of_shards': 1, 'number_of_replicas': 0,
             'inference_type': None, 'storage_class': "marqo.basic", 'number_of_inferences': 1})
-        mock_get.assert_called_with(path="indexes/my-test-index-1/status")
+        mock_get.assert_called_with("indexes/my-test-index-1/status")
         assert result == {"error": "inference_type is required"}
 
     @mock.patch("marqo._httprequests.HttpRequests.post", return_value={"error": "storage_class is required"})
@@ -269,7 +273,7 @@ class TestIndex(MarqoTestCase):
             },
             'number_of_shards': 1, 'number_of_replicas': 0,
             'inference_type': "marqo.CPU", 'storage_class': None, 'number_of_inferences': 1})
-        mock_get.assert_called_with(path="indexes/my-test-index-1/status")
+        mock_get.assert_called_with("indexes/my-test-index-1/status")
         assert result == {"error": "storage_class is required"}
 
     @mock.patch("marqo._httprequests.HttpRequests.post",
@@ -293,6 +297,95 @@ class TestIndex(MarqoTestCase):
             },
             'number_of_shards': 1, 'number_of_replicas': 0,
             'inference_type': "marqo.CPU", 'storage_class': "marqo.basic", 'number_of_inferences': -1})
-        mock_get.assert_called_with(path="indexes/my-test-index-1/status")
+        mock_get.assert_called_with("indexes/my-test-index-1/status")
         assert result == {"error": "inference_node_count must be greater than 0"}
+
+    def test_version_check_multiple_instantiation(self):
+        """Ensure that duplicated instantiation of the client does not result in multiple APIs calls of get_marqo()"""
+        with mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo:
+            mock_get_marqo.return_value = {'version': '0.0.0'}
+            index = self.client.index(self.index_name_1)
+
+            mock_get_marqo.assert_called_once()
+            mock_get_marqo.reset_mock()
+
+        for _ in range(10):
+            with mock.patch("marqo.index.mq_logger.warning") as mock_warning, \
+                    mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo:
+                index = self.client.index(self.index_name_1)
+
+                mock_get_marqo.assert_not_called()
+                mock_warning.assert_called_once()
+
+    def test_skipped_version_check_multiple_instantiation(self):
+        """Ensure that the url labelled as `_skipped` only call get_marqo() once"""
+        with mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo:
+            mock_get_marqo.side_effect = requests.exceptions.RequestException("test")
+            index = self.client.index(self.index_name_1)
+
+            mock_get_marqo.assert_called_once()
+            mock_get_marqo.reset_mock()
+            assert marqo_url_and_version_cache[self.client_settings["url"]] == '_skipped'
+
+        for _ in range(10):
+            with mock.patch("marqo.index.mq_logger.warning") as mock_warning, \
+                    mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo:
+                index = self.client.index(self.index_name_1)
+
+                mock_get_marqo.assert_not_called()
+                # Check the warning was logged every instantiation
+                mock_warning.assert_called_once()
+
+    def test_error_handling_in_version_check(self):
+        side_effect_list = [requests.exceptions.JSONDecodeError("test", "test", 1), BackendCommunicationError("test"),
+                            BackendTimeoutError("test"), requests.exceptions.RequestException("test"),
+                            KeyError("test"), KeyError("test"), requests.exceptions.Timeout("test")]
+        for i, side_effect in enumerate(side_effect_list):
+            with mock.patch("marqo.index.mq_logger.warning") as mock_warning, \
+                    mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo:
+                mock_get_marqo.side_effect = side_effect
+                index = self.client.index(self.index_name_1)
+
+                mock_get_marqo.assert_called_once()
+
+                # Check the warning was logged
+                mock_warning.assert_called_once()
+
+                # Get the warning message
+                warning_message = mock_warning.call_args[0][0]
+
+                # Assert the message is what you expect
+                self.assertIn("Marqo encountered a problem trying to check the Marqo version found", warning_message)
+                self.assertEqual(marqo_url_and_version_cache, dict({self.client_settings["url"]: "_skipped"}))
+
+                marqo_url_and_version_cache.clear()
+
+    def test_version_check_instantiation(self):
+        with mock.patch("marqo.index.mq_logger.warning") as mock_warning, \
+                mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo:
+            mock_get_marqo.return_value = {'version': '0.0.0'}
+            index = self.client.index(self.index_name_1)
+
+            mock_get_marqo.assert_called_once()
+
+            # Check the warning was logged
+            mock_warning.assert_called_once()
+
+            # Get the warning message
+            warning_message = mock_warning.call_args[0][0]
+
+            # Assert the message is what you expect
+            self.assertIn("Please upgrade your Marqo instance to avoid potential errors.", warning_message)
+
+            # Assert the url is in the cache
+            self.assertIn(self.client_settings['url'], marqo_url_and_version_cache)
+            assert marqo_url_and_version_cache[self.client_settings['url']] == '0.0.0'
+
+    def test_skip_version_check_for_previously_labelled_url(self):
+        with mock.patch.dict("marqo.index.marqo_url_and_version_cache",
+                             {self.client_settings["url"]: "_skipped"}) as mock_cache, \
+                mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo:
+            index = self.client.index(self.index_name_1)
+
+            mock_get_marqo.assert_not_called()
 

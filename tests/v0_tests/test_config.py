@@ -20,7 +20,7 @@ class TestConfig(MarqoTestCase):
 
     def test_get_url_when_cluster_is_marqo_and_no_index_name_specified(self):
         c = config.Config(instance_mappings=MarqoCloudInstanceMappings("https://api.marqo.ai"))
-        assert c.instance_mapping.get_control_url() == "https://api.marqo.ai/api"
+        assert c.instance_mapping.get_control_base_url() == "https://api.marqo.ai/api"
 
     @mock.patch("requests.get")
     def test_get_url_when_cluster_is_marqo_and_index_name_specified(self, mock_get):
@@ -29,8 +29,8 @@ class TestConfig(MarqoTestCase):
             {"index_name": "index2", "endpoint": "example2.com", "index_status": "READY"}
         ]}
         c = config.Config(instance_mappings=MarqoCloudInstanceMappings("https://api.marqo.ai"))
-        assert c.instance_mapping.get_url(index_name="index1") == "example.com"
+        assert c.instance_mapping.get_index_base_url(index_name="index1") == "example.com"
 
     def test_get_url_when_cluster_is_not_marqo_and_index_name_specified(self):
         c = config.Config(instance_mappings=DefaultInstanceMappings("https://s2search.io/abdcde:8882"))
-        assert c.instance_mapping.get_url(index_name="index1") == "https://s2search.io/abdcde:8882"
+        assert c.instance_mapping.get_index_base_url(index_name="index1") == "https://s2search.io/abdcde:8882"
