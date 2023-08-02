@@ -17,23 +17,28 @@ class TestModelCacheManagement(MarqoTestCase):
         self.client = Client(**self.client_settings)
         self.index_name = "test_index"
         self.MODEL = "ViT-B/32"
-        try:
-            self.client.delete_index(self.index_name)
-        except MarqoApiError as s:
-            pass
-
+        if not self.client.config.is_marqo_cloud:
+            try:
+                self.client.delete_index(self.index_name)
+            except MarqoApiError as s:
+                pass
+        else:
+            self.delete_documents(self.index_name)
 
     def tearDown(self) -> None:
-        try:
-            self.client.delete_index(self.index_name)
-        except MarqoApiError as s:
-            pass
+        if not self.client.config.is_marqo_cloud:
+            try:
+                self.client.delete_index(self.index_name)
+            except MarqoApiError as s:
+                pass
+        else:
+            self.delete_documents(self.index_name)
 
 
     def test_get_cuda_info(self) -> None:
         try:
             settings = {"model": self.MODEL}
-            self.client.create_index(index_name=self.index_name, **settings)
+            self.create_index(index_name=self.index_name, **settings)
             res = self.client.index(self.index_name).get_cuda_info()
             if "cuda_devices" not in res:
                 raise AssertionError
@@ -44,7 +49,7 @@ class TestModelCacheManagement(MarqoTestCase):
 
     def test_get_cpu_info(self) -> None:
         settings = {"model": self.MODEL}
-        self.client.create_index(index_name=self.index_name, **settings)
+        self.create_index(index_name=self.index_name, **settings)
         res = self.client.index(self.index_name).get_cpu_info()
 
         if "cpu_usage_percent" not in res:
@@ -59,7 +64,7 @@ class TestModelCacheManagement(MarqoTestCase):
 
     def test_get_loaded_models(self) -> None:
         settings = {"model": self.MODEL}
-        self.client.create_index(index_name=self.index_name, **settings)
+        self.create_index(index_name=self.index_name, **settings)
         res = self.client.index(self.index_name).get_loaded_models()
 
         if "models" not in res:
@@ -69,7 +74,7 @@ class TestModelCacheManagement(MarqoTestCase):
         # test a model that is not cached
         try:
             settings = {"model": self.MODEL}
-            self.client.create_index(index_name=self.index_name, **settings)
+            self.create_index(index_name=self.index_name, **settings)
             res = self.client.index(self.index_name).eject_model("void_model", "void_device")
             raise AssertionError
         except MarqoWebError:
@@ -81,7 +86,7 @@ class TestModelCacheManagement(MarqoTestCase):
 
         settings = {"model": self.MODEL}
 
-        self.client.create_index(index_name=self.index_name, **settings)
+        self.create_index(index_name=self.index_name, **settings)
         d1 = {
             "doc title": "Cool Document 1",
             "field 1": "some extra info"

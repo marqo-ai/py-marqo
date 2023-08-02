@@ -17,22 +17,24 @@ class TestImageChunking(MarqoTestCase):
         client_0 = Client(**self.client_settings)
         
         self.index_name = self.generic_test_index_name
-
-        try:
-            client_0.delete_index(self.index_name)
-        except MarqoApiError as s:
-            pass
+        if not client_0.config.is_marqo_cloud:
+            try:
+                client_0.delete_index(self.index_name)
+            except MarqoApiError as s:
+                pass
+        else:
+            self.delete_documents(self.index_name)
 
     def test_image_no_chunking(self):
 
         image_size = (256, 384)
 
         client = Client(**self.client_settings)
-        
-        try:
-            client.delete_index(self.index_name)
-        except MarqoApiError as s:
-            pass
+        if not client.config.is_marqo_cloud:
+            try:
+                client.delete_index(self.index_name)
+            except MarqoApiError as s:
+                pass
 
         settings = {
             "treat_urls_and_pointers_as_images":True,   # allows us to find an image file and index it 
@@ -40,7 +42,7 @@ class TestImageChunking(MarqoTestCase):
              "image_preprocessing_method" : None
             }
         
-        client.create_index(self.index_name, **settings)
+        self.create_index(self.index_name, **settings)
 
         temp_file_name = 'https://avatars.githubusercontent.com/u/13092433?v=4'
         
@@ -86,9 +88,8 @@ class TestImageChunking(MarqoTestCase):
             "image_preprocessing_method":"simple"
             }
         
-        client.create_index(self.index_name, **settings)
+        self.create_index(self.index_name, **settings)
 
-        
         temp_file_name = 'https://avatars.githubusercontent.com/u/13092433?v=4'
         
         img = Image.open(requests.get(temp_file_name, stream=True).raw)

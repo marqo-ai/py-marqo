@@ -10,11 +10,12 @@ class TestCustomVectorSearch(MarqoTestCase):
     def setUp(self) -> None:
         self.client = Client(**self.client_settings)
         self.index_name_1 = "my-test-index-1"
-        try:
-            self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
-            pass
-        self.client.create_index(index_name=self.index_name_1, model="ViT-B/32")
+        if not self.client.config.is_marqo_cloud:
+            try:
+                self.client.delete_index(self.index_name_1)
+            except MarqoApiError as s:
+                pass
+        self.create_index(index_name=self.index_name_1, model="ViT-B/32")
         self.client.index(index_name=self.index_name_1).add_documents(
             [
                 {
@@ -34,10 +35,13 @@ class TestCustomVectorSearch(MarqoTestCase):
         self.query = {"What are the best pets": 1}
 
     def tearDown(self) -> None:
-        try:
-            self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
-            pass
+        if not self.client.config.is_marqo_cloud:
+            try:
+                self.client.delete_index(self.index_name_1)
+            except MarqoApiError as s:
+                pass
+        else:
+            self.delete_documents(self.index_name_1)
 
     def search_with_context(self, context_vector: Optional[Dict[str, List[Dict[str, Any]]]] = None) -> Dict[str, Any]:
         return self.client.index(self.index_name_1).search(

@@ -18,9 +18,17 @@ class TestDemo(MarqoTestCase):
             except MarqoApiError as s:
                 pass
 
+    def tearDown(self) -> None:
+        client_0 = Client(**self.client_settings)
+        for ix_name in ["cool-index-1", "my-first-index", "my-weighted-query-index", "my-first-multimodal-index"]:
+            try:
+                client_0.delete_index(ix_name)
+            except MarqoApiError as s:
+                pass
+
     def test_demo(self):
         client = Client(**self.client_settings)
-        client.create_index("cool-index-1")
+        self.create_index("cool-index-1")
         client.index("cool-index-1").add_documents([
             {
                 "Title": "The Legend of the River",
@@ -59,7 +67,7 @@ class TestDemo(MarqoTestCase):
 
         mq = marqo.Client(**self.client_settings)
 
-        mq.create_index("my-first-index")
+        self.create_index("my-first-index")
         mq.index("my-first-index").add_documents(
             [
                 {
@@ -122,7 +130,7 @@ class TestDemo(MarqoTestCase):
     def test_readme_example_weighted_query(self):
         import marqo
         mq = marqo.Client(**self.client_settings)
-        mq.create_index("my-weighted-query-index")
+        self.create_index("my-weighted-query-index")
         mq.index("my-weighted-query-index").add_documents([
                 {
                     "Title": "Smartphone",
@@ -198,7 +206,7 @@ class TestDemo(MarqoTestCase):
         import marqo
         mq = marqo.Client(**self.client_settings)
         settings = {"treat_urls_and_pointers_as_images": True, "model": "ViT-B/32"}
-        mq.create_index("my-first-multimodal-index", **settings)
+        self.create_index("my-first-multimodal-index", **settings)
         mq.index("my-first-multimodal-index").add_documents(
             [
                 {

@@ -4,6 +4,7 @@
 Pass its settings to local_marqo_settings.
 """
 import logging
+import time
 from collections import defaultdict
 from functools import wraps
 import json
@@ -120,12 +121,6 @@ class MarqoTestCase(TestCase):
         # class property to indicate if test is being run on multi
         cls.IS_MULTI_INSTANCE = (True if os.environ.get("IS_MULTI_INSTANCE", False) in ["True", "TRUE", "true", True] else False)
 
-        marqo_server_version = Client(**cls.client_settings).get_marqo()["version"]
-        if marqo_server_version != py_marqo_support_version:
-            print(f"WARNING: supported Py-marqo version and Marqo versions aren't the same!\n {marqo_server_version} != {py_marqo_support_version}")
-            print(f"MARQO SERVER VERSION -> {marqo_server_version}")
-            print(f"PY-MARQO SUPPORTED VERSION -> {py_marqo_support_version}")
-
     @classmethod
     def tearDownClass(cls) -> None:
         """Delete commonly used test indexes after all tests are run
@@ -134,10 +129,11 @@ class MarqoTestCase(TestCase):
         commonly_used_ix_name = 'my-test-index-1'
         indexes_to_tear_down = [cls.generic_test_index_name, commonly_used_ix_name]
         for ix_name in indexes_to_tear_down:
-            try:
-                client.delete_index(ix_name)
-            except marqo.errors.MarqoApiError as e:
-                logging.debug(f'received error `{e}` from index deletion request.')
+            if not client.config.is_marqo_cloud:
+                try:
+                    client.delete_index(ix_name)
+                except marqo.errors.MarqoApiError as e:
+                    logging.debug(f'received error `{e}` from index deletion request.')
 
     def warm_request(self, func, *args, **kwargs):
         '''
@@ -146,4 +142,38 @@ class MarqoTestCase(TestCase):
         This solves the occurence of tests failing due to eventual consistency implemented in marqo cloud.
         '''
         for i in range(5):
-            func(*args, **kwargs) 
+            func(*args, **kwargs)
+
+    def create_cloud_index(self, index_name, index_defaults=None, **kwargs):
+        client = marqo.Client(**self.client_settings)
+        index_settings = index_defaults if index_defaults else {}
+        index_settings.update({
+            "inference_type": "marqo.CPU", "storage_class": "marqo.basic", "model": "hf/all_datasets_v4_MiniLM-L6"
+        })
+        while True:
+            if client.http.get(f"/indexes/{index_name}/status") == "READY":
+                break
+            try:
+                client.create_index(index_name, settings_dict=index_settings)
+            except marqo.errors.MarqoWebError as e:
+                if e.status_code == 409:
+                    continue
+
+    def create_index(self, index_name, index_defaults=None, **kwargs):
+        client = marqo.Client(**self.client_settings)
+        if client.config.is_marqo_cloud:
+            self.create_cloud_index(index_name, index_defaults, **kwargs)
+            return
+        client.create_index(index_name, settings_dict=index_defaults, **kwargs)
+
+    def delete_documents(self, index_name):
+        client = marqo.Client(**self.client_settings)
+        indexes = client.get_indexes()
+        if index_name in indexes:
+            try:
+                idx = client.index(index_name)
+                docs_to_delete = [i['_id'] for i in idx.search("")['hits']]
+                if docs_to_delete:
+                    idx.delete_documents(docs_to_delete)
+            except marqo.errors.MarqoCloudIndexNotFoundError:
+                pass

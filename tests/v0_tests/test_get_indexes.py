@@ -14,18 +14,23 @@ class TestAddDocuments(MarqoTestCase):
         self.index_name_1 = "my-test-index-1"
         self.index_name_2 = "my-test-index-2"
         self.index_names = [self.index_name_1, self.index_name_2]
-        for ix_name in self.index_names:
-            try:
-                self.client.delete_index(ix_name)
-            except MarqoApiError:
-                pass
+        if not self.client.config.is_marqo_cloud:
+            for ix_name in self.index_names:
+                try:
+                    self.client.delete_index(ix_name)
+                except MarqoApiError:
+                    pass
 
     def tearDown(self) -> None:
-        for ix_name in self.index_names:
-            try:
-                self.client.delete_index(ix_name)
-            except MarqoApiError:
-                pass
+        if not self.client.config.is_marqo_cloud:
+            for ix_name in self.index_names:
+                try:
+                    self.client.delete_index(ix_name)
+                except MarqoApiError:
+                    pass
+        else:
+            for ix_name in self.index_names:
+                self.delete_documents(ix_name)
 
     def _is_index_name_in_get_indexes_response(self, index_name, get_indexes_response):
         for found_index in get_indexes_response['results']:
@@ -41,7 +46,7 @@ class TestAddDocuments(MarqoTestCase):
         ix_0 = self.client.get_indexes()
         assert not self._is_index_name_in_get_indexes_response(self.index_name_1, ix_0)
 
-        self.client.create_index(self.index_name_1)
+        self.create_index(self.index_name_1)
         ix_1 = self.client.get_indexes()
         assert self._is_index_name_in_get_indexes_response(self.index_name_1, ix_1)
 
@@ -57,7 +62,7 @@ class TestAddDocuments(MarqoTestCase):
 
     def test_get_indexes_usable(self):
         """Are the indices we get back usable? """
-        self.client.create_index(self.index_name_1)
+        self.create_index(self.index_name_1)
         get_ixes_res = self.client.get_indexes()
         assert self._is_index_name_in_get_indexes_response(self.index_name_1, get_ixes_res)
 

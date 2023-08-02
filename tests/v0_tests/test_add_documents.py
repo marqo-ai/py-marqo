@@ -14,35 +14,43 @@ from unittest import mock
 
 
 class TestAddDocuments(MarqoTestCase):
-
     def setUp(self) -> None:
         self.client = Client(**self.client_settings)
         self.index_name_1 = "my-test-index-1"
-        try:
-            self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
-            pass
+        if not self.client.config.is_marqo_cloud:
+            try:
+                self.client.delete_index(self.index_name_1)
+            except MarqoApiError as s:
+                pass
+        else:
+            self.delete_documents(self.index_name_1)
 
     def tearDown(self) -> None:
-        try:
-            self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
-            pass
+        if not self.client.config.is_marqo_cloud:
+            try:
+                self.client.delete_index(self.index_name_1)
+            except MarqoApiError as s:
+                pass
+        else:
+            self.delete_documents(self.index_name_1)
 
     # Create index tests
 
     def test_create_index(self):
-        self.client.create_index(index_name=self.index_name_1)
+        self.create_index(index_name=self.index_name_1)
 
     def test_create_index_double(self):
-        self.client.create_index(index_name=self.index_name_1)
+        if not self.client.config.is_marqo_cloud:
+            self.client.create_index(index_name=self.index_name_1)
         try:
             self.client.create_index(index_name=self.index_name_1)
         except MarqoWebError as e:
             assert "index_already_exists" == e.code
 
     def test_create_index_hnsw(self):
-        self.client.create_index(index_name=self.index_name_1, settings_dict={
+        if self.client.config.is_marqo_cloud:
+            self.client.delete_index(self.index_name_1)
+        self.create_index(index_name=self.index_name_1, index_defaults={
             "index_defaults": {
                 "ann_parameters": {
                     "parameters": {
@@ -63,14 +71,14 @@ class TestAddDocuments(MarqoTestCase):
     # Delete index tests:
 
     def test_delete_index(self):
-        self.client.create_index(index_name=self.index_name_1)
+        self.create_index(index_name=self.index_name_1)
         self.client.delete_index(self.index_name_1)
-        self.client.create_index(index_name=self.index_name_1)
+        self.create_index(index_name=self.index_name_1)
 
     # Get index tests:
 
     def test_get_index(self):
-        self.client.create_index(index_name=self.index_name_1)
+        self.create_index(index_name=self.index_name_1)
         index = self.client.get_index(self.index_name_1)
         assert index.index_name == self.index_name_1
 
@@ -79,12 +87,12 @@ class TestAddDocuments(MarqoTestCase):
             index = self.client.get_index("some-non-existent-index")
             raise AssertionError
         except MarqoWebError as e:
-            assert e.code == "index_not_found"
+            assert e.code == "index_not_found" or e.code == "index_not_found_cloud"
 
     # Add documents tests:
 
     def test_add_documents_with_ids(self):
-        self.client.create_index(index_name=self.index_name_1)
+        self.create_index(index_name=self.index_name_1)
         d1 = {
             "doc title": "Cool Document 1",
             "field 1": "some extra info",
@@ -106,7 +114,7 @@ class TestAddDocuments(MarqoTestCase):
 
     def test_add_documents(self):
         """indexes the documents and retrieves the documents with the generated IDs"""
-        self.client.create_index(index_name=self.index_name_1)
+        self.create_index(index_name=self.index_name_1)
         d1 = {
             "doc title": "Cool Document 1",
             "field 1": "some extra info"
@@ -127,7 +135,7 @@ class TestAddDocuments(MarqoTestCase):
         assert retrieved_d1 == d1 or retrieved_d1 == d2
 
     def test_add_documents_with_ids_twice(self):
-        self.client.create_index(index_name=self.index_name_1)
+        self.create_index(index_name=self.index_name_1)
         d1 = {
             "doc title": "Just Your Average Doc",
             "field X": "this is a solid doc",
@@ -144,11 +152,7 @@ class TestAddDocuments(MarqoTestCase):
         assert d2 == self.client.index(self.index_name_1).get_document("56")
 
     def test_add_batched_documents(self):
-        try:
-            self.client.delete_index(self.index_name_1)
-        except MarqoApiError:
-            pass
-        self.client.create_index(self.index_name_1)
+        self.create_index(self.index_name_1)
         ix = self.client.index(index_name=self.index_name_1)
         doc_ids = [str(num) for num in range(0, 100)]
 
@@ -176,7 +180,7 @@ class TestAddDocuments(MarqoTestCase):
     # delete documents tests:
 
     def test_delete_docs(self):
-        self.client.create_index(index_name=self.index_name_1)
+        self.create_index(index_name=self.index_name_1)
         self.client.index(self.index_name_1).add_documents([
             {"abc": "wow camel", "_id": "123"},
             {"abc": "camels are cool", "_id": "foo"}
@@ -199,7 +203,7 @@ class TestAddDocuments(MarqoTestCase):
         assert len(res1['hits']) == 1
 
     def test_delete_docs_empty_ids(self):
-        self.client.create_index(index_name=self.index_name_1)
+        self.create_index(index_name=self.index_name_1)
         self.client.index(self.index_name_1).add_documents([{"abc": "efg", "_id": "123"}], tensor_fields=["abc"])
         try:
             self.client.index(self.index_name_1).delete_documents([])
@@ -212,16 +216,16 @@ class TestAddDocuments(MarqoTestCase):
 
     def test_get_document(self):
         my_doc = {"abc": "efg", "_id": "123"}
-        self.client.create_index(index_name=self.index_name_1)
+        self.create_index(index_name=self.index_name_1)
         self.client.index(self.index_name_1).add_documents([my_doc], tensor_fields=["abc"])
         retrieved = self.client.index(self.index_name_1).get_document(document_id='123')
         assert retrieved == my_doc
 
     def test_add_documents_missing_index_fails(self):
         with pytest.raises(MarqoWebError) as ex:
-            self.client.index(self.index_name_1).add_documents([{"abd": "efg"}], tensor_fields=["abc"])
+            self.client.index("some-non-existing-index").add_documents([{"abd": "efg"}], tensor_fields=["abc"])
 
-        assert "index_not_found" == ex.value.code
+        assert ex.value.code in ["index_not_found", "cloud_index_not_found"]
 
     def test_add_documents_with_device(self):
         temp_client = copy.deepcopy(self.client)
@@ -315,7 +319,7 @@ class TestAddDocuments(MarqoTestCase):
         assert "processes=12" not in kwargs["path"]
 
     def test_resilient_indexing(self):
-        self.client.create_index(self.index_name_1)
+        self.create_index(self.index_name_1)
 
         if self.IS_MULTI_INSTANCE:
             time.sleep(1)
@@ -382,7 +386,7 @@ class TestAddDocuments(MarqoTestCase):
 
     def test_add_lists_non_tensor(self):
         original_doc = {"d1": "blah", "_id": "1234", 'my list': ['tag-1', 'tag-2']}
-        self.client.create_index(self.index_name_1)
+        self.create_index(self.index_name_1)
         self.client.index(self.index_name_1).add_documents(documents=[original_doc], non_tensor_fields=['my list'])
 
         if self.IS_MULTI_INSTANCE:
@@ -406,7 +410,7 @@ class TestAddDocuments(MarqoTestCase):
         assert len(bad_res['hits']) == 0
 
     def test_use_existing_fields(self):
-        self.client.create_index(self.index_name_1)
+        self.create_index(self.index_name_1)
         self.client.index(index_name=self.index_name_1).add_documents(
             documents=[
                 {
@@ -447,7 +451,7 @@ class TestAddDocuments(MarqoTestCase):
             "treat_urls_and_pointers_as_images": True,
             "model": "ViT-B/32",
         }
-        self.client.create_index(index_name=self.index_name_1, **settings)
+        self.create_index(index_name=self.index_name_1, **settings)
 
         self.client.index(index_name=self.index_name_1).add_documents(
             documents=[
@@ -550,6 +554,6 @@ class TestAddDocuments(MarqoTestCase):
         non_tensor_fields = ['text']
 
         with self.assertLogs('marqo', level='WARNING') as cm:
-            self.client.create_index(self.index_name_1)
+            self.create_index(self.index_name_1)
             self.client.index(self.index_name_1).add_documents(documents=documents, non_tensor_fields=non_tensor_fields)
             self.assertTrue({'`non_tensor_fields`', 'Marqo', '2.0.0.'}.issubset(set(cm.output[0].split(" "))))

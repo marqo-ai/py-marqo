@@ -11,10 +11,13 @@ class TestAddDocumentsModelAuth(MarqoTestCase):
     def setUp(self) -> None:
         self.client = Client(**self.client_settings)
         self.index_name_1 = "my-test-index-1"
-        try:
-            self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
-            pass
+        if not self.client.config.is_marqo_cloud:
+            try:
+                self.client.delete_index(self.index_name_1)
+            except MarqoApiError as s:
+                pass
+        else:
+            self.delete_documents(self.index_name_1)
 
     def test_add_docs_model_auth(self):
         mock__post = mock.MagicMock()

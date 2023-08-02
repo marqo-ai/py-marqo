@@ -8,10 +8,11 @@ class TestGetSettings(MarqoTestCase):
         self.client = Client(**self.client_settings)
         self.generic_header = {'Content-type': 'application/json'}
         self.index_name = 'my-test-index-1'
-        try:
-            self.client.delete_index(self.index_name)
-        except IndexNotFoundError as s:
-            pass
+        if not self.client.config.is_marqo_cloud:
+            try:
+                self.client.delete_index(self.index_name)
+            except IndexNotFoundError as s:
+                pass
 
     def test_default_settings(self):
         """default fields should be returned if index is created with default settings
@@ -22,7 +23,7 @@ class TestGetSettings(MarqoTestCase):
                                           'image_preprocessing': {'patch_method': None}}, 'number_of_shards': 5,
                                           'number_of_replicas' : 1,}
         """
-        self.client.create_index(index_name=self.index_name)
+        self.create_index(index_name=self.index_name)
 
         ix = self.client.index(self.index_name)
         index_settings = ix.get_settings()
@@ -51,7 +52,7 @@ class TestGetSettings(MarqoTestCase):
             }
         }
 
-        self.client.create_index(index_name=self.index_name, settings_dict=index_settings)
+        self.create_index(index_name=self.index_name, index_defaults=index_settings)
 
         ix = self.client.index(self.index_name)
         index_settings = ix.get_settings()
@@ -64,7 +65,7 @@ class TestGetSettings(MarqoTestCase):
         self.assertTrue(fields.issubset(set(index_settings['index_defaults'])))
 
     def test_settings_should_be_type_dict(self):
-        self.client.create_index(index_name=self.index_name)
+        self.create_index(index_name=self.index_name)
 
         ix = self.client.index(self.index_name)
         index_settings = ix.get_settings()

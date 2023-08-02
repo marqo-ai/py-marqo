@@ -10,11 +10,14 @@ class TestScoreModifierSearch(MarqoTestCase):
     def setUp(self) -> None:
         self.client = Client(**self.client_settings)
         self.index_name_1 = "my-test-index-1"
-        try:
-            self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
-            pass
-        self.client.create_index(index_name=self.index_name_1, model="ViT-B/32")
+        if not self.client.config.is_marqo_cloud:
+            try:
+                self.client.delete_index(self.index_name_1)
+            except MarqoApiError as s:
+                pass
+        else:
+            self.delete_documents(self.index_name_1)
+        self.create_index(index_name=self.index_name_1, model="ViT-B/32")
         self.client.index(index_name=self.index_name_1).add_documents(
             documents=[
                 {"my_text_field": "A rider is riding a horse jumping over the barrier.",
@@ -37,10 +40,13 @@ class TestScoreModifierSearch(MarqoTestCase):
         self.query = "what is the rider doing?"
 
     def tearDown(self) -> None:
-        try:
-            self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
-            pass
+        if not self.client.config.is_marqo_cloud:
+            try:
+                self.client.delete_index(self.index_name_1)
+            except MarqoApiError as s:
+                pass
+        else:
+            self.delete_documents(self.index_name_1)
     
     def search_with_score_modifier(self, score_modifiers: Optional[Dict[str, List[Dict[str, Any]]]] = None, **kwargs) -> Dict[str, Any]:
         return self.client.index(self.index_name_1).search(

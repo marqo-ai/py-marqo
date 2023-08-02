@@ -93,10 +93,21 @@ class Index:
         Returns:
             Response body, containing information about index creation result
         """
+        def cloud_wait_for_index_ready():
+            creation = req.get(f"indexes/{index_name}/status")
+            while creation['index_status'] != 'READY':
+                time.sleep(10)
+                creation = req.get(f"indexes/{index_name}/status")
+                mq_logger.info(f"Index creation status: {creation['index_status']}")
+            mq_logger.info("Index created successfully")
+            return True
         req = HttpRequests(config)
 
         if settings_dict is not None and settings_dict:
-            return req.post(f"indexes/{index_name}", body=settings_dict)
+            response = req.post(f"indexes/{index_name}", body=settings_dict)
+            if config.is_marqo_cloud:
+                cloud_wait_for_index_ready()
+            return response
 
         if config.api_key is not None:
             # making the keyword settings params override the default cloud
@@ -119,11 +130,7 @@ class Index:
             cl_settings['number_of_replicas'] = replicas_count
             cl_settings['number_of_shards'] = storage_node_count
             response = req.post(f"indexes/{index_name}", body=cl_settings)
-            creation = req.get(f"indexes/{index_name}/status")
-            while creation['index_status'] != 'READY':
-                time.sleep(10)
-                creation = req.get(f"indexes/{index_name}/status")
-                mq_logger.info(f"Index creation status: {creation['index_status']}")
+            cloud_wait_for_index_ready()
             return response
 
         return req.post(f"indexes/{index_name}", body={

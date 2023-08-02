@@ -3,6 +3,7 @@ import marqo
 from marqo import enums
 from typing import Any, Callable, Dict, List, Optional, Union
 from unittest import mock
+from pytest import mark
 from marqo.client import Client
 from marqo.errors import InvalidArgError, MarqoApiError, MarqoWebError
 import requests
@@ -11,6 +12,7 @@ import math
 from tests.marqo_test import mock_http_traffic, with_documents, MockHTTPTraffic, MarqoTestCase
 
 
+@mark.ignore_cloud_tests
 class TestBulkSearch(MarqoTestCase):
 
     def setUp(self) -> None:

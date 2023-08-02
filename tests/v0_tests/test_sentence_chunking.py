@@ -20,26 +20,32 @@ class TestSentenceChunking(MarqoTestCase):
         
         self.index_name = self.generic_test_index_name
 
-        try:
-            client_0.delete_index(self.index_name)
-        except MarqoApiError as s:
-            pass
+        if not client_0.config.is_marqo_cloud:
+            try:
+                client_0.delete_index(self.index_name)
+            except MarqoApiError as s:
+                pass
+        else:
+            self.delete_documents(self.index_name)
 
     def test_sentence_no_chunking(self):
 
         client = Client(**self.client_settings)
-        
-        try:
-            client.delete_index(self.index_name)
-        except MarqoApiError as s:
-            pass
+
+        if not client.config.is_marqo_cloud:
+            try:
+                client.delete_index(self.index_name)
+            except MarqoApiError as s:
+                pass
+        else:
+            self.delete_documents(self.index_name)
 
         settings = {
             "sentences_per_chunk":int(1e3),  
             "sentence_overlap":0 
             }
         
-        client.create_index(self.index_name, **settings)
+        self.create_index(self.index_name, **settings)
 
 
         document1 = {'_id': '1', # '_id' can be provided but is not required
@@ -64,18 +70,21 @@ class TestSentenceChunking(MarqoTestCase):
     def test_sentence_chunking_no_overlap(self):
 
         client = Client(**self.client_settings)
-        
-        try:
-            client.delete_index(self.index_name)
-        except MarqoApiError as s:
-            pass
+
+        if not client.config.is_marqo_cloud:
+            try:
+                client.delete_index(self.index_name)
+            except MarqoApiError as s:
+                pass
+        else:
+            self.delete_documents(self.index_name)
 
         settings = {
             "sentences_per_chunk":2,  
             "sentence_overlap":0 
             }
         
-        client.create_index(self.index_name, **settings)
+        self.create_index(self.index_name, **settings)
 
 
         document1 = {'_id': '1', # '_id' can be provided but is not required
@@ -128,18 +137,21 @@ class TestSentenceChunking(MarqoTestCase):
     def test_sentence_chunking_overlap(self):
 
         client = Client(**self.client_settings)
-        
-        try:
-            client.delete_index(self.index_name)
-        except MarqoApiError as s:
-            pass
+
+        if not client.config.is_marqo_cloud:
+            try:
+                client.delete_index(self.index_name)
+            except MarqoApiError as s:
+                pass
+        else:
+            self.delete_documents(self.index_name)
 
         settings = {
             "sentences_per_chunk":2,  
             "sentence_overlap":1
             }
         
-        client.create_index(self.index_name, **settings)
+        self.create_index(self.index_name, **settings)
 
 
         document1 = {'_id': '1', # '_id' can be provided but is not required

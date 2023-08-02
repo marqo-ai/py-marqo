@@ -15,16 +15,22 @@ class TestLogging(MarqoTestCase):
     def setUp(self) -> None:
         self.client = Client(**self.client_settings)
         self.index_name_1 = "my-test-index-1"
-        try:
-            self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
-            pass
+        if not self.client.config.is_marqo_cloud:
+            try:
+                self.client.delete_index(self.index_name_1)
+            except MarqoApiError as s:
+                pass
+        else:
+            self.delete_documents(self.index_name_1)
 
     def tearDown(self) -> None:
-        try:
-            self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
-            pass
+        if not self.client.config.is_marqo_cloud:
+            try:
+                self.client.delete_index(self.index_name_1)
+            except MarqoApiError as s:
+                pass
+        else:
+            self.delete_documents(self.index_name_1)
 
     @staticmethod
     def _get_docs_to_index():

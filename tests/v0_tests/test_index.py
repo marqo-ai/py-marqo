@@ -16,17 +16,21 @@ class TestIndex(MarqoTestCase):
     def setUp(self) -> None:
         self.client = Client(**self.client_settings)
         self.index_name_1 = "my-test-index-1"
-        try:
-            self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
-            pass
+        if not self.client.config.is_marqo_cloud:
+            try:
+                self.client.delete_index(self.index_name_1)
+            except MarqoApiError as s:
+                pass
         marqo_url_and_version_cache.clear()
 
     def tearDown(self) -> None:
-        try:
-            self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
-            pass
+        if not self.client.config.is_marqo_cloud:
+            try:
+                self.client.delete_index(self.index_name_1)
+            except MarqoApiError as s:
+                pass
+        else:
+            self.delete_documents(self.index_name_1)
         marqo_url_and_version_cache.clear()
 
     def test_create_index_settings_dict(self):
@@ -45,9 +49,9 @@ class TestIndex(MarqoTestCase):
             mock__post = mock.MagicMock()
             @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
             def run():
-                self.client.create_index(
+                self.create_index(
                     index_name=self.index_name_1,
-                    settings_dict=settings_dict,
+                    index_defaults=settings_dict,
                     **non_settings_dicts_param)
                 return True
             assert run()
@@ -56,7 +60,7 @@ class TestIndex(MarqoTestCase):
                    is expected_treat_urls_and_pointers_as_images
 
     def test_get_documents(self):
-        self.client.create_index(index_name=self.index_name_1)
+        self.create_index(index_name=self.index_name_1)
         d1 = {
             "Title": "Treatise on the viability of rocket cars",
             "Blurb": "A rocket car is a car powered by a rocket engine. "
@@ -87,7 +91,7 @@ class TestIndex(MarqoTestCase):
                 assert doc_res['_found']
 
     def test_get_documents_expose_facets(self):
-        self.client.create_index(index_name=self.index_name_1)
+        self.create_index(index_name=self.index_name_1)
         d1 = {
             "Title": "Treatise on the viability of rocket cars",
             "Blurb": "A rocket car is a car powered by a rocket engine. "
@@ -123,7 +127,7 @@ class TestIndex(MarqoTestCase):
                 assert doc_res['_found']
 
     def test_get_document_expose_facets(self):
-        self.client.create_index(index_name=self.index_name_1)
+        self.create_index(index_name=self.index_name_1)
         d1 = {
             "Title": "Treatise on the viability of rocket cars",
             "Blurb": "A rocket car is a car powered by a rocket engine. "
@@ -202,7 +206,7 @@ class TestIndex(MarqoTestCase):
         settings = {
             "number_of_replicas": intended_replicas
         }
-        self.client.create_index(index_name=self.index_name_1, settings_dict = settings)
+        self.create_index(index_name=self.index_name_1, index_defaults=settings)
         index_setting = self.client.index(self.index_name_1).get_settings()
         print(index_setting)
         assert intended_replicas == index_setting['number_of_replicas']

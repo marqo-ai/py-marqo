@@ -18,10 +18,13 @@ class TestSearch(MarqoTestCase):
     def setUp(self) -> None:
         self.client = Client(**self.client_settings)
         self.index_name_1 = "my-test-index-1"
-        try:
-            self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
-            pass
+        if not self.client.config.is_marqo_cloud:
+            try:
+                self.client.delete_index(self.index_name_1)
+            except MarqoApiError as s:
+                pass
+        else:
+            self.delete_documents(self.index_name_1)
 
     @staticmethod
     def strip_marqo_fields(doc, strip_id=True):
@@ -40,7 +43,7 @@ class TestSearch(MarqoTestCase):
     def test_search_single(self):
         """Searches an index of a single doc.
         Checks the basic functionality and response structure"""
-        self.client.create_index(index_name=self.index_name_1)
+        self.create_index(index_name=self.index_name_1)
         d1 = {
             "Title": "This is a title about some doc. ",
             "Description": """The Guardian is a British daily newspaper. It was founded in 1821 as The Manchester Guardian, and changed its name in 1959.[5] Along with its sister papers The Observer and The Guardian Weekly, The Guardian is part of the Guardian Media Group, owned by the Scott Trust.[6] The trust was created in 1936 to "secure the financial and editorial independence of The Guardian in perpetuity and to safeguard the journalistic freedom and liberal values of The Guardian free from commercial or political interference".[7] The trust was converted into a limited company in 2008, with a constitution written so as to maintain for The Guardian the same protections as were built into the structure of the Scott Trust by its creators. Profits are reinvested in journalism rather than distributed to owners or shareholders.[7] It is considered a newspaper of record in the UK.[8][9]
@@ -61,7 +64,7 @@ class TestSearch(MarqoTestCase):
         assert ("Title" in search_res["hits"][0]["_highlights"]) or ("Description" in search_res["hits"][0]["_highlights"])
 
     def test_search_empty_index(self):
-        self.client.create_index(index_name=self.index_name_1)
+        self.create_index(index_name=self.index_name_1)
 
         if self.IS_MULTI_INSTANCE:
             self.warm_request(self.client.index(self.index_name_1).search,
@@ -73,7 +76,7 @@ class TestSearch(MarqoTestCase):
 
     def test_search_highlights(self):
         """Tests if show_highlights works and if the deprecation behaviour is expected"""
-        self.client.create_index(index_name=self.index_name_1)
+        self.create_index(index_name=self.index_name_1)
         self.client.index(index_name=self.index_name_1).add_documents([{"f1": "some doc"}], tensor_fields=["f1"])
         for params, expected_highlights_presence in [
                 ({"highlights": True, "show_highlights": False}, False),
@@ -95,7 +98,7 @@ class TestSearch(MarqoTestCase):
             assert ("_highlights" in search_res["hits"][0]) is expected_highlights_presence
 
     def test_search_multi(self):
-        self.client.create_index(index_name=self.index_name_1)
+        self.create_index(index_name=self.index_name_1)
         d1 = {
                 "doc title": "Cool Document 1",
                 "field 1": "some extra info",
@@ -120,7 +123,7 @@ class TestSearch(MarqoTestCase):
         assert search_res['hits'][0]['_highlights']["field X"] == "this is a solid doc"
 
     def test_select_lexical(self):
-        self.client.create_index(index_name=self.index_name_1)
+        self.create_index(index_name=self.index_name_1)
         d1 = {
             "doc title": "Very heavy, dense metallic lead.",
             "field 1": "some extra info",
@@ -191,7 +194,7 @@ class TestSearch(MarqoTestCase):
         assert "device" not in kwargs0["path"]
 
     def test_filter_string_and_searchable_attributes(self):
-        self.client.create_index(index_name=self.index_name_1)
+        self.create_index(index_name=self.index_name_1)
         docs = [
             {
                 "_id": "0",                     # content in field_a
@@ -285,7 +288,7 @@ class TestSearch(MarqoTestCase):
 
 
     def test_filter_on_nested_docs(self):
-        self.client.create_index(index_name=self.index_name_1)
+        self.create_index(index_name=self.index_name_1)
         docs = [
             {
                 "_id": "filter_in_tag",
@@ -381,7 +384,7 @@ class TestSearch(MarqoTestCase):
             assert set([hit["_id"] for hit in search_res["hits"]]) == set(case["expected"])
 
     def test_attributes_to_retrieve(self):
-        self.client.create_index(index_name=self.index_name_1)
+        self.create_index(index_name=self.index_name_1)
         d1 = {
             "doc title": "Very heavy, dense metallic lead.",
             "abc-123": "some text blah",
@@ -419,7 +422,7 @@ class TestSearch(MarqoTestCase):
 
         
     def test_pagination_single_field(self):
-        self.client.create_index(index_name=self.index_name_1)
+        self.create_index(index_name=self.index_name_1)
         
         # 100 random words
         vocab_source = "https://www.mit.edu/~ecprice/wordlist.10000"
@@ -483,7 +486,7 @@ class TestSearch(MarqoTestCase):
                 'treat_urls_and_pointers_as_images': True
             }
         }
-        self.client.create_index(index_name=self.index_name_1, settings_dict=image_index_config)
+        self.create_index(index_name=self.index_name_1, index_defaults=image_index_config)
         self.client.index(index_name=self.index_name_1).add_documents(
             documents=docs, tensor_fields=['loc a', 'loc b'], auto_refresh=True
         )
@@ -514,7 +517,7 @@ class TestSearch(MarqoTestCase):
             "dont#tensorise Me": "Dog",
             "tensorise_me": "quarterly earnings report"
         }]
-        self.client.create_index(index_name=self.index_name_1)
+        self.create_index(index_name=self.index_name_1)
         self.client.index(index_name=self.index_name_1).add_documents(
             docs, auto_refresh=True, non_tensor_fields=["dont#tensorise Me"]
         )
@@ -541,7 +544,7 @@ class TestSearch(MarqoTestCase):
                 filter_field: "Alpaca"
             }
             ]
-            self.client.create_index(self.index_name_1)
+            self.create_index(self.index_name_1)
             self.client.index(index_name=self.index_name_1).add_documents(
                 docs, auto_refresh=True, non_tensor_fields=[field_to_not_search]
             )

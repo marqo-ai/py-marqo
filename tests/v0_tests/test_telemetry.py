@@ -10,20 +10,26 @@ class TestTelemetry(MarqoTestCase):
     def setUp(self) -> None:
         self.client = Client(**self.client_settings, return_telemetry=True)
         self.index_name_1 = "my-test-index-1"
-        try:
-            self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
-            pass
+        if not self.client.config.is_marqo_cloud:
+            try:
+                self.client.delete_index(self.index_name_1)
+            except MarqoApiError as s:
+                pass
+        else:
+            self.delete_documents(self.index_name_1)
 
     def tearDown(self) -> None:
-        try:
-            self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
-            pass
+        if not self.client.config.is_marqo_cloud:
+            try:
+                self.client.delete_index(self.index_name_1)
+            except MarqoApiError as s:
+                pass
+        else:
+            self.delete_documents(self.index_name_1)
 
     def test_telemetry_add_documents(self):
         number_of_docs = 10
-        self.client.create_index(self.index_name_1)
+        self.create_index(self.index_name_1)
         doc = [{"Title": "Marqo is useful",
                 "Description": "Marqo is a very useful tool"}, ] * number_of_docs
 
@@ -68,7 +74,7 @@ class TestTelemetry(MarqoTestCase):
             self.assertIn("timesMs", res["telemetry"])
 
     def test_telemetry_bulk_search(self):
-        self.client.create_index(self.index_name_1)
+        self.create_index(self.index_name_1)
         self.client.index(self.index_name_1).add_documents([{"Title": "A dummy document",}], tensor_fields=["Title"])
         bulk_search_query = [
             {
@@ -103,7 +109,7 @@ class TestTelemetry(MarqoTestCase):
 
 
     def test_telemetry_get_document(self):
-        self.client.create_index(self.index_name_1)
+        self.create_index(self.index_name_1)
         self.client.index(self.index_name_1).add_documents([{"_id": "123321", "Title": "Marqo is useful",}],
                                                            tensor_fields=["Title"])
         res = self.client.index(self.index_name_1).get_document("123321")
@@ -112,7 +118,7 @@ class TestTelemetry(MarqoTestCase):
 
 
     def test_delete_documents(self):
-        self.client.create_index(self.index_name_1)
+        self.create_index(self.index_name_1)
         self.client.index(self.index_name_1).add_documents([{"_id": "123321", "Title": "Marqo is useful",}],
                                                            tensor_fields=["Title"])
         res = self.client.index(self.index_name_1).delete_documents(["123321"])
