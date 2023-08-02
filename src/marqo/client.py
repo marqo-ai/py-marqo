@@ -1,4 +1,5 @@
 import base64
+import os
 from typing import Any, Dict, List, Optional, Union
 
 from pydantic import error_wrappers
@@ -230,7 +231,7 @@ class Client:
 
         # Skip the check for Marqo CloudV2 APIs right now
         skip_version_check_url = ["https://api.marqo.ai", "https://cloud.marqo.ai"]
-        if self.url in skip_version_check_url:
+        if self.url in skip_version_check_url or len(os.environ.get("MARQO_CLOUD_URL", "")) > 0:
             marqo_url_and_version_cache[self.url] = "_skipped"
             mq_logger.warning(skip_warning_message)
             return

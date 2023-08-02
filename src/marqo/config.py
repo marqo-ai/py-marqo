@@ -2,6 +2,7 @@ from typing import Optional, Union
 from marqo import enums, utils
 import urllib3
 import warnings
+import os
 from marqo.marqo_url_resolver import MarqoUrlResolver
 
 
@@ -48,7 +49,19 @@ class Config:
                 self.cluster_is_s2search = True
             if "api.marqo.ai" in lowered_url:
                 self.cluster_is_marqo = True
-                self.marqo_url_resolver = MarqoUrlResolver(api_key=self.api_key, expiration_time=15)
+                self.marqo_url_resolver = MarqoUrlResolver(
+                    url="api.marqo.ai",
+                    api_key=self.api_key,
+                    expiration_time=15,
+                )
+            if len(os.environ.get("MARQO_CLOUD_URL", "")) > 0:
+                url = os.environ["MARQO_CLOUD_URL"]
+                self.cluster_is_marqo = True
+                self.marqo_url_resolver = MarqoUrlResolver(
+                    url=url,
+                    api_key=self.api_key,
+                    expiration_time=15,
+                )
         self.url = url
         return self.url
 

@@ -9,10 +9,11 @@ from marqo.errors import (
 
 
 class MarqoUrlResolver:
-    def __init__(self, api_key=None, expiration_time: int = 15):
+    def __init__(self, url, api_key=None, expiration_time: int = 15):
         """ URL Resolver is a cache for urls that are resolved to their respective indices only for marqo cloud. """
         self.timestamp = time.time() - expiration_time
         self._urls_mapping = {"READY": {}, "CREATING": {}}
+        self.url = url
         self.api_key = api_key
         self.expiration_time = expiration_time
 
@@ -34,7 +35,7 @@ class MarqoUrlResolver:
 
     def _refresh_urls(self, timeout=None):
         try:
-            response = requests.get('https://api.marqo.ai/api/indexes',
+            response = requests.get(f'https://{self.url}/api/indexes',
                                     headers={"x-api-key": self.api_key}, timeout=timeout)
         except Timeout:
             mq_logger.warning(
