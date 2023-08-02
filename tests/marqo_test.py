@@ -170,10 +170,11 @@ class MarqoTestCase(TestCase):
         client = marqo.Client(**self.client_settings)
         indexes = client.get_indexes()
         if index_name in indexes:
-            try:
-                idx = client.index(index_name)
-                docs_to_delete = [i['_id'] for i in idx.search("")['hits']]
-                if docs_to_delete:
-                    idx.delete_documents(docs_to_delete)
-            except marqo.errors.MarqoCloudIndexNotFoundError:
-                pass
+            if client.http.get(f"/indexes/{index_name}/status") == "READY":
+                try:
+                    idx = client.index(index_name)
+                    docs_to_delete = [i['_id'] for i in idx.search("")['hits']]
+                    if docs_to_delete:
+                        idx.delete_documents(docs_to_delete)
+                except marqo.errors.MarqoCloudIndexNotFoundError:
+                    pass
