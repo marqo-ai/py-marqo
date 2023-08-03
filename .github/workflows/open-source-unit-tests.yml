@@ -71,7 +71,14 @@ jobs:
       - name: "Determine py-marqo's supported Marqo version"
         id: get_default_marqo_version
         run: |
-          echo "::set-output name=version::$(python -c 'from marqo import version; print(version.__marqo_version__)')"
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          export PYTHONPATH=$(pwd):$(pwd)/src:$PYTHONPATH
+          SUPPORTED_MQ_VERSION=$(python -c 'from marqo import version; print(version.__marqo_version__)') || exit 1
+          
+          # error out if version is empty:
+          if [ -z "$SUPPORTED_MQ_VERSION" ]; then exit 1; fi
+          echo "::set-output name=version::$SUPPORTED_MQ_VERSION"
 
       - name: Log into ECR
         uses: docker/login-action@v1
