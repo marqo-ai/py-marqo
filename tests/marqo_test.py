@@ -169,7 +169,7 @@ class MarqoTestCase(TestCase):
     def delete_documents(self, index_name):
         client = marqo.Client(**self.client_settings)
         indexes = client.get_indexes()
-        if index_name in indexes:
+        if index_name in indexes['results']:
             if client.http.get(f"/indexes/{index_name}/status") == "READY":
                 try:
                     idx = client.index(index_name)

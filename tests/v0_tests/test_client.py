@@ -1,3 +1,5 @@
+import os
+
 import requests
 from json import JSONDecodeError
 from unittest import mock
@@ -79,3 +81,8 @@ class TestClient(MarqoTestCase):
             res = self.client.index(self.index_name_1).health()
             args, kwargs = mock_get.call_args
             self.assertIn(f"/{self.index_name_1}/health", kwargs["path"])
+
+    def test_overwrite_cloud_url_and_client_is_set_to_marqo(self):
+        os.environ["MARQO_CLOUD_URL"] = "https://cloud.url.com"
+        client = Client(url="https://cloud.url.com", api_key="test")
+        self.assertTrue(client.config.is_marqo_cloud)

@@ -16,7 +16,7 @@ from marqo._httprequests import HttpRequests
 from marqo.config import Config
 from marqo.enums import SearchMethods, Devices
 from marqo import errors, utils
-from marqo.errors import MarqoWebError
+from marqo.errors import MarqoWebError, UnsupportedOperationError
 from marqo.marqo_logging import mq_logger
 from marqo.version import minimum_supported_marqo_version
 from packaging import version as versioning_helpers
@@ -155,7 +155,10 @@ class Index:
 
     def get_status(self):
         """gets the status of the index"""
-        return self.http.get(path=F"indexes/{self.index_name}/status")
+        if self.config.is_marqo_cloud:
+            return self.http.get(path=F"indexes/{self.index_name}/status")
+        else:
+            raise UnsupportedOperationError("This operation is only supported for Marqo Cloud")
 
     def search(self, q: Union[str, dict], searchable_attributes: Optional[List[str]] = None,
                limit: int = 10, offset: int = 0, search_method: Union[SearchMethods.TENSOR, str] = SearchMethods.TENSOR,

@@ -46,7 +46,7 @@ class MarqoCloudInstanceMappings(InstanceMappings):
 
     def _refresh_urls(self, timeout=None):
         try:
-            response = requests.get('https://api.marqo.ai/api/indexes',
+            response = requests.get(f'{self.get_control_base_url()}/indexes',
                                     headers={"x-api-key": self.api_key}, timeout=timeout)
         except Timeout:
             mq_logger.warning(
