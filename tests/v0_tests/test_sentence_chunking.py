@@ -15,37 +15,16 @@ class TestSentenceChunking(MarqoTestCase):
     Assumptions:
         - Local OpenSearch (not S2Search)
     """
-    def setUp(self) -> None:
-        client_0 = Client(**self.client_settings)
-        
-        self.index_name = self.generic_test_index_name
-
-        if not client_0.config.is_marqo_cloud:
-            try:
-                client_0.delete_index(self.index_name)
-            except MarqoApiError as s:
-                pass
-        else:
-            self.delete_documents(self.index_name)
-
     def test_sentence_no_chunking(self):
 
         client = Client(**self.client_settings)
-
-        if not client.config.is_marqo_cloud:
-            try:
-                client.delete_index(self.index_name)
-            except MarqoApiError as s:
-                pass
-        else:
-            self.delete_documents(self.index_name)
 
         settings = {
             "sentences_per_chunk":int(1e3),  
             "sentence_overlap":0 
             }
         
-        self.create_index(self.index_name, **settings)
+        self.test_index_name = self.create_test_index(self.generic_test_index_name, **settings)
 
 
         document1 = {'_id': '1', # '_id' can be provided but is not required
@@ -53,13 +32,13 @@ class TestSentenceChunking(MarqoTestCase):
             'description': 'the image chunking. can (optionally) chunk. the image into sub-patches (aking to segmenting text). by using either. a learned model. or simple box generation and cropping.',
             'misc':'sasasasaifjfnonfqeno asadsdljknjdfln'}
 
-        client.index(self.index_name).add_documents([document1], tensor_fields=['attributes', 'description', 'misc'])
+        client.index(self.test_index_name).add_documents([document1], tensor_fields=['attributes', 'description', 'misc'])
 
         # test the search works
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.index_name).search,'a')
+            self.warm_request(client.index(self.test_index_name).search,'a')
 
-        results = client.index(self.index_name).search('a')
+        results = client.index(self.test_index_name).search('a')
         print(results)
         assert results['hits'][0]['attributes'] == document1['attributes']
 
@@ -71,20 +50,12 @@ class TestSentenceChunking(MarqoTestCase):
 
         client = Client(**self.client_settings)
 
-        if not client.config.is_marqo_cloud:
-            try:
-                client.delete_index(self.index_name)
-            except MarqoApiError as s:
-                pass
-        else:
-            self.delete_documents(self.index_name)
-
         settings = {
             "sentences_per_chunk":2,  
             "sentence_overlap":0 
             }
         
-        self.create_index(self.index_name, **settings)
+        self.test_index_name = self.create_test_index(self.generic_test_index_name, **settings)
 
 
         document1 = {'_id': '1', # '_id' can be provided but is not required
@@ -92,15 +63,15 @@ class TestSentenceChunking(MarqoTestCase):
             'description': 'the image chunking. can (optionally) chunk. the image into sub-patches (aking to segmenting text). by using either. a learned model. or simple box generation and cropping.',
             'misc':'sasasasaifjfnonfqeno asadsdljknjdfln'}
 
-        client.index(self.index_name).add_documents([document1], tensor_fields=['attributes', 'description', 'misc'])
+        client.index(self.test_index_name).add_documents([document1], tensor_fields=['attributes', 'description', 'misc'])
 
         # search with a term we know is an exact chunk and will then show in the highlights
         search_term = 'hello. how are you.'
         
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.index_name).search,search_term)
+            self.warm_request(client.index(self.test_index_name).search,search_term)
 
-        results = client.index(self.index_name).search(search_term)
+        results = client.index(self.test_index_name).search(search_term)
         print(results)
         assert results['hits'][0]['_highlights']['attributes'] == search_term
 
@@ -108,9 +79,9 @@ class TestSentenceChunking(MarqoTestCase):
         search_term = 'the image into sub-patches (aking to segmenting text). by using either.'
         
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.index_name).search,search_term)
+            self.warm_request(client.index(self.test_index_name).search,search_term)
 
-        results = client.index(self.index_name).search(search_term)
+        results = client.index(self.test_index_name).search(search_term)
         print(results)
         assert results['hits'][0]['_highlights']['description'] == search_term
 
@@ -118,9 +89,9 @@ class TestSentenceChunking(MarqoTestCase):
         search_term = 'sasasasaifjfnonfqeno asadsdljknjdfln'
         
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.index_name).search,search_term)
+            self.warm_request(client.index(self.test_index_name).search,search_term)
 
-        results = client.index(self.index_name).search(search_term)
+        results = client.index(self.test_index_name).search(search_term)
         print(results)
         assert results['hits'][0]['_highlights']['misc'] == search_term
 
@@ -128,9 +99,9 @@ class TestSentenceChunking(MarqoTestCase):
         search_term = 'can (optionally) chunk.'
         
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.index_name).search,search_term)
+            self.warm_request(client.index(self.test_index_name).search,search_term)
 
-        results = client.index(self.index_name).search(search_term)
+        results = client.index(self.test_index_name).search(search_term)
         print(results)
         assert results['hits'][0]['_highlights']['description'] == 'the image chunking. can (optionally) chunk.'
 
@@ -138,20 +109,12 @@ class TestSentenceChunking(MarqoTestCase):
 
         client = Client(**self.client_settings)
 
-        if not client.config.is_marqo_cloud:
-            try:
-                client.delete_index(self.index_name)
-            except MarqoApiError as s:
-                pass
-        else:
-            self.delete_documents(self.index_name)
-
         settings = {
             "sentences_per_chunk":2,  
             "sentence_overlap":1
             }
         
-        self.create_index(self.index_name, **settings)
+        self.test_index_name = self.create_test_index(self.generic_test_index_name, **settings)
 
 
         document1 = {'_id': '1', # '_id' can be provided but is not required
@@ -159,15 +122,15 @@ class TestSentenceChunking(MarqoTestCase):
             'description': 'the image chunking. can (optionally) chunk. the image into sub-patches (aking to segmenting text). by using either. a learned model. or simple box generation and cropping.',
             'misc':'sasasasaifjfnonfqeno asadsdljknjdfln'}
 
-        client.index(self.index_name).add_documents([document1], tensor_fields=['attributes', 'description', 'misc'])
+        client.index(self.test_index_name).add_documents([document1], tensor_fields=['attributes', 'description', 'misc'])
 
         # search with a term we know is an exact chunk and will then show in the highlights
         search_term = 'hello. how are you.'
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.index_name).search,search_term)
+            self.warm_request(client.index(self.test_index_name).search,search_term)
         
-        results = client.index(self.index_name).search(search_term)
+        results = client.index(self.test_index_name).search(search_term)
         print(results)
         assert results['hits'][0]['_highlights']['attributes'] == search_term
 
@@ -175,9 +138,9 @@ class TestSentenceChunking(MarqoTestCase):
         search_term = 'the image into sub-patches (aking to segmenting text). by using either.'
         
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.index_name).search,search_term)
+            self.warm_request(client.index(self.test_index_name).search,search_term)
         
-        results = client.index(self.index_name).search(search_term)
+        results = client.index(self.test_index_name).search(search_term)
         print(results)
         assert results['hits'][0]['_highlights']['description'] == search_term
 
@@ -185,9 +148,9 @@ class TestSentenceChunking(MarqoTestCase):
         search_term = 'sasasasaifjfnonfqeno asadsdljknjdfln'
         
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.index_name).search,search_term)
+            self.warm_request(client.index(self.test_index_name).search,search_term)
         
-        results = client.index(self.index_name).search(search_term)
+        results = client.index(self.test_index_name).search(search_term)
         print(results)
         assert results['hits'][0]['_highlights']['misc'] == search_term
 
@@ -195,9 +158,9 @@ class TestSentenceChunking(MarqoTestCase):
         search_term = 'can (optionally) chunk.'
         
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.index_name).search,search_term)
+            self.warm_request(client.index(self.test_index_name).search,search_term)
         
-        results = client.index(self.index_name).search(search_term)
+        results = client.index(self.test_index_name).search(search_term)
         print(results)
         assert results['hits'][0]['_highlights']['description'] == 'the image chunking. can (optionally) chunk.'
 
@@ -205,17 +168,17 @@ class TestSentenceChunking(MarqoTestCase):
         search_term = "can (optionally) chunk. the image into sub-patches (aking to segmenting text)."
         
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.index_name).search,search_term)
+            self.warm_request(client.index(self.test_index_name).search,search_term)
         
-        results = client.index(self.index_name).search(search_term)
+        results = client.index(self.test_index_name).search(search_term)
         print(results)
         assert results['hits'][0]['_highlights']['description'] == search_term
 
         search_term = "the image into sub-patches (aking to segmenting text). by using either."
         
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.index_name).search,search_term)
+            self.warm_request(client.index(self.test_index_name).search,search_term)
         
-        results = client.index(self.index_name).search(search_term)
+        results = client.index(self.test_index_name).search(search_term)
         print(results)
         assert results['hits'][0]['_highlights']['description'] == search_term

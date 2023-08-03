@@ -8,17 +8,9 @@ from tests.marqo_test import MarqoTestCase
 class TestScoreModifierSearch(MarqoTestCase):
 
     def setUp(self) -> None:
-        self.client = Client(**self.client_settings)
-        self.index_name_1 = "my-test-index-1"
-        if not self.client.config.is_marqo_cloud:
-            try:
-                self.client.delete_index(self.index_name_1)
-            except MarqoApiError as s:
-                pass
-        else:
-            self.delete_documents(self.index_name_1)
-        self.create_index(index_name=self.index_name_1, model="ViT-B/32")
-        self.client.index(index_name=self.index_name_1).add_documents(
+        super().setUp()
+        self.test_index_name = self.create_test_index(index_name=self.generic_test_index_name, model="ViT-B/32")
+        self.client.index(index_name=self.test_index_name).add_documents(
             documents=[
                 {"my_text_field": "A rider is riding a horse jumping over the barrier.",
                  "my_image_field": "https://raw.githubusercontent.com/marqo-ai/marqo/mainline/examples/ImageSearchGuide/data/image2.jpg",
@@ -42,14 +34,14 @@ class TestScoreModifierSearch(MarqoTestCase):
     def tearDown(self) -> None:
         if not self.client.config.is_marqo_cloud:
             try:
-                self.client.delete_index(self.index_name_1)
+                self.client.delete_index(self.test_index_name)
             except MarqoApiError as s:
                 pass
         else:
-            self.delete_documents(self.index_name_1)
+            self.delete_documents(self.test_index_name)
     
     def search_with_score_modifier(self, score_modifiers: Optional[Dict[str, List[Dict[str, Any]]]] = None, **kwargs) -> Dict[str, Any]:
-        return self.client.index(self.index_name_1).search(
+        return self.client.index(self.test_index_name).search(
             q = self.query,
             score_modifiers = score_modifiers,
             **kwargs
@@ -127,8 +119,8 @@ class TestScoreModifierBulkSearch(TestScoreModifierSearch):
 
     def search_with_score_modifier(self, score_modifiers: Optional[Dict[str, List[Dict[str, Any]]]] = None, **kwargs) -> Dict[str, Any]:
         resp = self.client.bulk_search([{
-            "index": self.index_name_1,
-            "q": self.index_name_1,
+            "index": self.test_index_name,
+            "q": self.test_index_name,
             "scoreModifiers": score_modifiers,
             **{self.map_search_kwargs(k): v for k,v in kwargs.items()}
         }])

@@ -14,24 +14,6 @@ from marqo.errors import BackendTimeoutError, BackendCommunicationError
 
 class TestClient(MarqoTestCase):
 
-    def setUp(self) -> None:
-        self.client = Client(**self.client_settings)
-        self.index_name_1 = "my-test-index-1"
-        if not self.client.config.is_marqo_cloud:
-            try:
-                self.client.delete_index(self.index_name_1)
-            except MarqoApiError as s:
-                pass
-
-    def tearDown(self) -> None:
-        if not self.client.config.is_marqo_cloud:
-            try:
-                self.client.delete_index(self.index_name_1)
-            except MarqoApiError as s:
-                pass
-        else:
-            self.delete_documents(self.index_name_1)
-
     @mark.ignore_cloud_tests
     def test_get_marqo(self):
         res = self.client.get_marqo()
@@ -70,19 +52,21 @@ class TestClient(MarqoTestCase):
                 self.assertIn("If you are trying to check the health on Marqo Cloud", cm.exception.message)
 
     def test_check_index_health_response(self):
-        self.create_index(self.index_name_1)
-        res = self.client.index(self.index_name_1).health()
+        self.test_index_name = self.create_test_index(self.generic_test_index_name)
+        res = self.client.index(self.test_index_name).health()
         assert 'status' in res
         assert 'status' in res['backend']
 
     def test_check_index_health_query(self):
         with patch("marqo._httprequests.HttpRequests.get") as mock_get:
-            self.create_index(self.index_name_1)
-            res = self.client.index(self.index_name_1).health()
+            self.test_index_name = self.create_test_index(self.generic_test_index_name)
+            res = self.client.index(self.test_index_name).health()
             args, kwargs = mock_get.call_args
-            self.assertIn(f"/{self.index_name_1}/health", kwargs["path"])
+            self.assertIn(f"/{self.test_index_name}/health", kwargs["path"])
 
     def test_overwrite_cloud_url_and_client_is_set_to_marqo(self):
+        current = os.environ.get("MARQO_CLOUD_URL")
         os.environ["MARQO_CLOUD_URL"] = "https://cloud.url.com"
         client = Client(url="https://cloud.url.com", api_key="test")
         self.assertTrue(client.config.is_marqo_cloud)
+        os.environ["MARQO_CLOUD_URL"] = current

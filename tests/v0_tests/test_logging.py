@@ -11,27 +11,6 @@ import requests
 marqo.set_log_level("INFO")
 
 class TestLogging(MarqoTestCase):
-
-    def setUp(self) -> None:
-        self.client = Client(**self.client_settings)
-        self.index_name_1 = "my-test-index-1"
-        if not self.client.config.is_marqo_cloud:
-            try:
-                self.client.delete_index(self.index_name_1)
-            except MarqoApiError as s:
-                pass
-        else:
-            self.delete_documents(self.index_name_1)
-
-    def tearDown(self) -> None:
-        if not self.client.config.is_marqo_cloud:
-            try:
-                self.client.delete_index(self.index_name_1)
-            except MarqoApiError as s:
-                pass
-        else:
-            self.delete_documents(self.index_name_1)
-
     @staticmethod
     def _get_docs_to_index():
         return [
@@ -62,19 +41,19 @@ class TestLogging(MarqoTestCase):
         ]
 
     def _create_img_index(self, index_name):
-        self.client.create_index(index_name=index_name, treat_urls_and_pointers_as_images=True, model='ViT-B/32')
+        return self.create_test_index(index_name=index_name, treat_urls_and_pointers_as_images=True, model='ViT-B/32')
 
     def test_add_document_warnings_no_batching(self):
-        self._create_img_index(index_name=self.index_name_1)
+        self.test_index_name = self._create_img_index(index_name=self.generic_test_index_name)
         with self.assertLogs('marqo', level='INFO') as cm:
-            self.client.index(index_name=self.index_name_1).add_documents(self._get_docs_to_index(), device="cpu",
+            self.client.index(index_name=self.test_index_name).add_documents(self._get_docs_to_index(), device="cpu",
                                                                           tensor_fields=["Title"])
             assert len(cm.output) == 1
             assert "errors detected" in cm.output[0].lower()
             assert "info" in cm.output[0].lower()
 
     def test_add_document_warnings_client_batching(self):
-        self._create_img_index(index_name=self.index_name_1)
+        self.test_index_name = self._create_img_index(index_name=self.generic_test_index_name)
         params_expected = [
             # so no client batching, that means no batch info output,  and therefore only 1 warning
             ({}, {"num_log_msgs": 1, "num_errors_msgs": 1}),
@@ -85,7 +64,7 @@ class TestLogging(MarqoTestCase):
         for params, expected in params_expected:
 
             with self.assertLogs('marqo', level='INFO') as cm:
-                self.client.index(index_name=self.index_name_1).add_documents(
+                self.client.index(index_name=self.test_index_name).add_documents(
                     documents=self._get_docs_to_index(), device="cpu", **params, tensor_fields=["Title"])
                 print(params, expected)
                 assert len(cm.output) == expected['num_log_msgs']

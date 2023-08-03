@@ -14,6 +14,9 @@ class TestConfig(MarqoTestCase):
     def setUp(self) -> None:
         self.endpoint = self.authorized_url
 
+    def tearDown(self) -> None:
+        pass
+
     def test_url_is_marqo(self):
         c = config.Config(MarqoCloudInstanceMappings("https://api.marqo.ai"), is_marqo_cloud=True)
         assert c.is_marqo_cloud

@@ -7,6 +7,8 @@ import time
 from requests import RequestException
 
 from marqo import defaults
+from marqo.cloud_helpers import cloud_wait_for_index_status
+from marqo.enums import IndexStatus
 import typing
 from urllib import parse
 from datetime import datetime
@@ -49,12 +51,27 @@ class Index:
         self.index_name = index_name
         self.created_at = self._maybe_datetime(created_at)
         self.updated_at = self._maybe_datetime(updated_at)
-        self._marqo_minimum_supported_version_check()
+        skip_version_check = False
+        if config.is_marqo_cloud:
+            try:
+                if self.get_status()["index_status"] != IndexStatus.CREATED:
+                    logging.warning(f"Index {index_name} is not ready. Status: {self.get_status()}, operations may fail.")
+                    skip_version_check = True
+            except Exception as e:
+                skip_version_check = True
+        if not skip_version_check:
+            self._marqo_minimum_supported_version_check()
+        else:
+            logging.warning("Version check is skipped because index is not ready yet.")
 
     def delete(self) -> Dict[str, Any]:
         """Delete the index.
         """
-        return self.http.delete(path=f"indexes/{self.index_name}")
+        response = self.http.delete(path=f"indexes/{self.index_name}")
+        if self.config.is_marqo_cloud:
+            cloud_wait_for_index_status(self.http, self.index_name, IndexStatus.DELETED)
+        return response
+
 
     @staticmethod
     def create(config: Config, index_name: str,
@@ -93,20 +110,12 @@ class Index:
         Returns:
             Response body, containing information about index creation result
         """
-        def cloud_wait_for_index_ready():
-            creation = req.get(f"indexes/{index_name}/status")
-            while creation['index_status'] != 'READY':
-                time.sleep(10)
-                creation = req.get(f"indexes/{index_name}/status")
-                mq_logger.info(f"Index creation status: {creation['index_status']}")
-            mq_logger.info("Index created successfully")
-            return True
         req = HttpRequests(config)
 
         if settings_dict is not None and settings_dict:
             response = req.post(f"indexes/{index_name}", body=settings_dict)
             if config.is_marqo_cloud:
-                cloud_wait_for_index_ready()
+                cloud_wait_for_index_status(req, index_name, IndexStatus.CREATED)
             return response
 
         if config.api_key is not None:
@@ -130,7 +139,7 @@ class Index:
             cl_settings['number_of_replicas'] = replicas_count
             cl_settings['number_of_shards'] = storage_node_count
             response = req.post(f"indexes/{index_name}", body=cl_settings)
-            cloud_wait_for_index_ready()
+            cloud_wait_for_index_status(req, index_name, IndexStatus.CREATED)
             return response
 
         return req.post(f"indexes/{index_name}", body={
@@ -566,7 +575,7 @@ class Index:
 
     def health(self) -> dict:
         """Check the health of an index"""
-        return self.http.get(path=f"indexes/{self.index_name}/health", index_name=self.index_name)
+        return self.http.get(path="health", index_name=self.index_name)
 
     def get_loaded_models(self):
         return self.http.get(path="models", index_name=self.index_name)

@@ -7,18 +7,6 @@ from unittest import mock
 
 
 class TestAddDocumentsModelAuth(MarqoTestCase):
-
-    def setUp(self) -> None:
-        self.client = Client(**self.client_settings)
-        self.index_name_1 = "my-test-index-1"
-        if not self.client.config.is_marqo_cloud:
-            try:
-                self.client.delete_index(self.index_name_1)
-            except MarqoApiError as s:
-                pass
-        else:
-            self.delete_documents(self.index_name_1)
-
     def test_add_docs_model_auth(self):
         mock__post = mock.MagicMock()
 
@@ -26,7 +14,7 @@ class TestAddDocumentsModelAuth(MarqoTestCase):
         def run():
             mock_s3_model_auth = {'s3': {'aws_access_key_id': 'some_acc_key',
                                          'aws_secret_access_key': 'some_sec_acc_key'}}
-            self.client.index(index_name=self.index_name_1).add_documents(
+            self.client.index(index_name=self.generic_test_index_name).add_documents(
                 documents=[{"some": "data"}], model_auth=mock_s3_model_auth, tensor_fields=["some"])
             args, kwargs = mock__post.call_args
             assert "modelAuth" in kwargs['body']
@@ -44,7 +32,7 @@ class TestAddDocumentsModelAuth(MarqoTestCase):
             mock_s3_model_auth = {'s3': {'aws_access_key_id': 'some_acc_key',
                                          'aws_secret_access_key': 'some_sec_acc_key'}}
             expected_str = f"&model_auth={convert_dict_to_url_params(mock_s3_model_auth)}"
-            self.client.index(index_name=self.index_name_1).add_documents(
+            self.client.index(index_name=self.generic_test_index_name).add_documents(
                 documents=[{"some": f"data {i}"} for i in range(20)], model_auth=mock_s3_model_auth,
                 client_batch_size=10, tensor_fields=["some"]
             )
@@ -65,7 +53,7 @@ class TestAddDocumentsModelAuth(MarqoTestCase):
         def run():
             mock_s3_model_auth = {'s3': {'aws_access_key_id': 'some_acc_key',
                                          'aws_secret_access_key': 'some_sec_acc_key'}}
-            self.client.index(index_name=self.index_name_1).search(
+            self.client.index(index_name=self.generic_test_index_name).search(
                 q='something', model_auth=mock_s3_model_auth)
             args, kwargs = mock__post.call_args
             assert kwargs['body']['modelAuth'] == mock_s3_model_auth
@@ -83,7 +71,7 @@ class TestAddDocumentsModelAuth(MarqoTestCase):
                                          'aws_secret_access_key': 'some_sec_acc_key'}}
 
             self.client.bulk_search([{
-                "index": self.index_name_1,
+                "index": self.generic_test_index_name,
                 "q": "a",
                 "modelAuth": mock_s3_model_auth
             }])

@@ -8,15 +8,9 @@ from tests.marqo_test import MarqoTestCase
 class TestCustomVectorSearch(MarqoTestCase):
 
     def setUp(self) -> None:
-        self.client = Client(**self.client_settings)
-        self.index_name_1 = "my-test-index-1"
-        if not self.client.config.is_marqo_cloud:
-            try:
-                self.client.delete_index(self.index_name_1)
-            except MarqoApiError as s:
-                pass
-        self.create_index(index_name=self.index_name_1, model="ViT-B/32")
-        self.client.index(index_name=self.index_name_1).add_documents(
+        super().setUp()
+        self.test_index_name = self.create_test_index(index_name=self.generic_test_index_name, model="ViT-B/32")
+        self.client.index(index_name=self.test_index_name).add_documents(
             [
                 {
                     "Title": "A comparison of the best pets",
@@ -34,17 +28,8 @@ class TestCustomVectorSearch(MarqoTestCase):
 
         self.query = {"What are the best pets": 1}
 
-    def tearDown(self) -> None:
-        if not self.client.config.is_marqo_cloud:
-            try:
-                self.client.delete_index(self.index_name_1)
-            except MarqoApiError as s:
-                pass
-        else:
-            self.delete_documents(self.index_name_1)
-
     def search_with_context(self, context_vector: Optional[Dict[str, List[Dict[str, Any]]]] = None) -> Dict[str, Any]:
-        return self.client.index(self.index_name_1).search(
+        return self.client.index(self.test_index_name).search(
             q=self.query,
             context = context_vector
         )
@@ -140,7 +125,7 @@ class TestCustomBulkVectorSearch(TestCustomVectorSearch):
 
     def search_with_context(self, context_vector: Optional[Dict[str, List[Dict[str, Any]]]] = None) -> Dict[str, Any]:
         resp = self.client.bulk_search([{
-            "index": self.index_name_1,
+            "index": self.test_index_name,
             "q": self.query,
             "context": context_vector
         }])
@@ -153,13 +138,13 @@ class TestCustomBulkVectorSearch(TestCustomVectorSearch):
         wrong_context = {"tensor": [{"vector": [1, ] * (self.vector_dim + 2), "weight": 1}, {"vector": [2, ] * (self.vector_dim + 3), "weight": 0}]}
         if self.IS_MULTI_INSTANCE:
             self.warm_request(self.client.bulk_search, [{
-                "index": self.index_name_1,
+                "index": self.test_index_name,
                 "q": {"blah blah" :1},
                 "context": correct_context,
             }])
         try:
             self.client.bulk_search([{
-                "index": self.index_name_1,
+                "index": self.test_index_name,
                 "q": {"blah blah": 1},
                 "context": wrong_context, # the dimension mismatches the index
             }])
@@ -171,13 +156,13 @@ class TestCustomBulkVectorSearch(TestCustomVectorSearch):
         correct_context = {"tensor": [{"vector": [1, ] * self.vector_dim, "weight": 1}, {"vector": [2, ] * self.vector_dim, "weight": 0}]}
         if self.IS_MULTI_INSTANCE:
             self.warm_request(self.client.bulk_search, [{
-                "index": self.index_name_1,
+                "index": self.test_index_name,
                 "q": {"blah blah" :1},
                 "context": correct_context,
             }])
         try:
             self.client.bulk_search([{
-                "index": self.index_name_1,
+                "index": self.test_index_name,
                 "q": "blah blah",
                 "context": correct_context, # the dimension mismatches the index
             }])

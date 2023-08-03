@@ -14,18 +14,6 @@ from tests.marqo_test import MarqoTestCase
 
 
 class TestSearch(MarqoTestCase):
-
-    def setUp(self) -> None:
-        self.client = Client(**self.client_settings)
-        self.index_name_1 = "my-test-index-1"
-        if not self.client.config.is_marqo_cloud:
-            try:
-                self.client.delete_index(self.index_name_1)
-            except MarqoApiError as s:
-                pass
-        else:
-            self.delete_documents(self.index_name_1)
-
     @staticmethod
     def strip_marqo_fields(doc, strip_id=True):
         """Strips Marqo fields from a returned doc to get the original doc"""
@@ -43,20 +31,20 @@ class TestSearch(MarqoTestCase):
     def test_search_single(self):
         """Searches an index of a single doc.
         Checks the basic functionality and response structure"""
-        self.create_index(index_name=self.index_name_1)
+        self.test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
         d1 = {
             "Title": "This is a title about some doc. ",
             "Description": """The Guardian is a British daily newspaper. It was founded in 1821 as The Manchester Guardian, and changed its name in 1959.[5] Along with its sister papers The Observer and The Guardian Weekly, The Guardian is part of the Guardian Media Group, owned by the Scott Trust.[6] The trust was created in 1936 to "secure the financial and editorial independence of The Guardian in perpetuity and to safeguard the journalistic freedom and liberal values of The Guardian free from commercial or political interference".[7] The trust was converted into a limited company in 2008, with a constitution written so as to maintain for The Guardian the same protections as were built into the structure of the Scott Trust by its creators. Profits are reinvested in journalism rather than distributed to owners or shareholders.[7] It is considered a newspaper of record in the UK.[8][9]
             The editor-in-chief Katharine Viner succeeded Alan Rusbridger in 2015.[10][11] Since 2018, the paper's main newsprint sections have been published in tabloid format. As of July 2021, its print edition had a daily circulation of 105,134.[4] The newspaper has an online edition, TheGuardian.com, as well as two international websites, Guardian Australia (founded in 2013) and Guardian US (founded in 2011). The paper's readership is generally on the mainstream left of British political opinion,[12][13][14][15] and the term "Guardian reader" is used to imply a stereotype of liberal, left-wing or "politically correct" views.[3] Frequent typographical errors during the age of manual typesetting led Private Eye magazine to dub the paper the "Grauniad" in the 1960s, a nickname still used occasionally by the editors for self-mockery.[16]
             """
         }
-        add_doc_res = self.client.index(self.index_name_1).add_documents([d1], tensor_fields=["Title", "Description"])
+        add_doc_res = self.client.index(self.test_index_name).add_documents([d1], tensor_fields=["Title", "Description"])
         
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(self.index_name_1).search,
+            self.warm_request(self.client.index(self.test_index_name).search,
             "title about some doc")
 
-        search_res = self.client.index(self.index_name_1).search(
+        search_res = self.client.index(self.test_index_name).search(
             "title about some doc")
         assert len(search_res["hits"]) == 1
         assert self.strip_marqo_fields(search_res["hits"][0]) == d1
@@ -64,20 +52,20 @@ class TestSearch(MarqoTestCase):
         assert ("Title" in search_res["hits"][0]["_highlights"]) or ("Description" in search_res["hits"][0]["_highlights"])
 
     def test_search_empty_index(self):
-        self.create_index(index_name=self.index_name_1)
+        self.test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(self.index_name_1).search,
+            self.warm_request(self.client.index(self.test_index_name).search,
             "title about some doc")
 
-        search_res = self.client.index(self.index_name_1).search(
+        search_res = self.client.index(self.test_index_name).search(
             "title about some doc")
         assert len(search_res["hits"]) == 0
 
     def test_search_highlights(self):
         """Tests if show_highlights works and if the deprecation behaviour is expected"""
-        self.create_index(index_name=self.index_name_1)
-        self.client.index(index_name=self.index_name_1).add_documents([{"f1": "some doc"}], tensor_fields=["f1"])
+        self.test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
+        self.client.index(index_name=self.test_index_name).add_documents([{"f1": "some doc"}], tensor_fields=["f1"])
         for params, expected_highlights_presence in [
                 ({"highlights": True, "show_highlights": False}, False),
                 ({"highlights": False, "show_highlights": True}, False),
@@ -90,15 +78,15 @@ class TestSearch(MarqoTestCase):
             ]:
 
             if self.IS_MULTI_INSTANCE:
-                self.warm_request(self.client.index(self.index_name_1).search,
+                self.warm_request(self.client.index(self.test_index_name).search,
                 "title about some doc", **params)
 
-            search_res = self.client.index(self.index_name_1).search(
+            search_res = self.client.index(self.test_index_name).search(
                 "title about some doc", **params)
             assert ("_highlights" in search_res["hits"][0]) is expected_highlights_presence
 
     def test_search_multi(self):
-        self.create_index(index_name=self.index_name_1)
+        self.test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
         d1 = {
                 "doc title": "Cool Document 1",
                 "field 1": "some extra info",
@@ -109,21 +97,21 @@ class TestSearch(MarqoTestCase):
                 "field X": "this is a solid doc",
                 "_id": "123456"
         }
-        res = self.client.index(self.index_name_1).add_documents([
+        res = self.client.index(self.test_index_name).add_documents([
             d1, d2
         ], tensor_fields=["doc title", "field X"])
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(self.index_name_1).search,
+            self.warm_request(self.client.index(self.test_index_name).search,
             "this is a solid doc")
 
-        search_res = self.client.index(self.index_name_1).search(
+        search_res = self.client.index(self.test_index_name).search(
             "this is a solid doc")
         assert d2 == self.strip_marqo_fields(search_res['hits'][0], strip_id=False)
         assert search_res['hits'][0]['_highlights']["field X"] == "this is a solid doc"
 
     def test_select_lexical(self):
-        self.create_index(index_name=self.index_name_1)
+        self.test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
         d1 = {
             "doc title": "Very heavy, dense metallic lead.",
             "field 1": "some extra info",
@@ -135,17 +123,17 @@ class TestSearch(MarqoTestCase):
             "field X": "this is a solid doc",
             "_id": "123456"
         }
-        res = self.client.index(self.index_name_1).add_documents([
+        res = self.client.index(self.test_index_name).add_documents([
             d1, d2
         ], tensor_fields=['doc title', 'field X'])
 
         # Ensure that vector search works
         if self.IS_MULTI_INSTANCE:
             time.sleep(5)
-            self.warm_request(self.client.index(self.index_name_1).search,
+            self.warm_request(self.client.index(self.test_index_name).search,
             "Examples of leadership", search_method=enums.SearchMethods.TENSOR)
 
-        search_res = self.client.index(self.index_name_1).search(
+        search_res = self.client.index(self.test_index_name).search(
             "Examples of leadership", search_method=enums.SearchMethods.TENSOR)
         assert d2 == self.strip_marqo_fields(search_res["hits"][0], strip_id=False)
         assert search_res["hits"][0]['_highlights']["doc title"].startswith("The captain bravely lead her followers")
@@ -153,18 +141,18 @@ class TestSearch(MarqoTestCase):
         # try it with lexical search:
         #    can't find the above with synonym
         if self.IS_MULTI_INSTANCE:
-            self.client.index(self.index_name_1).search(
+            self.client.index(self.test_index_name).search(
             "Examples of leadership", search_method=marqo.SearchMethods.LEXICAL)
 
-        assert len(self.client.index(self.index_name_1).search(
+        assert len(self.client.index(self.test_index_name).search(
             "Examples of leadership", search_method=marqo.SearchMethods.LEXICAL)["hits"]) == 0
         #    but can look for a word
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(self.index_name_1).search,
+            self.warm_request(self.client.index(self.test_index_name).search,
             '"captain"')
 
-        assert self.client.index(self.index_name_1).search(
+        assert self.client.index(self.test_index_name).search(
             '"captain"')["hits"][0]["_id"] == "123456"
 
     def test_search_with_device(self):
@@ -172,7 +160,7 @@ class TestSearch(MarqoTestCase):
         mock__post = mock.MagicMock()
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
         def run():
-            temp_client.index(self.index_name_1).search(q="my search term", device="cuda:2")
+            temp_client.index(self.generic_test_index_name).search(q="my search term", device="cuda:2")
             return True
         assert run()
         # did we set the device properly?
@@ -186,7 +174,7 @@ class TestSearch(MarqoTestCase):
         mock__post = mock.MagicMock()
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
         def run():
-            temp_client.index(self.index_name_1).search(q="my search term")
+            temp_client.index(self.generic_test_index_name).search(q="my search term")
             return True
         assert run()
         # did we use the defined default device?
@@ -194,7 +182,7 @@ class TestSearch(MarqoTestCase):
         assert "device" not in kwargs0["path"]
 
     def test_filter_string_and_searchable_attributes(self):
-        self.create_index(index_name=self.index_name_1)
+        self.test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
         docs = [
             {
                 "_id": "0",                     # content in field_a
@@ -223,7 +211,7 @@ class TestSearch(MarqoTestCase):
                 "int_for_filtering": 1,
             }
         ]
-        res = self.client.index(self.index_name_1).add_documents(docs,auto_refresh=True, tensor_fields=["field_a", "field_b"])
+        res = self.client.index(self.test_index_name).add_documents(docs,auto_refresh=True, tensor_fields=["field_a", "field_b"])
 
         test_cases = (
             {   # filter string only (str)
@@ -272,13 +260,13 @@ class TestSearch(MarqoTestCase):
 
         for case in test_cases:
             if self.IS_MULTI_INSTANCE:
-                self.warm_request(self.client.index(self.index_name_1).search,
+                self.warm_request(self.client.index(self.test_index_name).search,
                     case["query"],
                     filter_string=case.get("filter_string", ""),
                     searchable_attributes=case.get("searchable_attributes", None)
                 )
 
-            search_res = self.client.index(self.index_name_1).search(
+            search_res = self.client.index(self.test_index_name).search(
                 case["query"],
                 filter_string=case.get("filter_string", ""),
                 searchable_attributes=case.get("searchable_attributes", None)
@@ -288,7 +276,7 @@ class TestSearch(MarqoTestCase):
 
 
     def test_filter_on_nested_docs(self):
-        self.create_index(index_name=self.index_name_1)
+        self.test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
         docs = [
             {
                 "_id": "filter_in_tag",
@@ -328,7 +316,7 @@ class TestSearch(MarqoTestCase):
                 }
             }
         }
-        self.client.index(self.index_name_1).add_documents(docs, mappings=mappings_object, auto_refresh=True, tensor_fields=["content", "combined_text_field"])
+        self.client.index(self.test_index_name).add_documents(docs, mappings=mappings_object, auto_refresh=True, tensor_fields=["content", "combined_text_field"])
 
         test_cases = (
             { # Test where only "tag" field contains "TO_FILTER"
@@ -376,7 +364,7 @@ class TestSearch(MarqoTestCase):
         
         for case in test_cases[0:3]:
             print(f"THE CASE IS: {case}")
-            search_res = self.client.index(self.index_name_1).search(
+            search_res = self.client.index(self.test_index_name).search(
                 case["query"],
                 filter_string=case.get("filter_string", ""),
             )
@@ -384,7 +372,7 @@ class TestSearch(MarqoTestCase):
             assert set([hit["_id"] for hit in search_res["hits"]]) == set(case["expected"])
 
     def test_attributes_to_retrieve(self):
-        self.create_index(index_name=self.index_name_1)
+        self.test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
         d1 = {
             "doc title": "Very heavy, dense metallic lead.",
             "abc-123": "some text blah",
@@ -399,7 +387,7 @@ class TestSearch(MarqoTestCase):
             "an_int": 2345678,
             "_id": "123456"
         }
-        x = self.client.index(self.index_name_1).add_documents([
+        x = self.client.index(self.test_index_name).add_documents([
             d1, d2
         ], tensor_fields=['doc title', 'field X', 'field1', 'abc-123', 'an_int'], auto_refresh=True)
         atts = ["doc title", "an_int"]
@@ -407,12 +395,12 @@ class TestSearch(MarqoTestCase):
                               enums.SearchMethods.LEXICAL]:
             
             if self.IS_MULTI_INSTANCE:
-                self.warm_request(self.client.index(self.index_name_1).search,
+                self.warm_request(self.client.index(self.test_index_name).search,
                     q="blah blah", attributes_to_retrieve=atts,
                     search_method=search_method
                 )
 
-            search_res = self.client.index(self.index_name_1).search(
+            search_res = self.client.index(self.test_index_name).search(
                 q="blah blah", attributes_to_retrieve=atts,
                 search_method=search_method
             )
@@ -422,7 +410,7 @@ class TestSearch(MarqoTestCase):
 
         
     def test_pagination_single_field(self):
-        self.create_index(index_name=self.index_name_1)
+        self.test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
         
         # 100 random words
         vocab_source = "https://www.mit.edu/~ecprice/wordlist.10000"
@@ -433,15 +421,15 @@ class TestSearch(MarqoTestCase):
                             }
                         for i in range(num_docs)]
         
-        self.client.index(index_name=self.index_name_1).add_documents(
+        self.client.index(index_name=self.test_index_name).add_documents(
             docs, tensor_fields=["Title"], auto_refresh=False, client_batch_size=50
         )
-        self.client.index(index_name=self.index_name_1).refresh()
+        self.client.index(index_name=self.test_index_name).refresh()
 
         for search_method in (enums.SearchMethods.TENSOR, enums.SearchMethods.LEXICAL):
             for doc_count in [100]:
                 # Query full results
-                full_search_results = self.client.index(self.index_name_1).search(
+                full_search_results = self.client.index(self.test_index_name).search(
                                         search_method=search_method,
                                         q='a', 
                                         limit=doc_count)
@@ -454,12 +442,12 @@ class TestSearch(MarqoTestCase):
                         off = page_num * page_size
 
                         if self.IS_MULTI_INSTANCE:
-                            self.warm_request(self.client.index(self.index_name_1).search,
+                            self.warm_request(self.client.index(self.test_index_name).search,
                                         search_method=search_method,
                                         q='a', 
                                         limit=lim, offset=off)
 
-                        page_res = self.client.index(self.index_name_1).search(
+                        page_res = self.client.index(self.test_index_name).search(
                                         search_method=search_method,
                                         q='a', 
                                         limit=lim, offset=off)
@@ -486,8 +474,8 @@ class TestSearch(MarqoTestCase):
                 'treat_urls_and_pointers_as_images': True
             }
         }
-        self.create_index(index_name=self.index_name_1, index_defaults=image_index_config)
-        self.client.index(index_name=self.index_name_1).add_documents(
+        self.test_index_name = self.create_test_index(index_name=self.generic_test_index_name, settings_dict=image_index_config)
+        self.client.index(index_name=self.test_index_name).add_documents(
             documents=docs, tensor_fields=['loc a', 'loc b'], auto_refresh=True
         )
         queries_expected_ordering = [
@@ -500,7 +488,7 @@ class TestSearch(MarqoTestCase):
              ['artefact_hippo', 'realistic_hippo']),
         ]
         for query, expected_ordering in queries_expected_ordering:
-            res = self.client.index(index_name=self.index_name_1).search(
+            res = self.client.index(index_name=self.test_index_name).search(
                 q=query,
                 search_method="TENSOR")
             print(res)
@@ -517,13 +505,13 @@ class TestSearch(MarqoTestCase):
             "dont#tensorise Me": "Dog",
             "tensorise_me": "quarterly earnings report"
         }]
-        self.create_index(index_name=self.index_name_1)
-        self.client.index(index_name=self.index_name_1).add_documents(
+        self.test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
+        self.client.index(index_name=self.test_index_name).add_documents(
             docs, auto_refresh=True, non_tensor_fields=["dont#tensorise Me"]
         )
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(self.index_name_1).search, q='Blah')
-        search_res = self.client.index(index_name=self.index_name_1).search("Dog")
+            self.warm_request(self.client.index(self.test_index_name).search, q='Blah')
+        search_res = self.client.index(index_name=self.test_index_name).search("Dog")
         assert list(search_res['hits'][0]['_highlights'].keys()) == ['tensorise_me']
 
     def test_special_characters(self):
@@ -544,21 +532,21 @@ class TestSearch(MarqoTestCase):
                 filter_field: "Alpaca"
             }
             ]
-            self.create_index(self.index_name_1)
-            self.client.index(index_name=self.index_name_1).add_documents(
+            self.test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
+            self.client.index(index_name=self.test_index_name).add_documents(
                 docs, auto_refresh=True, non_tensor_fields=[field_to_not_search]
             )
 
             search_filter_field = f"filter{filter_char}me"
             if self.IS_MULTI_INSTANCE:
-                self.warm_request(self.client.index(self.index_name_1).search, 
+                self.warm_request(self.client.index(self.test_index_name).search,
                     q="Dog", 
                     searchable_attributes=[field_to_search, field_to_not_search],
                     attributes_to_retrieve=[field_to_not_search],
                     filter_string=f'{search_filter_field}:Walrus'
                 )
             
-            search1_res = self.client.index(index_name=self.index_name_1).search(
+            search1_res = self.client.index(index_name=self.test_index_name).search(
                 "Dog", searchable_attributes=[field_to_search, field_to_not_search],
                 attributes_to_retrieve=[field_to_not_search],
                 filter_string=f'{search_filter_field}:Walrus'

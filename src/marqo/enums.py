@@ -10,3 +10,7 @@ class Devices:
     cpu = "cpu"
     cuda = "cuda"
 
+
+class IndexStatus:
+    CREATED = "READY"
+    DELETED = "DELETED"
