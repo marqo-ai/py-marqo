@@ -30,8 +30,10 @@ class TestAddDocuments(MarqoTestCase):
         ix_2 = self.client.get_indexes()
         assert self._is_index_name_in_get_indexes_response(self.test_index_name_2, ix_2)
 
-        assert len(ix_2['results']) > len(ix_1['results'])
-        assert len(ix_1['results']) > len(ix_0['results'])
+        # since indexes are not deleted after each test for cloud instances, this assert may not be correct.
+        if not self.client.config.is_marqo_cloud:
+            assert len(ix_2['results']) > len(ix_1['results'])
+            assert len(ix_1['results']) > len(ix_0['results'])
 
         for found_index in ix_2['results']:
             assert isinstance(found_index, marqo.index.Index)

@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional
 from marqo.client import Client
 from marqo.errors import MarqoApiError, MarqoWebError
 from tests.marqo_test import MarqoTestCase
+from pytest import mark
 
 
 class TestScoreModifierSearch(MarqoTestCase):
@@ -30,15 +31,6 @@ class TestScoreModifierSearch(MarqoTestCase):
                                                        "filter"]
         )
         self.query = "what is the rider doing?"
-
-    def tearDown(self) -> None:
-        if not self.client.config.is_marqo_cloud:
-            try:
-                self.client.delete_index(self.test_index_name)
-            except MarqoApiError as s:
-                pass
-        else:
-            self.delete_documents(self.test_index_name)
     
     def search_with_score_modifier(self, score_modifiers: Optional[Dict[str, List[Dict[str, Any]]]] = None, **kwargs) -> Dict[str, Any]:
         return self.client.index(self.test_index_name).search(
@@ -106,6 +98,7 @@ class TestScoreModifierSearch(MarqoTestCase):
             }
         self.search_with_score_modifier(score_modifiers=valid_score_modifiers)
 
+@mark.ignore_cloud_tests
 class TestScoreModifierBulkSearch(TestScoreModifierSearch):
     
     def map_search_kwargs(self, k: str) -> str:

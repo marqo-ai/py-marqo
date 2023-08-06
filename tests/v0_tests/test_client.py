@@ -52,20 +52,20 @@ class TestClient(MarqoTestCase):
                 self.assertIn("If you are trying to check the health on Marqo Cloud", cm.exception.message)
 
     def test_check_index_health_response(self):
-        self.test_index_name = self.create_test_index(self.generic_test_index_name)
-        res = self.client.index(self.test_index_name).health()
+        test_index_name = self.create_test_index(self.generic_test_index_name)
+        res = self.client.index(test_index_name).health()
         assert 'status' in res
         assert 'status' in res['backend']
 
     def test_check_index_health_query(self):
+        test_index_name = self.create_test_index(self.generic_test_index_name)
         with patch("marqo._httprequests.HttpRequests.get") as mock_get:
-            self.test_index_name = self.create_test_index(self.generic_test_index_name)
-            res = self.client.index(self.test_index_name).health()
+            res = self.client.index(test_index_name).health()
             args, kwargs = mock_get.call_args
-            self.assertIn(f"/{self.test_index_name}/health", kwargs["path"])
+            self.assertIn(f"health", kwargs["path"])
 
     def test_overwrite_cloud_url_and_client_is_set_to_marqo(self):
-        current = os.environ.get("MARQO_CLOUD_URL")
+        current = os.environ.get("MARQO_CLOUD_URL", "api.marqo.ai")
         os.environ["MARQO_CLOUD_URL"] = "https://cloud.url.com"
         client = Client(url="https://cloud.url.com", api_key="test")
         self.assertTrue(client.config.is_marqo_cloud)

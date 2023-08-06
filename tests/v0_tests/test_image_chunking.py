@@ -31,7 +31,7 @@ class TestImageChunking(MarqoTestCase):
              "image_preprocessing_method" : None
             }
 
-        self.test_index_name = self.create_test_index(self.generic_test_index_name, **settings)
+        test_index_name = self.create_test_index(self.generic_test_index_name, **settings)
 
         temp_file_name = 'https://avatars.githubusercontent.com/u/13092433?v=4'
         
@@ -40,21 +40,21 @@ class TestImageChunking(MarqoTestCase):
             'description': 'the image chunking can (optionally) chunk the image into sub-patches (aking to segmenting text) by using either a learned model or simple box generation and cropping',
             'location': temp_file_name}
 
-        client.index(self.test_index_name).add_documents([document1], tensor_fields=['location', 'description', 'attributes'])
+        client.index(test_index_name).add_documents([document1], tensor_fields=['location', 'description', 'attributes'])
 
         # test the search works
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.test_index_name).search,'a')
+            self.warm_request(client.index(test_index_name).search,'a')
 
-        results = client.index(self.test_index_name).search('a')
+        results = client.index(test_index_name).search('a')
         print(results)
         assert results['hits'][0]['location'] == temp_file_name
 
         # search only the image location
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.test_index_name).search,'a', searchable_attributes=['location'])
+            self.warm_request(client.index(test_index_name).search,'a', searchable_attributes=['location'])
 
-        results = client.index(self.test_index_name).search('a', searchable_attributes=['location'])
+        results = client.index(test_index_name).search('a', searchable_attributes=['location'])
         print(results)
         assert results['hits'][0]['location'] == temp_file_name
         # the highlight should be the location
@@ -77,7 +77,7 @@ class TestImageChunking(MarqoTestCase):
             "image_preprocessing_method":"simple"
             }
         
-        self.test_index_name = self.create_test_index(self.generic_test_index_name, **settings)
+        test_index_name = self.create_test_index(self.generic_test_index_name, **settings)
 
         temp_file_name = 'https://avatars.githubusercontent.com/u/13092433?v=4'
         
@@ -88,21 +88,21 @@ class TestImageChunking(MarqoTestCase):
             'description': 'the image chunking can (optionally) chunk the image into sub-patches (akin to segmenting text) by using either a learned model or simple box generation and cropping',
             'location': temp_file_name}
 
-        client.index(self.test_index_name).add_documents([document1], tensor_fields=['location', 'description', 'attributes'])
+        client.index(test_index_name).add_documents([document1], tensor_fields=['location', 'description', 'attributes'])
 
         # test the search works
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.test_index_name).search,'a')
+            self.warm_request(client.index(test_index_name).search,'a')
 
-        results = client.index(self.test_index_name).search('a')
+        results = client.index(test_index_name).search('a')
         print(results)
         assert results['hits'][0]['location'] == temp_file_name
 
         # search only the image location
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.test_index_name).search,'a', searchable_attributes=['location'])
+            self.warm_request(client.index(test_index_name).search,'a', searchable_attributes=['location'])
 
-        results = client.index(self.test_index_name).search('a', searchable_attributes=['location'])
+        results = client.index(test_index_name).search('a', searchable_attributes=['location'])
         print(results)
         assert results['hits'][0]['location'] == temp_file_name
         # the highlight should be the location
@@ -112,8 +112,8 @@ class TestImageChunking(MarqoTestCase):
 
         # search using the image itself, should return a full sized image as highlight
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index(self.test_index_name).search,temp_file_name)
+            self.warm_request(client.index(test_index_name).search,temp_file_name)
 
-        results = client.index(self.test_index_name).search(temp_file_name)
+        results = client.index(test_index_name).search(temp_file_name)
         print(results)
         assert abs(np.array(results['hits'][0]['_highlights']['location']) - np.array([0, 0, img.size[0], img.size[1]])).sum() < 1e-6

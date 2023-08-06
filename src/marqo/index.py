@@ -1,6 +1,5 @@
 import functools
 import json
-import logging
 import pprint
 import time
 
@@ -55,14 +54,16 @@ class Index:
         if config.is_marqo_cloud:
             try:
                 if self.get_status()["index_status"] != IndexStatus.CREATED:
-                    logging.warning(f"Index {index_name} is not ready. Status: {self.get_status()}, operations may fail.")
+                    mq_logger.warning(f"Index {index_name} is not ready. Status: {self.get_status()}. Common operations, "
+                                    f"such as search and add_documents, may fail until the index is ready. "
+                                    f"Please check `mq.index('{index_name}').get_status()` for the index's status. "
+                                    f"Skipping version check.")
                     skip_version_check = True
             except Exception as e:
                 skip_version_check = True
+                mq_logger.warning(f"Failed to get index status for index {index_name}. Skipping version check. Error: {e}")
         if not skip_version_check:
             self._marqo_minimum_supported_version_check()
-        else:
-            logging.warning("Version check is skipped because index is not ready yet.")
 
     def delete(self) -> Dict[str, Any]:
         """Delete the index.
@@ -435,7 +436,6 @@ class Index:
                                 f"docs (server unbatched), for an average of {(res['processingTimeMs'] / (1000 * num_docs)):.3f}s per doc.")
             if 'errors' in res and res['errors']:
                 mq_logger.info(error_detected_message)
-
             if errors_detected:
                 mq_logger.info(error_detected_message)
         total_add_docs_time = timer() - t0

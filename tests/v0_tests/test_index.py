@@ -37,9 +37,13 @@ class TestIndex(MarqoTestCase):
                      False),
                 ]:
             mock__post = mock.MagicMock()
+            mock_get = mock.MagicMock()
+            mock_get.return_value = {"index_status": "READY"}
+
             @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+            @mock.patch("marqo._httprequests.HttpRequests.get", mock_get)
             def run():
-                self.test_index_name = self.create_test_index(
+                test_index_name = self.client.create_index(
                     index_name=self.generic_test_index_name,
                     settings_dict=settings_dict,
                     **non_settings_dicts_param)
@@ -50,7 +54,7 @@ class TestIndex(MarqoTestCase):
                    is expected_treat_urls_and_pointers_as_images
 
     def test_get_documents(self):
-        self.test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
+        test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
         d1 = {
             "Title": "Treatise on the viability of rocket cars",
             "Blurb": "A rocket car is a car powered by a rocket engine. "
@@ -65,10 +69,10 @@ class TestIndex(MarqoTestCase):
                      "distant galaxies.",
             "_id": "article_985"
         }
-        self.client.index(self.test_index_name).add_documents([
+        self.client.index(test_index_name).add_documents([
             d1, d2
         ], tensor_fields=["Blurb", "Title"])
-        res = self.client.index(self.test_index_name).get_documents(
+        res = self.client.index(test_index_name).get_documents(
             ["article_152", "article_490", "article_985"]
         )
         assert len(res['results']) == 3
@@ -81,7 +85,7 @@ class TestIndex(MarqoTestCase):
                 assert doc_res['_found']
 
     def test_get_documents_expose_facets(self):
-        self.test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
+        test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
         d1 = {
             "Title": "Treatise on the viability of rocket cars",
             "Blurb": "A rocket car is a car powered by a rocket engine. "
@@ -96,10 +100,10 @@ class TestIndex(MarqoTestCase):
                      "distant galaxies.",
             "_id": "article_985"
         }
-        self.client.index(self.test_index_name).add_documents([
+        self.client.index(test_index_name).add_documents([
             d1, d2
         ], tensor_fields=["Blurb", "Title"])
-        res = self.client.index(self.test_index_name).get_documents(
+        res = self.client.index(test_index_name).get_documents(
             ["article_152", "article_490", "article_985"],
             expose_facets=True
         )
@@ -117,7 +121,7 @@ class TestIndex(MarqoTestCase):
                 assert doc_res['_found']
 
     def test_get_document_expose_facets(self):
-        self.test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
+        test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
         d1 = {
             "Title": "Treatise on the viability of rocket cars",
             "Blurb": "A rocket car is a car powered by a rocket engine. "
@@ -125,10 +129,10 @@ class TestIndex(MarqoTestCase):
                      "future of land-based transport.",
             "_id": "article_152"
         }
-        self.client.index(self.test_index_name).add_documents([
+        self.client.index(test_index_name).add_documents([
             d1
         ], tensor_fields=["Blurb", "Title"])
-        doc_res = self.client.index(self.test_index_name).get_document(
+        doc_res = self.client.index(test_index_name).get_document(
             document_id="article_152",
             expose_facets=True
         )
@@ -141,9 +145,12 @@ class TestIndex(MarqoTestCase):
 
     def test_create_cloud_index(self):
         mock__post = mock.MagicMock()
+        mock_get = mock.MagicMock()
+        mock_get.return_value = {"index_status": "READY"}
         test_client = copy.deepcopy(self.client)
         test_client.config.api_key = 'some-super-secret-API-key'
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        @mock.patch("marqo._httprequests.HttpRequests.get", mock_get)
         def run():
             test_client.create_index(index_name=self.generic_test_index_name)
             args, kwargs = mock__post.call_args
@@ -157,9 +164,12 @@ class TestIndex(MarqoTestCase):
     @mark.ignore_cloud_tests
     def test_create_cloud_index_non_default_param(self):
         mock__post = mock.MagicMock()
+        mock_get = mock.MagicMock()
+        mock_get.return_value = {"index_status": "READY"}
         test_client = copy.deepcopy(self.client)
         test_client.config.api_key = 'some-super-secret-API-key'
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        @mock.patch("marqo._httprequests.HttpRequests.get", mock_get)
         def run():
             # this is overridden by a create_index() default parameter
             test_client.create_index(
@@ -172,14 +182,17 @@ class TestIndex(MarqoTestCase):
             return True
         assert run()
 
-    @mark.ignore_cloud_tests
     def test_create_cloud_index_settings_dict_precedence(self):
         """settings_dict overrides all cloud defaults"""
         mock__post = mock.MagicMock()
+        mock_get = mock.MagicMock()
+        mock_get.return_value = {"index_status": "READY"}
         test_client = copy.deepcopy(self.client)
         test_client.config.api_key = 'some-super-secret-API-key'
+        test_client.config.is_marqo_cloud = True
 
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        @mock.patch("marqo._httprequests.HttpRequests.get", mock_get)
         def run():
             # this is overridden by a create_index() default parameter
             test_client.create_index(
@@ -198,8 +211,8 @@ class TestIndex(MarqoTestCase):
         settings = {
             "number_of_replicas": intended_replicas
         }
-        self.test_index_name = self.create_test_index(index_name=self.generic_test_index_name, settings_dict=settings)
-        index_setting = self.client.index(self.test_index_name).get_settings()
+        test_index_name = self.create_test_index(index_name=self.generic_test_index_name, settings_dict=settings)
+        index_setting = self.client.index(test_index_name).get_settings()
         print(index_setting)
         assert intended_replicas == index_setting['number_of_replicas']
 
@@ -299,7 +312,8 @@ class TestIndex(MarqoTestCase):
     def test_version_check_multiple_instantiation(self):
         """Ensure that duplicated instantiation of the client does not result in multiple APIs calls of get_marqo()"""
         with mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo, \
-                mock.patch("marqo.index.Index.get_status") as mock_get_status:
+                mock.patch("marqo.index.Index.get_status") as mock_get_status, \
+                mock.patch("marqo.marqo_cloud_instance_mappings.MarqoCloudInstanceMappings.get_index_base_url") as mock_get_base_url:
             mock_get_status.return_value = {'index_status': 'READY'}
             mock_get_marqo.return_value = {'version': '0.0.0'}
             index = self.client.index(self.generic_test_index_name)
@@ -318,9 +332,11 @@ class TestIndex(MarqoTestCase):
     def test_skipped_version_check_multiple_instantiation(self):
         """Ensure that the url labelled as `_skipped` only call get_marqo() once"""
         with mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo, \
-                mock.patch("marqo.index.Index.get_status") as mock_get_status:
+                mock.patch("marqo.index.Index.get_status") as mock_get_status, \
+                mock.patch("marqo.marqo_cloud_instance_mappings.MarqoCloudInstanceMappings.get_index_base_url") as mock_get_base_url:
             mock_get_status.return_value = {'index_status': 'READY'}
             mock_get_marqo.side_effect = requests.exceptions.RequestException("test")
+            mock_get_base_url.return_value = self.client_settings["url"]
             index = self.client.index(self.generic_test_index_name)
 
             mock_get_marqo.assert_called_once()
@@ -342,8 +358,12 @@ class TestIndex(MarqoTestCase):
                             KeyError("test"), KeyError("test"), requests.exceptions.Timeout("test")]
         for i, side_effect in enumerate(side_effect_list):
             with mock.patch("marqo.index.mq_logger.warning") as mock_warning, \
-                    mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo:
+                    mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo, \
+                    mock.patch("marqo.index.Index.get_status") as mock_get_status, \
+                    mock.patch("marqo.marqo_cloud_instance_mappings.MarqoCloudInstanceMappings.get_index_base_url") as mock_get_base_url:
                 mock_get_marqo.side_effect = side_effect
+                mock_get_status.return_value = {'index_status': 'READY'}
+                mock_get_base_url.return_value = self.client_settings["url"]
                 index = self.client.index(self.generic_test_index_name)
 
                 mock_get_marqo.assert_called_once()
@@ -363,9 +383,12 @@ class TestIndex(MarqoTestCase):
     def test_version_check_instantiation(self):
         with mock.patch("marqo.index.mq_logger.warning") as mock_warning, \
                 mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo, \
-                mock.patch("marqo.index.Index.get_status") as mock_get_status:
+                mock.patch("marqo.index.Index.get_status") as mock_get_status, \
+                mock.patch("marqo.marqo_cloud_instance_mappings.MarqoCloudInstanceMappings.get_index_base_url") as mock_get_base_url:
             mock_get_marqo.return_value = {'version': '0.0.0'}
             mock_get_status.return_value = {'index_status': 'READY'}
+            mock_get_base_url.return_value = self.client_settings['url']
+
             index = self.client.index(self.generic_test_index_name)
 
             mock_get_marqo.assert_called_once()
@@ -380,7 +403,10 @@ class TestIndex(MarqoTestCase):
             self.assertIn("Please upgrade your Marqo instance to avoid potential errors.", warning_message)
 
             # Assert the url is in the cache
-            self.assertIn(self.client_settings['url'], marqo_url_and_version_cache)
+            self.assertIn(
+                self.client.config.instance_mapping.get_index_base_url(self.generic_test_index_name),
+                marqo_url_and_version_cache
+            )
             assert marqo_url_and_version_cache[self.client_settings['url']] == '0.0.0'
 
     def test_skip_version_check_for_previously_labelled_url(self):

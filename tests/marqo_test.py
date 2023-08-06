@@ -105,6 +105,16 @@ def with_documents(index_to_documents_fn: Callable[[], Dict[str, List[Dict[str, 
     return decorator
 
 
+def create_settings_hash(settings_dict, kwargs):
+    combined_dict = {**settings_dict, **kwargs}
+    combined_str = ''.join(f"{key}{value}" for key, value in combined_dict.items())
+    crc32_hash = zlib.crc32(combined_str.encode())
+    short_hash = hex(crc32_hash & 0xffffffff)[2:][
+                 :10]  # Take the first 10 characters of the hexadecimal representation
+    print(f"Created index with settings hash: {short_hash} for settings: {combined_dict}")
+    return short_hash
+
+
 class MarqoTestCase(TestCase):
 
     @classmethod
@@ -115,10 +125,7 @@ class MarqoTestCase(TestCase):
         api_key = os.environ.get("MARQO_API_KEY", None)
         if (api_key):
             local_marqo_settings["api_key"] = api_key
-        cls.index_suffix = os.environ.get("MARQO_INDEX_SUFFIX", None)
-        if not cls.index_suffix:
-            os.environ["MARQO_INDEX_SUFFIX"] = str(uuid.uuid4())[:8]
-            cls.index_suffix = os.environ["MARQO_INDEX_SUFFIX"]
+        cls.index_suffix = os.environ.get("MARQO_INDEX_SUFFIX", "")
         cls.client_settings = local_marqo_settings
         cls.authorized_url = cls.client_settings["url"]
         cls.generic_test_index_name = 'test-index'
@@ -133,32 +140,35 @@ class MarqoTestCase(TestCase):
         """
         client = marqo.Client(**cls.client_settings)
         for index in client.get_indexes()['results']:
-            if not client.config.is_marqo_cloud:
-                try:
-                    index.delete()
-                except marqo.errors.MarqoApiError as e:
-                    logging.debug(f'received error `{e}` from index deletion request.')
+            if index.index_name.startswith(cls.generic_test_index_name):
+                if not client.config.is_marqo_cloud:
+                    try:
+                        index.delete()
+                    except marqo.errors.MarqoApiError as e:
+                        logging.debug(f'received error `{e}` from index deletion request.')
 
     def setUp(self) -> None:
         self.client = Client(**self.client_settings)
-        for index in self.client.get_indexes()['results']:
-            if not self.client.config.is_marqo_cloud:
-                try:
-                    index.delete()
-                except marqo.errors.MarqoApiError as e:
-                    logging.debug(f'received error `{e}` from index deletion request.')
-            else:
-                self.cleanup_documents_from_all_indices()
+        if self.client.config.is_marqo_cloud:
+            self.cleanup_documents_from_all_indices()
+        else:
+            for index in self.client.get_indexes()['results']:
+                if index.index_name.startswith(self.generic_test_index_name):
+                    try:
+                        index.delete()
+                    except marqo.errors.MarqoApiError as e:
+                        logging.debug(f'received error `{e}` from index deletion request.')
 
     def tearDown(self) -> None:
-        for index in self.client.get_indexes()['results']:
-            if not self.client.config.is_marqo_cloud:
-                try:
-                    index.delete()
-                except marqo.errors.MarqoApiError as e:
-                    logging.debug(f'received error `{e}` from index deletion request.')
-            else:
-                self.cleanup_documents_from_all_indices()
+        if self.client.config.is_marqo_cloud:
+            self.cleanup_documents_from_all_indices()
+        else:
+            for index in self.client.get_indexes()['results']:
+                if index.index_name.startswith(self.generic_test_index_name):
+                    try:
+                        index.delete()
+                    except marqo.errors.MarqoApiError as e:
+                        logging.debug(f'received error `{e}` from index deletion request.')
 
     def warm_request(self, func, *args, **kwargs):
         '''
@@ -170,33 +180,28 @@ class MarqoTestCase(TestCase):
             func(*args, **kwargs)
 
     def create_cloud_index(self, index_name, settings_dict=None, **kwargs):
-        def create_settings_hash():
-            combined_dict = {**settings_dict, **kwargs}
-            combined_str = ''.join(f"{key}{value}" for key, value in combined_dict.items())
-            crc32_hash = zlib.crc32(combined_str.encode())
-            short_hash = hex(crc32_hash & 0xffffffff)[2:][
-                         :10]  # Take the first 10 characters of the hexadecimal representation
-            print(f"Created index with settings hash: {short_hash} for settings: {combined_dict}")
-            return short_hash
-
         client = marqo.Client(**self.client_settings)
         settings_dict = settings_dict if settings_dict else {}
         index_name = f"{index_name}-{self.index_suffix}"
         if settings_dict or kwargs:
-            index_name = f"{index_name}-{create_settings_hash()}"
+            index_name = f"{index_name}-{create_settings_hash(settings_dict, kwargs)}"
         settings_dict.update({
             "inference_type": "marqo.CPU", "storage_class": "marqo.basic", "model": "hf/all_datasets_v4_MiniLM-L6"
         })
-        while True:
-            try:
-                if client.http.get(f"/indexes/{index_name}/status")["index_status"] == "READY":
-                    break
-            except Exception as e:
-                pass
+        try:
+            status = client.http.get(f"/indexes/{index_name}/status")["index_status"]
+            if status == "CREATING":
+                while status == "CREATING":
+                    time.sleep(10)
+                    status = client.http.get(f"/indexes/{index_name}/status")["index_status"]
+            if status != "READY":
+                self.client.create_index(index_name, settings_dict=settings_dict, **kwargs)
+        except Exception as e:
             self.client.create_index(index_name, settings_dict=settings_dict, **kwargs)
         return index_name
 
-    def create_test_index(self, index_name, settings_dict=None, **kwargs):
+    def create_test_index(self, index_name: str, settings_dict: dict = None, **kwargs):
+        """Create a test index with the given name and settings and triggers specific logic if index is cloud index"""
         client = marqo.Client(**self.client_settings)
         if client.config.is_marqo_cloud:
             index_name = self.create_cloud_index(index_name, settings_dict, **kwargs)
@@ -208,9 +213,10 @@ class MarqoTestCase(TestCase):
         client = marqo.Client(**self.client_settings)
         indexes = client.get_indexes()
         for index in indexes['results']:
-            if self.index_suffix in index.index_name.split('-'):
+            if index.index_name.startswith(self.generic_test_index_name) and \
+                    self.index_suffix in index.index_name.split('-'):
                 if client.http.get(f"/indexes/{index.index_name}/status")["index_status"] == "READY":
-                    docs_to_delete = [i['_id'] for i in index.search("")['hits']]
+                    docs_to_delete = [i['_id'] for i in index.search("", limit=100)['hits']]
                     while docs_to_delete:
                         index.delete_documents(docs_to_delete, auto_refresh=True)
-                        docs_to_delete = [i['_id'] for i in index.search("")['hits']]
+                        docs_to_delete = [i['_id'] for i in index.search("", limit=100)['hits']]
