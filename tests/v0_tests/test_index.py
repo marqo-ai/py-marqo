@@ -161,7 +161,6 @@ class TestIndex(MarqoTestCase):
             return True
         assert run()
 
-    @mark.ignore_cloud_tests
     def test_create_cloud_index_non_default_param(self):
         mock__post = mock.MagicMock()
         mock_get = mock.MagicMock()
@@ -230,7 +229,7 @@ class TestIndex(MarqoTestCase):
 
         mock_post.assert_called_with('indexes/test-index', body={
             'index_defaults': {
-                'treat_urls_and_pointers_as_images': False, 'model': None, 'normalize_embeddings': True,
+                'treat_urls_and_pointers_as_images': False, 'model': 'hf/all_datasets_v4_MiniLM-L6', 'normalize_embeddings': True,
                 'text_preprocessing': {'split_length': 2, 'split_overlap': 0, 'split_method': 'sentence'},
                 'image_preprocessing': {'patch_method': None}
             },
@@ -253,7 +252,7 @@ class TestIndex(MarqoTestCase):
 
         mock_post.assert_called_with('indexes/test-index', body={
             'index_defaults': {
-                'treat_urls_and_pointers_as_images': False, 'model': None, 'normalize_embeddings': True,
+                'treat_urls_and_pointers_as_images': False, 'model': 'hf/all_datasets_v4_MiniLM-L6', 'normalize_embeddings': True,
                 'text_preprocessing': {'split_length': 2, 'split_overlap': 0, 'split_method': 'sentence'},
                 'image_preprocessing': {'patch_method': None}
             },
@@ -276,7 +275,7 @@ class TestIndex(MarqoTestCase):
 
         mock_post.assert_called_with('indexes/test-index', body={
             'index_defaults': {
-                'treat_urls_and_pointers_as_images': False, 'model': None, 'normalize_embeddings': True,
+                'treat_urls_and_pointers_as_images': False, 'model': 'hf/all_datasets_v4_MiniLM-L6', 'normalize_embeddings': True,
                 'text_preprocessing': {'split_length': 2, 'split_overlap': 0, 'split_method': 'sentence'},
                 'image_preprocessing': {'patch_method': None}
             },
@@ -300,7 +299,7 @@ class TestIndex(MarqoTestCase):
 
         mock_post.assert_called_with('indexes/test-index', body={
             'index_defaults': {
-                'treat_urls_and_pointers_as_images': False, 'model': None, 'normalize_embeddings': True,
+                'treat_urls_and_pointers_as_images': False, 'model': 'hf/all_datasets_v4_MiniLM-L6', 'normalize_embeddings': True,
                 'text_preprocessing': {'split_length': 2, 'split_overlap': 0, 'split_method': 'sentence'},
                 'image_preprocessing': {'patch_method': None}
             },

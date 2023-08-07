@@ -206,7 +206,7 @@ class MarqoTestCase(TestCase):
         try:
             status = client.http.get(f"indexes/{index_name}/status")["index_status"]
             if status == "CREATING":
-                cloud_wait_for_index_status(client, index_name, "READY")
+                cloud_wait_for_index_status(client.http, index_name, "READY")
             if status != "READY":
                 self.client.create_index(index_name, settings_dict=settings_dict,
                                          inference_node_type="marqo.CPU", storage_node_type="marqo.basic", **kwargs)
