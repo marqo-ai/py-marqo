@@ -9,7 +9,7 @@ setup(
         # client:
         "requests",
         "urllib3",
-        "pydantic"
+        "pydantic < 2.0.0"
     ],
     tests_require=[
         "pytest",
