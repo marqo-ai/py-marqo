@@ -59,7 +59,7 @@ class Index:
                                     f"Please check `mq.index('{index_name}').get_status()` for the index's status. "
                                     f"Skipping version check.")
                     skip_version_check = True
-            except Exception as e:
+            except (MarqoWebError, TypeError) as e:
                 skip_version_check = True
                 mq_logger.warning(f"Failed to get index status for index {index_name}. Skipping version check. Error: {e}")
         if not skip_version_check:

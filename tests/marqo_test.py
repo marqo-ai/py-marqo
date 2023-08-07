@@ -121,6 +121,10 @@ def with_documents(index_to_documents_fn: Callable[[], Dict[str, List[Dict[str, 
 
 
 def create_settings_hash(settings_dict, kwargs):
+    """
+    Creates a hash from the settings dictionary and kwargs. Used to ensure that each index is created unique.
+    Size is restricted on 10 characters to prevent having to big index name which could cause issues.
+    """
     dict_to_hash = {**settings_dict, **kwargs} if settings_dict else kwargs
     combined_str = ''.join(f"{key}{value}" for key, value in dict_to_hash.items())
     crc32_hash = zlib.crc32(combined_str.encode())
@@ -143,7 +147,7 @@ class MarqoTestCase(TestCase):
         cls.index_suffix = os.environ.get("MARQO_INDEX_SUFFIX", "")
         cls.client_settings = local_marqo_settings
         cls.authorized_url = cls.client_settings["url"]
-        cls.generic_test_index_name = 'test-index'
+        cls.generic_test_index_name = 'test-index'  # used as a prefix when index is created with settings
         cls.generic_test_index_name_2 = cls.generic_test_index_name + '-2'
 
         # class property to indicate if test is being run on multi
@@ -195,6 +199,13 @@ class MarqoTestCase(TestCase):
             func(*args, **kwargs)
 
     def create_cloud_index(self, index_name, settings_dict=None, **kwargs):
+        """
+        Creates a cloud index with the given name and settings. If settings_dict or any kwargs are provided,
+        they will be used to create a unique index name by hashing the settings_dict and kwargs.
+        If settings_dict is not provided, the index name will be the given index_name + the index_suffix.
+
+        Performs check for status of index and waits for index to be ready before returning.
+        """
         client = marqo.Client(**self.client_settings)
         index_name = f"{index_name}-{self.index_suffix}"
         if settings_dict or kwargs:

@@ -5,7 +5,8 @@ from marqo.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
 from tests.marqo_test import MarqoTestCase
 from marqo.errors import MarqoCloudIndexNotFoundError,MarqoCloudIndexNotReadyError
 
-class TestMarqoUrlResolver(MarqoTestCase):
+
+class TestMarqoCloudInstanceMappings(MarqoTestCase):
     @patch("requests.get")
     def test_refresh_urls_if_needed(self, mock_get):
         mock_get.return_value.json.return_value = {"results": [
@@ -17,7 +18,7 @@ class TestMarqoUrlResolver(MarqoTestCase):
         )
         initial_timestamp = mapping.latest_index_mappings_refresh_timestamp
 
-        # Wait for more than the expiration time
+        # Wait some time to see that timestamp is updated and it is higher than initial one after refresh
         time.sleep(0.1)
 
         mapping._refresh_urls_if_needed("index1")
@@ -44,6 +45,7 @@ class TestMarqoUrlResolver(MarqoTestCase):
         mapping._refresh_urls_if_needed("index1")
         initial_timestamp = mapping.latest_index_mappings_refresh_timestamp
         time.sleep(0.1)
+        # Since index is loaded in cache, it should not be refreshed and timestamp should not be updated
         mapping._refresh_urls_if_needed("index2")
 
         # Check that the timestamp has not been updated

@@ -1,3 +1,8 @@
+"""
+Creates a unique suffix for the index name to avoid conflicts
+with another testing executed in the same account.
+"""
+
 import os
 import uuid
 
