@@ -3,8 +3,8 @@ import time
 from marqo.marqo_logging import mq_logger
 
 
-def cloud_wait_for_index_status(req , index_name: str, status):
-    """ Wait for index to be created on Marqo Cloud by checking
+def cloud_wait_for_index_status(req, index_name: str, status):
+    """ Wait for index to be achieve some status on Marqo Cloud by checking
     it's status every 10 seconds until it becomes expected value"""
     current_status = req.get(f"indexes/{index_name}/status")
     while current_status['index_status'] != status:

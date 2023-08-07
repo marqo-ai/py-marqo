@@ -125,13 +125,15 @@ class Index:
             cl_settings = defaults.get_cloud_default_index_settings()
             cl_ix_defaults = cl_settings['index_defaults']
             cl_ix_defaults['treat_urls_and_pointers_as_images'] = treat_urls_and_pointers_as_images
-            cl_ix_defaults['model'] = model
+            if model is not None:
+                cl_ix_defaults['model'] = model
             cl_ix_defaults['normalize_embeddings'] = normalize_embeddings
             cl_text_preprocessing = cl_ix_defaults['text_preprocessing']
             cl_text_preprocessing['split_overlap'] = sentence_overlap
             cl_text_preprocessing['split_length'] = sentences_per_chunk
             cl_img_preprocessing = cl_ix_defaults['image_preprocessing']
-            cl_img_preprocessing['patch_method'] = image_preprocessing_method
+            if image_preprocessing_method is not None:
+                cl_img_preprocessing['patch_method'] = image_preprocessing_method
             if not config.is_marqo_cloud:
                 return req.post(f"indexes/{index_name}", body=cl_settings)
             cl_settings['inference_type'] = inference_node_type

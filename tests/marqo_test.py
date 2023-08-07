@@ -1,8 +1,22 @@
-"""Please have a running Marqo instance to test against!
-
-
-Pass its settings to local_marqo_settings.
 """
+Before running the tests locally, ensure that you have a running Marqo instance to test against!
+Pass its settings to the local_marqo_settings.
+
+To run Cloud V2 tests, execute `tox -e cloud_tests`.
+When running Cloud V2 tests, make sure to set the following environment variables:
+- MARQO_CLOUD_URL: The URL that the config class uses to recognize the cloud environment.
+- MARQO_API_KEY: The API key used for authentication.
+- MARQO_URL: The URL of the Marqo cloud instance.
+
+When `cluster.is_marqo_cloud` is set to True, the tests will have different setUp and tearDown procedures:
+- Indices will not be deleted after each test.
+- However, documents will be deleted after each test.
+
+The function `create_cloud_index` will be triggered whenever an index needs to be created for the cloud tests.
+It checks the status of the index and creates a new index if needed. It also adds a suffix for unique test execution
+and a hash generated from index settings to ensure each index is unique.
+"""
+
 import logging
 import time
 import uuid
@@ -19,8 +33,9 @@ from marqo.utils import construct_authorized_url
 from marqo._httprequests import HTTP_OPERATIONS
 from marqo.version import __marqo_version__ as py_marqo_support_version
 from marqo.client import Client
-from marqo.errors import InternalError, MarqoApiError
+from marqo.errors import InternalError, MarqoApiError, MarqoWebError
 import zlib
+from marqo.cloud_helpers import cloud_wait_for_index_status
 
 
 class MockHTTPTraffic(BaseModel):
@@ -106,12 +121,12 @@ def with_documents(index_to_documents_fn: Callable[[], Dict[str, List[Dict[str, 
 
 
 def create_settings_hash(settings_dict, kwargs):
-    combined_dict = {**settings_dict, **kwargs}
-    combined_str = ''.join(f"{key}{value}" for key, value in combined_dict.items())
+    dict_to_hash = {**settings_dict, **kwargs} if settings_dict else kwargs
+    combined_str = ''.join(f"{key}{value}" for key, value in dict_to_hash.items())
     crc32_hash = zlib.crc32(combined_str.encode())
     short_hash = hex(crc32_hash & 0xffffffff)[2:][
                  :10]  # Take the first 10 characters of the hexadecimal representation
-    print(f"Created index with settings hash: {short_hash} for settings: {combined_dict}")
+    print(f"Created index with settings hash: {short_hash} for settings: {dict_to_hash}")
     return short_hash
 
 
@@ -181,23 +196,23 @@ class MarqoTestCase(TestCase):
 
     def create_cloud_index(self, index_name, settings_dict=None, **kwargs):
         client = marqo.Client(**self.client_settings)
-        settings_dict = settings_dict if settings_dict else {}
         index_name = f"{index_name}-{self.index_suffix}"
         if settings_dict or kwargs:
             index_name = f"{index_name}-{create_settings_hash(settings_dict, kwargs)}"
-        settings_dict.update({
-            "inference_type": "marqo.CPU", "storage_class": "marqo.basic", "model": "hf/all_datasets_v4_MiniLM-L6"
-        })
+        if settings_dict:
+            settings_dict.update({
+                "inference_type": "marqo.CPU", "storage_class": "marqo.basic"
+            })
         try:
-            status = client.http.get(f"/indexes/{index_name}/status")["index_status"]
+            status = client.http.get(f"indexes/{index_name}/status")["index_status"]
             if status == "CREATING":
-                while status == "CREATING":
-                    time.sleep(10)
-                    status = client.http.get(f"/indexes/{index_name}/status")["index_status"]
+                cloud_wait_for_index_status(client, index_name, "READY")
             if status != "READY":
-                self.client.create_index(index_name, settings_dict=settings_dict, **kwargs)
-        except Exception as e:
-            self.client.create_index(index_name, settings_dict=settings_dict, **kwargs)
+                self.client.create_index(index_name, settings_dict=settings_dict,
+                                         inference_node_type="marqo.CPU", storage_node_type="marqo.basic", **kwargs)
+        except (MarqoWebError, TypeError) as e:
+            self.client.create_index(index_name, settings_dict=settings_dict,
+                                     inference_node_type="marqo.CPU", storage_node_type="marqo.basic", **kwargs)
         return index_name
 
     def create_test_index(self, index_name: str, settings_dict: dict = None, **kwargs):
