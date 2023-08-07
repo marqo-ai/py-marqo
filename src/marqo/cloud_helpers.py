@@ -10,6 +10,6 @@ def cloud_wait_for_index_status(req , index_name: str, status):
     while current_status['index_status'] != status:
         time.sleep(10)
         current_status = req.get(f"indexes/{index_name}/status")
-        mq_logger.info(f"Index creation status: {current_status['index_status']}")
-    mq_logger.info("Index created successfully")
+        mq_logger.info(f"Current index status: {current_status['index_status']}")
+    mq_logger.info(f"Index achieved status {status} successfully")
     return True
