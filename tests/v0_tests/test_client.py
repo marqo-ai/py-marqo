@@ -10,6 +10,7 @@ from marqo.client import Client
 from tests.marqo_test import MarqoTestCase
 from marqo.errors import MarqoApiError, BadRequestError
 from marqo.errors import BackendTimeoutError, BackendCommunicationError
+import warnings
 
 
 class TestClient(MarqoTestCase):
@@ -24,16 +25,6 @@ class TestClient(MarqoTestCase):
         res = self.client.health()
         assert 'status' in res
         assert 'status' in res['backend']
-
-    @mark.ignore_cloud_tests
-    def test_health_deprecation_warning(self):
-        with mock.patch("marqo.client.mq_logger.warning") as mock_warning:
-            res = self.client.health()
-
-            # Check the warning was logged
-            mock_warning.assert_called_once()
-            warning_message = mock_warning.call_args[0][0]
-            self.assertIn("The `client.health()` API has been deprecated and will be removed in", warning_message)
 
     @mark.ignore_cloud_tests
     def test_error_handling_in_health_check(self):
@@ -70,3 +61,17 @@ class TestClient(MarqoTestCase):
         client = Client(url="https://cloud.url.com", api_key="test")
         self.assertTrue(client.config.is_marqo_cloud)
         os.environ["MARQO_CLOUD_URL"] = current
+
+    def test_raises_deprecation_warning_and_error_for_cloud(self):
+        mq = Client(**self.client_settings)
+        for operation in [mq.health, mq.get_marqo, mq.get_cpu_info, mq.get_loaded_models]:
+            if not mq.config.is_marqo_cloud:
+                with warnings.catch_warnings(record=True) as w:
+                    warnings.simplefilter("always")
+                    operation()
+                    assert len(w) == 1
+                    assert issubclass(w[-1].category, DeprecationWarning)
+                    assert "mq.index(index_name)." in str(w[-1].message)
+            else:
+                with self.assertRaises(BadRequestError):
+                    operation()

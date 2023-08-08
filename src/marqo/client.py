@@ -200,7 +200,7 @@ class Client:
 
     @deprecated(
         "This method is deprecated and will be removed in Marqo 2.0.0. "
-        "Please use `client.index(index_name).get_marqo()` instead. "
+        "Please use `mq.index(index_name).get_marqo()` instead. "
         "Check `https://docs.marqo.ai/1.1.0/API-Reference/indexes/` for more details."
     )
     def get_marqo(self):
@@ -210,7 +210,7 @@ class Client:
 
     @deprecated(
         "This method is deprecated and will be removed in Marqo 2.0.0. "
-        "Please use `client.index(index_name).health()` instead. "
+        "Please use `mq.index(index_name).health()` instead. "
         "Check `https://docs.marqo.ai/1.1.0/API-Reference/indexes/` for more details."
     )
     def health(self):
