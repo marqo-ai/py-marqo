@@ -13,7 +13,7 @@ class TestDemo(MarqoTestCase):
     def setUp(self) -> None:
         self.client = Client(**self.client_settings)
         if not self.client.config.is_marqo_cloud:
-            for ix_name in ["cool-index-1", "my-first-index", "my-weighted-query-index", "my-first-multimodal-index"]:
+            for ix_name in ["cool-index-1", "my-first-index", "my-weighted-query-index", "my-multimodal-index"]:
                 try:
                     self.client.delete_index(ix_name)
                 except MarqoApiError as s:
@@ -21,7 +21,7 @@ class TestDemo(MarqoTestCase):
 
     def tearDown(self) -> None:
         if not self.client.config.is_marqo_cloud:
-            for ix_name in ["cool-index-1", "my-first-index", "my-weighted-query-index", "my-first-multimodal-index"]:
+            for ix_name in ["cool-index-1", "my-first-index", "my-weighted-query-index", "my-multimodal-index"]:
                 try:
                     self.client.delete_index(ix_name)
                 except MarqoApiError as s:
@@ -209,7 +209,7 @@ class TestDemo(MarqoTestCase):
         import marqo
         mq = marqo.Client(**self.client_settings)
         settings = {"treat_urls_and_pointers_as_images": True, "model": "ViT-B/32"}
-        test_index_name = self.create_test_index("my-first-multimodal-index", **settings)
+        test_index_name = self.create_test_index("my-multimodal-index", **settings)
         mq.index(test_index_name).add_documents(
             [
                 {

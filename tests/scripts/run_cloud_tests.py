@@ -1,6 +1,6 @@
 import sys
 from create_test_suffix import set_index_suffix
-from delete_all_cloud_indexes import delete_all_test_indices
+from delete_all_cloud_test_indexes import delete_all_test_indices
 
 if __name__ == '__main__':
     # Generate the random suffix

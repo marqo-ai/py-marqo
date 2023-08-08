@@ -51,10 +51,10 @@ class TestAddDocuments(MarqoTestCase):
 
     # Delete index tests:
 
-    # def test_delete_index(self):
-    #     test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
-    #     self.client.delete_index(test_index_name)
-    #     test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
+    def test_delete_index(self):
+        test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
+        self.client.delete_index(test_index_name)
+        test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
 
     # Get index tests:
 

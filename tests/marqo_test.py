@@ -14,7 +14,9 @@ When `cluster.is_marqo_cloud` is set to True, the tests will have different setU
 
 The function `create_cloud_index` will be triggered whenever an index needs to be created for the cloud tests.
 It checks the status of the index and creates a new index if needed. It also adds a suffix for unique test execution
-and a hash generated from index settings to ensure each index is unique.
+and a hash generated from index settings ensure that only 1 index is created for a given
+index settings_dict or index kwargs.
+It also ensures that any tests that require an index with specific settings get routed to the appropriate index.
 """
 
 import logging
@@ -125,7 +127,7 @@ def create_settings_hash(settings_dict, kwargs):
     Creates a hash from the settings dictionary and kwargs. Used to ensure that each index is created unique.
     Size is restricted on 10 characters to prevent having to big index name which could cause issues.
     """
-    dict_to_hash = {**settings_dict, **kwargs} if settings_dict else kwargs
+    dict_to_hash = settings_dict if settings_dict else kwargs
     combined_str = ''.join(f"{key}{value}" for key, value in dict_to_hash.items())
     crc32_hash = zlib.crc32(combined_str.encode())
     short_hash = hex(crc32_hash & 0xffffffff)[2:][
@@ -144,7 +146,7 @@ class MarqoTestCase(TestCase):
         api_key = os.environ.get("MARQO_API_KEY", None)
         if (api_key):
             local_marqo_settings["api_key"] = api_key
-        cls.index_suffix = os.environ.get("MARQO_INDEX_SUFFIX", "")
+        cls.index_suffix = os.environ.get("MQ_TEST_RUN_IDENTIFIER", "")
         cls.client_settings = local_marqo_settings
         cls.authorized_url = cls.client_settings["url"]
         cls.generic_test_index_name = 'test-index'  # used as a prefix when index is created with settings
@@ -202,9 +204,16 @@ class MarqoTestCase(TestCase):
         """
         Creates a cloud index with the given name and settings. If settings_dict or any kwargs are provided,
         they will be used to create a unique index name by hashing the settings_dict and kwargs.
-        If settings_dict is not provided, the index name will be the given index_name + the index_suffix.
+        If settings_dict and index settings kwargs are not provided,
+        the index name will be the given index_name + the index_suffix.
 
         Performs check for status of index and waits for index to be ready before returning.
+
+        Args:
+            index_name (str): Name of index to create
+            settings_dict (dict): Dictionary of settings to use when creating index,
+            same as settings_dict in create_index
+            **kwargs: Additional keyword arguments to pass to create_index e.g. model, treat_urls_and_pointers_as_image.
         """
         client = marqo.Client(**self.client_settings)
         index_name = f"{index_name}-{self.index_suffix}"

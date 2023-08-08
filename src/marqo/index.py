@@ -59,7 +59,7 @@ class Index:
                                     f"Please check `mq.index('{index_name}').get_status()` for the index's status. "
                                     f"Skipping version check.")
                     skip_version_check = True
-            except (MarqoWebError, TypeError) as e:
+            except (MarqoWebError, TypeError, KeyError) as e:
                 skip_version_check = True
                 mq_logger.warning(f"Failed to get index status for index {index_name}. Skipping version check. Error: {e}")
         if not skip_version_check:
@@ -577,7 +577,7 @@ class Index:
 
     def health(self) -> dict:
         """Check the health of an index"""
-        return self.http.get(path="health", index_name=self.index_name)
+        return self.http.get(path=f"indexes/{self.index_name}/health", index_name=self.index_name)
 
     def get_loaded_models(self):
         return self.http.get(path="models", index_name=self.index_name)

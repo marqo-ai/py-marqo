@@ -216,9 +216,6 @@ class Client:
     def health(self):
         if self.config.is_marqo_cloud:
             self.raise_error_for_cloud("health")
-        mq_logger.warning('The `client.health()` API has been deprecated and will be removed in '
-                          'Marqo 2.0.0. Use `client.index(index_name).health()` instead. '
-                          'Check `https://docs.marqo.ai/1.1.0/API-Reference/indexes/` for more details.')
         try:
             return self.http.get(path="health")
         except (MarqoWebError, RequestException, TypeError, KeyError) as e:

@@ -4,7 +4,8 @@ import pprint
 from pytest import mark
 
 from marqo.client import Client
-from marqo.errors import MarqoApiError, MarqoError, MarqoWebError, BackendCommunicationError, BackendTimeoutError
+from marqo.errors import MarqoApiError, MarqoError, MarqoWebError, BackendCommunicationError, BackendTimeoutError, \
+    UnsupportedOperationError
 import unittest
 
 from marqo.index import marqo_url_and_version_cache
@@ -415,4 +416,10 @@ class TestIndex(MarqoTestCase):
             index = self.client.index(self.generic_test_index_name)
 
             mock_get_marqo.assert_not_called()
+
+    @mark.ignore_cloud_tests
+    def test_get_status_raises_error_on_local_index(self):
+        index = self.client.index(self.generic_test_index_name)
+        with self.assertRaises(UnsupportedOperationError):
+            index.get_status()
 
