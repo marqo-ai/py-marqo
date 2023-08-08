@@ -15,18 +15,18 @@ import warnings
 
 class TestClient(MarqoTestCase):
 
-    @mark.ignore_cloud_tests
+    @mark.ignore_during_cloud_tests
     def test_get_marqo(self):
         res = self.client.get_marqo()
         assert 'Welcome to Marqo' == res['message']
 
-    @mark.ignore_cloud_tests
+    @mark.ignore_during_cloud_tests
     def test_health(self):
         res = self.client.health()
         assert 'status' in res
         assert 'status' in res['backend']
 
-    @mark.ignore_cloud_tests
+    @mark.ignore_during_cloud_tests
     def test_error_handling_in_health_check(self):
         client = Client(**self.client_settings)
         side_effect_list = [requests.exceptions.JSONDecodeError("test", "test", 1), BackendCommunicationError("test"),

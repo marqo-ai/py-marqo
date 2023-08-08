@@ -58,7 +58,7 @@ class TestTelemetry(MarqoTestCase):
             self.assertIn("telemetry", res)
             self.assertIn("timesMs", res["telemetry"])
 
-    @mark.ignore_cloud_tests
+    @mark.ignore_during_cloud_tests
     def test_telemetry_bulk_search(self):
         test_index_name = self.create_test_index(self.generic_test_index_name)
         self.client.index(test_index_name).add_documents([{"Title": "A dummy document",}], tensor_fields=["Title"])

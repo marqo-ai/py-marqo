@@ -417,7 +417,7 @@ class TestIndex(MarqoTestCase):
 
             mock_get_marqo.assert_not_called()
 
-    @mark.ignore_cloud_tests
+    @mark.ignore_during_cloud_tests
     def test_get_status_raises_error_on_local_index(self):
         index = self.client.index(self.generic_test_index_name)
         with self.assertRaises(UnsupportedOperationError):

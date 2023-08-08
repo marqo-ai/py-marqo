@@ -50,6 +50,7 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
 
         # Check that the timestamp has not been updated
         assert mapping.latest_index_mappings_refresh_timestamp == initial_timestamp
+        assert mock_get.called_once()
 
         # Check that the URLs mapping has been initially populated
         assert mapping._urls_mapping["READY"] == {

@@ -7,7 +7,7 @@ if __name__ == '__main__':
     set_index_suffix()
 
     import pytest
-    pytest_args = ['tests/', '-m', 'not ignore_cloud_tests'] + sys.argv[1:]
+    pytest_args = ['tests/', '-m', 'not ignore_during_cloud_tests'] + sys.argv[1:]
     pytest.main(pytest_args)
 
     # Run the third command that uses the suffix

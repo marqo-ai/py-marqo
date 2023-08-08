@@ -3,4 +3,4 @@ requires = ["setuptools>=42"]
 build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
-markers = "ignore_cloud_tests: Mark tests to be ignored when running with env set to cloud_tests"
+markers = "ignore_during_cloud_tests: Mark tests to be ignored when running with env set to cloud_tests"

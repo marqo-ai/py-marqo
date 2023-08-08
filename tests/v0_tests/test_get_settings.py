@@ -26,7 +26,7 @@ class TestGetSettings(MarqoTestCase):
         self.assertIn("number_of_replicas", index_settings)
         self.assertTrue(fields.issubset(set(index_settings['index_defaults'])))
 
-    @mark.ignore_cloud_tests
+    @mark.ignore_during_cloud_tests
     def test_custom_settings(self):
         """adding custom settings to the index should be reflected in the returned output
         """

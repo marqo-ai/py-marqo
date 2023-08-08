@@ -123,7 +123,7 @@ class TestCustomVectorSearch(MarqoTestCase):
             self.query = {"What are the best pets": 1}
 
 
-@mark.ignore_cloud_tests
+@mark.ignore_during_cloud_tests
 class TestCustomBulkVectorSearch(TestCustomVectorSearch):
 
     def search_with_context(self, context_vector: Optional[Dict[str, List[Dict[str, Any]]]] = None) -> Dict[str, Any]:

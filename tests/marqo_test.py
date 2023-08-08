@@ -214,6 +214,9 @@ class MarqoTestCase(TestCase):
             settings_dict (dict): Dictionary of settings to use when creating index,
             same as settings_dict in create_index
             **kwargs: Additional keyword arguments to pass to create_index e.g. model, treat_urls_and_pointers_as_image.
+
+        Caveats:
+        - Please note that settings_dict override any kwargs during index creation
         """
         client = marqo.Client(**self.client_settings)
         index_name = f"{index_name}-{self.index_suffix}"
@@ -227,7 +230,7 @@ class MarqoTestCase(TestCase):
             status = client.http.get(f"indexes/{index_name}/status")["index_status"]
             if status == "CREATING":
                 cloud_wait_for_index_status(client.http, index_name, "READY")
-            if status != "READY":
+            elif status != "READY":
                 self.client.create_index(index_name, settings_dict=settings_dict,
                                          inference_node_type="marqo.CPU", storage_node_type="marqo.basic", **kwargs)
         except (MarqoWebError, TypeError) as e:

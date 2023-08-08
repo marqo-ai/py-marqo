@@ -98,7 +98,8 @@ class TestScoreModifierSearch(MarqoTestCase):
             }
         self.search_with_score_modifier(score_modifiers=valid_score_modifiers)
 
-@mark.ignore_cloud_tests
+
+@mark.ignore_during_cloud_tests
 class TestScoreModifierBulkSearch(TestScoreModifierSearch):
     
     def map_search_kwargs(self, k: str) -> str:

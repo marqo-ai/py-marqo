@@ -12,7 +12,7 @@ import math
 from tests.marqo_test import mock_http_traffic, with_documents, MockHTTPTraffic, MarqoTestCase
 
 
-@mark.ignore_cloud_tests
+@mark.ignore_during_cloud_tests
 class TestBulkSearch(MarqoTestCase):
     @staticmethod
     def strip_marqo_fields(doc, strip_id=True):
