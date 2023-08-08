@@ -128,7 +128,7 @@ def create_settings_hash(settings_dict, kwargs):
     Size is restricted on 10 characters to prevent having to big index name which could cause issues.
     """
     dict_to_hash = settings_dict if settings_dict else kwargs
-    combined_str = ''.join(f"{key}{value}" for key, value in dict_to_hash.items())
+    combined_str = ''.join(f"{key}{value}" for key, value in sorted(dict_to_hash.items()))
     crc32_hash = zlib.crc32(combined_str.encode())
     short_hash = hex(crc32_hash & 0xffffffff)[2:][
                  :10]  # Take the first 10 characters of the hexadecimal representation
