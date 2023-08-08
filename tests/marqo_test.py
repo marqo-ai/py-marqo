@@ -235,9 +235,7 @@ class MarqoTestCase(TestCase):
             })
 
         if len(index_name) > 32:
-            index_name = index_name[len(index_name) - 32: len(index_name)]
-            if index_name[0] == "-":
-                index_name = index_name[1:]
+            raise ValueError(f"Index name {index_name} is too long.")
         try:
             status = client.http.get(f"indexes/{index_name}/status")["index_status"]
             if status == "CREATING":
