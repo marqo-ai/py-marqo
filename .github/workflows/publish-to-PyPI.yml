@@ -128,6 +128,8 @@ jobs:
   Publish-to-PyPi:
     runs-on: ubuntu-latest
     environment: PyPI
+    needs:
+      - Stop-Runner
 
     steps:
     - uses: actions/checkout@v3
