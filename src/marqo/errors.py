@@ -94,6 +94,10 @@ class __InvalidRequestError(MarqoWebError):
     error_type = "invalid_request"
 
 
+class UnsupportedOperationError(__InvalidRequestError):
+    code = "unsupported_operation"
+
+
 class IndexAlreadyExistsError(__InvalidRequestError):
     code = "index_already_exists"
     status_code = HTTPStatus.CONFLICT

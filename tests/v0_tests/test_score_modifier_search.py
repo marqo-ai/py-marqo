@@ -3,19 +3,15 @@ from typing import Any, Dict, List, Optional
 from marqo.client import Client
 from marqo.errors import MarqoApiError, MarqoWebError
 from tests.marqo_test import MarqoTestCase
+from pytest import mark
 
 
 class TestScoreModifierSearch(MarqoTestCase):
 
     def setUp(self) -> None:
-        self.client = Client(**self.client_settings)
-        self.index_name_1 = "my-test-index-1"
-        try:
-            self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
-            pass
-        self.client.create_index(index_name=self.index_name_1, model="ViT-B/32")
-        self.client.index(index_name=self.index_name_1).add_documents(
+        super().setUp()
+        self.test_index_name = self.create_test_index(index_name=self.generic_test_index_name, model="ViT-B/32")
+        self.client.index(index_name=self.test_index_name).add_documents(
             documents=[
                 {"my_text_field": "A rider is riding a horse jumping over the barrier.",
                  "my_image_field": "https://raw.githubusercontent.com/marqo-ai/marqo/mainline/examples/ImageSearchGuide/data/image2.jpg",
@@ -35,15 +31,9 @@ class TestScoreModifierSearch(MarqoTestCase):
                                                        "filter"]
         )
         self.query = "what is the rider doing?"
-
-    def tearDown(self) -> None:
-        try:
-            self.client.delete_index(self.index_name_1)
-        except MarqoApiError as s:
-            pass
     
     def search_with_score_modifier(self, score_modifiers: Optional[Dict[str, List[Dict[str, Any]]]] = None, **kwargs) -> Dict[str, Any]:
-        return self.client.index(self.index_name_1).search(
+        return self.client.index(self.test_index_name).search(
             q = self.query,
             score_modifiers = score_modifiers,
             **kwargs
@@ -108,6 +98,8 @@ class TestScoreModifierSearch(MarqoTestCase):
             }
         self.search_with_score_modifier(score_modifiers=valid_score_modifiers)
 
+
+@mark.ignore_during_cloud_tests
 class TestScoreModifierBulkSearch(TestScoreModifierSearch):
     
     def map_search_kwargs(self, k: str) -> str:
@@ -121,8 +113,8 @@ class TestScoreModifierBulkSearch(TestScoreModifierSearch):
 
     def search_with_score_modifier(self, score_modifiers: Optional[Dict[str, List[Dict[str, Any]]]] = None, **kwargs) -> Dict[str, Any]:
         resp = self.client.bulk_search([{
-            "index": self.index_name_1,
-            "q": self.index_name_1,
+            "index": self.test_index_name,
+            "q": self.test_index_name,
             "scoreModifiers": score_modifiers,
             **{self.map_search_kwargs(k): v for k,v in kwargs.items()}
         }])

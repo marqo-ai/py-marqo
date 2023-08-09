@@ -11,17 +11,26 @@ class TestDemo(MarqoTestCase):
     """Tests for demos.
     """
     def setUp(self) -> None:
-        client_0 = Client(**self.client_settings)
-        for ix_name in ["cool-index-1", "my-first-index", "my-weighted-query-index", "my-first-multimodal-index"]:
-            try:
-                client_0.delete_index(ix_name)
-            except MarqoApiError as s:
-                pass
+        self.client = Client(**self.client_settings)
+        if not self.client.config.is_marqo_cloud:
+            for ix_name in ["cool-index", "first-index", "weight-index", "mmodal-index"]:
+                try:
+                    self.client.delete_index(ix_name)
+                except MarqoApiError as s:
+                    pass
+
+    def tearDown(self) -> None:
+        if not self.client.config.is_marqo_cloud:
+            for ix_name in ["cool-index", "first-index", "weight-index", "mmodal-index"]:
+                try:
+                    self.client.delete_index(ix_name)
+                except MarqoApiError as s:
+                    pass
 
     def test_demo(self):
         client = Client(**self.client_settings)
-        client.create_index("cool-index-1")
-        client.index("cool-index-1").add_documents([
+        test_index_name = self.create_test_index("cool-index")
+        client.index(test_index_name).add_documents([
             {
                 "Title": "The Legend of the River",
                 "Description": "Once upon a time there was a cat who wore a hat. "
@@ -42,16 +51,18 @@ class TestDemo(MarqoTestCase):
         print("\nSearching the phrase 'River' across all fields")
         
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index("cool-index-1").search,"River")
+            self.warm_request(client.index(test_index_name).search,"River")
 
-        pprint.pprint(client.index("cool-index-1").search("River"))
+        pprint.pprint(client.index(test_index_name).search("River"))
         # then we search specific searchable attributes. We can see how powerful semantic search is
         print("\nThen we search specific 'River over' searchable attributes. We can see how powerful semantic search is")
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(client.index("cool-index-1").search,"River", searchable_attributes=["Key Points"])
+            self.warm_request(client.index(test_index_name).search,"River", searchable_attributes=["Key Points"])
 
-        pprint.pprint(client.index("cool-index-1").search("River", searchable_attributes=["Key Points"]))
+        pprint.pprint(client.index(test_index_name).search("River", searchable_attributes=["Key Points"]))
+
+        self.client.delete_index(test_index_name)
 
     def test_readme_example(self):
 
@@ -59,8 +70,8 @@ class TestDemo(MarqoTestCase):
 
         mq = marqo.Client(**self.client_settings)
 
-        mq.create_index("my-first-index")
-        mq.index("my-first-index").add_documents(
+        test_index_name = self.create_test_index("first-index")
+        mq.index(test_index_name).add_documents(
             [
                 {
                     "Title": "The Travels of Marco Polo",
@@ -76,11 +87,11 @@ class TestDemo(MarqoTestCase):
         )
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(mq.index("my-first-index").search,
+            self.warm_request(mq.index(test_index_name).search,
                 q="What is the best outfit to wear on the moon?"
             )
 
-        results = mq.index("my-first-index").search(
+        results = mq.index(test_index_name).search(
             q="What is the best outfit to wear on the moon?"
         )
 
@@ -88,7 +99,7 @@ class TestDemo(MarqoTestCase):
 
         assert results["hits"][0]["_id"] == "article_591"
 
-        r2 = mq.index("my-first-index").get_document(document_id="article_591")
+        r2 = mq.index(test_index_name).get_document(document_id="article_591")
         assert {
                 "Title": "Extravehicular Mobility Unit (EMU)",
                 "Description": "The EMU is a spacesuit that provides environmental protection, "
@@ -96,34 +107,34 @@ class TestDemo(MarqoTestCase):
                 "_id": "article_591"
             } == r2
 
-        r3 = mq.index("my-first-index").get_stats()
+        r3 = mq.index(test_index_name).get_stats()
 
         assert r3["numberOfDocuments"] == 2
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(mq.index("my-first-index").search,'marco polo', search_method=marqo.SearchMethods.LEXICAL)
+            self.warm_request(mq.index(test_index_name).search,'marco polo', search_method=marqo.SearchMethods.LEXICAL)
 
-        r4 = mq.index("my-first-index").search('marco polo', search_method=marqo.SearchMethods.LEXICAL)
+        r4 = mq.index(test_index_name).search('marco polo', search_method=marqo.SearchMethods.LEXICAL)
         assert r4["hits"][0]["Title"] == "The Travels of Marco Polo"
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(mq.index("my-first-index").search,'adventure', searchable_attributes=['Title'])
+            self.warm_request(mq.index(test_index_name).search,'adventure', searchable_attributes=['Title'])
 
-        r5 = mq.index("my-first-index").search('adventure', searchable_attributes=['Title'])
+        r5 = mq.index(test_index_name).search('adventure', searchable_attributes=['Title'])
         assert len(r5["hits"]) == 2
 
-        r6 = mq.index("my-first-index").delete_documents(ids=["article_591", "article_602"])
+        r6 = mq.index(test_index_name).delete_documents(ids=["article_591", "article_602"])
         assert r6['details']['deletedDocuments'] == 1
 
-        rneg1 = mq.index("my-first-index").delete()
+        rneg1 = mq.index(test_index_name).delete()
         pprint.pprint(rneg1)
         assert (rneg1["acknowledged"] is True) or (rneg1["acknowledged"] == 'true')
 
     def test_readme_example_weighted_query(self):
         import marqo
         mq = marqo.Client(**self.client_settings)
-        mq.create_index("my-weighted-query-index")
-        mq.index("my-weighted-query-index").add_documents([
+        test_index_name = self.create_test_index("weight-index")
+        mq.index(test_index_name).add_documents([
                 {
                     "Title": "Smartphone",
                     "Description": "A smartphone is a portable computer device that combines mobile telephone "
@@ -144,7 +155,7 @@ class TestDemo(MarqoTestCase):
             tensor_fields=["Title", "Description"]
         )
 
-        r1 = mq.index("my-weighted-query-index").get_stats()
+        r1 = mq.index(test_index_name).get_stats()
         assert r1["numberOfDocuments"] == 3
 
         query = {
@@ -153,11 +164,11 @@ class TestDemo(MarqoTestCase):
         }
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(mq.index("my-weighted-query-index").search,
+            self.warm_request(mq.index(test_index_name).search,
                 q=query, searchable_attributes=["Title", "Description"]
             )
 
-        r2 = mq.index("my-weighted-query-index").search(
+        r2 = mq.index(test_index_name).search(
             q=query, searchable_attributes=["Title", "Description"]
         )
 
@@ -171,11 +182,11 @@ class TestDemo(MarqoTestCase):
         }
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(mq.index("my-weighted-query-index").search,
+            self.warm_request(mq.index(test_index_name).search,
                 q=query, searchable_attributes=["Title", "Description"]
             )
 
-        r3 = mq.index("my-weighted-query-index").search(
+        r3 = mq.index(test_index_name).search(
             q=query, searchable_attributes=["Title", "Description"]
         )
         print("\nQuery 2:")
@@ -190,7 +201,7 @@ class TestDemo(MarqoTestCase):
         assert len(r2["hits"]) == 3
         assert len(r3["hits"]) == 3
 
-        rneg1 = mq.index("my-weighted-query-index").delete()
+        rneg1 = mq.index(test_index_name).delete()
         pprint.pprint(rneg1)
         assert (rneg1["acknowledged"] is True) or (rneg1["acknowledged"] == 'true')
 
@@ -198,8 +209,8 @@ class TestDemo(MarqoTestCase):
         import marqo
         mq = marqo.Client(**self.client_settings)
         settings = {"treat_urls_and_pointers_as_images": True, "model": "ViT-B/32"}
-        mq.create_index("my-first-multimodal-index", **settings)
-        mq.index("my-first-multimodal-index").add_documents(
+        test_index_name = self.create_test_index("mmodal-index", **settings)
+        mq.index(test_index_name).add_documents(
             [
                 {
                     "Title": "Flying Plane",
@@ -235,16 +246,16 @@ class TestDemo(MarqoTestCase):
             tensor_fields=["captioned_image"],
         )
 
-        r1 = mq.index("my-first-multimodal-index").get_stats()
+        r1 = mq.index(test_index_name).get_stats()
         assert r1["numberOfDocuments"] == 3
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(mq.index("my-first-multimodal-index").search,
+            self.warm_request(mq.index(test_index_name).search,
                 q="Give me some images of vehicles and modes of transport. I am especially interested in air travel and commercial aeroplanes.",
                 searchable_attributes=["captioned_image"]
             )
 
-        r2 = mq.index("my-first-multimodal-index").search(
+        r2 = mq.index(test_index_name).search(
             q="Give me some images of vehicles and modes of transport. I am especially interested in air travel and commercial aeroplanes.",
             searchable_attributes=["captioned_image"],
         )
@@ -254,14 +265,14 @@ class TestDemo(MarqoTestCase):
         assert r2["hits"][0]["Title"] == "Flying Plane"
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(mq.index("my-first-multimodal-index").search,
+            self.warm_request(mq.index(test_index_name).search,
                 q={
                     "What are some vehicles and modes of transport?": 1.0,
                     "Aeroplanes and other things that fly": -1.0,
                 },
                 searchable_attributes=["captioned_image"]
             )
-        r3 = mq.index("my-first-multimodal-index").search(
+        r3 = mq.index(test_index_name).search(
             q={
                 "What are some vehicles and modes of transport?": 1.0,
                 "Aeroplanes and other things that fly": -1.0,
@@ -275,11 +286,11 @@ class TestDemo(MarqoTestCase):
         assert r3["hits"][0]["Title"] == "Red Bus"
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(mq.index("my-first-multimodal-index").search,
+            self.warm_request(mq.index(test_index_name).search,
                 q={"Animals of the Perissodactyla order": -1.0},
                 searchable_attributes=["captioned_image"],
             )
-        r4 = mq.index("my-first-multimodal-index").search(
+        r4 = mq.index(test_index_name).search(
             q={"Animals of the Perissodactyla order": -1.0},
             searchable_attributes=["captioned_image"],
         )
@@ -292,6 +303,6 @@ class TestDemo(MarqoTestCase):
         assert len(r3["hits"]) == 3
         assert len(r4["hits"]) == 3
 
-        rneg1 = mq.index("my-first-multimodal-index").delete()
+        rneg1 = mq.index(test_index_name).delete()
         pprint.pprint(rneg1)
         assert (rneg1["acknowledged"] is True) or (rneg1["acknowledged"] == 'true')

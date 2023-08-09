@@ -1,6 +1,7 @@
 import unittest
 from marqo._httprequests import HttpRequests
 from marqo.config import Config
+from marqo.default_instance_mappings import DefaultInstanceMappings
 
 class TestConstructPath(unittest.TestCase):
 
@@ -8,7 +9,9 @@ class TestConstructPath(unittest.TestCase):
         self.base_url = "http://localhost:8882"
 
     def construct_path_helper(self, path, use_telemetry=None):
-        r = HttpRequests(config=Config(use_telemetry=use_telemetry, url=self.base_url))
+        r = HttpRequests(
+            config=Config(use_telemetry=use_telemetry, instance_mappings=DefaultInstanceMappings(self.base_url))
+        )
         return r._construct_path(path)
 
     def test_construct_path_with_telemetry_enabled(self):
