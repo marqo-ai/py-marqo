@@ -111,6 +111,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: PyPI
     needs:
+      - Test-Py-Marqo
       - Stop-Runner
 
     steps:
