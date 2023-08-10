@@ -4,7 +4,7 @@
 # Unless otherwise specified, the Marqo version that is used for this test will be 
 # that specified by py-marqo's `marqo.version.__marqo_version__`
 
-name: Py-marqo open source unit tests
+name: Open source unit tests
 
 on:
   workflow_dispatch:
