@@ -50,18 +50,13 @@ class Index:
         self.index_name = index_name
         self.created_at = self._maybe_datetime(created_at)
         self.updated_at = self._maybe_datetime(updated_at)
+
         skip_version_check = False
-        if config.is_marqo_cloud:
-            try:
-                if self.get_status()["index_status"] != IndexStatus.CREATED:
-                    mq_logger.warning(f"Index {index_name} is not ready. Status: {self.get_status()}. Common operations, "
-                                    f"such as search and add_documents, may fail until the index is ready. "
-                                    f"Please check `mq.index('{index_name}').get_status()` for the index's status. "
-                                    f"Skipping version check.")
-                    skip_version_check = True
-            except (MarqoWebError, TypeError, KeyError) as e:
-                skip_version_check = True
-                mq_logger.warning(f"Failed to get index status for index {index_name}. Skipping version check. Error: {e}")
+        try:
+            self.config.instance_mapping.get_index_base_url(self.index_name)
+        except errors.MarqoError as e:
+            mq_logger.warning(e)
+            skip_version_check = True
         if not skip_version_check:
             self._marqo_minimum_supported_version_check()
 
