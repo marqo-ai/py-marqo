@@ -417,6 +417,12 @@ class TestIndex(MarqoTestCase):
 
             mock_get_marqo.assert_not_called()
 
+    def test_get_health(self):
+        test_index_name = self.create_test_index(self.generic_test_index_name)
+        res = self.client.index(test_index_name).health()
+        assert 'status' in res
+        assert 'status' in res['backend']
+
     @mark.ignore_during_cloud_tests
     def test_get_status_raises_error_on_local_index(self):
         index = self.client.index(self.generic_test_index_name)

@@ -50,26 +50,27 @@ class Index:
         self.index_name = index_name
         self.created_at = self._maybe_datetime(created_at)
         self.updated_at = self._maybe_datetime(updated_at)
+
         skip_version_check = False
-        if config.is_marqo_cloud:
-            try:
-                if self.get_status()["index_status"] != IndexStatus.CREATED:
-                    mq_logger.warning(f"Index {index_name} is not ready. Status: {self.get_status()}. Common operations, "
-                                    f"such as search and add_documents, may fail until the index is ready. "
-                                    f"Please check `mq.index('{index_name}').get_status()` for the index's status. "
-                                    f"Skipping version check.")
-                    skip_version_check = True
-            except (MarqoWebError, TypeError, KeyError) as e:
-                skip_version_check = True
-                mq_logger.warning(f"Failed to get index status for index {index_name}. Skipping version check. Error: {e}")
+        # trying to get index url to verify that index is mapped
+        try:
+            self.config.instance_mapping.get_index_base_url(self.index_name)
+        except errors.MarqoError as e:
+            mq_logger.warning(e)
+            skip_version_check = True
         if not skip_version_check:
             self._marqo_minimum_supported_version_check()
 
-    def delete(self) -> Dict[str, Any]:
+    def delete(self, wait_for_readiness=True) -> Dict[str, Any]:
         """Delete the index.
+
+        Args:
+            wait_for_readiness: Marqo Cloud specific, whether to wait until
+                operation is completed or to proceed without waiting for status,
+                won't do anything if config.is_marqo_cloud=False
         """
         response = self.http.delete(path=f"indexes/{self.index_name}")
-        if self.config.is_marqo_cloud:
+        if self.config.is_marqo_cloud and wait_for_readiness:
             cloud_wait_for_index_status(self.http, self.index_name, IndexStatus.DELETED)
         return response
 
@@ -88,6 +89,7 @@ class Index:
                inference_node_count: int = 1,
                storage_node_count: int = 1,
                replicas_count: int = 0,
+               wait_for_readiness=True
                ) -> Dict[str, Any]:
         """Create the index.
 
@@ -108,6 +110,9 @@ class Index:
             inference_node_count: number of inference nodes for the index
             storage_node_count: number of storage nodes for the index
             replicas_count: number of replicas for the index
+            wait_for_readiness: Marqo Cloud specific, whether to wait until
+                operation is completed or to proceed without waiting for status,
+                won't do anything if config.is_marqo_cloud=False
         Returns:
             Response body, containing information about index creation result
         """
@@ -115,7 +120,7 @@ class Index:
 
         if settings_dict is not None and settings_dict:
             response = req.post(f"indexes/{index_name}", body=settings_dict)
-            if config.is_marqo_cloud:
+            if config.is_marqo_cloud and wait_for_readiness:
                 cloud_wait_for_index_status(req, index_name, IndexStatus.CREATED)
             return response
 
@@ -142,7 +147,8 @@ class Index:
             cl_settings['number_of_replicas'] = replicas_count
             cl_settings['number_of_shards'] = storage_node_count
             response = req.post(f"indexes/{index_name}", body=cl_settings)
-            cloud_wait_for_index_status(req, index_name, IndexStatus.CREATED)
+            if wait_for_readiness:
+                cloud_wait_for_index_status(req, index_name, IndexStatus.CREATED)
             return response
 
         return req.post(f"indexes/{index_name}", body={
