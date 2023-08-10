@@ -28,6 +28,10 @@ class TestAddDocuments(MarqoTestCase):
         except MarqoWebError as e:
             assert e.code == "index_already_exists"
 
+    def test_WILL_FAIL(self):
+        raise ValueError
+        raise ValueError()
+
     def test_create_index_hnsw(self):
         if not self.client.config.is_marqo_cloud:
             self.client.delete_index(self.generic_test_index_name)
