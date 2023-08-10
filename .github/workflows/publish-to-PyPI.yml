@@ -65,30 +65,12 @@ jobs:
           if [ -z "$SUPPORTED_MQ_VERSION" ]; then exit 1; fi
           echo "::set-output name=version::$SUPPORTED_MQ_VERSION"
 
-      - name: Log into ECR
-        uses: docker/login-action@v1
-        if: github.event.inputs.image_registry_location == 'ECR'
-        with:
-          registry: ${{ secrets.AWS_ACCOUNT_NUMBER }}.dkr.ecr.us-east-1.amazonaws.com/${{ github.event.inputs.image_repo }}
-          username: ${{ secrets.ECR_READER_AWS_ACCESS_KEY_ID }}
-          password: ${{ secrets.ECR_READER_AWS_SECRET_ACCESS_KEY }}
-
       - name: Set registry and image repo
         id: prepare
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            if [[ "${{ github.event.inputs.image_registry_location }}" == "ECR" ]]; then
-              echo "::set-output name=registry::${{ secrets.AWS_ACCOUNT_NUMBER }}.dkr.ecr.us-east-1.amazonaws.com"
-            else
-              echo "::set-output name=registry::marqoai"
-            fi
-            echo "::set-output name=image_repo::${{ github.event.inputs.image_repo }}"
-            echo "::set-output name=image_tag::${{ github.event.inputs.image_tag }}"
-          else
-            echo "::set-output name=registry::marqoai"
-            echo "::set-output name=image_repo::marqo"
-            echo "::set-output name=image_tag::${{ steps.get_default_marqo_version.outputs.version }}"
-          fi
+          echo "::set-output name=registry::marqoai"
+          echo "::set-output name=image_repo::marqo"
+          echo "::set-output name=image_tag::${{ steps.get_default_marqo_version.outputs.version }}"
 
       - name: Run Py-Marqo Tests
         run: |
