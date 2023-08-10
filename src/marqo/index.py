@@ -1,10 +1,13 @@
 import functools
 import json
-import logging
 import pprint
 import time
 
+from requests import RequestException
+
 from marqo import defaults
+from marqo.cloud_helpers import cloud_wait_for_index_status
+from marqo.enums import IndexStatus
 import typing
 from urllib import parse
 from datetime import datetime
@@ -14,7 +17,12 @@ from marqo._httprequests import HttpRequests
 from marqo.config import Config
 from marqo.enums import SearchMethods, Devices
 from marqo import errors, utils
+from marqo.errors import MarqoWebError, UnsupportedOperationError
 from marqo.marqo_logging import mq_logger
+from marqo.version import minimum_supported_marqo_version
+from packaging import version as versioning_helpers
+
+marqo_url_and_version_cache: Dict[str, str] = {}
 
 
 class Index:
@@ -42,11 +50,29 @@ class Index:
         self.index_name = index_name
         self.created_at = self._maybe_datetime(created_at)
         self.updated_at = self._maybe_datetime(updated_at)
+        skip_version_check = False
+        if config.is_marqo_cloud:
+            try:
+                if self.get_status()["index_status"] != IndexStatus.CREATED:
+                    mq_logger.warning(f"Index {index_name} is not ready. Status: {self.get_status()}. Common operations, "
+                                    f"such as search and add_documents, may fail until the index is ready. "
+                                    f"Please check `mq.index('{index_name}').get_status()` for the index's status. "
+                                    f"Skipping version check.")
+                    skip_version_check = True
+            except (MarqoWebError, TypeError, KeyError) as e:
+                skip_version_check = True
+                mq_logger.warning(f"Failed to get index status for index {index_name}. Skipping version check. Error: {e}")
+        if not skip_version_check:
+            self._marqo_minimum_supported_version_check()
 
     def delete(self) -> Dict[str, Any]:
         """Delete the index.
         """
-        return self.http.delete(path=f"indexes/{self.index_name}")
+        response = self.http.delete(path=f"indexes/{self.index_name}")
+        if self.config.is_marqo_cloud:
+            cloud_wait_for_index_status(self.http, self.index_name, IndexStatus.DELETED)
+        return response
+
 
     @staticmethod
     def create(config: Config, index_name: str,
@@ -88,7 +114,10 @@ class Index:
         req = HttpRequests(config)
 
         if settings_dict is not None and settings_dict:
-            return req.post(f"indexes/{index_name}", body=settings_dict)
+            response = req.post(f"indexes/{index_name}", body=settings_dict)
+            if config.is_marqo_cloud:
+                cloud_wait_for_index_status(req, index_name, IndexStatus.CREATED)
+            return response
 
         if config.api_key is not None:
             # making the keyword settings params override the default cloud
@@ -96,14 +125,16 @@ class Index:
             cl_settings = defaults.get_cloud_default_index_settings()
             cl_ix_defaults = cl_settings['index_defaults']
             cl_ix_defaults['treat_urls_and_pointers_as_images'] = treat_urls_and_pointers_as_images
-            cl_ix_defaults['model'] = model
+            if model is not None:
+                cl_ix_defaults['model'] = model
             cl_ix_defaults['normalize_embeddings'] = normalize_embeddings
             cl_text_preprocessing = cl_ix_defaults['text_preprocessing']
             cl_text_preprocessing['split_overlap'] = sentence_overlap
             cl_text_preprocessing['split_length'] = sentences_per_chunk
             cl_img_preprocessing = cl_ix_defaults['image_preprocessing']
-            cl_img_preprocessing['patch_method'] = image_preprocessing_method
-            if not config.cluster_is_marqo:
+            if image_preprocessing_method is not None:
+                cl_img_preprocessing['patch_method'] = image_preprocessing_method
+            if not config.is_marqo_cloud:
                 return req.post(f"indexes/{index_name}", body=cl_settings)
             cl_settings['inference_type'] = inference_node_type
             cl_settings['storage_class'] = storage_node_type
@@ -111,12 +142,7 @@ class Index:
             cl_settings['number_of_replicas'] = replicas_count
             cl_settings['number_of_shards'] = storage_node_count
             response = req.post(f"indexes/{index_name}", body=cl_settings)
-            index = Index(config, index_name)
-            creation = index.get_status()
-            while creation['index_status'] != 'READY':
-                time.sleep(10)
-                creation = index.get_status()
-                mq_logger.info(f"Index creation status: {creation['index_status']}")
+            cloud_wait_for_index_status(req, index_name, IndexStatus.CREATED)
             return response
 
         return req.post(f"indexes/{index_name}", body={
@@ -141,7 +167,10 @@ class Index:
 
     def get_status(self):
         """gets the status of the index"""
-        return self.http.get(path=F"indexes/{self.index_name}/status")
+        if self.config.is_marqo_cloud:
+            return self.http.get(path=F"indexes/{self.index_name}/status")
+        else:
+            raise UnsupportedOperationError("This operation is only supported for Marqo Cloud")
 
     def search(self, q: Union[str, dict], searchable_attributes: Optional[List[str]] = None,
                limit: int = 10, offset: int = 0, search_method: Union[SearchMethods.TENSOR, str] = SearchMethods.TENSOR,
@@ -409,7 +438,6 @@ class Index:
                                 f"docs (server unbatched), for an average of {(res['processingTimeMs'] / (1000 * num_docs)):.3f}s per doc.")
             if 'errors' in res and res['errors']:
                 mq_logger.info(error_detected_message)
-
             if errors_detected:
                 mq_logger.info(error_detected_message)
         total_add_docs_time = timer() - t0
@@ -550,3 +578,49 @@ class Index:
     def health(self) -> dict:
         """Check the health of an index"""
         return self.http.get(path=f"indexes/{self.index_name}/health", index_name=self.index_name)
+
+    def get_loaded_models(self):
+        return self.http.get(path="models", index_name=self.index_name)
+
+    def get_cuda_info(self):
+        return self.http.get(path="device/cuda", index_name=self.index_name)
+
+    def get_cpu_info(self):
+        return self.http.get(path="device/cpu", index_name=self.index_name)
+
+    def get_marqo(self):
+        return self.http.get(path="", index_name=self.index_name)
+
+    def eject_model(self, model_name: str, model_device: str):
+        return self.http.delete(
+            path=f"models?model_name={model_name}&model_device={model_device}", index_name=self.index_name
+        )
+
+    def _marqo_minimum_supported_version_check(self):
+        min_ver = minimum_supported_marqo_version()
+        url = self.config.instance_mapping.get_index_base_url(self.index_name)
+        skip_warning_message = (
+            f"Marqo encountered a problem trying to check the Marqo version found at `{url}`. "
+            f"The minimum supported Marqo version for this client is {min_ver}. "
+            f"If you are sure your Marqo version is compatible with this client, you can ignore this message. ")
+
+        # Skip the check if the url is previously labelled as "_skipped"
+        if url in marqo_url_and_version_cache and marqo_url_and_version_cache[url] == "_skipped":
+            mq_logger.warning(skip_warning_message)
+            return
+
+        # Do version check
+        try:
+            if url not in marqo_url_and_version_cache:
+                marqo_url_and_version_cache[url] = self.get_marqo()["version"]
+            marqo_version = marqo_url_and_version_cache[url]
+            if versioning_helpers.parse(marqo_version) < versioning_helpers.parse(min_ver):
+                mq_logger.warning(f"Your Marqo Python client requires a minimum Marqo version of "
+                                  f"{minimum_supported_marqo_version()} to function properly, but your Marqo version is {marqo_version}. "
+                                  f"Please upgrade your Marqo instance to avoid potential errors. "
+                                  f"If you have already changed your Marqo instance but still get this warning, please restart your Marqo client Python interpreter.")
+        except (MarqoWebError, RequestException, TypeError, KeyError) as e:
+            mq_logger.warning(skip_warning_message)
+            marqo_url_and_version_cache[url] = "_skipped"
+        return
+
