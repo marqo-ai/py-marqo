@@ -83,6 +83,14 @@ def populate_indices():
              {"sentences_per_chunk": 2,
               "sentence_overlap": 1
               },
+             {"settings_dict":
+                 {
+                     'index_defaults': {
+                         'model': "ViT-B/16",
+                         'treat_urls_and_pointers_as_images': True
+                     }
+                 }
+              },
              ]
     }
 
