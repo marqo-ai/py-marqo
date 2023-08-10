@@ -1,3 +1,12 @@
+# GitHub Actions Workflow: Publish to PyPI
+# Description:
+# This workflow automates the process of testing and publishing the `py-marqo` package to PyPI.
+# The process includes:
+# 1. Starting a self-hosted EC2 runner.
+# 2. Running the `py-marqo` test suite on this runner.
+# 3. Stopping the EC2 runner.
+# 4. Publishing the package to PyPI if all previous steps were successful.
+
 name: Publish to PyPI
 
 on:
