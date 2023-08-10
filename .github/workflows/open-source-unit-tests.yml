@@ -56,7 +56,7 @@ jobs:
           security-group-id: ${{ secrets.AMD_SECURITY_GROUP_ID }}
 
   Test-Py-Marqo:
-    name: Run Py-Marqo Test Suite
+    name: Run open source unit tests
     needs: Start-Runner
     runs-on: ${{ needs.start-runner.outputs.label }}
     
