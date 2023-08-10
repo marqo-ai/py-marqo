@@ -20,10 +20,6 @@ on:
       image_tag:
         description: 'Marqo image tag. Examples: "1.1.0", "test" "latest"'
         required: true
-  push:
-    branches: 
-      - mainline
-      - 'releases/*'
   pull_request:
     branches: 
       - mainline
