@@ -19,6 +19,7 @@ jobs:
   Run-open-source-unit-tests:
     name: Run open source unit tests
     uses: ./.github/workflows/open-source-unit-tests.yml
+    secrets: inherit
   
   Publish-to-PyPi:
     runs-on: ubuntu-latest
