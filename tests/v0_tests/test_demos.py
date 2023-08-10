@@ -62,7 +62,7 @@ class TestDemo(MarqoTestCase):
 
         pprint.pprint(client.index(test_index_name).search("River", searchable_attributes=["Key Points"]))
 
-        self.client.delete_index(test_index_name)
+        self.client.delete_index(test_index_name, wait_for_readiness=False)
 
     def test_readme_example(self):
 
@@ -126,7 +126,7 @@ class TestDemo(MarqoTestCase):
         r6 = mq.index(test_index_name).delete_documents(ids=["article_591", "article_602"])
         assert r6['details']['deletedDocuments'] == 1
 
-        rneg1 = mq.index(test_index_name).delete()
+        rneg1 = mq.index(test_index_name).delete(wait_for_readiness=False)
         pprint.pprint(rneg1)
         assert (rneg1["acknowledged"] is True) or (rneg1["acknowledged"] == 'true')
 
@@ -201,7 +201,7 @@ class TestDemo(MarqoTestCase):
         assert len(r2["hits"]) == 3
         assert len(r3["hits"]) == 3
 
-        rneg1 = mq.index(test_index_name).delete()
+        rneg1 = mq.index(test_index_name).delete(wait_for_readiness=False)
         pprint.pprint(rneg1)
         assert (rneg1["acknowledged"] is True) or (rneg1["acknowledged"] == 'true')
 
@@ -303,6 +303,6 @@ class TestDemo(MarqoTestCase):
         assert len(r3["hits"]) == 3
         assert len(r4["hits"]) == 3
 
-        rneg1 = mq.index(test_index_name).delete()
+        rneg1 = mq.index(test_index_name).delete(wait_for_readiness=False)
         pprint.pprint(rneg1)
         assert (rneg1["acknowledged"] is True) or (rneg1["acknowledged"] == 'true')
