@@ -2,7 +2,7 @@ Thank you for your interest in making tensor search more accessible!
 
 ---
 
-## Ways to contribute
+## Ways to contribute:
 
 ### Bug reports
 You can submit bug reports on our GitHub repo
