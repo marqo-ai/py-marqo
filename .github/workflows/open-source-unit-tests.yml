@@ -7,6 +7,7 @@
 name: Py-marqo open source unit tests
 
 on:
+  workflow_call:
   workflow_dispatch:
     inputs:
       image_registry_location:
