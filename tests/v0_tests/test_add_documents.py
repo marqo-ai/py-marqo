@@ -18,6 +18,10 @@ class TestAddDocuments(MarqoTestCase):
     def test_create_index(self):
         test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
 
+    def test_WILL_FAIL(self):
+        raise ValueError
+        raise ValueError()
+    
     def test_create_index_double(self):
         if not self.client.config.is_marqo_cloud:
             self.create_test_index(index_name=self.generic_test_index_name)
