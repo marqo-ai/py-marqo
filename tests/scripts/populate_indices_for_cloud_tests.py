@@ -120,10 +120,9 @@ def populate_indices():
                         "inference_node_type": "marqo.CPU", "storage_node_type": "marqo.basic"
                     }
                 )
-            print(config_with_cloud_settings)
             indexes_to_create.append((index_name_to_create, config_with_cloud_settings))
     for index_name, config in indexes_to_create:
-        print(index_name, config)
+        print(f"Creating {index_name} with config: {config}")
         print(mq.create_index(index_name=index_name, wait_for_readiness=False, **config))
 
     while True:
