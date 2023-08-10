@@ -121,7 +121,7 @@ jobs:
           timeout 10m bash -c 'until [[ $(curl -v --silent --insecure http://localhost:8882 2>&1 | grep Marqo) ]]; do sleep 0.1; done;' || (echo "Marqo did not start in time" && exit 1)
           
           python -m pip install --upgrade pip
-          pip install tox
+          pip install tox==3.26
           tox
 
   Stop-Runner:
