@@ -121,7 +121,7 @@ class Index:
         if settings_dict is not None and settings_dict:
             response = req.post(f"indexes/{index_name}", body=settings_dict)
             if config.is_marqo_cloud and wait_for_readiness:
-                cloud_wait_for_index_status(req, index_name, IndexStatus.CREATED)
+                cloud_wait_for_index_status(req, index_name, IndexStatus.READY)
             return response
 
         if config.api_key is not None:
@@ -148,7 +148,7 @@ class Index:
             cl_settings['number_of_shards'] = storage_node_count
             response = req.post(f"indexes/{index_name}", body=cl_settings)
             if wait_for_readiness:
-                cloud_wait_for_index_status(req, index_name, IndexStatus.CREATED)
+                cloud_wait_for_index_status(req, index_name, IndexStatus.READY)
             return response
 
         return req.post(f"indexes/{index_name}", body={

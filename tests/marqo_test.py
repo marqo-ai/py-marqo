@@ -128,6 +128,13 @@ def create_settings_hash(settings_dict, **kwargs):
     Creates a hash from the settings dictionary and kwargs. Used to ensure that each index is created unique.
     Size is restricted on 10 characters to prevent having to big index name which could cause issues.
     """
+    if settings_dict:
+        index_defaults = settings_dict.get("index_defaults", {}).copy()
+        if index_defaults and len(settings_dict) != 1:
+            del settings_dict["index_defaults"]
+            settings_dict.update(index_defaults)
+    print(settings_dict)
+    quit()
     dict_to_hash = settings_dict["index_defaults"] if settings_dict else kwargs
     combined_str = json.dumps(dict_to_hash, sort_keys=True)
     crc32_hash = zlib.crc32(combined_str.encode())
