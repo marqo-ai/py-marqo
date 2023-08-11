@@ -4,7 +4,7 @@
 # Unless otherwise specified, the Marqo version that is used for this test will be 
 # that specified by py-marqo's `marqo.version.__marqo_version__`
 
-name: Py-marqo open source unit tests
+name: Open source unit tests
 
 on:
   workflow_dispatch:
@@ -20,12 +20,12 @@ on:
       image_tag:
         description: 'Marqo image tag. Examples: "1.1.0", "test" "latest"'
         required: true
-  push:
-    branches: 
-      - mainline
   pull_request:
     branches: 
       - mainline
+      - 'releases/*'
+  # allows other workflows to reuse these unit tests:
+  workflow_call:
 
 permissions:
   contents: read
@@ -56,7 +56,7 @@ jobs:
           security-group-id: ${{ secrets.AMD_SECURITY_GROUP_ID }}
 
   Test-Py-Marqo:
-    name: Run Py-Marqo Test Suite
+    name: Run open source unit tests
     needs: Start-Runner
     runs-on: ${{ needs.start-runner.outputs.label }}
     
@@ -121,7 +121,7 @@ jobs:
           timeout 10m bash -c 'until [[ $(curl -v --silent --insecure http://localhost:8882 2>&1 | grep Marqo) ]]; do sleep 0.1; done;' || (echo "Marqo did not start in time" && exit 1)
           
           python -m pip install --upgrade pip
-          pip install tox
+          pip install tox==3.26
           tox
 
   Stop-Runner:

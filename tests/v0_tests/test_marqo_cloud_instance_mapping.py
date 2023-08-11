@@ -121,3 +121,43 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         with self.assertRaises(MarqoCloudIndexNotFoundError):
             mapping.get_index_base_url("index2")
 
+    def test_second_index_instantiation_does_not_refresh_urls_when_not_needed(self):
+        if not self.client.config.is_marqo_cloud:
+            self.skipTest("Test is not relevant for non-Marqo Cloud instances")
+        test_index_name = self.create_test_index(self.generic_test_index_name)
+
+        time_now = time.time()
+        self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp -= 361
+        time.sleep(0.1)
+        idx = self.client.index(test_index_name)
+        assert self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp > time_now
+
+        time.sleep(0.1)
+        time_now = time.time()
+        idx = self.client.index(test_index_name)
+        assert self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp < time_now
+
+    def test_search_call_does_not_refresh_urls_when_not_needed(self):
+        if not self.client.config.is_marqo_cloud:
+            self.skipTest("Test is not relevant for non-Marqo Cloud instances")
+        test_index_name = self.create_test_index(self.generic_test_index_name)
+
+        time_now = time.time()
+        self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp -= 361
+        time.sleep(0.1)
+        idx = self.client.index(test_index_name)
+        assert self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp > time_now
+
+        time_now = time.time()
+        self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp -= 361
+        time.sleep(0.1)
+        idx.search("test")
+        assert self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp > time_now
+
+        time_now = time.time()
+        time.sleep(0.1)
+        idx.search("test")
+        assert self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp < time_now
+
+
+
