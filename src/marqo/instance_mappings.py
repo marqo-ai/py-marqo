@@ -8,7 +8,7 @@ class InstanceMappings(ABC):
     Abstract class for mapping index names to URLs.
 
     Implementations of this class must ensure asymptotic average-case time complexity of O(1) for all methods, i.e.
-    for a large number of requests per second, the time taken to process each request should be constant on average.
+    for a large number of calls per second, the time taken to process each call should be constant on average.
     An inefficient implementation of this class can cause the Marqo client to be slow.
 
     The namespace of index names is with respect to a Client instance.
