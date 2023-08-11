@@ -122,20 +122,17 @@ def with_documents(index_to_documents_fn: Callable[[], Dict[str, List[Dict[str, 
     return decorator
 
 
-# replication of create_settings_hash from marqo.marqo_test
 def create_settings_hash(settings_dict, **kwargs):
     """
     Creates a hash from the settings dictionary and kwargs. Used to ensure that each index is created unique.
     Size is restricted on 10 characters to prevent having to big index name which could cause issues.
     """
     if settings_dict:
+        settings_dict = settings_dict.copy()
         index_defaults = settings_dict.get("index_defaults", {}).copy()
-        if index_defaults and len(settings_dict) != 1:
-            del settings_dict["index_defaults"]
-            settings_dict.update(index_defaults)
-    print(settings_dict)
-    quit()
-    dict_to_hash = settings_dict["index_defaults"] if settings_dict else kwargs
+        del settings_dict["index_defaults"]
+        settings_dict.update(index_defaults)
+    dict_to_hash = settings_dict if settings_dict else kwargs
     combined_str = json.dumps(dict_to_hash, sort_keys=True)
     crc32_hash = zlib.crc32(combined_str.encode())
     short_hash = hex(crc32_hash & 0xffffffff)[2:][
@@ -190,7 +187,7 @@ class MarqoTestCase(TestCase):
 
     def tearDown(self) -> None:
         if self.client.config.is_marqo_cloud:
-            self.cleanup_documents_from_all_indices()
+            self.cleanup_documents_from_all_indices(self.indexes_to_cleanup)
         else:
             for index in self.client.get_indexes()['results']:
                 if index.index_name.startswith(self.generic_test_index_name):
@@ -235,11 +232,13 @@ class MarqoTestCase(TestCase):
         """
         client = marqo.Client(**self.client_settings)
         index_name = f"{index_name}-{self.index_suffix}"
-        if settings_dict or kwargs:
+        if settings_dict and kwargs:
+            raise ValueError("Cannot provide both settings_dict and kwargs.")
+        elif settings_dict or kwargs:
             index_name = f"{index_name}-{create_settings_hash(settings_dict, **kwargs)}"
         if settings_dict:
             settings_dict.update({
-                "inference_type": "marqo.CPU", "storage_class": "marqo.basic"
+                "inference_type": "marqo.CPU.large", "storage_class": "marqo.basic"
             })
 
         if len(index_name) > 32:
@@ -250,10 +249,10 @@ class MarqoTestCase(TestCase):
                 cloud_wait_for_index_status(client.http, index_name, "READY")
             elif status != "READY":
                 self.client.create_index(index_name, settings_dict=settings_dict,
-                                         inference_node_type="marqo.CPU", storage_node_type="marqo.basic", **kwargs)
+                                         inference_node_type="marqo.CPU.large", storage_node_type="marqo.basic", **kwargs)
         except (MarqoWebError, TypeError) as e:
             self.client.create_index(index_name, settings_dict=settings_dict,
-                                     inference_node_type="marqo.CPU", storage_node_type="marqo.basic", **kwargs)
+                                     inference_node_type="marqo.CPU.large", storage_node_type="marqo.basic", **kwargs)
         self.indexes_to_cleanup.add(index_name)
         return index_name
 
@@ -266,17 +265,26 @@ class MarqoTestCase(TestCase):
             client.create_index(index_name, settings_dict=settings_dict, **kwargs)
         return index_name
 
-    def cleanup_documents_from_all_indices(self):
+    def cleanup_documents_from_all_indices(self, indexes_to_cleanup: set):
+        """"This is used for cloud tests only.
+        Delete all documents from all indexes that were created
+        during the tests executed per instance of MarqoTestCase,
+        """
         indexes = self.client.get_indexes()
+        max_attempts = 1000
         for index in indexes['results']:
-            if index.index_name in self.indexes_to_cleanup:
+            if index.index_name in indexes_to_cleanup:
                 print(f"Deleting documents from index {index.index_name}")
                 try:
                     # veryfying that index is in the mapping
                     self.client.config.instance_mapping.get_index_base_url(index.index_name)
                     docs_to_delete = [i['_id'] for i in index.search("", limit=100)['hits']]
+                    attempt = 0
                     while docs_to_delete:
                         index.delete_documents(docs_to_delete, auto_refresh=True)
                         docs_to_delete = [i['_id'] for i in index.search("", limit=100)['hits']]
+                        attempt += 1
+                        if attempt > max_attempts:
+                            raise MarqoError(f"Max attempts reached. Failed to delete documents from index {index.index_name}")
                 except MarqoError as e:
                     print(f"Error deleting documents from index {index.index_name}: {e}")

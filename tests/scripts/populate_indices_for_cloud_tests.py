@@ -6,12 +6,18 @@ import zlib
 import marqo
 
 
+# replication of create_settings_hash from marqo.marqo_test
 def create_settings_hash(settings_dict, **kwargs):
     """
     Creates a hash from the settings dictionary and kwargs. Used to ensure that each index is created unique.
     Size is restricted on 10 characters to prevent having to big index name which could cause issues.
     """
-    dict_to_hash = settings_dict["index_defaults"] if settings_dict else kwargs
+    if settings_dict:
+        settings_dict = settings_dict.copy()
+        index_defaults = settings_dict.get("index_defaults", {}).copy()
+        del settings_dict["index_defaults"]
+        settings_dict.update(index_defaults)
+    dict_to_hash = settings_dict if settings_dict else kwargs
     combined_str = json.dumps(dict_to_hash, sort_keys=True)
     crc32_hash = zlib.crc32(combined_str.encode())
     short_hash = hex(crc32_hash & 0xffffffff)[2:][
@@ -26,14 +32,6 @@ def populate_indices():
     index_name_to_config_mappings = {
         generic_test_index_name + '-2' + '-' + test_uniqueness_id:
             [{}],
-        "cool-index" + '-' + test_uniqueness_id:
-            [{}],
-        "first-index" + '-' + test_uniqueness_id:
-            [{}],
-        "weight-index" + '-' + test_uniqueness_id:
-            [{}],
-        "mmodal-index" + '-' + test_uniqueness_id:
-            [{"treat_urls_and_pointers_as_images": True, "model": "ViT-B/32"}],
         generic_test_index_name + '-' + test_uniqueness_id:
             [{},
              {"settings_dict": {
@@ -88,7 +86,8 @@ def populate_indices():
                      'index_defaults': {
                          'model': "ViT-B/16",
                          'treat_urls_and_pointers_as_images': True
-                     }
+                     },
+                     "number_of_shards": 1,
                  }
               },
              ]
@@ -119,13 +118,13 @@ def populate_indices():
             if settings_dict:
                 config_with_cloud_settings["settings_dict"].update(
                     {
-                        "inference_type": "marqo.CPU", "storage_class": "marqo.basic",
+                        "inference_type": "marqo.CPU.large", "storage_class": "marqo.basic",
                     }
                 )
             else:
                 config_with_cloud_settings.update(
                     {
-                        "inference_node_type": "marqo.CPU", "storage_node_type": "marqo.basic"
+                        "inference_node_type": "marqo.CPU.large", "storage_node_type": "marqo.basic"
                     }
                 )
             indexes_to_create.append((index_name_to_create, config_with_cloud_settings))
@@ -133,6 +132,8 @@ def populate_indices():
         print(f"Creating {index_name} with config: {config}")
         print(mq.create_index(index_name=index_name, wait_for_readiness=False, **config))
 
+    max_retries = 1000
+    attempt = 0
     while True:
         if all(creating_index in mq.config.instance_mapping._urls_mapping["READY"] .keys()
                for creating_index, _ in indexes_to_create):
@@ -140,3 +141,6 @@ def populate_indices():
         mq.config.instance_mapping._refresh_urls()
         time.sleep(10)
         print("Waiting for indexes to be created...")
+        attempt += 1
+        if attempt > max_retries:
+            raise Exception("Timed out waiting for indexes to be created")
