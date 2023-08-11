@@ -242,10 +242,10 @@ class MarqoTestCase(TestCase):
                 cloud_wait_for_index_status(client.http, index_name, "READY")
             elif status != "READY":
                 self.client.create_index(index_name, settings_dict=settings_dict,
-                                         inference_node_type="marqo.CPU", storage_node_type="marqo.basic", **kwargs)
+                                         inference_node_type="marqo.CPU.large", storage_node_type="marqo.basic", **kwargs)
         except (MarqoWebError, TypeError) as e:
             self.client.create_index(index_name, settings_dict=settings_dict,
-                                     inference_node_type="marqo.CPU", storage_node_type="marqo.basic", **kwargs)
+                                     inference_node_type="marqo.CPU.large", storage_node_type="marqo.basic", **kwargs)
         return index_name
 
     def create_test_index(self, index_name: str, settings_dict: dict = None, **kwargs):
