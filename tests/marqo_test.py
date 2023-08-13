@@ -130,8 +130,9 @@ def create_settings_hash(settings_dict, **kwargs):
     if settings_dict:
         settings_dict = settings_dict.copy()
         index_defaults = settings_dict.get("index_defaults", {}).copy()
-        del settings_dict["index_defaults"]
-        settings_dict.update(index_defaults)
+        if index_defaults:
+            del settings_dict["index_defaults"]
+            settings_dict.update(index_defaults)
     dict_to_hash = settings_dict if settings_dict else kwargs
     combined_str = json.dumps(dict_to_hash, sort_keys=True)
     crc32_hash = zlib.crc32(combined_str.encode())
@@ -156,8 +157,6 @@ class MarqoTestCase(TestCase):
         cls.authorized_url = cls.client_settings["url"]
         cls.generic_test_index_name = 'test-index'  # used as a prefix when index is created with settings
         cls.generic_test_index_name_2 = cls.generic_test_index_name + '-2'
-
-        cls.indexes_to_cleanup = set()
 
         # class property to indicate if test is being run on multi
         cls.IS_MULTI_INSTANCE = (True if os.environ.get("IS_MULTI_INSTANCE", False) in ["True", "TRUE", "true", True] else False)
@@ -186,9 +185,7 @@ class MarqoTestCase(TestCase):
                         logging.debug(f'received error `{e}` from index deletion request.')
 
     def tearDown(self) -> None:
-        if self.client.config.is_marqo_cloud:
-            self.cleanup_documents_from_all_indices(self.indexes_to_cleanup)
-        else:
+        if not self.client.config.is_marqo_cloud:
             for index in self.client.get_indexes()['results']:
                 if index.index_name.startswith(self.generic_test_index_name):
                     try:
@@ -253,7 +250,7 @@ class MarqoTestCase(TestCase):
         except (MarqoWebError, TypeError) as e:
             self.client.create_index(index_name, settings_dict=settings_dict,
                                      inference_node_type="marqo.CPU.large", storage_node_type="marqo.basic", **kwargs)
-        self.indexes_to_cleanup.add(index_name)
+        self.cleanup_documents_from_index(index_name)
         return index_name
 
     def create_test_index(self, index_name: str, settings_dict: dict = None, **kwargs):
@@ -265,26 +262,24 @@ class MarqoTestCase(TestCase):
             client.create_index(index_name, settings_dict=settings_dict, **kwargs)
         return index_name
 
-    def cleanup_documents_from_all_indices(self, indexes_to_cleanup: set):
+    def cleanup_documents_from_index(self, index_to_cleanup: str):
         """"This is used for cloud tests only.
-        Delete all documents from all indexes that were created
-        during the tests executed per instance of MarqoTestCase,
+        Delete all documents from specified index.
         """
-        indexes = self.client.get_indexes()
+        idx = self.client.index(index_to_cleanup)
         max_attempts = 1000
-        for index in indexes['results']:
-            if index.index_name in indexes_to_cleanup:
-                print(f"Deleting documents from index {index.index_name}")
-                try:
-                    # veryfying that index is in the mapping
-                    self.client.config.instance_mapping.get_index_base_url(index.index_name)
-                    docs_to_delete = [i['_id'] for i in index.search("", limit=100)['hits']]
-                    attempt = 0
-                    while docs_to_delete:
-                        index.delete_documents(docs_to_delete, auto_refresh=True)
-                        docs_to_delete = [i['_id'] for i in index.search("", limit=100)['hits']]
-                        attempt += 1
-                        if attempt > max_attempts:
-                            raise MarqoError(f"Max attempts reached. Failed to delete documents from index {index.index_name}")
-                except MarqoError as e:
-                    print(f"Error deleting documents from index {index.index_name}: {e}")
+        print(f"Deleting documents from index {idx.index_name}")
+        try:
+            # veryfying that index is in the mapping
+            idx.refresh()
+            self.client.config.instance_mapping.get_index_base_url(idx.index_name)
+            docs_to_delete = [i['_id'] for i in idx.search("", limit=100)['hits']]
+            attempt = 0
+            while docs_to_delete:
+                idx.delete_documents(docs_to_delete, auto_refresh=True)
+                docs_to_delete = [i['_id'] for i in idx.search("", limit=100)['hits']]
+                attempt += 1
+                if attempt > max_attempts:
+                    raise MarqoError(f"Max attempts reached. Failed to delete documents from index {idx.index_name}")
+        except MarqoError as e:
+            print(f"Error deleting documents from index {idx.index_name}: {e}")

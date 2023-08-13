@@ -18,6 +18,7 @@ def delete_all_test_indices():
             if suffix is not None and suffix in index.index_name.split('-'):
                 if index.get_status()["index_status"] == marqo.enums.IndexStatus.READY:
                     index.delete(wait_for_readiness=False)
+    print("All test indices has been deleted")
 
 
 if __name__ == '__main__':

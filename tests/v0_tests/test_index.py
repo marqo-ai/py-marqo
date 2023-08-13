@@ -206,7 +206,7 @@ class TestIndex(MarqoTestCase):
             return True
         assert run()
 
-    @mark.ignore_cloud_tests
+    @mark.ignore_during_cloud_tests
     def test_create_custom_number_of_replicas(self):
         intended_replicas = 1
         settings = {
