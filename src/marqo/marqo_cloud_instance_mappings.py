@@ -10,6 +10,7 @@ from marqo.errors import (
 )
 from marqo.instance_mappings import InstanceMappings
 from marqo.marqo_logging import mq_logger
+from marqo.enums import IndexStatus
 
 
 class MarqoCloudInstanceMappings(InstanceMappings):
@@ -60,7 +61,9 @@ class MarqoCloudInstanceMappings(InstanceMappings):
             mq_logger.warning(response.text)
         response_json = response.json()
         for index in response_json['results']:
-            if index.get('index_status') in ["READY", "CREATING"]:
-                self._urls_mapping[index['index_status']][index['index_name']] = index.get('endpoint')
+            if index.get('index_status') in [IndexStatus.READY, IndexStatus.MODIFYING]:
+                self._urls_mapping[IndexStatus.READY][index['index_name']] = index.get('endpoint')
+            elif index.get('index_status') == IndexStatus.CREATING:
+                self._urls_mapping[IndexStatus.CREATING][index['index_name']] = index.get('endpoint')
         if self._urls_mapping:
             self.latest_index_mappings_refresh_timestamp = time.time()
