@@ -313,7 +313,6 @@ class TestIndex(MarqoTestCase):
 
         Also ensure we only log a version check warning once.
         """
-        # marqo_url_and_version_cache.clear()
         with mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo, \
                 mock.patch("marqo.index.Index.get_status") as mock_get_status, \
                 mock.patch("marqo.marqo_cloud_instance_mappings.MarqoCloudInstanceMappings.get_index_base_url") as mock_get_base_url:
