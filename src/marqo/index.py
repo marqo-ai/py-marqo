@@ -630,7 +630,7 @@ class Index:
                 versioning_helpers.InvalidVersion) as e:
             # skip the check if this is a cloud index that is still being created:
             if not (self.config.is_marqo_cloud and not
-                    self.config.instance_mapping.is_index_available(index_name=self.index_name)):
+                    self.config.instance_mapping.is_index_usage_allowed(index_name=self.index_name)):
                 mq_logger.warning(skip_warning_message)
             if url is not None:
                 marqo_url_and_version_cache[url] = "_skipped"

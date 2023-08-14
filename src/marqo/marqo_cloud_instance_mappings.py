@@ -76,7 +76,7 @@ class MarqoCloudInstanceMappings(InstanceMappings):
         if self._urls_mapping:
             self.latest_index_mappings_refresh_timestamp = time.time()
 
-    def is_index_available(self, index_name: str) -> bool:
+    def is_index_usage_allowed(self, index_name: str) -> bool:
         """Checks the status of the index in self._urls_mapping.
 
         Note that this method does not request a refresh of the mappings, so the result
