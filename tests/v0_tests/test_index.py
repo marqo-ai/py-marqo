@@ -441,6 +441,26 @@ class TestIndex(MarqoTestCase):
         with self.assertRaises(UnsupportedOperationError):
             index.get_status()
 
-    def test_version_check(self):
-        raise NotImplementedError('TODO implement me')
+    def test_version_check_skip_if_marked_as_skipped(self):
+        index = self.client.index(self.generic_test_index_name)
+        with mock.patch.dict("marqo.index.marqo_url_and_version_cache",
+                             {self.client_settings["url"]: "_skipped"}) as mock_cache, \
+                mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo, \
+                mock.patch("marqo.index.mq_logger.warning") as mock_warning:
+
+            index._marqo_minimum_supported_version_check()
+            mock_warning.assert_not_called()
+            mock_get_marqo.assert_not_called()
+
+    def test_version_check_handle_garbage_value(self):
+        index = self.client.index(self.generic_test_index_name)
+        with mock.patch.dict("marqo.index.marqo_url_and_version_cache",
+                             {self.client_settings["url"]: "garbage value"}) as mock_cache, \
+                mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo, \
+                mock.patch("marqo.index.mq_logger.warning") as mock_warning:
+
+            index._marqo_minimum_supported_version_check()
+            mock_warning.assert_called_once()
+            mock_get_marqo.assert_not_called()
+
 
