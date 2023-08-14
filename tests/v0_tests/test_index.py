@@ -307,8 +307,13 @@ class TestIndex(MarqoTestCase):
         mock_get.assert_called_with("indexes/test-index/status")
         assert result == {"error": "inference_node_count must be greater than 0"}
 
-    def test_version_check_multiple_instantiation(self):
-        """Ensure that duplicated instantiation of the client does not result in multiple APIs calls of get_marqo()"""
+    @mock.patch("marqo.index.mq_logger.warning")
+    def test_version_check_multiple_instantiation(self, mock_warning):
+        """Ensure that duplicated instantiation of the client does not result in multiple APIs calls of get_marqo()
+
+        Also ensure we only log a version check warning once.
+        """
+        # marqo_url_and_version_cache.clear()
         with mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo, \
                 mock.patch("marqo.index.Index.get_status") as mock_get_status, \
                 mock.patch("marqo.marqo_cloud_instance_mappings.MarqoCloudInstanceMappings.get_index_base_url") as mock_get_base_url:
@@ -317,15 +322,16 @@ class TestIndex(MarqoTestCase):
             index = self.client.index(self.generic_test_index_name)
 
             mock_get_marqo.assert_called_once()
+            mock_warning.assert_called_once()
+            mock_warning.reset_mock()
             mock_get_marqo.reset_mock()
 
         for _ in range(10):
-            with mock.patch("marqo.index.mq_logger.warning") as mock_warning, \
-                    mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo:
+            with mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo:
                 index = self.client.index(self.generic_test_index_name)
 
                 mock_get_marqo.assert_not_called()
-                mock_warning.assert_called_once()
+                mock_warning.assert_not_called()
 
     def test_warning_not_printed_for_ready_index(self):
         if not self.client.config.is_marqo_cloud:
@@ -460,7 +466,7 @@ class TestIndex(MarqoTestCase):
                 mock.patch("marqo.index.mq_logger.warning") as mock_warning:
 
             index._marqo_minimum_supported_version_check()
-            mock_warning.assert_called_once()
+            mock_warning.assert_not_called()
             mock_get_marqo.assert_not_called()
 
 
