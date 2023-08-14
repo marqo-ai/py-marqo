@@ -151,6 +151,25 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
             mock_warning.assert_called_once()
 
     @patch("requests.get")
+    def test_get_indexes_fails_cache_updates(self, mock_get):
+        mock_get.return_value.json.return_value = {"status_code": 500}
+        mock_get.return_value.ok = False
+        mapping = MarqoCloudInstanceMappings(
+            control_base_url="https://api.marqo.ai", api_key="your-api-key", url_cache_duration=0.1
+        )
+        with patch("marqo.marqo_cloud_instance_mappings.mq_logger.warning") as mock_warning:
+            mapping.latest_index_mappings_refresh_timestamp = time.time() - 366
+            with self.assertRaises(MarqoCloudIndexNotFoundError):
+                mapping.get_index_base_url("index1")
+            mock_warning.assert_called_once()
+        mapping.latest_index_mappings_refresh_timestamp = time.time() - mapping.url_cache_duration - 1
+        mock_get.return_value.ok = True
+        mock_get.return_value.json.return_value = {"results": [
+            {"index_name": "index1", "endpoint": "example.com", "index_status": "READY"},
+        ]}
+        assert mapping.get_index_base_url("index1") == "example.com"
+
+    @patch("requests.get")
     def test_deleting_status_raises_error(self, mock_get):
         mock_get.return_value.json.return_value = {"results": [
             {"index_name": "index1", "endpoint": "example.com", "index_status": "READY"},
@@ -174,14 +193,14 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         with self.assertRaises(MarqoCloudIndexNotFoundError):
             mapping.get_index_base_url("index2")
 
-    @patch("requests.get", side_effect=requests.get)
-    def test_only_1_http_request_sent_for_search(self, mock_get):
+    def test_only_1_http_request_sent_for_search(self):
         if not self.client.config.is_marqo_cloud:
             self.skipTest("Test is not relevant for non-Marqo Cloud instances")
         test_index_name = self.create_test_index(self.generic_test_index_name)
         self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp = time.time() - 366
         # 1 for the initial refresh, 1 for the search
-        with patch("marqo._httprequests.HttpRequests.post") as mock_post:
+        with patch("marqo._httprequests.HttpRequests.post") as mock_post, \
+                patch("requests.get") as mock_get:
             self.client.index(test_index_name).search("test")
             assert mock_post.call_count == 1
             assert mock_get.call_count == 1
@@ -191,14 +210,14 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
             assert mock_post.call_count == 2
             assert mock_get.call_count == 1
 
-    @patch("requests.get", side_effect=requests.get)
-    def test_when_needed_http_request_for_get_indexes_is_sent(self, mock_get):
+    def test_when_needed_http_request_for_get_indexes_is_sent(self):
         if not self.client.config.is_marqo_cloud:
             self.skipTest("Test is not relevant for non-Marqo Cloud instances")
         test_index_name = self.create_test_index(self.generic_test_index_name)
         self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp = time.time() - 366
         # 1 for the initial refresh, 1 for the search
-        with patch("marqo._httprequests.HttpRequests.post") as mock_post:
+        with patch("marqo._httprequests.HttpRequests.post") as mock_post, \
+                patch("requests.get") as mock_get:
             self.client.index(test_index_name).search("test")
             assert mock_post.call_count == 1
             assert mock_get.call_count == 1

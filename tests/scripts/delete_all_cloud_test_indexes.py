@@ -36,7 +36,7 @@ def delete_all_test_indices():
             if index_for_deletion_name not in all_index_names:
                 indices_to_delete.remove(index_for_deletion_name)
         if attempt > max_retries:
-            raise Exception("Timed out waiting for indices to be deleted, still remaining: "
+            raise RuntimeError("Timed out waiting for indices to be deleted, still remaining: "
                             f"{indices_to_delete}. Please delete manually")
     print("All test indices deleted successfully")
 

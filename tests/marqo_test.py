@@ -230,7 +230,7 @@ class MarqoTestCase(TestCase):
                                    f"Please specify it's settings in scripts/populate_all_indices.py")
         except (MarqoWebError, TypeError) as e:
             raise RuntimeError(f"Indexes must be precreated during cloud tests. Index {index_name} is not ready. "
-                               f"Please specify it's settings in scripts/populate_all_indices.py")
+                               f"Please specify its settings in scripts/populate_all_indices.py")
         self.cleanup_documents_from_index(index_name)
         return index_name
 
@@ -260,7 +260,7 @@ class MarqoTestCase(TestCase):
                 docs_to_delete = [i['_id'] for i in idx.search(q, limit=100)['hits']]
                 if docs_to_delete:
                     idx.delete_documents(docs_to_delete, auto_refresh=True)
-                else:
+                if attempt % 10 == 0:
                     q += " "
                 attempt += 1
                 if attempt > max_attempts:
