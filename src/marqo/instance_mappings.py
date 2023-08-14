@@ -37,8 +37,11 @@ class InstanceMappings(ABC):
         pass
 
     @abstractmethod
-    def is_index_available(self, index_name: str) -> bool:
+    def is_index_usage_allowed(self, index_name: str) -> bool:
         """
-        Return whether the given index is available.
+        Return whether the given index is allowed to be used.
+
+        Currently, it is just used during the version check. If False
+        is returned, the version check will not be attempted.
         """
         pass

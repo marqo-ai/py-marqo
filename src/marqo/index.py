@@ -59,7 +59,7 @@ class Index:
                 f'Cache update on index object instantiation could not retrieve index URL: {e}')
             skip_version_check = True
 
-        if (self.config.instance_mapping.is_index_available(index_name=self.index_name)
+        if (self.config.instance_mapping.is_index_usage_allowed(index_name=self.index_name)
                 and not skip_version_check):
             self._marqo_minimum_supported_version_check()
 
