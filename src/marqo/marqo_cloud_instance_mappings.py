@@ -69,5 +69,4 @@ class MarqoCloudInstanceMappings(InstanceMappings):
     def index_http_error_handler(self, index_name: str, http_status: Optional[int] = None) -> None:
         mq_logger.debug(f'Evicting index {index_name} from cache (if exists) due to error {http_status}')
 
-        self._urls_mapping['READY'].pop(index_name, None)
-        self._urls_mapping['CREATING'].pop(index_name, None)
+        self._refresh_urls()
