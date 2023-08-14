@@ -49,7 +49,6 @@ class MarqoCloudInstanceMappings(InstanceMappings):
             self._refresh_urls(timeout=3)
 
     def _refresh_urls(self, timeout=None):
-        print("sending HTTP request for cache refresh")
         try:
             response = requests.get(f'{self.get_control_base_url()}/indexes',
                                     headers={"x-api-key": self.api_key}, timeout=timeout)
