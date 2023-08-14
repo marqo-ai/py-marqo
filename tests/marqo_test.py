@@ -231,7 +231,7 @@ class MarqoTestCase(TestCase):
             index_name = f"{index_name}-{create_settings_hash(settings_dict, kwargs)}"
         if settings_dict:
             settings_dict.update({
-                "inference_type": "marqo.CPU", "storage_class": "marqo.basic"
+                "inference_type": "marqo.CPU.large", "storage_class": "marqo.basic"
             })
 
         if len(index_name) > 32:
