@@ -7,7 +7,8 @@ import requests
 from marqo.enums import IndexStatus
 from marqo.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
 from tests.marqo_test import MarqoTestCase
-from marqo.errors import MarqoCloudIndexNotFoundError, MarqoCloudIndexNotReadyError, MarqoWebError
+from marqo.errors import MarqoCloudIndexNotFoundError, MarqoCloudIndexNotReadyError, MarqoWebError, \
+    BackendCommunicationError
 
 
 class TestMarqoCloudInstanceMappings(MarqoTestCase):
@@ -203,23 +204,28 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         assert mock_post.call_count == 2
         assert mock_get.call_count == 1
 
-    @patch("requests.get", side_effect=requests.get)
-    def test_deleted_index_created_again(self, mock_get):
+    def test_deleted_index_created_again(self):
         if not self.client.config.is_marqo_cloud:
             self.skipTest("Test is not relevant for non-Marqo Cloud instances")
 
         mappings = self.client.config.instance_mapping
-        mappings._urls_mapping[IndexStatus.READY][self.generic_test_index_name] = 'https://example.com'
+        mappings._urls_mapping[IndexStatus.READY][self.generic_test_index_name] = \
+            'https://dummy-url-e0244394-4383-4869-b633-46e6fe4a3ac1.dp1.marqo.ai'
 
-        with mock.patch('marqo._httprequests.HttpRequests.send_request') as mock_send_request:
-            mock_send_request.side_effect = MarqoWebError(message="Not Found", status_code=404)
-            self.client.index(self.generic_test_index_name).search('test query')
+        with mock.patch('marqo.index.Index._marqo_minimum_supported_version_check'):
+            # Disable version check otherwise it'll cause cache eviction and we get IndexNotFound instead
+            with self.assertRaises(BackendCommunicationError):
+                self.client.index(self.generic_test_index_name).search('test query')
 
         assert self.generic_test_index_name not in mappings._urls_mapping[IndexStatus.READY]
 
+        # Second time we expect a cache refresh and index not found
+        with self.assertRaises(MarqoCloudIndexNotFoundError):
+            self.client.index(self.generic_test_index_name).search('test query')
+
         self.create_test_index(self.generic_test_index_name)
 
-        index = self.client.index(self.generic_test_index_name)
+        self.client.index(self.generic_test_index_name).search('test query')
 
         assert len(mappings._urls_mapping[IndexStatus.READY][self.generic_test_index_name]) > 0
 
@@ -366,7 +372,7 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         idx.search("test")
         assert self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp == last_refresh
 
-    def test_on_instance_error_404_existing_index(self):
+    def test_on_instance_error_existing_index(self):
         mappings = MarqoCloudInstanceMappings(
             control_base_url="https://api.marqo.ai", api_key="your-api-key"
         )
@@ -374,13 +380,13 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         mappings._urls_mapping[IndexStatus.READY]['index2'] = "example.com"
         mappings._urls_mapping[IndexStatus.CREATING]['index1'] = "example.com"
 
-        mappings.on_instance_error('index1', 404)
+        mappings.on_instance_error('index1')
 
         self.assertEqual(mappings._urls_mapping,
                          {IndexStatus.READY: {'index2': 'example.com'}, IndexStatus.CREATING: {}}
                          )
 
-    def test_on_instance_error_other_status(self):
+    def test_on_instance_error_missing_index(self):
         mappings = MarqoCloudInstanceMappings(
             control_base_url="https://api.marqo.ai", api_key="your-api-key"
         )
@@ -388,22 +394,7 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         mappings._urls_mapping[IndexStatus.READY]['index2'] = "example.com"
         mappings._urls_mapping[IndexStatus.CREATING]['index1'] = "example.com"
 
-        mappings.on_instance_error('index1', 500)
-
-        self.assertEqual(mappings._urls_mapping,
-                         {IndexStatus.READY: {'index1': 'example.com', 'index2': 'example.com'},
-                          IndexStatus.CREATING: {'index1': 'example.com'}}
-                         )
-
-    def test_on_instance_error_404_missing_index(self):
-        mappings = MarqoCloudInstanceMappings(
-            control_base_url="https://api.marqo.ai", api_key="your-api-key"
-        )
-        mappings._urls_mapping[IndexStatus.READY]['index1'] = "example.com"
-        mappings._urls_mapping[IndexStatus.READY]['index2'] = "example.com"
-        mappings._urls_mapping[IndexStatus.CREATING]['index1'] = "example.com"
-
-        mappings.on_instance_error('index3', 404)
+        mappings.on_instance_error('index3')
 
         self.assertEqual(mappings._urls_mapping,
                          {IndexStatus.READY: {'index1': 'example.com', 'index2': 'example.com'},

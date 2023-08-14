@@ -1,4 +1,5 @@
 import time
+from typing import Optional
 
 import requests
 from requests.exceptions import Timeout
@@ -65,9 +66,8 @@ class MarqoCloudInstanceMappings(InstanceMappings):
         if self._urls_mapping:
             self.latest_index_mappings_refresh_timestamp = time.time()
 
-    def on_instance_error(self, index_name: str, http_status: int) -> None:
-        if http_status == 404:
-            mq_logger.debug(f'Evicting index {index_name} from cache (if exists) due to 404')
+    def on_instance_error(self, index_name: str, http_status: Optional[int] = None) -> None:
+        mq_logger.debug(f'Evicting index {index_name} from cache (if exists) due to error {http_status}')
 
-            self._urls_mapping['READY'].pop(index_name, None)
-            self._urls_mapping['CREATING'].pop(index_name, None)
+        self._urls_mapping['READY'].pop(index_name, None)
+        self._urls_mapping['CREATING'].pop(index_name, None)

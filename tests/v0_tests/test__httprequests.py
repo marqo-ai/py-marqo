@@ -1,6 +1,8 @@
 import unittest
 from unittest.mock import patch, MagicMock
 
+import requests.exceptions
+
 from marqo._httprequests import HttpRequests
 from marqo.config import Config
 from marqo.default_instance_mappings import DefaultInstanceMappings
@@ -40,7 +42,7 @@ class TestConstructPath(unittest.TestCase):
     def test_send_request_calls_on_instance_error(self, mock_on_instance_error: MagicMock, mock_validate: MagicMock,
                                                   mock_requests: MagicMock,):
         # Set up mock behavior to raise MarqoWebError
-        mock_validate.side_effect = MarqoWebError(message="Not Found", status_code=404)
+        mock_validate.side_effect = requests.exceptions.ConnectionError()
 
         http_requests = HttpRequests(config=Config(instance_mappings=DefaultInstanceMappings(self.base_url)))
 
@@ -48,4 +50,4 @@ class TestConstructPath(unittest.TestCase):
             http_requests.get('/', index_name="test_index")
 
         mock_on_instance_error.assert_called_once()
-        mock_on_instance_error.assert_called_with("test_index", 404)
+        mock_on_instance_error.assert_called_with("test_index")
