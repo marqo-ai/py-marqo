@@ -1,9 +1,6 @@
 import time
 from unittest import mock
 from unittest.mock import patch, MagicMock
-
-import requests
-
 from marqo.enums import IndexStatus
 from marqo.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
 from tests.marqo_test import MarqoTestCase
@@ -173,11 +170,20 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         )
         assert mapping.get_index_base_url("index1") == "example.com"
         with patch("marqo.marqo_cloud_instance_mappings.mq_logger.warning") as mock_warning:
+            # simulate that the cache has expired
+            mapping.latest_index_mappings_refresh_timestamp = mapping.latest_index_mappings_refresh_timestamp - 20
+
+            # when mapping.index_http_error_handler triggers an update, we should gracefully
+            # handle the error
             mock_get.return_value.ok = False
+            mock_get.return_value.text = "Some Internal Server Error Message"
             mock_get.return_value.json.return_value = {"status_code": 500}
-            mapping.latest_index_mappings_refresh_timestamp = time.time() - 366
+            mapping.index_http_error_handler('index2')
+
             assert mapping.get_index_base_url("index1") == "example.com"
             mock_warning.assert_called_once()
+            assert str(mock_warning.call_args[0][0]) == mock_get.return_value.text
+            self.assertRaises(MarqoCloudIndexNotFoundError, mapping.get_index_base_url, "index2")
 
     @patch("requests.get")
     def test_get_indexes_fails_cache_updates(self, mock_get):
