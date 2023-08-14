@@ -36,6 +36,14 @@ def create_settings_hash(settings_dict, **kwargs):
 
 
 def populate_indices():
+    """ Populates indices for cloud tests. The flow is following:
+    in the index_name_to_config_mappings dict we define prefix as a key and list of settings as a value.
+    for each setting in a list there will be created an index with a name prefix + settings_hash.
+
+    All of the passed settings there will be taken as kwargs for the index creation,
+    so if you want to pass settings dict object,
+    the dict value must be wrapped in a dict with key "settings_dict".
+    """
     populate_indices_start_time = time.time()
     test_uniqueness_id = os.environ.get("MQ_TEST_RUN_IDENTIFIER", "")
     generic_test_index_name = 'test-index'
@@ -74,11 +82,11 @@ def populate_indices():
                      }
                  }
               },
-             {"treat_urls_and_pointers_as_images": True,  # allows us to find an image file and index it
+             {"treat_urls_and_pointers_as_images": True,
               "model": "ViT-B/16",
               "image_preprocessing_method": None
               },
-             {"treat_urls_and_pointers_as_images": True,  # allows us to find an image file and index it
+             {"treat_urls_and_pointers_as_images": True,
               "model": "ViT-B/16",
               "image_preprocessing_method": "simple"
               },
@@ -113,34 +121,37 @@ def populate_indices():
 
     indexes_to_create = []
 
-    for index_name, configs_list in index_name_to_config_mappings.items():
-        for config in configs_list:
-            settings_dict = config.get("settings_dict")
-            if config:
+    # map real index name (with settings hash) to settings
+    for index_name, settings_list in index_name_to_config_mappings.items():
+        for index_settings in settings_list:
+            settings_dict = index_settings.get("settings_dict")
+            if index_settings:
                 if not settings_dict:
-                    index_name_to_create = index_name + '-' + create_settings_hash(settings_dict=None, **config)
+                    index_name_to_create = index_name + '-' + create_settings_hash(settings_dict=None, **index_settings)
                 else:
                     index_name_to_create = index_name + '-' + create_settings_hash(settings_dict=settings_dict)
             else:
                 index_name_to_create = index_name
-            config_with_cloud_settings = config.copy()
+            index_settings_with_cloud_settings = index_settings.copy()
             if settings_dict:
-                config_with_cloud_settings["settings_dict"].update(
+                index_settings_with_cloud_settings["settings_dict"].update(
                     {
                         "inference_type": "marqo.CPU.large", "storage_class": "marqo.basic",
                     }
                 )
             else:
-                config_with_cloud_settings.update(
+                index_settings_with_cloud_settings.update(
                     {
                         "inference_node_type": "marqo.CPU.large", "storage_node_type": "marqo.basic"
                     }
                 )
-            indexes_to_create.append((index_name_to_create, config_with_cloud_settings))
-    for index_name, config in indexes_to_create:
-        print(f"Creating {index_name} with config: {config}")
-        print(mq.create_index(index_name=index_name, wait_for_readiness=False, **config))
+            indexes_to_create.append((index_name_to_create, index_settings_with_cloud_settings))
+    # create indexes
+    for index_name, index_settings in indexes_to_create:
+        print(f"Creating {index_name} with settings: {index_settings}")
+        print(mq.create_index(index_name=index_name, wait_for_readiness=False, **index_settings))
 
+    # wait for indexes to be created
     max_retries = 100
     attempt = 0
     while True:
