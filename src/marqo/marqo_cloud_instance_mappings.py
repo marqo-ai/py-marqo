@@ -1,5 +1,4 @@
 import time
-from typing import Optional
 
 import requests
 from requests.exceptions import Timeout
@@ -41,6 +40,7 @@ class MarqoCloudInstanceMappings(InstanceMappings):
             self._refresh_urls()
 
     def _refresh_urls(self, timeout=None):
+        mq_logger.debug("Refreshing Marqo Cloud index URL cache")
         try:
             response = requests.get(f'{self.get_control_base_url()}/indexes',
                                     headers={"x-api-key": self.api_key}, timeout=timeout)
@@ -63,5 +63,7 @@ class MarqoCloudInstanceMappings(InstanceMappings):
 
     def on_instance_error(self, index_name: str, http_status: int) -> None:
         if http_status == 404:
+            mq_logger.debug(f'Evicting index {index_name} from cache (if exists) due to 404')
+
             self._urls_mapping['READY'].pop(index_name, None)
             self._urls_mapping['CREATING'].pop(index_name, None)
