@@ -25,6 +25,8 @@ creation and deletion tests will be done elsewhere.
 """
 
 import logging
+import time
+import uuid
 from collections import defaultdict
 from functools import wraps
 import json
@@ -209,7 +211,7 @@ class MarqoTestCase(TestCase):
             - Please note that settings_dict overrides any kwargs during index creation.
         """
         client = marqo.Client(**self.client_settings)
-        index_name = f"{index_name}-{self.index_suffix}"
+        index_name = f"{index_name}" + (f"-{self.index_suffix}" if self.index_suffix else "")
         if settings_dict and kwargs:
             raise ValueError("Cannot provide both settings_dict and kwargs.")
         elif settings_dict or kwargs:

@@ -45,3 +45,14 @@ class InstanceMappings(ABC):
         is returned, the version check will not be attempted.
         """
         pass
+
+    @abstractmethod
+    def index_http_error_handler(self, index_name: str, http_status: Optional[int] = None) -> None:
+        """
+        Called when an HTTP error occurs on a Marqo index operation.
+
+        Args:
+            index_name: The index name
+            http_status: The HTTP status code
+        """
+        pass

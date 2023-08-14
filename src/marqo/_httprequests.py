@@ -67,10 +67,13 @@ class HttpRequests:
                 data=body,
                 verify=True
             )
-            return self.__validate(response)
+            return self._validate(response)
         except requests.exceptions.Timeout as err:
             raise BackendTimeoutError(str(err)) from err
         except requests.exceptions.ConnectionError as err:
+            if index_name:
+                self.config.instance_mapping.index_http_error_handler(index_name)
+
             raise BackendCommunicationError(str(err)) from err
 
     def get(
@@ -120,7 +123,7 @@ class HttpRequests:
         return request.json()
 
     @staticmethod
-    def __validate(
+    def _validate(
         request: requests.Response
     ) -> Any:
         try:
