@@ -68,6 +68,10 @@ class HttpRequests:
                 verify=True
             )
             return self.__validate(response)
+        except MarqoWebError as err:
+            if index_name:
+                self.config.instance_mapping.on_instance_error(index_name, err.status_code)
+                raise err
         except requests.exceptions.Timeout as err:
             raise BackendTimeoutError(str(err)) from err
         except requests.exceptions.ConnectionError as err:
