@@ -60,3 +60,8 @@ class MarqoCloudInstanceMappings(InstanceMappings):
                 self._urls_mapping[index['index_status']][index['index_name']] = index.get('endpoint')
         if self._urls_mapping:
             self.latest_index_mappings_refresh_timestamp = time.time()
+
+    def on_instance_error(self, index_name: str, http_status: int) -> None:
+        if http_status == 404:
+            self._urls_mapping['READY'].pop(index_name, None)
+            self._urls_mapping['CREATING'].pop(index_name, None)

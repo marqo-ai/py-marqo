@@ -25,3 +25,6 @@ class DefaultInstanceMappings(InstanceMappings):
 
     def is_remote(self):
         return self._is_remote
+
+    def on_instance_error(self, index_name: str, http_status: int) -> None:
+        return None

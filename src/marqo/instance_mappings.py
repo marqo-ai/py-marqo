@@ -35,3 +35,14 @@ class InstanceMappings(ABC):
     @abstractmethod
     def is_remote(self):
         pass
+
+    @abstractmethod
+    def on_instance_error(self, index_name: str, http_status: int) -> None:
+        """
+        Called when an HTTP error occurs on a Marqo instance.
+
+        Args:
+            index_name: The index name
+            http_status: The HTTP status code
+        """
+        pass
