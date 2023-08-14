@@ -12,5 +12,7 @@ class Devices:
 
 
 class IndexStatus:
-    CREATED = "READY"
+    READY = "READY"
     DELETED = "DELETED"
+    MODIFYING = "MODIFYING"
+    CREATING = "CREATING"
