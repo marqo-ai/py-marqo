@@ -26,6 +26,7 @@ class MarqoCloudInstanceMappings(InstanceMappings):
         return f"{self._control_base_url}/api"
 
     def get_index_base_url(self, index_name: str) -> str:
+        """Returns the index_name's base URL regardless of its status."""
         self._refresh_urls_if_needed(index_name)
 
         for cloud_status, indexes in self._urls_mapping.items():
