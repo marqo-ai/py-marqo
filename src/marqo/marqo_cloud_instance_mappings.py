@@ -46,7 +46,7 @@ class MarqoCloudInstanceMappings(InstanceMappings):
         if index_name not in self._urls_mapping[IndexStatus.READY] and \
                 time.time() - self.latest_index_mappings_refresh_timestamp > self.url_cache_duration:
             # fast refresh to catch if index was created
-            self._refresh_urls(timeout=3)
+            self._refresh_urls(timeout=15)
 
     def _refresh_urls(self, timeout=None):
         mq_logger.debug("Refreshing Marqo Cloud index URL cache")
