@@ -241,15 +241,13 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
             {"index_name": "index1", "endpoint": "example.com", "index_status": "CREATING"},
         ]}
         mapping.latest_index_mappings_refresh_timestamp = time.time() - 2
-        with self.assertRaises(MarqoCloudIndexNotReadyError):
-            mapping.get_index_base_url("index1")
+        assert 'example.com' == mapping.get_index_base_url("index1")
 
         # index is ready but cache is not expired
         mock_get.return_value.json.return_value = {"results": [
             {"index_name": "index1", "endpoint": "example.com", "index_status": "READY"},
         ]}
-        with self.assertRaises(MarqoCloudIndexNotReadyError):
-            mapping.get_index_base_url("index1")
+        assert 'example.com' == mapping.get_index_base_url("index1")
 
         mapping.latest_index_mappings_refresh_timestamp = time.time() - 2
         assert mapping.get_index_base_url("index1") == "example.com"
@@ -279,6 +277,9 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         with self.assertRaises(MarqoCloudIndexNotFoundError):
             mapping.get_index_base_url("index1")
 
+        with self.assertRaises(MarqoCloudIndexNotFoundError):
+            mapping.get_index_base_url("index-unknown")
+
     @patch("requests.get")
     def test_transitioning_flow_without_modifying(self, mock_get):
         mapping = MarqoCloudInstanceMappings(
@@ -291,15 +292,14 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
             {"index_name": "index1", "endpoint": "example.com", "index_status": "CREATING"},
         ]}
         mapping.latest_index_mappings_refresh_timestamp = time.time() - 2
-        with self.assertRaises(MarqoCloudIndexNotReadyError):
-            mapping.get_index_base_url("index1")
+
+        assert "example.com" == mapping.get_index_base_url("index1")
 
         # index is ready but cache is not expired
         mock_get.return_value.json.return_value = {"results": [
             {"index_name": "index1", "endpoint": "example.com", "index_status": "READY"},
         ]}
-        with self.assertRaises(MarqoCloudIndexNotReadyError):
-            mapping.get_index_base_url("index1")
+        assert "example.com" == mapping.get_index_base_url("index1")
 
         mapping.latest_index_mappings_refresh_timestamp = time.time() - 2
         assert mapping.get_index_base_url("index1") == "example.com"
