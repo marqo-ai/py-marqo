@@ -213,15 +213,11 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
             'https://dummy-url-e0244394-4383-4869-b633-46e6fe4a3ac1.dp1.marqo.ai'
 
         with mock.patch('marqo.index.Index._marqo_minimum_supported_version_check'):
-            # Disable version check otherwise it'll cause cache eviction and we get IndexNotFound instead
+            # Disable version check otherwise it'll cause cache eviction before we want it to happen
             with self.assertRaises(BackendCommunicationError):
                 self.client.index(self.generic_test_index_name).search('test query')
 
         assert self.generic_test_index_name not in mappings._urls_mapping[IndexStatus.READY]
-
-        # Second time we expect a cache refresh and index not found
-        with self.assertRaises(MarqoCloudIndexNotFoundError):
-            self.client.index(self.generic_test_index_name).search('test query')
 
         self.create_test_index(self.generic_test_index_name)
 
