@@ -1,5 +1,5 @@
 import time
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from marqo.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
 from tests.marqo_test import MarqoTestCase
@@ -33,7 +33,7 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         }
 
     @patch("requests.get")
-    def test_refresh_urls_if_not_needed(self, mock_get):
+    def test_refresh_urls_if_not_needed(self, mock_get: MagicMock):
         mock_get.return_value.json.return_value = {"results": [
             {"index_name": "index1", "endpoint": "example.com", "index_status": "READY"},
             {"index_name": "index2", "endpoint": "example2.com", "index_status": "READY"}
@@ -50,7 +50,7 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
 
         # Check that the timestamp has not been updated
         assert mapping.latest_index_mappings_refresh_timestamp == initial_timestamp
-        assert mock_get.called_once()
+        mock_get.assert_called_once()
 
         # Check that the URLs mapping has been initially populated
         assert mapping._urls_mapping["READY"] == {
