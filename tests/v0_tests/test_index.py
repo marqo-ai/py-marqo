@@ -423,3 +423,6 @@ class TestIndex(MarqoTestCase):
         with self.assertRaises(UnsupportedOperationError):
             index.get_status()
 
+    def test_version_check(self):
+        raise NotImplementedError('TODO implement me')
+

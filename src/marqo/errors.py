@@ -180,7 +180,7 @@ class MarqoCloudIndexNotReadyError(MarqoError):
     def __init__(self, index_name: str,) -> None:
         self.message = f"The Python client could not resolve the endpoint for the index name {index_name}. " \
                        f"This could be due to the index is still in the process of being created," \
-                       f" or that the client's cache has not yet been updated.\n" \
+                       f" or that the marqo client's cache has not yet been updated.\n" \
                        f"- Please try again in a couple of minutes, or you can query the index status" \
                        f" with mq.index({index_name}).get_status function to see when index is ready.\n" \
                        f"- If the problem persists, please contact marqo support at support@marqo.ai"

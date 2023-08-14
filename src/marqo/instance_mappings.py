@@ -35,3 +35,10 @@ class InstanceMappings(ABC):
     @abstractmethod
     def is_remote(self):
         pass
+
+    @abstractmethod
+    def is_index_available(self, index_name: str) -> bool:
+        """
+        Return whether the given index is available.
+        """
+        pass

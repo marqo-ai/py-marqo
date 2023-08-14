@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import requests
 
+import marqo
 from marqo.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
 from tests.marqo_test import MarqoTestCase
 from marqo.errors import MarqoCloudIndexNotFoundError,MarqoCloudIndexNotReadyError
@@ -325,5 +326,25 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         idx.search("test")
         assert self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp < time_now
 
+    def test_index_init_logging(self):
+        """Check for expected logging on index object instantiation"""
+        index_name = 'custom_test_index'
+
+
+        minutes = 20
+        import datetime
+        end_time = datetime.datetime.now() + datetime.timedelta(minutes=minutes)
+
+        while datetime.datetime.now() < end_time:
+            test_client = marqo.Client()
+
+            test_client.index(index_name)
+
+            try:
+                print(test_client.index(index_name).search('somthign'))
+            except MarqoWebError as e:
+                print("Error: ", e)
+
+            time.sleep(0.1)
 
 

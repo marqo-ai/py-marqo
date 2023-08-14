@@ -17,7 +17,7 @@ from marqo._httprequests import HttpRequests
 from marqo.config import Config
 from marqo.enums import SearchMethods, Devices
 from marqo import errors, utils
-from marqo.errors import MarqoWebError, UnsupportedOperationError
+from marqo.errors import MarqoWebError, UnsupportedOperationError, MarqoCloudIndexNotFoundError
 from marqo.marqo_logging import mq_logger
 from marqo.version import minimum_supported_marqo_version
 from packaging import version as versioning_helpers
@@ -55,9 +55,12 @@ class Index:
         try:
             self.config.instance_mapping.get_index_base_url(self.index_name)
         except errors.MarqoError as e:
-            mq_logger.warning(e)
+            mq_logger.debug(
+                f'Cache update on index object instantiation could not retrieve index URL: {e}')
             skip_version_check = True
-        if not skip_version_check:
+
+        if (self.config.instance_mapping.is_index_available(index_name=self.index_name)
+                and not skip_version_check):
             self._marqo_minimum_supported_version_check()
 
     def delete(self) -> Dict[str, Any]:
@@ -593,19 +596,22 @@ class Index:
 
     def _marqo_minimum_supported_version_check(self):
         min_ver = minimum_supported_marqo_version()
-        url = self.config.instance_mapping.get_index_base_url(self.index_name)
+        # in case we have a problem getting the index's URL:
         skip_warning_message = (
-            f"Marqo encountered a problem trying to check the Marqo version found at `{url}`. "
+            f"Marqo encountered a problem trying to check the Marqo version for index_name `{self.index_name}`. "
             f"The minimum supported Marqo version for this client is {min_ver}. "
             f"If you are sure your Marqo version is compatible with this client, you can ignore this message. ")
 
-        # Skip the check if the url is previously labelled as "_skipped"
-        if url in marqo_url_and_version_cache and marqo_url_and_version_cache[url] == "_skipped":
-            mq_logger.warning(skip_warning_message)
-            return
+        url = None
 
         # Do version check
         try:
+            url = self.config.instance_mapping.get_index_base_url(self.index_name)
+            skip_warning_message = (
+                f"Marqo encountered a problem trying to check the Marqo version found at `{url}`. "
+                f"The minimum supported Marqo version for this client is {min_ver}. "
+                f"If you are sure your Marqo version is compatible with this client, you can ignore this message. ")
+
             if url not in marqo_url_and_version_cache:
                 marqo_url_and_version_cache[url] = self.get_marqo()["version"]
             marqo_version = marqo_url_and_version_cache[url]
@@ -614,8 +620,12 @@ class Index:
                                   f"{minimum_supported_marqo_version()} to function properly, but your Marqo version is {marqo_version}. "
                                   f"Please upgrade your Marqo instance to avoid potential errors. "
                                   f"If you have already changed your Marqo instance but still get this warning, please restart your Marqo client Python interpreter.")
-        except (MarqoWebError, RequestException, TypeError, KeyError) as e:
-            mq_logger.warning(skip_warning_message)
-            marqo_url_and_version_cache[url] = "_skipped"
+        except (MarqoWebError, RequestException, TypeError, KeyError, MarqoCloudIndexNotFoundError) as e:
+            # skip the check if this is a cloud index that is still being created:
+            if not (self.config.is_marqo_cloud and not
+                    self.config.instance_mapping.is_index_available(index_name=self.index_name)):
+                mq_logger.warning(skip_warning_message)
+            if url is not None:
+                marqo_url_and_version_cache[url] = "_skipped"
         return
 

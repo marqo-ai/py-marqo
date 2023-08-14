@@ -14,6 +14,7 @@ from marqo.enums import IndexStatus
 
 
 class MarqoCloudInstanceMappings(InstanceMappings):
+
     def __init__(self, control_base_url, api_key=None, url_cache_duration: int = 15):
         self.latest_index_mappings_refresh_timestamp = time.time() - url_cache_duration
         self._urls_mapping = {IndexStatus.READY: {}, IndexStatus.CREATING: {}}
@@ -26,10 +27,19 @@ class MarqoCloudInstanceMappings(InstanceMappings):
 
     def get_index_base_url(self, index_name: str) -> str:
         self._refresh_urls_if_needed(index_name)
-        if index_name in self._urls_mapping[IndexStatus.READY]:
-            return self._urls_mapping[IndexStatus.READY][index_name]
-        if index_name in self._urls_mapping[IndexStatus.CREATING]:
-            raise MarqoCloudIndexNotReadyError(index_name)
+        print('url mappings:')
+        print(self._urls_mapping)
+        for cloud_status, indexes in self._urls_mapping.items():
+            if index_name in indexes:
+                return indexes[index_name]
+        print ("HERE")
+        # if there is no index name, what is the value? Not a URL, right?
+        # if index_name in self._urls_mapping[IndexStatus.READY]:
+        #     return self._urls_mapping[IndexStatus.READY][index_name]
+        # if index_name in self._urls_mapping[IndexStatus.CREATING]:
+        #     raise MarqoCloudIndexNotReadyError(index_name)
+
+        # only if
         raise MarqoCloudIndexNotFoundError(index_name)
 
     def is_remote(self):
@@ -46,6 +56,7 @@ class MarqoCloudInstanceMappings(InstanceMappings):
             self._refresh_urls(timeout=3)
 
     def _refresh_urls(self, timeout=None):
+        print("sending HTTP request for cache refresh")
         try:
             response = requests.get(f'{self.get_control_base_url()}/indexes',
                                     headers={"x-api-key": self.api_key}, timeout=timeout)
@@ -68,3 +79,17 @@ class MarqoCloudInstanceMappings(InstanceMappings):
                 self._urls_mapping[IndexStatus.CREATING][index['index_name']] = index.get('endpoint')
         if self._urls_mapping:
             self.latest_index_mappings_refresh_timestamp = time.time()
+
+    def is_index_available(self, index_name: str) -> bool:
+        """Checks the status of the index in self._urls_mapping.
+
+        Note that this method does not request a refresh of the mappings, so the result
+        of this method is a best effort.
+
+        If the index_name cannot be found in the self._urls_mapping, then False will be returned.
+        """
+
+        if index_name in self._urls_mapping[IndexStatus.READY]:
+            return True
+        else:
+            return False
