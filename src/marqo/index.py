@@ -613,6 +613,7 @@ class Index:
                 f"If you are sure your Marqo version is compatible with this client, you can ignore this message. ")
 
             if url not in marqo_url_and_version_cache:
+                # self.get_marqo() uses get_index_base_url(), so it should be available
                 marqo_url_and_version_cache[url] = self.get_marqo()["version"]
 
             marqo_version = marqo_url_and_version_cache[url]

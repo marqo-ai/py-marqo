@@ -27,19 +27,11 @@ class MarqoCloudInstanceMappings(InstanceMappings):
 
     def get_index_base_url(self, index_name: str) -> str:
         self._refresh_urls_if_needed(index_name)
-        print('url mappings:')
-        print(self._urls_mapping)
+
         for cloud_status, indexes in self._urls_mapping.items():
             if index_name in indexes:
                 return indexes[index_name]
-        print ("HERE")
-        # if there is no index name, what is the value? Not a URL, right?
-        # if index_name in self._urls_mapping[IndexStatus.READY]:
-        #     return self._urls_mapping[IndexStatus.READY][index_name]
-        # if index_name in self._urls_mapping[IndexStatus.CREATING]:
-        #     raise MarqoCloudIndexNotReadyError(index_name)
 
-        # only if
         raise MarqoCloudIndexNotFoundError(index_name)
 
     def is_remote(self):
