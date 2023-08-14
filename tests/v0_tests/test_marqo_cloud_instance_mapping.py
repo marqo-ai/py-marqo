@@ -1,11 +1,13 @@
 import time
+from unittest import mock
 from unittest.mock import patch, MagicMock
 
 import requests
 
+from marqo.enums import IndexStatus
 from marqo.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
 from tests.marqo_test import MarqoTestCase
-from marqo.errors import MarqoCloudIndexNotFoundError,MarqoCloudIndexNotReadyError
+from marqo.errors import MarqoCloudIndexNotFoundError, MarqoCloudIndexNotReadyError, MarqoWebError
 
 
 class TestMarqoCloudInstanceMappings(MarqoTestCase):
@@ -202,6 +204,26 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         assert mock_get.call_count == 1
 
     @patch("requests.get", side_effect=requests.get)
+    def test_deleted_index_created_again(self, mock_get):
+        if not self.client.config.is_marqo_cloud:
+            self.skipTest("Test is not relevant for non-Marqo Cloud instances")
+
+        mappings = self.client.config.instance_mapping
+        mappings._urls_mapping[IndexStatus.READY][self.generic_test_index_name] = 'https://example.com'
+
+        with mock.patch('marqo._httprequests.HttpRequests.send_request') as mock_send_request:
+            mock_send_request.side_effect = MarqoWebError(message="Not Found", status_code=404)
+            self.client.index(self.generic_test_index_name).search('test query')
+
+        assert self.generic_test_index_name not in mappings._urls_mapping[IndexStatus.READY]
+
+        self.create_test_index(self.generic_test_index_name)
+
+        index = self.client.index(self.generic_test_index_name)
+
+        assert len(mappings._urls_mapping[IndexStatus.READY][self.generic_test_index_name]) > 0
+
+    @patch("requests.get", side_effect=requests.get)
     @patch("marqo._httprequests.HttpRequests.post")
     def test_when_needed_http_request_for_get_indexes_is_sent(self, mock_post, mock_get):
         if not self.client.config.is_marqo_cloud:
@@ -343,3 +365,48 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         last_refresh = self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp
         idx.search("test")
         assert self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp == last_refresh
+
+    def test_on_instance_error_404_existing_index(self):
+        mappings = MarqoCloudInstanceMappings(
+            control_base_url="https://api.marqo.ai", api_key="your-api-key"
+        )
+        mappings._urls_mapping[IndexStatus.READY]['index1'] = "example.com"
+        mappings._urls_mapping[IndexStatus.READY]['index2'] = "example.com"
+        mappings._urls_mapping[IndexStatus.CREATING]['index1'] = "example.com"
+
+        mappings.on_instance_error('index1', 404)
+
+        self.assertEqual(mappings._urls_mapping,
+                         {IndexStatus.READY: {'index2': 'example.com'}, IndexStatus.CREATING: {}}
+                         )
+
+    def test_on_instance_error_other_status(self):
+        mappings = MarqoCloudInstanceMappings(
+            control_base_url="https://api.marqo.ai", api_key="your-api-key"
+        )
+        mappings._urls_mapping[IndexStatus.READY]['index1'] = "example.com"
+        mappings._urls_mapping[IndexStatus.READY]['index2'] = "example.com"
+        mappings._urls_mapping[IndexStatus.CREATING]['index1'] = "example.com"
+
+        mappings.on_instance_error('index1', 500)
+
+        self.assertEqual(mappings._urls_mapping,
+                         {IndexStatus.READY: {'index1': 'example.com', 'index2': 'example.com'},
+                          IndexStatus.CREATING: {'index1': 'example.com'}}
+                         )
+
+    def test_on_instance_error_404_missing_index(self):
+        mappings = MarqoCloudInstanceMappings(
+            control_base_url="https://api.marqo.ai", api_key="your-api-key"
+        )
+        mappings._urls_mapping[IndexStatus.READY]['index1'] = "example.com"
+        mappings._urls_mapping[IndexStatus.READY]['index2'] = "example.com"
+        mappings._urls_mapping[IndexStatus.CREATING]['index1'] = "example.com"
+
+        mappings.on_instance_error('index3', 404)
+
+        self.assertEqual(mappings._urls_mapping,
+                         {IndexStatus.READY: {'index1': 'example.com', 'index2': 'example.com'},
+                          IndexStatus.CREATING: {'index1': 'example.com'}}
+                         )
+
