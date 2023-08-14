@@ -1,7 +1,6 @@
 import os
 import signal
 import sys
-import time
 
 from create_and_set_cloud_unique_run_identifier import set_unique_run_identifier
 from delete_all_cloud_test_indexes import delete_all_test_indices
@@ -18,7 +17,6 @@ if __name__ == '__main__':
     # Set up the signal handler for KeyboardInterrupt (Cmd+C)
     signal.signal(signal.SIGINT, handle_interrupt)
 
-    test_start_time = time.time()
     try:
         set_unique_run_identifier()
         print(f"Using unique identifier: {os.environ['MQ_TEST_RUN_IDENTIFIER']}")

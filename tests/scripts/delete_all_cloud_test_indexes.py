@@ -20,6 +20,7 @@ def delete_all_test_indices():
         if index.index_name.startswith('test-index'):
             if suffix is not None and suffix in index.index_name.split('-'):
                 indices_to_delete.append(index.index_name)
+
     for index_name in indices_to_delete:
         index = client.index(index_name)
         if index.get_status()["index_status"] == marqo.enums.IndexStatus.READY:
@@ -30,13 +31,14 @@ def delete_all_test_indices():
         resp = requests.get(f"{client.config.instance_mapping.get_control_base_url()}/indexes",
                             headers={"x-api-key": client.config.api_key})
         resp_json = resp.json()
-        for index in resp_json['results']:
-            if index["index_name"] in indices_to_delete:
-                if index["index_status"] == "DELETED":
-                    indices_to_delete.remove(index["index_name"])
+        all_index_names = [index["index_name"] for index in resp_json['results']]
+        for index_for_deletion_name in indices_to_delete:
+            if index_for_deletion_name not in all_index_names:
+                indices_to_delete.remove(index_for_deletion_name)
         if attempt > max_retries:
             raise Exception("Timed out waiting for indices to be deleted, still remaining: "
                             f"{indices_to_delete}. Please delete manually")
+    print("All test indices deleted successfully")
 
 
 if __name__ == '__main__':

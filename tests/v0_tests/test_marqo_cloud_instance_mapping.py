@@ -175,40 +175,40 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
             mapping.get_index_base_url("index2")
 
     @patch("requests.get", side_effect=requests.get)
-    @patch("marqo._httprequests.HttpRequests.post")
-    def test_only_1_http_request_sent_for_search(self, mock_post, mock_get):
+    def test_only_1_http_request_sent_for_search(self, mock_get):
         if not self.client.config.is_marqo_cloud:
             self.skipTest("Test is not relevant for non-Marqo Cloud instances")
         test_index_name = self.create_test_index(self.generic_test_index_name)
         self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp = time.time() - 366
         # 1 for the initial refresh, 1 for the search
-        self.client.index(test_index_name).search("test")
-        assert mock_post.call_count == 1
-        assert mock_get.call_count == 1
+        with patch("marqo._httprequests.HttpRequests.post") as mock_post:
+            self.client.index(test_index_name).search("test")
+            assert mock_post.call_count == 1
+            assert mock_get.call_count == 1
 
-        # increased for search, didn't change for refresh
-        self.client.index(test_index_name).search("test")
-        assert mock_post.call_count == 2
-        assert mock_get.call_count == 1
+            # increased for search, didn't change for refresh
+            self.client.index(test_index_name).search("test")
+            assert mock_post.call_count == 2
+            assert mock_get.call_count == 1
 
     @patch("requests.get", side_effect=requests.get)
-    @patch("marqo._httprequests.HttpRequests.post")
-    def test_when_needed_http_request_for_get_indexes_is_sent(self, mock_post, mock_get):
+    def test_when_needed_http_request_for_get_indexes_is_sent(self, mock_get):
         if not self.client.config.is_marqo_cloud:
             self.skipTest("Test is not relevant for non-Marqo Cloud instances")
         test_index_name = self.create_test_index(self.generic_test_index_name)
         self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp = time.time() - 366
         # 1 for the initial refresh, 1 for the search
-        self.client.index(test_index_name).search("test")
-        assert mock_post.call_count == 1
-        assert mock_get.call_count == 1
+        with patch("marqo._httprequests.HttpRequests.post") as mock_post:
+            self.client.index(test_index_name).search("test")
+            assert mock_post.call_count == 1
+            assert mock_get.call_count == 1
 
-        self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp = time.time() - 366
+            self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp = time.time() - 366
 
-        # increased for search, increased for refresh
-        self.client.index(test_index_name).search("test")
-        assert mock_post.call_count == 2
-        assert mock_get.call_count == 2
+            # increased for search, increased for refresh
+            self.client.index(test_index_name).search("test")
+            assert mock_post.call_count == 2
+            assert mock_get.call_count == 2
 
     @patch("requests.get")
     def test_transitioning_flow(self, mock_get):

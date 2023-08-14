@@ -248,7 +248,7 @@ class MarqoTestCase(TestCase):
         Delete all documents from specified index.
         """
         idx = self.client.index(index_to_cleanup)
-        max_attempts = 1000
+        max_attempts = 100
         print(f"Deleting documents from index {idx.index_name}")
         try:
             # veryfying that index is in the mapping
@@ -258,10 +258,11 @@ class MarqoTestCase(TestCase):
             q = ""
             while idx.get_stats()["numberOfDocuments"] > 0:
                 docs_to_delete = [i['_id'] for i in idx.search(q, limit=100)['hits']]
-                idx.delete_documents(docs_to_delete, auto_refresh=True)
-                attempt += 1
-                if attempt % 100 == 0:
+                if docs_to_delete:
+                    idx.delete_documents(docs_to_delete, auto_refresh=True)
+                else:
                     q += " "
+                attempt += 1
                 if attempt > max_attempts:
                     raise MarqoError(f"Max attempts reached. Failed to delete documents from index {idx.index_name}")
         except MarqoError as e:
