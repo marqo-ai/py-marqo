@@ -59,6 +59,33 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         }
 
     @patch("requests.get")
+    def test_refresh_urls_if_expired(self, mock_get: MagicMock):
+        mock_get.return_value.json.return_value = {"results": [
+            {"index_name": "index1", "endpoint": "example.com", "index_status": "READY"},
+            {"index_name": "index2", "endpoint": "example2.com", "index_status": "READY"}
+        ]}
+        mapping = MarqoCloudInstanceMappings(
+            control_base_url="https://api.marqo.ai", api_key="your-api-key", url_cache_duration=60
+        )
+        # Call refresh_urls_if_needed without waiting
+        mapping._refresh_urls_if_needed("index1")
+        initial_timestamp = mapping.latest_index_mappings_refresh_timestamp
+        time.sleep(0.1)
+        # Since index is loaded in cache, it should not be refreshed and timestamp should not be updated
+        mapping.latest_index_mappings_refresh_timestamp = -1
+        mapping._refresh_urls_if_needed("index1")
+
+        # Check that the timestamp has not been updated
+        assert mapping.latest_index_mappings_refresh_timestamp > initial_timestamp
+        assert mock_get.call_count == 2
+
+        # Check that the URLs mapping has been initially populated
+        assert mapping._urls_mapping["READY"] == {
+            "index1": "example.com",
+            "index2": "example2.com",
+        }
+
+    @patch("requests.get")
     def test_refresh_includes_only_ready(self, mock_get):
         mock_get.return_value.json.return_value = {"results": [
             {"index_name": "index1", "endpoint": "example.com", "index_status": "READY"},
