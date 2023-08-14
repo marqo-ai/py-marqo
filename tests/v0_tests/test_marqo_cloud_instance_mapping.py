@@ -360,3 +360,30 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         time.sleep(0.1)
         idx.search("test")
         assert self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp < time_now
+
+    def test_is_index_usage_allowed(self):
+        if not self.client.config.is_marqo_cloud:
+            self.skipTest("Test is not relevant for non-Marqo Cloud instances")
+
+        test_index_name = self.create_test_index(self.generic_test_index_name)
+        assert self.client.config.instance_mapping.is_index_usage_allowed(test_index_name)
+
+        assert not self.client.config.instance_mapping.is_index_usage_allowed("not-existing-index")
+
+    @patch("requests.get")
+    def test_is_index_usage_allowed_combinations(self, mock_get):
+        if not self.client.config.is_marqo_cloud:
+            self.skipTest("Test is not relevant for non-Marqo Cloud instances")
+
+        mock_get.return_value.json.return_value = {"results": [
+            {"index_name": "index1", "endpoint": "example.com", "index_status": "CREATING"},
+            {"index_name": "index2", "endpoint": "example2.com", "index_status": "MODIFYING"},
+            {"index_name": "index3", "endpoint": "example3.com", "index_status": "READY"},
+        ]}
+        mapping = MarqoCloudInstanceMappings(
+            control_base_url="https://api.marqo.ai", api_key="your-api-key", url_cache_duration=1
+        )
+        assert not mapping.is_index_usage_allowed("index1")
+        assert mapping.is_index_usage_allowed("index2")
+        assert mapping.is_index_usage_allowed("index3")
+

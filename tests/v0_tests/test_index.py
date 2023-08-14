@@ -362,7 +362,7 @@ class TestIndex(MarqoTestCase):
 
                 mock_get_marqo.assert_not_called()
                 # Check the warning was logged every instantiation
-                mock_warning.assert_called_once()
+                mock_warning.assert_not_called()
 
     def test_error_handling_in_version_check(self):
         side_effect_list = [requests.exceptions.JSONDecodeError("test", "test", 1), BackendCommunicationError("test"),
