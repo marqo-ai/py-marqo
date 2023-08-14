@@ -224,7 +224,7 @@ class TestIndex(MarqoTestCase):
         self.client.config.is_marqo_cloud = True
 
         result = self.client.create_index(
-            index_name=self.generic_test_index_name, inference_node_type="marqo.CPU", inference_node_count=1,
+            index_name=self.generic_test_index_name, inference_node_type="marqo.CPU.large", inference_node_count=1,
             storage_node_type="marqo.basic"
         )
 
@@ -235,7 +235,7 @@ class TestIndex(MarqoTestCase):
                 'image_preprocessing': {'patch_method': None}
             },
             'number_of_shards': 1, 'number_of_replicas': 0,
-            'inference_type': "marqo.CPU", 'storage_class': "marqo.basic", 'number_of_inferences': 1})
+            'inference_type': "marqo.CPU.large", 'storage_class': "marqo.basic", 'number_of_inferences': 1})
         mock_get.assert_called_with("indexes/test-index/status")
         assert result == {"acknowledged": True}
 
@@ -270,7 +270,7 @@ class TestIndex(MarqoTestCase):
         self.client.config.is_marqo_cloud = True
 
         result = self.client.create_index(
-            index_name=self.generic_test_index_name, inference_node_type="marqo.CPU", inference_node_count=1,
+            index_name=self.generic_test_index_name, inference_node_type="marqo.CPU.large", inference_node_count=1,
             storage_node_type=None
         )
 
@@ -281,7 +281,7 @@ class TestIndex(MarqoTestCase):
                 'image_preprocessing': {'patch_method': None}
             },
             'number_of_shards': 1, 'number_of_replicas': 0,
-            'inference_type': "marqo.CPU", 'storage_class': None, 'number_of_inferences': 1})
+            'inference_type': "marqo.CPU.large", 'storage_class': None, 'number_of_inferences': 1})
         mock_get.assert_called_with("indexes/test-index/status")
         assert result == {"error": "storage_class is required"}
 
@@ -294,7 +294,7 @@ class TestIndex(MarqoTestCase):
         self.client.config.is_marqo_cloud = True
 
         result = self.client.create_index(
-            index_name=self.generic_test_index_name, inference_node_type="marqo.CPU", inference_node_count=-1,
+            index_name=self.generic_test_index_name, inference_node_type="marqo.CPU.large", inference_node_count=-1,
             storage_node_type="marqo.basic"
         )
 
@@ -305,7 +305,7 @@ class TestIndex(MarqoTestCase):
                 'image_preprocessing': {'patch_method': None}
             },
             'number_of_shards': 1, 'number_of_replicas': 0,
-            'inference_type': "marqo.CPU", 'storage_class': "marqo.basic", 'number_of_inferences': -1})
+            'inference_type': "marqo.CPU.large", 'storage_class': "marqo.basic", 'number_of_inferences': -1})
         mock_get.assert_called_with("indexes/test-index/status")
         assert result == {"error": "inference_node_count must be greater than 0"}
 

@@ -40,12 +40,9 @@ class MarqoCloudInstanceMappings(InstanceMappings):
                 time.time() - self.latest_index_mappings_refresh_timestamp > self.url_cache_duration:
             # fast refresh to catch if index was created
             self._refresh_urls()
-        if index_name in self._urls_mapping[IndexStatus.READY] and \
-                time.time() - self.latest_index_mappings_refresh_timestamp > 360:
-            # slow refresh in case index was deleted
-            self._refresh_urls(timeout=3)
 
     def _refresh_urls(self, timeout=None):
+        mq_logger.debug("Refreshing Marqo Cloud index URL cache")
         try:
             response = requests.get(f'{self.get_control_base_url()}/indexes',
                                     headers={"x-api-key": self.api_key}, timeout=timeout)
@@ -68,3 +65,11 @@ class MarqoCloudInstanceMappings(InstanceMappings):
                 self._urls_mapping[IndexStatus.CREATING][index['index_name']] = index.get('endpoint')
         if self._urls_mapping:
             self.latest_index_mappings_refresh_timestamp = time.time()
+
+    def index_http_error_handler(self, index_name: str, http_status: Optional[int] = None) -> None:
+        mq_logger.debug(f'Evicting index {index_name} from cache (if exists) due to error {http_status} and '
+                        f'refreshing index URL cache')
+
+        self._urls_mapping[IndexStatus.READY].pop(index_name, None)
+
+        self._refresh_urls_if_needed(index_name)

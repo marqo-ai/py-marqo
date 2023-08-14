@@ -226,12 +226,12 @@ class MarqoTestCase(TestCase):
             - Please note that settings_dict overrides any kwargs during index creation.
         """
         client = marqo.Client(**self.client_settings)
-        index_name = f"{index_name}-{self.index_suffix}"
+        index_name = f"{index_name}" + (f"-{self.index_suffix}" if self.index_suffix else "")
         if settings_dict or kwargs:
             index_name = f"{index_name}-{create_settings_hash(settings_dict, kwargs)}"
         if settings_dict:
             settings_dict.update({
-                "inference_type": "marqo.CPU", "storage_class": "marqo.basic"
+                "inference_type": "marqo.CPU.large", "storage_class": "marqo.basic"
             })
 
         if len(index_name) > 32:
