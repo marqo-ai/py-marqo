@@ -38,9 +38,9 @@ class TestConstructPath(unittest.TestCase):
 
     @patch("requests.sessions.Session.request")
     @patch("marqo._httprequests.HttpRequests._validate")
-    @patch("marqo.default_instance_mappings.DefaultInstanceMappings.on_instance_error")
-    def test_send_request_calls_on_instance_error(self, mock_on_instance_error: MagicMock, mock_validate: MagicMock,
-                                                  mock_requests: MagicMock,):
+    @patch("marqo.default_instance_mappings.DefaultInstanceMappings.index_http_error_handler")
+    def test_send_request_calls_index_http_error_handler(self, mock_index_http_error_handler: MagicMock, mock_validate: MagicMock,
+                                                  mock_requests: MagicMock, ):
         # Set up mock behavior to raise MarqoWebError
         mock_validate.side_effect = requests.exceptions.ConnectionError()
 
@@ -49,5 +49,5 @@ class TestConstructPath(unittest.TestCase):
         with self.assertRaises(MarqoWebError):
             http_requests.get('/', index_name="test_index")
 
-        mock_on_instance_error.assert_called_once()
-        mock_on_instance_error.assert_called_with("test_index")
+        mock_index_http_error_handler.assert_called_once()
+        mock_index_http_error_handler.assert_called_with("test_index")

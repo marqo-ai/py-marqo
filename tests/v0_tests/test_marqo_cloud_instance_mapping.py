@@ -283,7 +283,8 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         # cache has not expired, url is still returned
         assert mapping.get_index_base_url("index1") == "example.com"
 
-        mapping.latest_index_mappings_refresh_timestamp = time.time() - 366
+        # Trigger cache eviction for this index
+        mapping.index_http_error_handler("index1")
         with self.assertRaises(MarqoCloudIndexNotFoundError):
             mapping.get_index_base_url("index1")
 
@@ -326,7 +327,8 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         # cache has not expired, url is still returned
         assert mapping.get_index_base_url("index1") == "example.com"
 
-        mapping.latest_index_mappings_refresh_timestamp = time.time() - 366
+        # Trigger cache eviction for this index
+        mapping.index_http_error_handler("index1")
         with self.assertRaises(MarqoCloudIndexNotFoundError):
             mapping.get_index_base_url("index1")
 
@@ -368,7 +370,7 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         idx.search("test")
         assert self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp == last_refresh
 
-    def test_on_instance_error_existing_index(self):
+    def test_index_http_error_handler_existing_index(self):
         mappings = MarqoCloudInstanceMappings(
             control_base_url="https://api.marqo.ai", api_key="your-api-key"
         )
@@ -382,7 +384,7 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
                          {IndexStatus.READY: {'index2': 'example.com'}, IndexStatus.CREATING: {}}
                          )
 
-    def test_on_instance_error_missing_index(self):
+    def test_index_http_error_handler_missing_index(self):
         mappings = MarqoCloudInstanceMappings(
             control_base_url="https://api.marqo.ai", api_key="your-api-key"
         )
