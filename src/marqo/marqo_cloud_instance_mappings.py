@@ -67,6 +67,6 @@ class MarqoCloudInstanceMappings(InstanceMappings):
             self.latest_index_mappings_refresh_timestamp = time.time()
 
     def index_http_error_handler(self, index_name: str, http_status: Optional[int] = None) -> None:
-        mq_logger.debug(f'Evicting index {index_name} from cache (if exists) due to error {http_status}')
+        mq_logger.debug(f'Refreshing cache due to error {http_status} on index {index_name}')
 
         self._refresh_urls()

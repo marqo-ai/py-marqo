@@ -370,32 +370,25 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         idx.search("test")
         assert self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp == last_refresh
 
-    def test_index_http_error_handler_existing_index(self):
+    @patch("requests.get")
+    def test_index_http_error_handler(self, mock_get):
         mappings = MarqoCloudInstanceMappings(
             control_base_url="https://api.marqo.ai", api_key="your-api-key"
         )
         mappings._urls_mapping[IndexStatus.READY]['index1'] = "example.com"
         mappings._urls_mapping[IndexStatus.READY]['index2'] = "example.com"
         mappings._urls_mapping[IndexStatus.CREATING]['index1'] = "example.com"
+
+        mock_get.return_value.json.return_value = {"results": [
+            {"index_name": "index2", "endpoint": "example.com", "index_status": "READY"},
+            {"index_name": "index3", "endpoint": "example.com", "index_status": "CREATING"},
+        ]}
 
         mappings.index_http_error_handler('index1')
 
         self.assertEqual(mappings._urls_mapping,
-                         {IndexStatus.READY: {'index2': 'example.com'}, IndexStatus.CREATING: {}}
+                         {IndexStatus.READY: {'index2': 'example.com'},
+                          IndexStatus.CREATING: {'index3': 'example.com'}}
                          )
 
-    def test_index_http_error_handler_missing_index(self):
-        mappings = MarqoCloudInstanceMappings(
-            control_base_url="https://api.marqo.ai", api_key="your-api-key"
-        )
-        mappings._urls_mapping[IndexStatus.READY]['index1'] = "example.com"
-        mappings._urls_mapping[IndexStatus.READY]['index2'] = "example.com"
-        mappings._urls_mapping[IndexStatus.CREATING]['index1'] = "example.com"
-
-        mappings.index_http_error_handler('index3')
-
-        self.assertEqual(mappings._urls_mapping,
-                         {IndexStatus.READY: {'index1': 'example.com', 'index2': 'example.com'},
-                          IndexStatus.CREATING: {'index1': 'example.com'}}
-                         )
 
