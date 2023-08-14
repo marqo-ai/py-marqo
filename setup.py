@@ -10,6 +10,7 @@ setup(
         "requests",
         "urllib3",
         "pydantic<2.0.0",
+        "typing-extensions>=4.5.0",
         "packaging"
     ],
     tests_require=[

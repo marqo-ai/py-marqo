@@ -132,6 +132,80 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         with self.assertRaises(MarqoCloudIndexNotFoundError):
             mapping.get_index_base_url("index2")
 
+    @patch("requests.get")
+    def test_deleting_status_raises_error(self, mock_get):
+        mock_get.return_value.json.return_value = {"results": [
+            {"index_name": "index1", "endpoint": "example.com", "index_status": "READY"},
+            {"index_name": "index2", "endpoint": "example2.com", "index_status": "DELETING"}
+        ]}
+        mapping = MarqoCloudInstanceMappings(
+            control_base_url="https://api.marqo.ai", api_key="your-api-key", url_cache_duration=60
+        )
+        with self.assertRaises(MarqoCloudIndexNotFoundError):
+            mapping.get_index_base_url("index2")
+
+    @patch("requests.get")
+    def test_deleted_status_raises_error(self, mock_get):
+        mock_get.return_value.json.return_value = {"results": [
+            {"index_name": "index1", "endpoint": "example.com", "index_status": "READY"},
+            {"index_name": "index2", "endpoint": "example2.com", "index_status": "DELETED"}
+        ]}
+        mapping = MarqoCloudInstanceMappings(
+            control_base_url="https://api.marqo.ai", api_key="your-api-key", url_cache_duration=60
+        )
+        with self.assertRaises(MarqoCloudIndexNotFoundError):
+            mapping.get_index_base_url("index2")
+
+    @patch("requests.get")
+    def test_transitioning_flow(self, mock_get):
+        mapping = MarqoCloudInstanceMappings(
+            control_base_url="https://api.marqo.ai", api_key="your-api-key", url_cache_duration=1
+        )
+        with self.assertRaises(MarqoCloudIndexNotFoundError):
+            mapping.get_index_base_url("index1")
+
+        mock_get.return_value.json.return_value = {"results": [
+            {"index_name": "index1", "endpoint": "example.com", "index_status": "CREATING"},
+        ]}
+        mapping.latest_index_mappings_refresh_timestamp = time.time() - 2
+        with self.assertRaises(MarqoCloudIndexNotReadyError):
+            mapping.get_index_base_url("index1")
+
+        # index is ready but cache is not expired
+        mock_get.return_value.json.return_value = {"results": [
+            {"index_name": "index1", "endpoint": "example.com", "index_status": "READY"},
+        ]}
+        with self.assertRaises(MarqoCloudIndexNotReadyError):
+            mapping.get_index_base_url("index1")
+
+        mapping.latest_index_mappings_refresh_timestamp = time.time() - 2
+        assert mapping.get_index_base_url("index1") == "example.com"
+
+        mock_get.return_value.json.return_value = {"results": [
+            {"index_name": "index1", "endpoint": "example.com", "index_status": "MODIFYING"},
+        ]}
+        mapping.latest_index_mappings_refresh_timestamp = time.time() - 366
+
+        assert mapping.get_index_base_url("index1") == "example.com"
+
+        mock_get.return_value.json.return_value = {"results": [
+            {"index_name": "index1", "endpoint": "example.com", "index_status": "DELETING"},
+        ]}
+
+        # cache has not expired, url is still returned
+        assert mapping.get_index_base_url("index1") == "example.com"
+
+        mapping.latest_index_mappings_refresh_timestamp = time.time() - 366
+        with self.assertRaises(MarqoCloudIndexNotFoundError):
+            mapping.get_index_base_url("index1")
+
+        mock_get.return_value.json.return_value = {"results": [
+            {"index_name": "index1", "endpoint": "example.com", "index_status": "DELETED"},
+        ]}
+        mapping.latest_index_mappings_refresh_timestamp = time.time() - 366
+        with self.assertRaises(MarqoCloudIndexNotFoundError):
+            mapping.get_index_base_url("index1")
+
     def test_second_index_instantiation_does_not_refresh_urls_when_not_needed(self):
         if not self.client.config.is_marqo_cloud:
             self.skipTest("Test is not relevant for non-Marqo Cloud instances")
@@ -169,6 +243,3 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         time.sleep(0.1)
         idx.search("test")
         assert self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp < time_now
-
-
-
