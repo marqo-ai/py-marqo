@@ -626,6 +626,9 @@ class Index:
             if url not in marqo_url_and_version_cache:
                 # self.get_marqo() uses get_index_base_url(), so it should be available
                 marqo_url_and_version_cache[url] = self.get_marqo()["version"]
+            else:
+                # we already have the version cached, and therefor also logged a warning if needed
+                return
 
             marqo_version = marqo_url_and_version_cache[url]
 
