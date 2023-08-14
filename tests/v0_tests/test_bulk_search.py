@@ -1,11 +1,10 @@
 import copy
 import marqo
 from marqo import enums
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Dict, List
 from unittest import mock
 from pytest import mark
-from marqo.client import Client
-from marqo.errors import InvalidArgError, MarqoApiError, MarqoWebError
+from marqo.errors import InvalidArgError
 import requests
 import random
 import math

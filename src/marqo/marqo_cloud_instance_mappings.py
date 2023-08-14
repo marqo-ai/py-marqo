@@ -66,6 +66,7 @@ class MarqoCloudInstanceMappings(InstanceMappings):
 
         if not response.ok:
             mq_logger.warning(response.text)
+            return None
         response_json = response.json()
         self._urls_mapping = {IndexStatus.READY: {}, IndexStatus.CREATING: {}}
         for index in response_json['results']:

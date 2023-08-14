@@ -1,9 +1,5 @@
-import pprint
 import time
 import marqo.index
-from marqo.client import Client
-from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
-import unittest
 from tests.marqo_test import MarqoTestCase
 
 
