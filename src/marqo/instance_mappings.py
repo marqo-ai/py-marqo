@@ -37,9 +37,9 @@ class InstanceMappings(ABC):
         pass
 
     @abstractmethod
-    def on_instance_error(self, index_name: str, http_status: Optional[int] = None) -> None:
+    def index_http_error_handler(self, index_name: str, http_status: Optional[int] = None) -> None:
         """
-        Called when an HTTP error occurs on a Marqo instance.
+        Called when an HTTP error occurs on a Marqo index operation.
 
         Args:
             index_name: The index name

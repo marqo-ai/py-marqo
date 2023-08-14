@@ -380,7 +380,7 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         mappings._urls_mapping[IndexStatus.READY]['index2'] = "example.com"
         mappings._urls_mapping[IndexStatus.CREATING]['index1'] = "example.com"
 
-        mappings.on_instance_error('index1')
+        mappings.index_http_error_handler('index1')
 
         self.assertEqual(mappings._urls_mapping,
                          {IndexStatus.READY: {'index2': 'example.com'}, IndexStatus.CREATING: {}}
@@ -394,7 +394,7 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         mappings._urls_mapping[IndexStatus.READY]['index2'] = "example.com"
         mappings._urls_mapping[IndexStatus.CREATING]['index1'] = "example.com"
 
-        mappings.on_instance_error('index3')
+        mappings.index_http_error_handler('index3')
 
         self.assertEqual(mappings._urls_mapping,
                          {IndexStatus.READY: {'index1': 'example.com', 'index2': 'example.com'},

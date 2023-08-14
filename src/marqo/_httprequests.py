@@ -72,7 +72,7 @@ class HttpRequests:
             raise BackendTimeoutError(str(err)) from err
         except requests.exceptions.ConnectionError as err:
             if index_name:
-                self.config.instance_mapping.on_instance_error(index_name)
+                self.config.instance_mapping.index_http_error_handler(index_name)
 
             raise BackendCommunicationError(str(err)) from err
 
