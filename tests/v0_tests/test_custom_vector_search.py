@@ -1,7 +1,6 @@
 from typing import Any, Dict, List, Optional
 
-from marqo.client import Client
-from marqo.errors import MarqoApiError, MarqoWebError
+from marqo.errors import MarqoWebError
 from tests.marqo_test import MarqoTestCase
 from pytest import mark
 

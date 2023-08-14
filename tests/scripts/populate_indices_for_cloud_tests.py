@@ -11,6 +11,14 @@ def create_settings_hash(settings_dict, **kwargs):
     """
     Creates a hash from the settings dictionary and kwargs. Used to ensure that each index is created unique.
     Size is restricted on 10 characters to prevent having to big index name which could cause issues.
+
+    We de-nest the index_defaults so that some kwarg indexes and setttings_dict
+    indexes are more likely to generate the same index name,
+    saving us from creating an unnecessary index, Example:
+        settings_dict (original) = {"index_defaults": {"a": 1}, "number_of_shards": 2}
+        -> settings_dict (which we will use for hashing) = {"a": 1, "number_of_shards": 2}
+        # which matches the following index kwargs:
+        kwargs = {"a": 1, "number_of_shards": 2}
     """
     if settings_dict:
         settings_dict = settings_dict.copy()
@@ -136,7 +144,7 @@ def populate_indices():
     max_retries = 100
     attempt = 0
     while True:
-        if all(creating_index in mq.config.instance_mapping._urls_mapping["READY"] .keys()
+        if all(creating_index in mq.config.instance_mapping._urls_mapping["READY"].keys()
                for creating_index, _ in indexes_to_create):
             break
         mq.config.instance_mapping._refresh_urls()

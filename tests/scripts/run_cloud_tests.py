@@ -21,7 +21,7 @@ if __name__ == '__main__':
     test_start_time = time.time()
     try:
         set_unique_run_identifier()
-        print(f"Using unique identifier: {os.environ.get('MQ_TEST_RUN_IDENTIFIER', '')}")
+        print(f"Using unique identifier: {os.environ['MQ_TEST_RUN_IDENTIFIER']}")
         populate_indices()
         print(f"All indices has been created, proceeding to run tests with pytest. Arguments: {sys.argv[1:]}")
 

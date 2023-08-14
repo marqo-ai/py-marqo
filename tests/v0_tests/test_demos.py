@@ -1,8 +1,4 @@
-import requests
-
 from marqo.client import Client
-from marqo.errors import MarqoApiError
-import unittest
 import pprint
 from tests.marqo_test import MarqoTestCase
 

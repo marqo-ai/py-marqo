@@ -2,10 +2,6 @@ import copy
 import marqo
 from marqo import enums
 from unittest import mock
-from marqo.client import Client
-from marqo.errors import MarqoApiError
-import unittest
-import pprint
 import requests
 import random
 import math

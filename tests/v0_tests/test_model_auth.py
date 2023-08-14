@@ -1,6 +1,4 @@
 import json
-from marqo.client import Client
-from marqo.errors import MarqoApiError, MarqoError, MarqoWebError
 from tests.marqo_test import MarqoTestCase
 from marqo.utils import convert_dict_to_url_params
 from unittest import mock

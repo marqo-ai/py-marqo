@@ -1,6 +1,4 @@
 from tests.marqo_test import MarqoTestCase
-from marqo.errors import IndexNotFoundError
-from marqo.client import Client
 from pytest import mark
 
 

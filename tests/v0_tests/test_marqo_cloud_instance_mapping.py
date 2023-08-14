@@ -133,6 +133,23 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
             mapping.get_index_base_url("index2")
 
     @patch("requests.get")
+    def test_get_indexes_fails_cache_doesnt_update(self, mock_get):
+        mock_get.return_value.json.return_value = {"results": [
+            {"index_name": "index1", "endpoint": "example.com", "index_status": "READY"},
+        ]}
+        mapping = MarqoCloudInstanceMappings(
+            control_base_url="https://api.marqo.ai", api_key="your-api-key", url_cache_duration=0.1
+        )
+        assert mapping.get_index_base_url("index1") == "example.com"
+        with patch("marqo.marqo_cloud_instance_mappings.mq_logger.warning") as mock_warning:
+            mock_get.return_value.ok = False
+            mock_get.return_value.json.return_value = {"status_code": 500}
+            mapping.latest_index_mappings_refresh_timestamp = time.time() - 366
+            assert mapping.get_index_base_url("index1") == "example.com"
+            mock_warning.assert_called_once()
+
+
+    @patch("requests.get")
     def test_deleting_status_raises_error(self, mock_get):
         mock_get.return_value.json.return_value = {"results": [
             {"index_name": "index1", "endpoint": "example.com", "index_status": "READY"},

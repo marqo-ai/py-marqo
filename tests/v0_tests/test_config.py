@@ -1,9 +1,5 @@
-import unittest
 from unittest import mock
 from marqo import config
-from marqo import enums
-from marqo.client import Client
-from marqo import utils
 from tests.marqo_test import MarqoTestCase
 from marqo.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
 from marqo.default_instance_mappings import DefaultInstanceMappings

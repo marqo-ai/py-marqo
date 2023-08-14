@@ -1,5 +1,7 @@
 import os
 
+import requests
+
 import marqo
 
 
@@ -13,12 +15,28 @@ def delete_all_test_indices():
         local_marqo_settings["api_key"] = api_key
     client = marqo.Client(**local_marqo_settings)
     indexes = client.get_indexes()
+    indices_to_delete = []
     for index in indexes['results']:
         if index.index_name.startswith('test-index'):
             if suffix is not None and suffix in index.index_name.split('-'):
-                if index.get_status()["index_status"] == marqo.enums.IndexStatus.READY:
-                    index.delete(wait_for_readiness=False)
-    print("All test indices has been deleted")
+                indices_to_delete.append(index.index_name)
+    for index_name in indices_to_delete:
+        index = client.index(index_name)
+        if index.get_status()["index_status"] == marqo.enums.IndexStatus.READY:
+            index.delete(wait_for_readiness=False)
+    max_retries = 100
+    attempt = 0
+    while indices_to_delete:
+        resp = requests.get(f"{client.config.instance_mapping.get_control_base_url()}/indexes",
+                            headers={"x-api-key": client.config.api_key})
+        resp_json = resp.json()
+        for index in resp_json['results']:
+            if index["index_name"] in indices_to_delete:
+                if index["index_status"] == "DELETED":
+                    indices_to_delete.remove(index["index_name"])
+        if attempt > max_retries:
+            raise Exception("Timed out waiting for indices to be deleted, still remaining: "
+                            f"{indices_to_delete}. Please delete manually")
 
 
 if __name__ == '__main__':
