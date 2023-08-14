@@ -39,10 +39,6 @@ class MarqoCloudInstanceMappings(InstanceMappings):
                 time.time() - self.latest_index_mappings_refresh_timestamp > self.url_cache_duration:
             # fast refresh to catch if index was created
             self._refresh_urls()
-        if index_name in self._urls_mapping['READY'] and \
-                time.time() - self.latest_index_mappings_refresh_timestamp > 360:
-            # slow refresh in case index was deleted
-            self._refresh_urls(timeout=3)
 
     def _refresh_urls(self, timeout=None):
         try:

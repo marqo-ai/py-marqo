@@ -69,15 +69,14 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         )
         # Call refresh_urls_if_needed without waiting
         mapping._refresh_urls_if_needed("index1")
-        initial_timestamp = mapping.latest_index_mappings_refresh_timestamp
         time.sleep(0.1)
         # Since index is loaded in cache, it should not be refreshed and timestamp should not be updated
         mapping.latest_index_mappings_refresh_timestamp = -1
         mapping._refresh_urls_if_needed("index1")
 
         # Check that the timestamp has not been updated
-        assert mapping.latest_index_mappings_refresh_timestamp > initial_timestamp
-        assert mock_get.call_count == 2
+        assert mapping.latest_index_mappings_refresh_timestamp == -1
+        mock_get.assert_called_once()
 
         # Check that the URLs mapping has been initially populated
         assert mapping._urls_mapping["READY"] == {
@@ -148,7 +147,7 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         with self.assertRaises(MarqoCloudIndexNotFoundError):
             mapping.get_index_base_url("index2")
 
-    def test_second_index_instantiation_does_not_refresh_urls_when_not_needed(self):
+    def test_second_index_instantiation_does_not_refresh_urls(self):
         if not self.client.config.is_marqo_cloud:
             self.skipTest("Test is not relevant for non-Marqo Cloud instances")
         test_index_name = self.create_test_index(self.generic_test_index_name)
@@ -175,16 +174,6 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         idx = self.client.index(test_index_name)
         assert self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp > time_now
 
-        time_now = time.time()
-        self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp -= 361
-        time.sleep(0.1)
+        last_refresh = self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp
         idx.search("test")
-        assert self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp > time_now
-
-        time_now = time.time()
-        time.sleep(0.1)
-        idx.search("test")
-        assert self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp < time_now
-
-
-
+        assert self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp == last_refresh
