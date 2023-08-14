@@ -614,13 +614,19 @@ class Index:
 
             if url not in marqo_url_and_version_cache:
                 marqo_url_and_version_cache[url] = self.get_marqo()["version"]
+
             marqo_version = marqo_url_and_version_cache[url]
+
+            if marqo_version == "_skipped":
+                return
+
             if versioning_helpers.parse(marqo_version) < versioning_helpers.parse(min_ver):
                 mq_logger.warning(f"Your Marqo Python client requires a minimum Marqo version of "
                                   f"{minimum_supported_marqo_version()} to function properly, but your Marqo version is {marqo_version}. "
                                   f"Please upgrade your Marqo instance to avoid potential errors. "
                                   f"If you have already changed your Marqo instance but still get this warning, please restart your Marqo client Python interpreter.")
-        except (MarqoWebError, RequestException, TypeError, KeyError, MarqoCloudIndexNotFoundError) as e:
+        except (MarqoWebError, RequestException, TypeError, KeyError, MarqoCloudIndexNotFoundError,
+                versioning_helpers.InvalidVersion) as e:
             # skip the check if this is a cloud index that is still being created:
             if not (self.config.is_marqo_cloud and not
                     self.config.instance_mapping.is_index_available(index_name=self.index_name)):
