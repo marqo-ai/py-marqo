@@ -340,12 +340,12 @@ class TestIndex(MarqoTestCase):
             self.client.index(self.create_test_index(self.generic_test_index_name))
             mock_warning.assert_not_called()
 
-    def test_warning_printed_for_not_ready_index(self):
+    def test_warning_not_printed_for_not_ready_index(self):
         if not self.client.config.is_marqo_cloud:
             self.skipTest("Test only applicable for Marqo Cloud")
         with mock.patch("marqo.index.mq_logger.warning") as mock_warning:
             self.client.index("not-ready-index")
-            mock_warning.assert_called_once()
+            mock_warning.assert_not_called()
 
     def test_skipped_version_check_multiple_instantiation(self):
         """Ensure that the url labelled as `_skipped` only call get_marqo() once"""
