@@ -42,11 +42,11 @@ class MarqoCloudInstanceMappings(InstanceMappings):
     def is_remote(self):
         return True
 
-    def _refresh_urls_if_needed(self, index_name):
-        if index_name not in self._urls_mapping[IndexStatus.READY] and \
-                time.time() - self.latest_index_mappings_refresh_timestamp > self.url_cache_duration:
-            # fast refresh to catch if index was created
-            self._refresh_urls(timeout=15)
+    def _refresh_urls_if_needed(self, index_name: Optional[str] = None):
+        if index_name is None or index_name not in self._urls_mapping[IndexStatus.READY]:
+            if time.time() - self.latest_index_mappings_refresh_timestamp > self.url_cache_duration:
+                # fast refresh to catch if index was created
+                self._refresh_urls(timeout=15)
 
     def _refresh_urls(self, timeout=None):
         mq_logger.debug("Refreshing Marqo Cloud index URL cache")
@@ -75,12 +75,9 @@ class MarqoCloudInstanceMappings(InstanceMappings):
             self.latest_index_mappings_refresh_timestamp = time.time()
 
     def index_http_error_handler(self, index_name: str, http_status: Optional[int] = None) -> None:
-        mq_logger.debug(f'Evicting index {index_name} from cache (if exists) due to error {http_status} and '
-                        f'refreshing index URL cache')
+        mq_logger.debug(f'Triggering cache refresh due to error on index {index_name}')
 
-        self._urls_mapping[IndexStatus.READY].pop(index_name, None)
-
-        self._refresh_urls_if_needed(index_name)
+        self._refresh_urls_if_needed()
 
     def is_index_usage_allowed(self, index_name: str) -> bool:
         """Checks the status of the index in self._urls_mapping.

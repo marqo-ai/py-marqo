@@ -183,7 +183,8 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
             assert mapping.get_index_base_url("index1") == "example.com"
             mock_warning.assert_called_once()
             assert str(mock_warning.call_args[0][0]) == mock_get.return_value.text
-            self.assertRaises(MarqoCloudIndexNotFoundError, mapping.get_index_base_url, "index2")
+            # Ensure cache has maintained the old value
+            assert mapping.get_index_base_url("index2") == "example2.com"
 
     @patch("requests.get")
     def test_get_indexes_fails_cache_updates(self, mock_get):
@@ -368,7 +369,8 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         # cache has not expired, url is still returned
         assert mapping.get_index_base_url("index1") == "example.com"
 
-        # Trigger cache eviction for this index
+        # Trigger cache refresh, wait 1 second to ensure refresh isn't skipped
+        time.sleep(1)
         mapping.index_http_error_handler("index1")
         with self.assertRaises(MarqoCloudIndexNotFoundError):
             mapping.get_index_base_url("index1")
