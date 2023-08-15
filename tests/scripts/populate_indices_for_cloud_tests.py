@@ -2,7 +2,7 @@ import json
 import os
 import time
 import zlib
-
+from marqo.errors import MarqoWebError
 import marqo
 
 
@@ -139,7 +139,11 @@ def populate_indices():
             indexes_to_create.append((index_name_to_create, config_with_cloud_settings))
     for index_name, config in indexes_to_create:
         print(f"Creating {index_name} with config: {config}")
-        print(mq.create_index(index_name=index_name, wait_for_readiness=False, **config))
+        try:
+            print(mq.create_index(index_name=index_name, wait_for_readiness=False, **config))
+        except MarqoWebError as e:
+            print(f"Attempting to create index {index_name} resulting in error {e}")
+
 
     # Around 30 min:
     max_retries = 200
