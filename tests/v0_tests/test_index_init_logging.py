@@ -15,15 +15,22 @@ class TestInitLogging(MarqoTestCase):
     @patch("requests.get")
     @patch("marqo.marqo_cloud_instance_mappings.mq_logger.warning")
     def test_index_init_creating(self, mock_warning, mock_get):
-        """Test no logging on index instantiation when index is creating"""
+        """Test no logging on index instantiation when a cloud index is in a CREATING state"""
         if not self.client.config.is_marqo_cloud:
             self.skipTest("Test is not relevant for non-Marqo Cloud instances")
 
-        mock_get.return_value.json.return_value = {"results": [
-            {"index_name": "test_index_name", "endpoint": "example2.com", "index_status": "CREATING"}
-        ]}
         test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
+
+        mock_get.return_value.json.return_value = {"results": [
+            {"index_name": test_index_name, "endpoint": "example2.com", "index_status": "CREATING"}
+        ]}
+
         ix = self.client.index(test_index_name)
+
+        marqo_url_and_version_cache.clear()
+        ix.config.instance_mapping.latest_index_mappings_refresh_timestamp = 0
+        ix.config.instance_mapping.index_http_error_handler(test_index_name)
+
         assert ix.config.instance_mapping.get_index_base_url(test_index_name) == 'example2.com'
         assert mock_warning.call_count == 0
 
