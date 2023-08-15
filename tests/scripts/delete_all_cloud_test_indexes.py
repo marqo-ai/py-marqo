@@ -1,4 +1,5 @@
 import os
+import time
 
 import requests
 
@@ -28,6 +29,7 @@ def delete_all_test_indices():
     max_retries = 100
     attempt = 0
     while indices_to_delete:
+        attempt += 1
         resp = requests.get(f"{client.config.instance_mapping.get_control_base_url()}/indexes",
                             headers={"x-api-key": client.config.api_key})
         resp_json = resp.json()
@@ -38,6 +40,7 @@ def delete_all_test_indices():
         if attempt > max_retries:
             raise RuntimeError("Timed out waiting for indices to be deleted, still remaining: "
                             f"{indices_to_delete}. Please delete manually")
+        time.sleep(10)
     print("All test indices deleted successfully")
 
 
