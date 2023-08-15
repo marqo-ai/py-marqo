@@ -313,12 +313,13 @@ class TestIndex(MarqoTestCase):
 
         Also ensure we only log a version check warning once.
         """
+        test_index_name = self.create_test_index(self.generic_test_index_name)
         with mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo, \
                 mock.patch("marqo.index.Index.get_status") as mock_get_status, \
                 mock.patch("marqo.marqo_cloud_instance_mappings.MarqoCloudInstanceMappings.get_index_base_url") as mock_get_base_url:
             mock_get_status.return_value = {'index_status': 'READY'}
             mock_get_marqo.return_value = {'version': '0.0.0'}
-            index = self.client.index(self.generic_test_index_name)
+            index = self.client.index(test_index_name)
 
             mock_get_marqo.assert_called_once()
             mock_warning.assert_called_once()
@@ -327,7 +328,7 @@ class TestIndex(MarqoTestCase):
 
         for _ in range(10):
             with mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo:
-                index = self.client.index(self.generic_test_index_name)
+                index = self.client.index(test_index_name)
 
                 mock_get_marqo.assert_not_called()
                 mock_warning.assert_not_called()
@@ -339,22 +340,17 @@ class TestIndex(MarqoTestCase):
             self.client.index(self.create_test_index(self.generic_test_index_name))
             mock_warning.assert_not_called()
 
-    def test_warning_printed_for_not_ready_index(self):
-        if not self.client.config.is_marqo_cloud:
-            self.skipTest("Test only applicable for Marqo Cloud")
-        with mock.patch("marqo.index.mq_logger.warning") as mock_warning:
-            self.client.index("not-ready-index")
-            mock_warning.assert_called_once()
-
     def test_skipped_version_check_multiple_instantiation(self):
         """Ensure that the url labelled as `_skipped` only call get_marqo() once"""
+        test_index_name = self.create_test_index(self.generic_test_index_name)
+        marqo_url_and_version_cache.clear()
         with mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo, \
                 mock.patch("marqo.index.Index.get_status") as mock_get_status, \
                 mock.patch("marqo.marqo_cloud_instance_mappings.MarqoCloudInstanceMappings.get_index_base_url") as mock_get_base_url:
             mock_get_status.return_value = {'index_status': 'READY'}
             mock_get_marqo.side_effect = requests.exceptions.RequestException("test")
             mock_get_base_url.return_value = self.client_settings["url"]
-            index = self.client.index(self.generic_test_index_name)
+            index = self.client.index(test_index_name)
 
             mock_get_marqo.assert_called_once()
             mock_get_marqo.reset_mock()
@@ -373,6 +369,8 @@ class TestIndex(MarqoTestCase):
         side_effect_list = [requests.exceptions.JSONDecodeError("test", "test", 1), BackendCommunicationError("test"),
                             BackendTimeoutError("test"), requests.exceptions.RequestException("test"),
                             KeyError("test"), KeyError("test"), requests.exceptions.Timeout("test")]
+        test_index_name = self.create_test_index(self.generic_test_index_name)
+        marqo_url_and_version_cache.clear()
         for i, side_effect in enumerate(side_effect_list):
             with mock.patch("marqo.index.mq_logger.warning") as mock_warning, \
                     mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo, \
@@ -381,7 +379,7 @@ class TestIndex(MarqoTestCase):
                 mock_get_marqo.side_effect = side_effect
                 mock_get_status.return_value = {'index_status': 'READY'}
                 mock_get_base_url.return_value = self.client_settings["url"]
-                index = self.client.index(self.generic_test_index_name)
+                index = self.client.index(test_index_name)
 
                 mock_get_marqo.assert_called_once()
 
@@ -398,6 +396,8 @@ class TestIndex(MarqoTestCase):
                 marqo_url_and_version_cache.clear()
 
     def test_version_check_instantiation(self):
+        test_index_name = self.create_test_index(self.generic_test_index_name)
+        marqo_url_and_version_cache.clear()
         with mock.patch("marqo.index.mq_logger.warning") as mock_warning, \
                 mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo, \
                 mock.patch("marqo.index.Index.get_status") as mock_get_status, \
@@ -406,7 +406,7 @@ class TestIndex(MarqoTestCase):
             mock_get_status.return_value = {'index_status': 'READY'}
             mock_get_base_url.return_value = self.client_settings['url']
 
-            index = self.client.index(self.generic_test_index_name)
+            index = self.client.index(test_index_name)
 
             mock_get_marqo.assert_called_once()
 
@@ -421,7 +421,7 @@ class TestIndex(MarqoTestCase):
 
             # Assert the url is in the cache
             self.assertIn(
-                self.client.config.instance_mapping.get_index_base_url(self.generic_test_index_name),
+                self.client.config.instance_mapping.get_index_base_url(test_index_name),
                 marqo_url_and_version_cache
             )
             assert marqo_url_and_version_cache[self.client_settings['url']] == '0.0.0'

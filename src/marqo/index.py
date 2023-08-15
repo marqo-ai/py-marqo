@@ -51,17 +51,9 @@ class Index:
         self.created_at = self._maybe_datetime(created_at)
         self.updated_at = self._maybe_datetime(updated_at)
 
-        skip_version_check = False
         # trying to get index url to verify that index is mapped
-        try:
-            self.config.instance_mapping.get_index_base_url(self.index_name)
-        except errors.MarqoError as e:
-            mq_logger.debug(
-                f'Cache update on index object instantiation could not retrieve index URL: {e}')
-            skip_version_check = True
 
-        if (self.config.instance_mapping.is_index_usage_allowed(index_name=self.index_name)
-                and not skip_version_check):
+        if self.config.instance_mapping.is_index_usage_allowed(index_name=self.index_name):
             self._marqo_minimum_supported_version_check()
 
     def delete(self, wait_for_readiness=True) -> Dict[str, Any]:
@@ -618,6 +610,7 @@ class Index:
         # Do version check
         try:
             url = self.config.instance_mapping.get_index_base_url(self.index_name)
+            print(url)
             skip_warning_message = (
                 f"Marqo encountered a problem trying to check the Marqo version found at `{url}`. "
                 f"The minimum supported Marqo version for this client is {min_ver}. "

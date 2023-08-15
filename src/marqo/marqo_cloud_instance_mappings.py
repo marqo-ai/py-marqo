@@ -35,6 +35,8 @@ class MarqoCloudInstanceMappings(InstanceMappings):
 
         for cloud_status, indexes in self._urls_mapping.items():
             if index_name in indexes:
+                if cloud_status == IndexStatus.CREATING:
+                    raise MarqoCloudIndexNotReadyError(index_name)
                 return indexes[index_name]
 
         raise MarqoCloudIndexNotFoundError(index_name)

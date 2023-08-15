@@ -24,7 +24,7 @@ class TestInitLogging(MarqoTestCase):
         ]}
         test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
         ix = self.client.index(test_index_name)
-        assert ix.config.instance_mapping.get_index_base_url(test_index_name) == 'example2.com'
+        assert self.client.config.instance_mapping.get_index_base_url("test_index_name") == 'example2.com'
         assert mock_warning.call_count == 0
 
     @patch("marqo.marqo_cloud_instance_mappings.mq_logger.warning")
@@ -38,39 +38,37 @@ class TestInitLogging(MarqoTestCase):
         # check that index truly exists:
         ix.get_stats()
 
-    @patch("marqo._httprequests.HttpRequests.get")
     @patch("marqo.marqo_cloud_instance_mappings.mq_logger.warning")
-    def test_index_init_exists_version_mismatch(self, mock_warning, mock_get):
+    def test_index_init_exists_version_mismatch(self, mock_warning):
         """This should trigger a warning """
-        mock_get.return_value = {"message":"Welcome to Marqo","version":"0.0.21"}
 
         test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
+        with patch("marqo._httprequests.HttpRequests.get") as mock_get:
+            mock_get.return_value = {"message": "Welcome to Marqo", "version": "0.0.21"}
+            assert mock_warning.call_count == 0
+            #  creating a client shouldn't trigger a warning
+            temp_client = Client(**self.client_settings)
 
-        assert mock_warning.call_count == 0
+            assert mock_warning.call_count == 0
 
-        #  creating a client shouldn't trigger a warning
-        temp_client = Client(**self.client_settings)
+            marqo_url_and_version_cache.clear()
 
-        assert mock_warning.call_count == 0
+            # instantiating an index should trigger a warning, as the version is
+            # not supported
+            ix = temp_client.index(test_index_name)
+            mock_get.assert_called_once()
+            assert mock_warning.call_count == 1
+            # A get request to get Marqo's version:
+            assert mock_get.call_count == 1
 
-        marqo_url_and_version_cache.clear()
+            index_url = ix.config.instance_mapping.get_index_base_url(test_index_name)
+            assert marqo_url_and_version_cache[index_url] == "0.0.21"
 
-        # instantiating an index should trigger a warning, as the version is
-        # not supported
-        ix = temp_client.index(test_index_name)
-        mock_get.assert_called_once()
-        assert mock_warning.call_count == 1
-        # A get request to get Marqo's version:
-        assert mock_get.call_count == 1
+            temp_client_2 = Client(**self.client_settings)
+            ix_2 = temp_client.index(test_index_name)
 
-        index_url = ix.config.instance_mapping.get_index_base_url(test_index_name)
-        assert marqo_url_and_version_cache[index_url] == "0.0.21"
-
-        temp_client_2 = Client(**self.client_settings)
-        ix_2 = temp_client.index(test_index_name)
-
-        # We should not get a warning, as we already have the version cached:
-        assert mock_warning.call_count == 1
-        # but we don't make another request to get the version:
-        assert mock_get.call_count == 1
+            # We should not get a warning, as we already have the version cached:
+            assert mock_warning.call_count == 1
+            # but we don't make another request to get the version:
+            assert mock_get.call_count == 1
 
