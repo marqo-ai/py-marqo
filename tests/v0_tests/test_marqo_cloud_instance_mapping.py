@@ -383,6 +383,8 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
             assert mock_post.call_count == 2
             # mappings refresh is triggered due to the error:
             assert mock_get.call_count == 1
+            return 2
+        assert run() == 2
 
     @patch("requests.get")
     def test_transitioning_flow(self, mock_get):
