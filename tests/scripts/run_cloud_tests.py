@@ -9,7 +9,7 @@ from populate_indices_for_cloud_tests import populate_indices
 
 def handle_interrupt(signum, frame):
     print("\nInterrupt received. Cleaning up and deleting indices.")
-    delete_all_test_indices()
+    # delete_all_test_indices()
     sys.exit(1)
 
 
