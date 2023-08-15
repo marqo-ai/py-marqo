@@ -132,7 +132,7 @@ class Client:
             res = self.http.delete(path=f"indexes/{index_name}")
             if self.config.is_marqo_cloud and wait_for_readiness:
                 cloud_wait_for_index_status(self.http, index_name, enums.IndexStatus.DELETED)
-                return res
+            return res
         except errors.MarqoWebError as e:
             return e.message
 
