@@ -59,6 +59,17 @@ class TestAddDocuments(MarqoTestCase):
         self.client.delete_index(test_index_name)
         test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
 
+    def test_delete_index_response(self):
+        mock_delete = mock.Mock()
+        mock_delete.return_value = {'mock_delete_message': 'mock_delete_response'}
+        @mock.patch("marqo._httprequests.HttpRequests.delete", mock_delete)
+        def run():
+            test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
+            delete_response = self.client.delete_index(test_index_name)
+            assert delete_response == mock_delete.return_value
+            return 2
+        assert run() == 2
+
     # Get index tests:
 
     def test_get_index(self):
