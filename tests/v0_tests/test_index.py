@@ -348,17 +348,19 @@ class TestIndex(MarqoTestCase):
 
     def test_skipped_version_check_multiple_instantiation(self):
         """Ensure that the url labelled as `_skipped` only call get_marqo() once"""
+        test_index_name = self.create_test_index(self.generic_test_index_name)
+        marqo_url_and_version_cache.clear()
         with mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo, \
-                mock.patch("marqo.index.Index.get_status") as mock_get_status, \
-                mock.patch("marqo.marqo_cloud_instance_mappings.MarqoCloudInstanceMappings.get_index_base_url") as mock_get_base_url:
+                mock.patch("marqo.index.Index.get_status") as mock_get_status:
             mock_get_status.return_value = {'index_status': 'READY'}
             mock_get_marqo.side_effect = requests.exceptions.RequestException("test")
-            mock_get_base_url.return_value = self.client_settings["url"]
-            index = self.client.index(self.generic_test_index_name)
+
+            index = self.client.index(test_index_name)
 
             mock_get_marqo.assert_called_once()
             mock_get_marqo.reset_mock()
-            assert marqo_url_and_version_cache[self.client_settings["url"]] == '_skipped'
+            assert ('_skipped' ==
+                    marqo_url_and_version_cache[index.config.instance_mapping.get_index_base_url(test_index_name)])
 
         for _ in range(10):
             with mock.patch("marqo.index.mq_logger.warning") as mock_warning, \
@@ -366,7 +368,6 @@ class TestIndex(MarqoTestCase):
                 index = self.client.index(self.generic_test_index_name)
 
                 mock_get_marqo.assert_not_called()
-                # Check the warning was logged every instantiation
                 mock_warning.assert_not_called()
 
     def test_error_handling_in_version_check(self):
