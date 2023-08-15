@@ -610,7 +610,6 @@ class Index:
         # Do version check
         try:
             url = self.config.instance_mapping.get_index_base_url(self.index_name)
-            print(url)
             skip_warning_message = (
                 f"Marqo encountered a problem trying to check the Marqo version found at `{url}`. "
                 f"The minimum supported Marqo version for this client is {min_ver}. "
