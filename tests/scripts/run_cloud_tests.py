@@ -28,7 +28,7 @@ if __name__ == '__main__':
         pytest.main(pytest_args)
         print("All tests has been executed, proceeding to delete indices")
 
-        delete_all_test_indices()
+        # delete_all_test_indices()
     except Exception as e:
         print(f"Error: {e}")
-        delete_all_test_indices()
+        # delete_all_test_indices()
