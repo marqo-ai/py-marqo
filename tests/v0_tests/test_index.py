@@ -373,16 +373,18 @@ class TestIndex(MarqoTestCase):
         side_effect_list = [requests.exceptions.JSONDecodeError("test", "test", 1), BackendCommunicationError("test"),
                             BackendTimeoutError("test"), requests.exceptions.RequestException("test"),
                             KeyError("test"), KeyError("test"), requests.exceptions.Timeout("test")]
+        # we must use a real index name that can appear in urls_mappings, otherwise the version
+        # check won't be attempted
+        test_index_name = self.create_test_index(self.generic_test_index_name)
         for i, side_effect in enumerate(side_effect_list):
             with mock.patch("marqo.index.mq_logger.warning") as mock_warning, \
                     mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo, \
-                    mock.patch("marqo.index.Index.get_status") as mock_get_status, \
-                    mock.patch("marqo.marqo_cloud_instance_mappings.MarqoCloudInstanceMappings.get_index_base_url") as mock_get_base_url:
+                    mock.patch("marqo.index.Index.get_status") as mock_get_status: #, \
                 mock_get_marqo.side_effect = side_effect
                 mock_get_status.return_value = {'index_status': 'READY'}
-                mock_get_base_url.return_value = self.client_settings["url"]
-                index = self.client.index(self.generic_test_index_name)
+                marqo_url_and_version_cache.clear()
 
+                index = self.client.index(test_index_name)
                 mock_get_marqo.assert_called_once()
 
                 # Check the warning was logged
@@ -393,9 +395,31 @@ class TestIndex(MarqoTestCase):
 
                 # Assert the message is what you expect
                 self.assertIn("Marqo encountered a problem trying to check the Marqo version found", warning_message)
-                self.assertEqual(marqo_url_and_version_cache, dict({self.client_settings["url"]: "_skipped"}))
+                self.assertEqual(marqo_url_and_version_cache, dict(
+                    {index.config.instance_mapping.get_index_base_url(index_name=test_index_name): "_skipped"}))
 
                 marqo_url_and_version_cache.clear()
+
+    def test_error_handling_in_version_check_already_instantiated(self):
+        # once cached, there should be no warning or request to get version
+        side_effect_list = [requests.exceptions.JSONDecodeError("test", "test", 1), BackendCommunicationError("test"),
+                            BackendTimeoutError("test"), requests.exceptions.RequestException("test"),
+                            KeyError("test"), KeyError("test"), requests.exceptions.Timeout("test")]
+        test_index_name = self.create_test_index(self.generic_test_index_name)
+        index = self.client.index(test_index_name)
+
+        for i, side_effect in enumerate(side_effect_list):
+            with mock.patch("marqo.index.mq_logger.warning") as mock_warning, \
+                    mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo, \
+                    mock.patch("marqo.index.Index.get_status") as mock_get_status:
+                mock_get_marqo.side_effect = side_effect
+                mock_get_status.return_value = {'index_status': 'READY'}
+
+                index = self.client.index(test_index_name)
+                mock_get_marqo.assert_not_called()
+
+                # Check the warning was logged
+                mock_warning.assert_not_called()
 
     def test_version_check_instantiation(self):
         with mock.patch("marqo.index.mq_logger.warning") as mock_warning, \

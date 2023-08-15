@@ -448,8 +448,8 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
 
         time_now = time.time()
         self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp -= 361
-        time.sleep(0.1)
         idx = self.client.index(test_index_name)
+        self.client.config.instance_mapping.index_http_error_handler(test_index_name)
         assert self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp > time_now
 
         last_refresh = self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp

@@ -9,7 +9,7 @@ from populate_indices_for_cloud_tests import populate_indices
 
 def handle_interrupt(signum, frame):
     print("\nInterrupt received. Cleaning up and deleting indices.")
-    delete_all_test_indices()
+    # delete_all_test_indices()
     sys.exit(1)
 
 
@@ -18,7 +18,9 @@ if __name__ == '__main__':
     signal.signal(signal.SIGINT, handle_interrupt)
 
     try:
-        set_unique_run_identifier()
+        if 'MQ_TEST_RUN_IDENTIFIER' not in os.environ:
+            os.environ['MQ_TEST_RUN_IDENTIFIER'] = 'cloudinteg'
+        # set_unique_run_identifier()
         print(f"Using unique identifier: {os.environ['MQ_TEST_RUN_IDENTIFIER']}")
         populate_indices()
         print(f"All indices has been created, proceeding to run tests with pytest. Arguments: {sys.argv[1:]}")
@@ -28,7 +30,7 @@ if __name__ == '__main__':
         pytest.main(pytest_args)
         print("All tests has been executed, proceeding to delete indices")
 
-        delete_all_test_indices()
+        # delete_all_test_indices()
     except Exception as e:
         print(f"Error: {e}")
-        delete_all_test_indices()
+        # delete_all_test_indices()
