@@ -18,7 +18,9 @@ if __name__ == '__main__':
     signal.signal(signal.SIGINT, handle_interrupt)
 
     try:
-        set_unique_run_identifier()
+        if 'MQ_TEST_RUN_IDENTIFIER' not in os.environ:
+            os.environ['MQ_TEST_RUN_IDENTIFIER'] = 'cloudinteg'
+        # set_unique_run_identifier()
         print(f"Using unique identifier: {os.environ['MQ_TEST_RUN_IDENTIFIER']}")
         populate_indices()
         print(f"All indices has been created, proceeding to run tests with pytest. Arguments: {sys.argv[1:]}")
