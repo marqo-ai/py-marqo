@@ -141,7 +141,8 @@ def populate_indices():
         print(f"Creating {index_name} with config: {config}")
         print(mq.create_index(index_name=index_name, wait_for_readiness=False, **config))
 
-    max_retries = 100
+    # Around 30 min:
+    max_retries = 200
     attempt = 0
     while True:
         if all(creating_index in mq.config.instance_mapping._urls_mapping["READY"].keys()
@@ -149,7 +150,8 @@ def populate_indices():
             break
         mq.config.instance_mapping._refresh_urls()
         time.sleep(10)
-        print("Waiting for indexes to be created...")
+        print(f"Waiting for indexes to be created. Current Mappings: "
+              f"{mq.config.instance_mapping._urls_mapping}")
         attempt += 1
         if attempt > max_retries:
             raise Exception("Timed out waiting for indexes to be created")
