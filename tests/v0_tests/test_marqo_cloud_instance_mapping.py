@@ -346,20 +346,43 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         if not self.client.config.is_marqo_cloud:
             self.skipTest("Test is not relevant for non-Marqo Cloud instances")
         test_index_name = self.create_test_index(self.generic_test_index_name)
-        self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp = time.time() - 366
+
+        from marqo._httprequests import HttpRequests as HttpReq2
+        h = HttpReq2
+
+        def pass_through_post(*args, **kwargs):
+            return h.post(*args, **kwargs)
+
+        # pop the index_name to force a refresh
+        # Ensure the mappings are ready:
+        self.client.index(test_index_name).search("test")
+        simulated_last_reset_time = time.time() - 366
+        self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp =  simulated_last_reset_time
         # 1 for the initial refresh, 1 for the search
-        with patch("marqo._httprequests.HttpRequests.post") as mock_post, \
-                patch("requests.get") as mock_get:
+        mock_post = mock.MagicMock()
+        mock_get = mock.MagicMock()
+        mock_post.side_effect = pass_through_post
+
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock_post)
+        @mock.patch("requests.get", mock_get)
+        def run():
+
             self.client.index(test_index_name).search("test")
             assert mock_post.call_count == 1
-            assert mock_get.call_count == 1
+            # no need to refresh, as there is no error, even if the refresh duration has passed:
+            assert mock_get.call_count == 0
 
-            self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp = time.time() - 366
+            assert (simulated_last_reset_time
+                    == self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp)
 
-            # increased for search, increased for refresh
-            self.client.index(test_index_name).search("test")
+            # trigger a communication error on the next search:
+            self.client.config.instance_mapping._urls_mapping["READY"][test_index_name] = 'thisdoesntexist.com'
+            with self.assertRaises(BackendCommunicationError):
+                self.client.index(test_index_name).search("test")
+
             assert mock_post.call_count == 2
-            assert mock_get.call_count == 2
+            # mappings refresh is triggered due to the error:
+            assert mock_get.call_count == 1
 
     @patch("requests.get")
     def test_transitioning_flow(self, mock_get):
