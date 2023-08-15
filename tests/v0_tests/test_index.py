@@ -313,12 +313,13 @@ class TestIndex(MarqoTestCase):
 
         Also ensure we only log a version check warning once.
         """
+        test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
+        marqo_url_and_version_cache.clear()
         with mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo, \
-                mock.patch("marqo.index.Index.get_status") as mock_get_status, \
-                mock.patch("marqo.marqo_cloud_instance_mappings.MarqoCloudInstanceMappings.get_index_base_url") as mock_get_base_url:
+                mock.patch("marqo.index.Index.get_status") as mock_get_status:
             mock_get_status.return_value = {'index_status': 'READY'}
             mock_get_marqo.return_value = {'version': '0.0.0'}
-            index = self.client.index(self.generic_test_index_name)
+            index = self.client.index(test_index_name)
 
             mock_get_marqo.assert_called_once()
             mock_warning.assert_called_once()
@@ -327,7 +328,7 @@ class TestIndex(MarqoTestCase):
 
         for _ in range(10):
             with mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo:
-                index = self.client.index(self.generic_test_index_name)
+                index = self.client.index(test_index_name)
 
                 mock_get_marqo.assert_not_called()
                 mock_warning.assert_not_called()
