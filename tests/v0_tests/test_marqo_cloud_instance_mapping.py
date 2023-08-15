@@ -35,13 +35,16 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         }
 
     @patch("requests.get")
-    def test_refresh_urls_if_not_needed(self, mock_get: MagicMock):
+    def test_refresh_urls_if_needed_index_exists(self, mock_get: MagicMock):
+        """
+        Test that if index is already in cache, it is not refreshed.
+        """
         mock_get.return_value.json.return_value = {"results": [
             {"index_name": "index1", "endpoint": "example.com", "index_status": "READY"},
             {"index_name": "index2", "endpoint": "example2.com", "index_status": "READY"}
         ]}
         mapping = MarqoCloudInstanceMappings(
-            control_base_url="https://api.marqo.ai", api_key="your-api-key", url_cache_duration=60
+            control_base_url="https://api.marqo.ai", api_key="your-api-key", url_cache_duration=0
         )
         # Call refresh_urls_if_needed without waiting
         mapping._refresh_urls_if_needed("index1")
@@ -61,7 +64,10 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         }
 
     @patch("requests.get")
-    def test_refresh_urls_if_expired(self, mock_get: MagicMock):
+    def test_refresh_urls_if_needed_cache_duration_not_passed(self, mock_get: MagicMock):
+        """
+        Test that if cache duration has not passed, it is not refreshed.
+        """
         mock_get.return_value.json.return_value = {"results": [
             {"index_name": "index1", "endpoint": "example.com", "index_status": "READY"},
             {"index_name": "index2", "endpoint": "example2.com", "index_status": "READY"}
@@ -71,14 +77,51 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         )
         # Call refresh_urls_if_needed without waiting
         mapping._refresh_urls_if_needed("index1")
+        initial_timestamp = mapping.latest_index_mappings_refresh_timestamp
         time.sleep(0.1)
-        # Since index is loaded in cache, it should not be refreshed and timestamp should not be updated
-        mapping.latest_index_mappings_refresh_timestamp = -1
-        mapping._refresh_urls_if_needed("index1")
+        # Since cache duration has not passed, it should not be refreshed and timestamp should not be updated
+        mapping._refresh_urls_if_needed("index3")
 
         # Check that the timestamp has not been updated
-        assert mapping.latest_index_mappings_refresh_timestamp == -1
+        assert mapping.latest_index_mappings_refresh_timestamp == initial_timestamp
         mock_get.assert_called_once()
+
+        # Check that the URLs mapping has been initially populated
+        assert mapping._urls_mapping["READY"] == {
+            "index1": "example.com",
+            "index2": "example2.com",
+        }
+
+    @patch("requests.get")
+    def test_refresh_urls_if_needed_no_index(self, mock_get: MagicMock):
+        """
+        Test that if no index is passed, cache refresh is only time based.
+        """
+        mock_get.return_value.json.return_value = {"results": [
+            {"index_name": "index1", "endpoint": "example.com", "index_status": "READY"},
+            {"index_name": "index2", "endpoint": "example2.com", "index_status": "READY"}
+        ]}
+        mapping = MarqoCloudInstanceMappings(
+            control_base_url="https://api.marqo.ai", api_key="your-api-key", url_cache_duration=1
+        )
+        mapping._refresh_urls_if_needed("index1")
+        initial_timestamp = mapping.latest_index_mappings_refresh_timestamp
+        time.sleep(0.1)
+        # Since cache duration has not passed, it should not be refreshed and timestamp should not be updated
+        mapping._refresh_urls_if_needed()
+
+        # Check that the timestamp has not been updated
+        assert mapping.latest_index_mappings_refresh_timestamp == initial_timestamp
+        mock_get.assert_called_once()
+
+        initial_timestamp = mapping.latest_index_mappings_refresh_timestamp
+        time.sleep(1)
+        # Since cache duration has passed, cache should refresh
+        mapping._refresh_urls_if_needed()
+
+        # Check that the timestamp has been updated
+        assert mapping.latest_index_mappings_refresh_timestamp > initial_timestamp
+        self.assertEqual(mock_get.call_count, 2)
 
         # Check that the URLs mapping has been initially populated
         assert mapping._urls_mapping["READY"] == {
