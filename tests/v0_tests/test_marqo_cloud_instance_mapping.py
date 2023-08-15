@@ -171,6 +171,19 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
             assert "marqo cloud indexes" in cm.output[0].lower()
 
     @patch("requests.get")
+    def test_refresh_urls_non_ok_response(self, mock_get):
+        """None is return and text content is logged as a warning"""
+        expected_message = "some HTTP error"
+        mock_get.return_value.ok = False
+        mock_get.return_value.text = expected_message
+        mapping = MarqoCloudInstanceMappings(
+            control_base_url="https://api.marqo.ai", api_key="your-api-key", url_cache_duration=60
+        )
+        with self.assertLogs('marqo', level='WARNING') as cm:
+            assert mapping._refresh_urls(timeout=5) is None
+            assert expected_message in cm.output[0]
+
+    @patch("requests.get")
     def test_ok_to_get_index_before_ready(self, mock_get):
         mock_get.return_value.json.return_value = {"results": [
             {"index_name": "index1", "endpoint": "example.com", "index_status": "READY"},
