@@ -277,10 +277,14 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         if not self.client.config.is_marqo_cloud:
             self.skipTest("Test is not relevant for non-Marqo Cloud instances")
         test_index_name = self.create_test_index(self.generic_test_index_name)
+
+        # pop the index_name to force a refresh
         self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp = time.time() - 366
-        # 1 for the initial refresh, 1 for the search
+        self.client.config.instance_mapping._urls_mapping["READY"].pop(test_index_name, '')
+
         with patch("marqo._httprequests.HttpRequests.post") as mock_post, \
                 patch("requests.get") as mock_get:
+            # 1 for the initial refresh, 1 for the search
             self.client.index(test_index_name).search("test")
             assert mock_post.call_count == 1
             assert mock_get.call_count == 1
