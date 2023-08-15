@@ -1,8 +1,4 @@
-import requests
-
 from marqo.client import Client
-from marqo.errors import MarqoApiError
-import unittest
 import pprint
 from tests.marqo_test import MarqoTestCase
 
@@ -10,26 +6,10 @@ from tests.marqo_test import MarqoTestCase
 class TestDemo(MarqoTestCase):
     """Tests for demos.
     """
-    def setUp(self) -> None:
-        self.client = Client(**self.client_settings)
-        if not self.client.config.is_marqo_cloud:
-            for ix_name in ["cool-index", "first-index", "weight-index", "mmodal-index"]:
-                try:
-                    self.client.delete_index(ix_name)
-                except MarqoApiError as s:
-                    pass
-
-    def tearDown(self) -> None:
-        if not self.client.config.is_marqo_cloud:
-            for ix_name in ["cool-index", "first-index", "weight-index", "mmodal-index"]:
-                try:
-                    self.client.delete_index(ix_name)
-                except MarqoApiError as s:
-                    pass
 
     def test_demo(self):
         client = Client(**self.client_settings)
-        test_index_name = self.create_test_index("cool-index")
+        test_index_name = self.create_test_index(self.generic_test_index_name)
         client.index(test_index_name).add_documents([
             {
                 "Title": "The Legend of the River",
@@ -62,7 +42,8 @@ class TestDemo(MarqoTestCase):
 
         pprint.pprint(client.index(test_index_name).search("River", searchable_attributes=["Key Points"]))
 
-        self.client.delete_index(test_index_name)
+        if not self.client.config.is_marqo_cloud:
+            self.client.delete_index(test_index_name, wait_for_readiness=False)
 
     def test_readme_example(self):
 
@@ -70,7 +51,7 @@ class TestDemo(MarqoTestCase):
 
         mq = marqo.Client(**self.client_settings)
 
-        test_index_name = self.create_test_index("first-index")
+        test_index_name = self.create_test_index(self.generic_test_index_name)
         mq.index(test_index_name).add_documents(
             [
                 {
@@ -126,14 +107,15 @@ class TestDemo(MarqoTestCase):
         r6 = mq.index(test_index_name).delete_documents(ids=["article_591", "article_602"])
         assert r6['details']['deletedDocuments'] == 1
 
-        rneg1 = mq.index(test_index_name).delete()
-        pprint.pprint(rneg1)
-        assert (rneg1["acknowledged"] is True) or (rneg1["acknowledged"] == 'true')
+        if not self.client.config.is_marqo_cloud:
+            rneg1 = mq.index(test_index_name).delete(wait_for_readiness=False)
+            pprint.pprint(rneg1)
+            assert (rneg1["acknowledged"] is True) or (rneg1["acknowledged"] == 'true')
 
     def test_readme_example_weighted_query(self):
         import marqo
         mq = marqo.Client(**self.client_settings)
-        test_index_name = self.create_test_index("weight-index")
+        test_index_name = self.create_test_index(self.generic_test_index_name)
         mq.index(test_index_name).add_documents([
                 {
                     "Title": "Smartphone",
@@ -201,15 +183,16 @@ class TestDemo(MarqoTestCase):
         assert len(r2["hits"]) == 3
         assert len(r3["hits"]) == 3
 
-        rneg1 = mq.index(test_index_name).delete()
-        pprint.pprint(rneg1)
-        assert (rneg1["acknowledged"] is True) or (rneg1["acknowledged"] == 'true')
+        if not self.client.config.is_marqo_cloud:
+            rneg1 = mq.index(test_index_name).delete(wait_for_readiness=False)
+            pprint.pprint(rneg1)
+            assert (rneg1["acknowledged"] is True) or (rneg1["acknowledged"] == 'true')
 
     def test_readme_example_multimodal_combination_query(self):
         import marqo
         mq = marqo.Client(**self.client_settings)
         settings = {"treat_urls_and_pointers_as_images": True, "model": "ViT-B/32"}
-        test_index_name = self.create_test_index("mmodal-index", **settings)
+        test_index_name = self.create_test_index(self.generic_test_index_name, **settings)
         mq.index(test_index_name).add_documents(
             [
                 {
@@ -303,6 +286,7 @@ class TestDemo(MarqoTestCase):
         assert len(r3["hits"]) == 3
         assert len(r4["hits"]) == 3
 
-        rneg1 = mq.index(test_index_name).delete()
-        pprint.pprint(rneg1)
-        assert (rneg1["acknowledged"] is True) or (rneg1["acknowledged"] == 'true')
+        if not self.client.config.is_marqo_cloud:
+            rneg1 = mq.index(test_index_name).delete(wait_for_readiness=False)
+            pprint.pprint(rneg1)
+            assert (rneg1["acknowledged"] is True) or (rneg1["acknowledged"] == 'true')

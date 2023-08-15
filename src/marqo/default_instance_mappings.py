@@ -26,5 +26,9 @@ class DefaultInstanceMappings(InstanceMappings):
     def is_remote(self):
         return self._is_remote
 
+    def is_index_usage_allowed(self, index_name: str) -> bool:
+        return True
+
     def index_http_error_handler(self, index_name: str, http_status: Optional[int] = None) -> None:
         return None
+

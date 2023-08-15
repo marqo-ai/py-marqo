@@ -1,8 +1,6 @@
 from marqo.client import Client
 from tests.marqo_test import MarqoTestCase
-from marqo.errors import MarqoApiError
 import math
-from tests.marqo_test import with_documents
 from pytest import mark
 
 

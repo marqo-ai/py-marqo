@@ -2,12 +2,8 @@ import requests
 from PIL import Image
 from marqo.client import Client
 from marqo.errors import MarqoApiError
-import unittest
 import numpy as np
-import pprint
 from tests.marqo_test import MarqoTestCase
-import tempfile
-import os
 
 
 class TestImageChunking(MarqoTestCase):
@@ -65,11 +61,11 @@ class TestImageChunking(MarqoTestCase):
         image_size = (256, 384)
 
         client = Client(**self.client_settings)
-
-        try:
-            client.delete_index(self.generic_test_index_name)
-        except MarqoApiError as s:
-            pass
+        if not client.config.is_marqo_cloud:
+            try:
+                client.delete_index(self.generic_test_index_name)
+            except MarqoApiError as s:
+                pass
 
         settings = {
             "treat_urls_and_pointers_as_images":True,   # allows us to find an image file and index it 

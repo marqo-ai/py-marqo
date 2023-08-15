@@ -82,6 +82,7 @@ class Client:
             inference_node_count=1,
             storage_node_count=1,
             replicas_count=0,
+            wait_for_readiness=True
     ) -> Dict[str, Any]:
         """Create the index. Please refer to the marqo cloud to see options for inference and storage node types.
 
@@ -101,6 +102,7 @@ class Client:
             inference_node_count;
             storage_node_count:
             replicas_count:
+            wait_for_readiness:
         Returns:
             Response body, containing information about index creation result
         """
@@ -112,21 +114,25 @@ class Client:
             image_preprocessing_method=image_preprocessing_method,
             settings_dict=settings_dict, inference_node_type=inference_node_type, storage_node_type=storage_node_type,
             storage_node_count=storage_node_count, replicas_count=replicas_count,
-            inference_node_count=inference_node_count,
+            inference_node_count=inference_node_count, wait_for_readiness=wait_for_readiness
         )
 
-    def delete_index(self, index_name: str) -> Dict[str, Any]:
+    def delete_index(self, index_name: str, wait_for_readiness=True) -> Dict[str, Any]:
         """Deletes an index
 
         Args:
             index_name: name of the index
-
+            wait_for_readiness: Marqo Cloud specific, whether to wait until
+                operation is completed or to proceed without waiting for status,
+                won't do anything if config.is_marqo_cloud=False
         Returns:
             response body about the result of the delete request
         """
         try:
             res = self.http.delete(path=f"indexes/{index_name}")
-            cloud_wait_for_index_status(self.http, index_name, enums.IndexStatus.DELETED)
+            if self.config.is_marqo_cloud and wait_for_readiness:
+                cloud_wait_for_index_status(self.http, index_name, enums.IndexStatus.DELETED)
+            return res
         except errors.MarqoWebError as e:
             return e.message
 

@@ -1,14 +1,13 @@
 import os
 
 import requests
-from json import JSONDecodeError
 from unittest import mock
 from unittest.mock import patch
 from pytest import mark
 
 from marqo.client import Client
 from tests.marqo_test import MarqoTestCase
-from marqo.errors import MarqoApiError, BadRequestError
+from marqo.errors import BadRequestError
 from marqo.errors import BackendTimeoutError, BackendCommunicationError
 import warnings
 
