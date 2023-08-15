@@ -1,15 +1,21 @@
 import time
 import marqo.index
 from tests.marqo_test import MarqoTestCase
+from pytest import mark
 
-
-class TestAddDocuments(MarqoTestCase):
+class TestGetIndexes(MarqoTestCase):
     def _is_index_name_in_get_indexes_response(self, index_name, get_indexes_response):
         for found_index in get_indexes_response['results']:
             if index_name == found_index.index_name:
                 return True
         return False
 
+    def test_get_indexes_simple(self):
+        """this can be run on the cloud"""
+        test_index_name = self.create_test_index(self.generic_test_index_name)
+        assert self._is_index_name_in_get_indexes_response(test_index_name, self.client.get_indexes())
+
+    @mark.ignore_during_cloud_tests
     def test_get_indexes(self):
         """Asserts that the results grow after each create_index request
         If this test breaks, ensure another user isn't using the same Marqo
