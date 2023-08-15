@@ -2,6 +2,7 @@ import time
 from unittest import mock
 from unittest.mock import patch, MagicMock
 from marqo.enums import IndexStatus
+from marqo.index import marqo_url_and_version_cache
 from marqo.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
 from tests.marqo_test import MarqoTestCase
 from marqo.errors import MarqoCloudIndexNotFoundError, MarqoCloudIndexNotReadyError, MarqoWebError, \
@@ -293,22 +294,49 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         if not self.client.config.is_marqo_cloud:
             self.skipTest("Test is not relevant for non-Marqo Cloud instances")
 
+        test_index_name = self.create_test_index(self.generic_test_index_name)
+        bad_url = 'https://dummy-url-e0244394-4383-4869-b633-46e6fe4a3ac1.dp1.marqo.ai'
+
+        # trigger the version check, if needed, to make this fair between individual runs and
+        # running the entire test suite
+        self.client.index(test_index_name)
+        marqo_url_and_version_cache[bad_url] = '_skipped'
+
+        # set time to now to prevent the mappings from refreshing prematurely
         mappings = self.client.config.instance_mapping
-        mappings._urls_mapping[IndexStatus.READY][self.generic_test_index_name] = \
-            'https://dummy-url-e0244394-4383-4869-b633-46e6fe4a3ac1.dp1.marqo.ai'
+        mappings.latest_index_mappings_refresh_timestamp = time.time()
+        mappings._urls_mapping[IndexStatus.READY][test_index_name] = bad_url
+
 
         with mock.patch('marqo.index.Index._marqo_minimum_supported_version_check'):
-            # Disable version check otherwise it'll cause cache eviction before we want it to happen
             with self.assertRaises(BackendCommunicationError):
-                self.client.index(self.generic_test_index_name).search('test query')
+                # attempts to use the bad_url for searching and raises a connection error
+                # but does not refresh the cache yet, because we haven't yet hit the minimum
+                # refresh duration
+                self.client.index(test_index_name).search('test query')
 
-        assert self.generic_test_index_name not in mappings._urls_mapping[IndexStatus.READY]
+        # note that the troublesome URL is NOT evicted from mappings
+        assert (mappings._urls_mapping[IndexStatus.READY][test_index_name] == bad_url)
 
-        self.create_test_index(self.generic_test_index_name)
+        # ... another client deletes the index here ...
 
-        self.client.index(self.generic_test_index_name).search('test query')
+        # set time to the past to force a mappings refresh on the next error
+        self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp = 0
 
-        assert len(mappings._urls_mapping[IndexStatus.READY][self.generic_test_index_name]) > 0
+        # instantiating a client should not trigger a mappings refresh (as the version cache
+        # still has the bad_url)
+        ix = self.client.index(test_index_name)
+
+        with self.assertRaises(BackendCommunicationError):
+            # error is raised on search, which kicks off the mappings refresh
+            # We can actually refresh this time as the minimum refresh duration has passed
+            ix.search('test query')
+
+        # now we can search with the correct URL
+        ix.search('test query')
+
+        assert len(mappings._urls_mapping[IndexStatus.READY][test_index_name]) > 0
+        assert (mappings._urls_mapping[IndexStatus.READY][test_index_name] != bad_url)
 
     def test_when_needed_http_request_for_get_indexes_is_sent(self):
         if not self.client.config.is_marqo_cloud:
