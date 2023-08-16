@@ -401,6 +401,11 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
             with self.assertRaises(BackendCommunicationError):
                 ix2 = self.client.index(test_index_name)
                 ix2.search("test")
+
+            # the timestamp should be updated along with the refresh:
+            assert (simulated_last_reset_time
+                < self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp)
+
             assert mock_post.call_count == 2
             # mappings refresh is triggered due to the error:
             assert mock_get.call_count == 1
