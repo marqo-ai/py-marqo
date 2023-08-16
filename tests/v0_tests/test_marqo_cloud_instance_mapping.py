@@ -361,10 +361,13 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         test_index_name = self.create_test_index(self.generic_test_index_name)
 
         from marqo._httprequests import HttpRequests as HttpReq2
-        h = HttpReq2
+        # these assignments allow HttpRequests.post to used while also being mocked,
+        # while preventing infinite recursion:
+        h = HttpReq2(config=self.client.config)
+        v = h.post
 
         def pass_through_post(*args, **kwargs):
-            return h.post(*args, **kwargs)
+            return v(*args, **kwargs)
 
         # pop the index_name to force a refresh
         # Ensure the mappings are ready:
@@ -389,10 +392,15 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
                     == self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp)
 
             # trigger a communication error on the next search:
-            self.client.config.instance_mapping._urls_mapping["READY"][test_index_name] = 'thisdoesntexist.com'
-            with self.assertRaises(BackendCommunicationError):
-                self.client.index(test_index_name).search("test")
+            not_real_url = 'https://dummy-url-e0244394-4383-4869-b633-46e6fe4a3ac1.dp1.marqo.ai'
+            # to prevent us accidentally prematurely refreshing mappings, we
+            #  need to add the dummy url to the version cache:
+            marqo_url_and_version_cache[not_real_url] = '_skipped'
+            self.client.config.instance_mapping._urls_mapping["READY"][test_index_name] = not_real_url
 
+            with self.assertRaises(BackendCommunicationError):
+                ix2 = self.client.index(test_index_name)
+                ix2.search("test")
             assert mock_post.call_count == 2
             # mappings refresh is triggered due to the error:
             assert mock_get.call_count == 1
