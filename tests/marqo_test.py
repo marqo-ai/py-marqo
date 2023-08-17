@@ -261,6 +261,7 @@ class MarqoTestCase(TestCase):
         client = marqo.Client(**self.client_settings)
         if settings_dict and kwargs:
             raise ValueError("Only one of settings_dict and kwargs can be specified")
+        kwargs = kwargs or {}
         client.create_index(index_name, settings_dict=settings_dict, **kwargs)
         return index_name
 
