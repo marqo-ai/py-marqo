@@ -1,12 +1,15 @@
 from marqo.errors import MarqoWebError
-from tests.marqo_test import MarqoTestCase
+from tests.marqo_test import MarqoTestCase, CloudTestIndex
 
 
 class TestBoostSearch(MarqoTestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        self.test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
+        self.test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         self.client.index(index_name=self.test_index_name).add_documents(
             [
                 {

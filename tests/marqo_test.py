@@ -25,16 +25,17 @@ creation and deletion tests will be done elsewhere.
 """
 
 import logging
-import time
-import uuid
 from collections import defaultdict
 from functools import wraps
 import json
 import os
+from random import choice
+from string import ascii_letters
+
 from pydantic import BaseModel
 from typing import Any, Callable, Dict, List, Optional, Union
 from unittest import mock, TestCase
-from tests.scripts.populate_indices_for_cloud_tests import create_settings_hash
+from tests.cloud_tests.cloud_test_index import CloudTestIndex
 
 import marqo
 from marqo._httprequests import HTTP_OPERATIONS
@@ -211,15 +212,9 @@ class MarqoTestCase(TestCase):
             - Please note that settings_dict overrides any kwargs during index creation.
         """
         client = marqo.Client(**self.client_settings)
-        index_name = f"{index_name}" + (f"-{self.index_suffix}" if self.index_suffix else "")
-        if settings_dict and kwargs:
-            raise ValueError("Cannot provide both settings_dict and kwargs.")
-        elif settings_dict or kwargs:
-            index_name = f"{index_name}-{create_settings_hash(settings_dict, **kwargs)}"
-        if settings_dict:
-            settings_dict.update({
-                "inference_type": "marqo.CPU.large", "storage_class": "marqo.basic"
-            })
+        index_name = f"{index_name}" + (f"-{self.index_suffix}" if self.index_suffix else "") + '-' + \
+                     kwargs.get("suffix", "199f2a49")
+        index_name = index_name.strip("-")
 
         if len(index_name) > 32:
             raise ValueError(f"Index name {index_name} is too long.")
@@ -236,13 +231,37 @@ class MarqoTestCase(TestCase):
         self.cleanup_documents_from_index(index_name)
         return index_name
 
-    def create_test_index(self, index_name: str, settings_dict: dict = None, **kwargs):
-        """Create a test index with the given name and settings and triggers specific logic if index is cloud index"""
+    def create_test_index(
+            self,
+            cloud_test_index_to_use: CloudTestIndex, open_source_test_index_name: str,
+            open_source_index_settings: dict = None, open_source_index_kwargs: dict = None,
+    ):
+        """Infers whether test is being run on cloud or open source and
+        creates the appropriate index if it being run on open source,
+        otherwise returns the name of the cloud index to use and applies
+        unique run identifier to the index name and performs documents cleanup.
+
+        Returns:
+            name of the index to use
+        """
         client = marqo.Client(**self.client_settings)
         if client.config.is_marqo_cloud:
-            index_name = self.create_cloud_index(index_name, settings_dict, **kwargs)
+            if cloud_test_index_to_use is None:
+                raise ValueError("cloud_test_index_to_use must be specified for cloud tests")
+            index_name_to_return = f"{cloud_test_index_to_use.value}-{self.index_suffix}"
+            self.cleanup_documents_from_index(index_name_to_return)
         else:
-            client.create_index(index_name, settings_dict=settings_dict, **kwargs)
+            index_name_to_return = self.create_open_source_index(
+                open_source_test_index_name, open_source_index_settings, open_source_index_kwargs
+            )
+        return index_name_to_return
+
+    def create_open_source_index(self, index_name: str, settings_dict: dict = None, kwargs: dict = None):
+        """Create an open source index with the given name and settings."""
+        client = marqo.Client(**self.client_settings)
+        if settings_dict and kwargs:
+            raise ValueError("Only one of settings_dict and kwargs can be specified")
+        client.create_index(index_name, settings_dict=settings_dict, **kwargs)
         return index_name
 
     def cleanup_documents_from_index(self, index_to_cleanup: str):
@@ -258,13 +277,17 @@ class MarqoTestCase(TestCase):
             self.client.config.instance_mapping.get_index_base_url(idx.index_name)
             attempt = 0
             q = ""
-            while idx.get_stats()["numberOfDocuments"] > 0:
+            docs_to_delete = [i['_id'] for i in idx.search(q, limit=100)['hits']]
+            verified_run = 0
+            while idx.get_stats()["numberOfDocuments"] > 0 or docs_to_delete or verified_run < 3:
                 docs_to_delete = [i['_id'] for i in idx.search(q, limit=100)['hits']]
                 if docs_to_delete:
+                    verified_run = 0
                     idx.delete_documents(docs_to_delete, auto_refresh=True)
                 if attempt % 10 == 0:
-                    q += " "
+                    q = ''.join(choice(ascii_letters) for _ in range(8))
                 attempt += 1
+                verified_run += 1
                 if attempt > max_attempts:
                     raise MarqoError(f"Max attempts reached. Failed to delete documents from index {idx.index_name}")
         except MarqoError as e:

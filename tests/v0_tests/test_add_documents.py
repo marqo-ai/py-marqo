@@ -10,7 +10,7 @@ import time
 from pytest import mark
 
 from marqo.errors import MarqoError, MarqoWebError
-from tests.marqo_test import MarqoTestCase
+from tests.marqo_test import MarqoTestCase, CloudTestIndex
 from marqo import enums
 from unittest import mock
 
@@ -18,13 +18,22 @@ from unittest import mock
 class TestAddDocuments(MarqoTestCase):
     # Create index tests
     def test_create_index(self):
-        test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
     
     def test_create_index_double(self):
         if not self.client.config.is_marqo_cloud:
-            self.create_test_index(index_name=self.generic_test_index_name)
+            self.create_test_index(
+                cloud_test_index_to_use=CloudTestIndex.basic_index,
+                open_source_test_index_name=self.generic_test_index_name,
+            )
         try:
-            self.create_test_index(index_name=self.generic_test_index_name)
+            self.create_test_index(
+                cloud_test_index_to_use=CloudTestIndex.basic_index,
+                open_source_test_index_name=self.generic_test_index_name,
+            )
         except MarqoError as e:
             assert e.code == "index_already_exists_cloud"
         except MarqoWebError as e:
@@ -33,15 +42,19 @@ class TestAddDocuments(MarqoTestCase):
     def test_create_index_hnsw(self):
         if not self.client.config.is_marqo_cloud:
             self.client.delete_index(self.generic_test_index_name)
-        test_index_name = self.create_test_index(index_name=self.generic_test_index_name, settings_dict={
-            "index_defaults": {
-                "ann_parameters": {
-                    "parameters": {
-                        "m": 24
+        test_index_name = test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.image_index,
+            open_source_test_index_name=self.generic_test_index_name,
+            open_source_index_settings={
+                "index_defaults": {
+                    "ann_parameters": {
+                        "parameters": {
+                            "m": 24
+                        }
                     }
                 }
             }
-        })
+        )
         assert self.client.get_index(test_index_name).get_settings() \
                    ["index_defaults"]["ann_parameters"]["parameters"]["m"] == 24
 
@@ -55,17 +68,26 @@ class TestAddDocuments(MarqoTestCase):
 
     @mark.ignore_during_cloud_tests
     def test_delete_index(self):
-        test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         self.client.delete_index(test_index_name)
-        test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
 
     def test_delete_index_response(self):
         mock_delete = mock.Mock()
         mock_delete.return_value = {'mock_delete_message': 'mock_delete_response'}
         @mock.patch("marqo._httprequests.HttpRequests.delete", mock_delete)
         def run():
-            test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
-            delete_response = self.client.delete_index(test_index_name)
+            test_index_name = self.create_test_index(
+                cloud_test_index_to_use=CloudTestIndex.basic_index,
+                open_source_test_index_name=self.generic_test_index_name,
+            )
+            delete_response = self.client.delete_index(test_index_name, wait_for_readiness=False)
             assert delete_response == mock_delete.return_value
             return 2
         assert run() == 2
@@ -73,7 +95,10 @@ class TestAddDocuments(MarqoTestCase):
     # Get index tests:
 
     def test_get_index(self):
-        test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         index = self.client.get_index(test_index_name)
         assert index.index_name == test_index_name
 
@@ -89,7 +114,10 @@ class TestAddDocuments(MarqoTestCase):
     # Add documents tests:
 
     def test_add_documents_with_ids(self):
-        test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         d1 = {
             "doc title": "Cool Document 1",
             "field 1": "some extra info",
@@ -111,7 +139,10 @@ class TestAddDocuments(MarqoTestCase):
 
     def test_add_documents(self):
         """indexes the documents and retrieves the documents with the generated IDs"""
-        test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         d1 = {
             "doc title": "Cool Document 1",
             "field 1": "some extra info"
@@ -132,7 +163,10 @@ class TestAddDocuments(MarqoTestCase):
         assert retrieved_d1 == d1 or retrieved_d1 == d2
 
     def test_add_documents_with_ids_twice(self):
-        test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         d1 = {
             "doc title": "Just Your Average Doc",
             "field X": "this is a solid doc",
@@ -149,7 +183,10 @@ class TestAddDocuments(MarqoTestCase):
         assert d2 == self.client.index(test_index_name).get_document("56")
 
     def test_add_batched_documents(self):
-        test_index_name = self.create_test_index(self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         ix = self.client.index(index_name=test_index_name)
         doc_ids = [str(num) for num in range(0, 100)]
 
@@ -177,7 +214,10 @@ class TestAddDocuments(MarqoTestCase):
     # delete documents tests:
 
     def test_delete_docs(self):
-        test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         self.client.index(test_index_name).add_documents([
             {"abc": "wow camel", "_id": "123"},
             {"abc": "camels are cool", "_id": "foo"}
@@ -200,7 +240,10 @@ class TestAddDocuments(MarqoTestCase):
         assert len(res1['hits']) == 1
 
     def test_delete_docs_empty_ids(self):
-        test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         self.client.index(test_index_name).add_documents([{"abc": "efg", "_id": "123"}], tensor_fields=["abc"])
         try:
             self.client.index(test_index_name).delete_documents([])
@@ -213,7 +256,10 @@ class TestAddDocuments(MarqoTestCase):
 
     def test_get_document(self):
         my_doc = {"abc": "efg", "_id": "123"}
-        test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         self.client.index(test_index_name).add_documents([my_doc], tensor_fields=["abc"])
         retrieved = self.client.index(test_index_name).get_document(document_id='123')
         assert retrieved == my_doc
@@ -316,8 +362,10 @@ class TestAddDocuments(MarqoTestCase):
         assert "processes=12" not in kwargs["path"]
 
     def test_resilient_indexing(self):
-        test_index_name = self.create_test_index(self.generic_test_index_name)
-
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         if self.IS_MULTI_INSTANCE:
             time.sleep(1)
 
@@ -383,7 +431,10 @@ class TestAddDocuments(MarqoTestCase):
 
     def test_add_lists_non_tensor(self):
         original_doc = {"d1": "blah", "_id": "1234", 'my list': ['tag-1', 'tag-2']}
-        test_index_name = self.create_test_index(self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         self.client.index(test_index_name).add_documents(documents=[original_doc], non_tensor_fields=['my list'])
 
         if self.IS_MULTI_INSTANCE:
@@ -407,7 +458,10 @@ class TestAddDocuments(MarqoTestCase):
         assert len(bad_res['hits']) == 0
 
     def test_use_existing_fields(self):
-        test_index_name = self.create_test_index(self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         self.client.index(index_name=test_index_name).add_documents(
             documents=[
                 {
@@ -448,8 +502,11 @@ class TestAddDocuments(MarqoTestCase):
             "treat_urls_and_pointers_as_images": True,
             "model": "ViT-B/32",
         }
-        test_index_name = self.create_test_index(index_name=self.generic_test_index_name, **settings)
-
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.image_index,
+            open_source_test_index_name=self.generic_test_index_name,
+            open_source_index_kwargs=settings
+        )
         self.client.index(index_name=test_index_name).add_documents(
             documents=[
                 {
@@ -551,6 +608,9 @@ class TestAddDocuments(MarqoTestCase):
         non_tensor_fields = ['text']
 
         with self.assertLogs('marqo', level='WARNING') as cm:
-            test_index_name = self.create_test_index(self.generic_test_index_name)
+            test_index_name = self.create_test_index(
+                cloud_test_index_to_use=CloudTestIndex.basic_index,
+                open_source_test_index_name=self.generic_test_index_name,
+            )
             self.client.index(test_index_name).add_documents(documents=documents, non_tensor_fields=non_tensor_fields)
             self.assertTrue({'`non_tensor_fields`', 'Marqo', '2.0.0.'}.issubset(set(cm.output[0].split(" "))))

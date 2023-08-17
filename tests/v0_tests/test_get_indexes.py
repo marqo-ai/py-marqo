@@ -1,7 +1,8 @@
 import time
 import marqo.index
-from tests.marqo_test import MarqoTestCase
+from tests.marqo_test import MarqoTestCase, CloudTestIndex
 from pytest import mark
+
 
 class TestGetIndexes(MarqoTestCase):
     def _is_index_name_in_get_indexes_response(self, index_name, get_indexes_response):
@@ -12,7 +13,10 @@ class TestGetIndexes(MarqoTestCase):
 
     def test_get_indexes_simple(self):
         """this can be run on the cloud"""
-        test_index_name = self.create_test_index(self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         assert self._is_index_name_in_get_indexes_response(test_index_name, self.client.get_indexes())
 
     @mark.ignore_during_cloud_tests
@@ -24,13 +28,19 @@ class TestGetIndexes(MarqoTestCase):
         ix_0 = self.client.get_indexes()
         assert not self._is_index_name_in_get_indexes_response(self.generic_test_index_name, ix_0)
 
-        self.test_index_name = self.create_test_index(self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         ix_1 = self.client.get_indexes()
-        assert self._is_index_name_in_get_indexes_response(self.test_index_name, ix_1)
+        assert self._is_index_name_in_get_indexes_response(test_index_name, ix_1)
 
-        self.test_index_name_2 = self.create_test_index(self.generic_test_index_name_2)
+        test_index_name_2 = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name_2,
+        )
         ix_2 = self.client.get_indexes()
-        assert self._is_index_name_in_get_indexes_response(self.test_index_name_2, ix_2)
+        assert self._is_index_name_in_get_indexes_response(test_index_name_2, ix_2)
 
         # since indexes are not deleted after each test for cloud instances, this assert may not be correct.
         if not self.client.config.is_marqo_cloud:
@@ -42,13 +52,16 @@ class TestGetIndexes(MarqoTestCase):
 
     def test_get_indexes_usable(self):
         """Are the indices we get back usable? """
-        self.test_index_name = self.create_test_index(self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         get_ixes_res = self.client.get_indexes()
-        assert self._is_index_name_in_get_indexes_response(self.test_index_name, get_ixes_res)
+        assert self._is_index_name_in_get_indexes_response(test_index_name, get_ixes_res)
 
         my_ix = None
         for found_index in get_ixes_res['results']:
-            if self.test_index_name == found_index.index_name:
+            if test_index_name == found_index.index_name:
                 my_ix = found_index
 
         if my_ix is None:

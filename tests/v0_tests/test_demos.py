@@ -1,6 +1,6 @@
 from marqo.client import Client
 import pprint
-from tests.marqo_test import MarqoTestCase
+from tests.marqo_test import MarqoTestCase, CloudTestIndex
 
 
 class TestDemo(MarqoTestCase):
@@ -9,7 +9,10 @@ class TestDemo(MarqoTestCase):
 
     def test_demo(self):
         client = Client(**self.client_settings)
-        test_index_name = self.create_test_index(self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         client.index(test_index_name).add_documents([
             {
                 "Title": "The Legend of the River",
@@ -51,7 +54,10 @@ class TestDemo(MarqoTestCase):
 
         mq = marqo.Client(**self.client_settings)
 
-        test_index_name = self.create_test_index(self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         mq.index(test_index_name).add_documents(
             [
                 {
@@ -115,7 +121,10 @@ class TestDemo(MarqoTestCase):
     def test_readme_example_weighted_query(self):
         import marqo
         mq = marqo.Client(**self.client_settings)
-        test_index_name = self.create_test_index(self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         mq.index(test_index_name).add_documents([
                 {
                     "Title": "Smartphone",
@@ -192,7 +201,11 @@ class TestDemo(MarqoTestCase):
         import marqo
         mq = marqo.Client(**self.client_settings)
         settings = {"treat_urls_and_pointers_as_images": True, "model": "ViT-B/32"}
-        test_index_name = self.create_test_index(self.generic_test_index_name, **settings)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.image_index,
+            open_source_test_index_name=self.generic_test_index_name,
+            open_source_index_kwargs=settings
+        )
         mq.index(test_index_name).add_documents(
             [
                 {

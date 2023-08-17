@@ -4,7 +4,7 @@ from unittest.mock import patch, MagicMock
 from marqo.enums import IndexStatus
 from marqo.index import marqo_url_and_version_cache
 from marqo.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
-from tests.marqo_test import MarqoTestCase
+from tests.marqo_test import MarqoTestCase, CloudTestIndex
 from marqo.errors import MarqoCloudIndexNotFoundError, MarqoCloudIndexNotReadyError, MarqoWebError, \
     BackendCommunicationError
 
@@ -289,7 +289,10 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
     def test_only_1_http_request_sent_for_search(self):
         if not self.client.config.is_marqo_cloud:
             self.skipTest("Test is not relevant for non-Marqo Cloud instances")
-        test_index_name = self.create_test_index(self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
 
         # pop the index_name to force a refresh
         self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp = time.time() - 366
@@ -311,7 +314,10 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         if not self.client.config.is_marqo_cloud:
             self.skipTest("Test is not relevant for non-Marqo Cloud instances")
 
-        test_index_name = self.create_test_index(self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         bad_url = 'https://dummy-url-e0244394-4383-4869-b633-46e6fe4a3ac1.dp1.marqo.ai'
 
         # trigger the version check, if needed, to make this fair between individual runs and
@@ -358,7 +364,10 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
     def test_when_needed_http_request_for_get_indexes_is_sent(self):
         if not self.client.config.is_marqo_cloud:
             self.skipTest("Test is not relevant for non-Marqo Cloud instances")
-        test_index_name = self.create_test_index(self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
 
         from marqo._httprequests import HttpRequests as HttpReq2
         # these assignments allow HttpRequests.post to used while also being mocked,
@@ -511,7 +520,10 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
     def test_index_instantiation_does_not_refresh_urls(self):
         if not self.client.config.is_marqo_cloud:
             self.skipTest("Test is not relevant for non-Marqo Cloud instances")
-        test_index_name = self.create_test_index(self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
 
         start_time = time.time()
         self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp -= 361
@@ -527,7 +539,10 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
     def test_search_call_does_not_refresh_urls_when_not_needed(self):
         if not self.client.config.is_marqo_cloud:
             self.skipTest("Test is not relevant for non-Marqo Cloud instances")
-        test_index_name = self.create_test_index(self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
 
         time_now = time.time()
         self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp -= 361
@@ -564,7 +579,10 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         if not self.client.config.is_marqo_cloud:
             self.skipTest("Test is not relevant for non-Marqo Cloud instances")
 
-        test_index_name = self.create_test_index(self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         assert self.client.config.instance_mapping.is_index_usage_allowed(test_index_name)
 
         assert not self.client.config.instance_mapping.is_index_usage_allowed("not-existing-index")

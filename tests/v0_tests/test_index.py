@@ -6,7 +6,7 @@ from marqo.errors import BackendCommunicationError, BackendTimeoutError, \
     UnsupportedOperationError
 
 from marqo.index import marqo_url_and_version_cache
-from tests.marqo_test import MarqoTestCase
+from tests.marqo_test import MarqoTestCase, CloudTestIndex
 from unittest import mock
 import requests
 from marqo.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
@@ -52,7 +52,10 @@ class TestIndex(MarqoTestCase):
                    is expected_treat_urls_and_pointers_as_images
 
     def test_get_documents(self):
-        test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         d1 = {
             "Title": "Treatise on the viability of rocket cars",
             "Blurb": "A rocket car is a car powered by a rocket engine. "
@@ -83,7 +86,10 @@ class TestIndex(MarqoTestCase):
                 assert doc_res['_found']
 
     def test_get_documents_expose_facets(self):
-        test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         d1 = {
             "Title": "Treatise on the viability of rocket cars",
             "Blurb": "A rocket car is a car powered by a rocket engine. "
@@ -119,7 +125,10 @@ class TestIndex(MarqoTestCase):
                 assert doc_res['_found']
 
     def test_get_document_expose_facets(self):
-        test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         d1 = {
             "Title": "Treatise on the viability of rocket cars",
             "Blurb": "A rocket car is a car powered by a rocket engine. "
@@ -209,7 +218,11 @@ class TestIndex(MarqoTestCase):
         settings = {
             "number_of_replicas": intended_replicas,
         }
-        test_index_name = self.create_test_index(index_name=self.generic_test_index_name, settings_dict=settings)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+            open_source_index_settings=settings
+        )
         index_setting = self.client.index(test_index_name).get_settings()
         print(index_setting)
         assert intended_replicas == index_setting['number_of_replicas']
@@ -313,7 +326,10 @@ class TestIndex(MarqoTestCase):
 
         Also ensure we only log a version check warning once.
         """
-        test_index_name = self.create_test_index(index_name=self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         marqo_url_and_version_cache.clear()
         with mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo, \
                 mock.patch("marqo.index.Index.get_status") as mock_get_status:
@@ -337,7 +353,10 @@ class TestIndex(MarqoTestCase):
         if not self.client.config.is_marqo_cloud:
             self.skipTest("Test only applicable for Marqo Cloud")
         with mock.patch("marqo.index.mq_logger.warning") as mock_warning:
-            self.client.index(self.create_test_index(self.generic_test_index_name))
+            self.client.index(self.create_test_index(
+                cloud_test_index_to_use=CloudTestIndex.basic_index,
+                open_source_test_index_name=self.generic_test_index_name,
+            ))
             mock_warning.assert_not_called()
 
     def test_warning_not_printed_for_not_ready_index(self):
@@ -349,7 +368,10 @@ class TestIndex(MarqoTestCase):
 
     def test_skipped_version_check_multiple_instantiation(self):
         """Ensure that the url labelled as `_skipped` only call get_marqo() once"""
-        test_index_name = self.create_test_index(self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         marqo_url_and_version_cache.clear()
         with mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo, \
                 mock.patch("marqo.index.Index.get_status") as mock_get_status:
@@ -377,7 +399,10 @@ class TestIndex(MarqoTestCase):
                             KeyError("test"), KeyError("test"), requests.exceptions.Timeout("test")]
         # we must use a real index name that can appear in urls_mappings, otherwise the version
         # check won't be attempted
-        test_index_name = self.create_test_index(self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         for i, side_effect in enumerate(side_effect_list):
             with mock.patch("marqo.index.mq_logger.warning") as mock_warning, \
                     mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo, \
@@ -407,7 +432,10 @@ class TestIndex(MarqoTestCase):
         side_effect_list = [requests.exceptions.JSONDecodeError("test", "test", 1), BackendCommunicationError("test"),
                             BackendTimeoutError("test"), requests.exceptions.RequestException("test"),
                             KeyError("test"), KeyError("test"), requests.exceptions.Timeout("test")]
-        test_index_name = self.create_test_index(self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         index = self.client.index(test_index_name)
 
         for i, side_effect in enumerate(side_effect_list):
@@ -424,7 +452,10 @@ class TestIndex(MarqoTestCase):
                 mock_warning.assert_not_called()
 
     def test_version_check_instantiation(self):
-        test_index_name = self.create_test_index(self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         marqo_url_and_version_cache.clear()
         with mock.patch("marqo.index.mq_logger.warning") as mock_warning, \
                 mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo, \
@@ -464,7 +495,10 @@ class TestIndex(MarqoTestCase):
             mock_get_marqo.assert_not_called()
 
     def test_get_health(self):
-        test_index_name = self.create_test_index(self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         res = self.client.index(test_index_name).health()
         assert 'status' in res
         assert 'status' in res['backend']
