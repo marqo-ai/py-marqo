@@ -22,7 +22,7 @@ jobs:
   integration_tests:
     name: Cloud Integration Tests
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.job_to_run == 'integration_tests' || github.event_name == 'push' && github.event.pull_request.state != 'opened' }}
+    if: ${{ github.event.inputs.job_to_run == 'integration_tests' || github.event_name == 'push' }}
 
     steps:
       - name: Checkout code
