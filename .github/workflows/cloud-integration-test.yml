@@ -20,17 +20,18 @@ on:
   # allows other workflows to reuse these unit tests:
   workflow_call:
 
+permissions:
+  contents: read
+
 jobs:
   integration_tests:
     name: Cloud Integration Tests
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.job_to_run == 'integration_tests' || github.event_name == 'push' }}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
+
+      - name: Printout event
+        run: echo ${{ github.event_name }}
 
       - name: Set up Python 3.8
         uses: actions/setup-python@v2
