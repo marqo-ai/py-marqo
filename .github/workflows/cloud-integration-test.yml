@@ -17,6 +17,8 @@ on:
     branches:
       - mainline
       - 'releases/*'
+  # allows other workflows to reuse these unit tests:
+  workflow_call:
 
 jobs:
   integration_tests:
