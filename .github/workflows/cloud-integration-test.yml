@@ -9,7 +9,7 @@ on:
       CLOUD_MARQO_API_KEY:
         description: 'MARQO_API_KEY for cloud integration tests'
         required: true
-      job_to_run :
+      job_to_run:
         description: 'Job to run'
         required: true
         default: 'cleanup_indexes'
