@@ -16,7 +16,7 @@ from marqo.enums import IndexStatus
 class MarqoCloudInstanceMappings(InstanceMappings):
 
     def __init__(self, control_base_url, api_key=None, url_cache_duration: int = 15):
-        self.latest_index_mappings_refresh_timestamp = time.time() - url_cache_duration
+        self.latest_index_mappings_refresh_timestamp = time.time() - url_cache_duration - 1
         self._urls_mapping = {IndexStatus.READY: {}, IndexStatus.CREATING: {}}
         self.api_key = api_key
         self.url_cache_duration = url_cache_duration

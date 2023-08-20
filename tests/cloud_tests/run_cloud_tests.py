@@ -7,14 +7,14 @@ from delete_all_cloud_test_indexes import delete_all_test_indices
 from populate_indices_for_cloud_tests import populate_indices
 
 tests_specific_kwargs = {
-    'create-indexes': False, 'delete-indexes': False,
+    'create-indexes': False, 'delete-indexes': False, 'use-unique-identifier': False,
 }
 
 
 def handle_interrupt(signum, frame):
     print("\nInterrupt received. Cleaning up and deleting indices.")
     if tests_specific_kwargs['delete-indexes']:
-        delete_all_test_indices()
+        delete_all_test_indices(wait_for_readiness=False)
     sys.exit(1)
 
 
@@ -37,9 +37,10 @@ if __name__ == '__main__':
                 tests_specific_kwargs[test_specific_arg] = convert_string_to_boolean(arg.split('=')[1])
                 sys.argv.remove(arg)
     try:
+        if tests_specific_kwargs['use-unique-identifier']:
+            set_unique_run_identifier()
         if 'MQ_TEST_RUN_IDENTIFIER' not in os.environ:
             os.environ['MQ_TEST_RUN_IDENTIFIER'] = 'cinteg'
-        # set_unique_run_identifier()
         print(f"Using unique identifier: {os.environ['MQ_TEST_RUN_IDENTIFIER']}")
         if tests_specific_kwargs['create-indexes']:
             populate_indices()
@@ -52,8 +53,8 @@ if __name__ == '__main__':
         print("All tests has been executed, proceeding to delete indices")
 
         if tests_specific_kwargs['delete-indexes']:
-            delete_all_test_indices()
+            delete_all_test_indices(wait_for_readiness=True)
     except Exception as e:
         print(f"Error: {e}")
         if tests_specific_kwargs['delete-indexes']:
-            delete_all_test_indices()
+            delete_all_test_indices(wait_for_readiness=True)
