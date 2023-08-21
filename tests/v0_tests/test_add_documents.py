@@ -184,7 +184,7 @@ class TestAddDocuments(MarqoTestCase):
 
     def test_add_batched_documents(self):
         test_index_name = self.create_test_index(
-            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            cloud_test_index_to_use=CloudTestIndex.text_index_with_custom_model,
             open_source_test_index_name=self.generic_test_index_name,
         )
         ix = self.client.index(index_name=test_index_name)

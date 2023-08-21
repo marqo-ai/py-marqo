@@ -3,12 +3,6 @@ name: Cloud Integration Tests
 on:
   workflow_dispatch:
     inputs:
-      CLOUD_MARQO_URL:
-        description: 'MARQO_URL for cloud integration tests'
-        required: true
-      CLOUD_MARQO_API_KEY:
-        description: 'MARQO_API_KEY for cloud integration tests'
-        required: true
       job_to_run:
         description: 'Job to run'
         required: true

@@ -10,7 +10,7 @@ class TestDemo(MarqoTestCase):
     def test_demo(self):
         client = Client(**self.client_settings)
         test_index_name = self.create_test_index(
-            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            cloud_test_index_to_use=CloudTestIndex.text_index_with_custom_model,
             open_source_test_index_name=self.generic_test_index_name,
         )
         client.index(test_index_name).add_documents([
@@ -55,7 +55,7 @@ class TestDemo(MarqoTestCase):
         mq = marqo.Client(**self.client_settings)
 
         test_index_name = self.create_test_index(
-            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            cloud_test_index_to_use=CloudTestIndex.text_index_with_custom_model,
             open_source_test_index_name=self.generic_test_index_name,
         )
         mq.index(test_index_name).add_documents(
@@ -122,7 +122,7 @@ class TestDemo(MarqoTestCase):
         import marqo
         mq = marqo.Client(**self.client_settings)
         test_index_name = self.create_test_index(
-            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            cloud_test_index_to_use=CloudTestIndex.text_index_with_custom_model,
             open_source_test_index_name=self.generic_test_index_name,
         )
         mq.index(test_index_name).add_documents([
