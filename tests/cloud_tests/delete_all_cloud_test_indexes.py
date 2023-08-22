@@ -18,6 +18,8 @@ def delete_all_test_indices(wait_for_readiness=False):
         if index.index_name.startswith('test-index'):
             if suffix is not None and suffix in index.index_name.split('-'):
                 indices_to_delete.append(index.index_name)
+            elif suffix is None:
+                indices_to_delete.append(index.index_name)
 
     for index_name in indices_to_delete:
         index = client.index(index_name)

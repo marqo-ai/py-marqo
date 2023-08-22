@@ -20,11 +20,8 @@ def handle_interrupt(signum, frame):
 
 def convert_string_to_boolean(string_value):
     valid_representations_of_true = ['true', '1']
-    valid_representations_of_false = ['false', '0']
     if string_value.lower() in valid_representations_of_true:
         return True
-    elif string_value.lower() in valid_representations_of_false:
-        return False
 
 
 if __name__ == '__main__':

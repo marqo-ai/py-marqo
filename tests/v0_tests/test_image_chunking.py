@@ -21,7 +21,7 @@ class TestImageChunking(MarqoTestCase):
             except MarqoApiError as s:
                 pass
 
-        settings = {
+        open_source_settings = {
             "treat_urls_and_pointers_as_images": True,   # allows us to find an image file and index it
             "model": "ViT-B/16",
             "image_preprocessing_method": None
@@ -30,7 +30,7 @@ class TestImageChunking(MarqoTestCase):
         test_index_name = self.create_test_index(
             cloud_test_index_to_use=CloudTestIndex.image_index,
             open_source_test_index_name=self.generic_test_index_name,
-            open_source_index_kwargs=settings,
+            open_source_index_kwargs=open_source_settings,
         )
 
         temp_file_name = 'https://avatars.githubusercontent.com/u/13092433?v=4'

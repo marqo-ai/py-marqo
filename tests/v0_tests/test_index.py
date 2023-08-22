@@ -19,6 +19,7 @@ class TestIndex(MarqoTestCase):
         marqo_url_and_version_cache.clear()
 
     def tearDown(self) -> None:
+        super().tearDown()
         marqo_url_and_version_cache.clear()
 
     def test_create_index_settings_dict(self):

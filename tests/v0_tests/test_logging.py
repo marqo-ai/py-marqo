@@ -36,7 +36,7 @@ class TestLogging(MarqoTestCase):
     def _create_img_index(self, index_name):
         return self.create_test_index(
             cloud_test_index_to_use=CloudTestIndex.image_index,
-            open_source_test_index_name=self.generic_test_index_name,
+            open_source_test_index_name=index_name,
             open_source_index_kwargs={"treat_urls_and_pointers_as_images": True, "model": "ViT-B/32"}
         )
 

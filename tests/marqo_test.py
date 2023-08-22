@@ -43,6 +43,7 @@ from marqo._httprequests import HTTP_OPERATIONS
 from marqo.client import Client
 from marqo.errors import InternalError, MarqoWebError, MarqoError
 from marqo.cloud_helpers import cloud_wait_for_index_status
+from marqo.index import Index
 
 
 class MockHTTPTraffic(BaseModel):
@@ -143,6 +144,7 @@ class MarqoTestCase(TestCase):
         cls.index_suffix = os.environ.get("MQ_TEST_RUN_IDENTIFIER", "")
         cls.client_settings = local_marqo_settings
         cls.authorized_url = cls.client_settings["url"]
+        cls.index_to_documents_cleanup_mapping = {}
         cls.generic_test_index_name = 'test-index'  # used as a prefix when index is created with settings
         cls.generic_test_index_name_2 = cls.generic_test_index_name + '-2'
 
@@ -173,7 +175,10 @@ class MarqoTestCase(TestCase):
                         logging.debug(f'received error `{e}` from index deletion request.')
 
     def tearDown(self) -> None:
-        if not self.client.config.is_marqo_cloud:
+        if self.client.config.is_marqo_cloud:
+            if hasattr(self, 'add_documents_and_mark_for_cleanup_patch'):
+                self.add_documents_and_mark_for_cleanup_patch.stop()
+        else:
             for index in self.client.get_indexes()['results']:
                 if index.index_name.startswith(self.generic_test_index_name):
                     try:
@@ -208,12 +213,23 @@ class MarqoTestCase(TestCase):
             if cloud_test_index_to_use is None:
                 raise ValueError("cloud_test_index_to_use must be specified for cloud tests")
             index_name_to_return = f"{cloud_test_index_to_use.value}-{self.index_suffix}"
-            self.cleanup_documents_from_index(index_name_to_return)
+            self.prepare_cloud_index_for_test(index_name_to_return)
         else:
             index_name_to_return = self.create_open_source_index(
                 open_source_test_index_name, open_source_index_settings, open_source_index_kwargs
             )
         return index_name_to_return
+
+    def prepare_cloud_index_for_test(self, index_name: str):
+        self.cleanup_documents_from_index(index_name)
+        if not isinstance(marqo.index.Index.add_documents, mock.MagicMock):
+            if hasattr(self, 'add_documents_and_mark_for_cleanup_patch'):
+                self.add_documents_and_mark_for_cleanup_patch.stop()
+            self.add_documents_and_mark_for_cleanup_patch = mock.patch.object(
+                Index, 'add_documents', side_effect=lambda documents, **kwargs:
+                self.mark_for_cleanup_and_add_documents(index_name, documents, **kwargs)
+            )
+            self.add_documents_and_mark_for_cleanup_patch.start()
 
     def create_open_source_index(self, index_name: str, settings_dict: dict = None, kwargs: dict = None):
         """Create an open source index with the given name and settings."""
@@ -224,33 +240,54 @@ class MarqoTestCase(TestCase):
         client.create_index(index_name, settings_dict=settings_dict, **kwargs)
         return index_name
 
+    def mark_for_cleanup_and_add_documents(self, index_name: str, documents: list, *args,   **kwargs):
+        """Add documents to index and mark for cleanup after test is run."""
+        if kwargs.get("get_ix_name"):
+            return index_name
+        unclosed_mocks = {}
+        # print out all active mocks
+        for active_mock in mock._patch._active_patches:
+            unclosed_mocks[active_mock.kwargs['side_effect']] = active_mock.kwargs['side_effect']([], get_ix_name=True)
+        print(f"unclosed mocks: {unclosed_mocks}")
+        self.add_documents_and_mark_for_cleanup_patch.stop()
+        res = self.client.index(index_name).add_documents(documents, *args, **kwargs)
+        self.add_documents_and_mark_for_cleanup_patch.start()
+        res_list = [res] if type(res) is not list else res
+        for result_to_process in res_list:
+            if not result_to_process['errors']:
+                if self.index_to_documents_cleanup_mapping.get(index_name) is None:
+                    self.index_to_documents_cleanup_mapping[index_name] = set([doc['_id'] for doc in result_to_process['items']])
+                else:
+                    self.index_to_documents_cleanup_mapping[index_name].update([doc['_id'] for doc in result_to_process['items']])
+        return res
+
     def cleanup_documents_from_index(self, index_to_cleanup: str):
         """"This is used for cloud tests only.
         Delete all documents from specified index.
         """
         idx = self.client.index(index_to_cleanup)
-        max_attempts = 100
         print(f"Deleting documents from index {idx.index_name}")
         try:
-            # veryfying that index is in the mapping
             idx.refresh()
+            # verifying that index is in the mapping
             self.client.config.instance_mapping.get_index_base_url(idx.index_name)
-            attempt = 0
-            q = ""
-            docs_to_delete = [i['_id'] for i in idx.search(q, limit=100)['hits']]
-            verified_run = 0
-            while idx.get_stats()["numberOfDocuments"] > 0 or docs_to_delete or verified_run < 3:
+
+            if self.index_to_documents_cleanup_mapping.get(index_to_cleanup):
+                idx.delete_documents(list(self.index_to_documents_cleanup_mapping[index_to_cleanup]), auto_refresh=True)
+
+            if idx.get_stats()["numberOfDocuments"] > 0:
+                max_attempts = 100
+                attempt = 0
+                q = ""
                 docs_to_delete = [i['_id'] for i in idx.search(q, limit=100)['hits']]
-                if docs_to_delete:
-                    verified_run = 0
-                    idx.delete_documents(docs_to_delete, auto_refresh=True)
-                if attempt % 10 == 0:
-                    if attempt == 90:
-                        time.sleep(60)
+                while idx.get_stats()["numberOfDocuments"] > 0 or docs_to_delete:
+                    docs_to_delete = [i['_id'] for i in idx.search(q, limit=100)['hits']]
+                    if docs_to_delete:
+                        verified_run = 0
+                        idx.delete_documents(docs_to_delete, auto_refresh=True)
                     q = ''.join(choice(ascii_letters) for _ in range(8))
-                attempt += 1
-                verified_run += 1
-                if attempt > max_attempts:
-                    raise MarqoError(f"Max attempts reached. Failed to delete documents from index {idx.index_name}")
+                    attempt += 1
+                    if attempt > max_attempts:
+                        raise MarqoError(f"Max attempts reached. Failed to delete documents from index {idx.index_name}")
         except MarqoError as e:
             print(f"Error deleting documents from index {idx.index_name}: {e}")
