@@ -46,7 +46,9 @@ if __name__ == '__main__':
         import pytest
         pytest_args = ['tests/', '-m', 'not ignore_during_cloud_tests'] + sys.argv[1:]
         print(pytest_args)
-        pytest.main(pytest_args)
+        pytest_exit_code = pytest.main(pytest_args)
+        if pytest_exit_code != 0:
+            raise RuntimeError(f"Pytest failed with exit code: {pytest_exit_code}")
         print("All tests has been executed, proceeding to delete indices")
 
         if tests_specific_kwargs['delete-indexes']:
@@ -55,3 +57,4 @@ if __name__ == '__main__':
         print(f"Error: {e}")
         if tests_specific_kwargs['delete-indexes']:
             delete_all_test_indices(wait_for_readiness=True)
+        sys.exit(1)
