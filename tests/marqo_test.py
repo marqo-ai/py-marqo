@@ -10,13 +10,12 @@ When running Cloud V2 tests, make sure to set the following environment variable
 
 When `cluster.is_marqo_cloud` is set to True, the tests will have different setUp and tearDown procedures:
 - Indices will not be deleted after each test.
-- However, documents will be deleted after each test.
+- However, documents will be deleted on every call for index.
 
-The function `create_cloud_index` will be triggered whenever an index needs to be created for the cloud tests.
-It checks the status of the index and creates a new index if needed. It also adds a suffix for unique test execution
-and a hash generated from index settings ensure that only 1 index is created for a given
-index settings_dict or index kwargs.
-It also ensures that any tests that require an index with specific settings get routed to the appropriate index.
+The function `prepare_cloud_index_for_test` will be triggered whenever an index is called for the cloud tests.
+It performs cleanup for index documents and mocks the 'add_documents' method to call
+add_documents_and_mark_for_cleanup_patch instead which stores list of added documents,
+for future cleanup of documents.
 
 We will not actually create and delete real cloud indexes
 during this test suite, because this slows down py-marqo <> Marqo cloud tests.
@@ -107,6 +106,8 @@ def mock_http_traffic(mock_config: List[MockHTTPTraffic], forbid_extra_calls: bo
 
 
 def with_documents(index_to_documents_fn: Callable[[], Dict[str, List[Dict[str, Any]]]], warmup_query: Optional[str] = None):
+    """Function decorator to create indices and add documents to them.
+    Created index has default settings and CloudTestIndex.basic_index is used during cloud tests."""
     def decorator(test_func):
         @wraps(test_func)
         def wrapper(self, *args, **kwargs):
@@ -200,13 +201,17 @@ class MarqoTestCase(TestCase):
             cloud_test_index_to_use: CloudTestIndex, open_source_test_index_name: str,
             open_source_index_settings: dict = None, open_source_index_kwargs: dict = None,
     ):
-        """Infers whether test is being run on cloud or open source and
-        creates the appropriate index if it being run on open source,
-        otherwise returns the name of the cloud index to use and applies
-        unique run identifier to the index name and performs documents cleanup.
+        """Determines whether the test is executed in a cloud environment or within an open-source setup.
+        If it's running in an open-source environment,
+        this function creates the corresponding index and returns its name.
+
+        In the case of cloud testing, it provides the name of the cloud index to be used.
+        Additionally, it applies a unique run identifier to the index name and performs
+        cleanup operations on documents associated with the index.
 
         Returns:
-            name of the index to use
+            The name of the index to be used, depending on the testing environment.
+
         """
         client = marqo.Client(**self.client_settings)
         if client.config.is_marqo_cloud:
@@ -221,6 +226,20 @@ class MarqoTestCase(TestCase):
         return index_name_to_return
 
     def prepare_cloud_index_for_test(self, index_name: str):
+        """
+        Cleans up documents from the specified cloud index and prepares it for testing.
+
+        This method first cleans up any existing documents in the provided 'index_name'.
+        It then ensures that the 'add_documents' method of the Marqo index is correctly mocked
+        to perform it with proper handling by adding _ids of documents
+        to the self.index_to_documents_cleanup_mapping.
+
+        Also checks for existing patch and stops it if it exists.
+
+        Args:
+            index_name (str): The name of the cloud index to prepare for testing.
+
+        """
         self.cleanup_documents_from_index(index_name)
         if not isinstance(marqo.index.Index.add_documents, mock.MagicMock):
             if hasattr(self, 'add_documents_and_mark_for_cleanup_patch'):
@@ -236,8 +255,12 @@ class MarqoTestCase(TestCase):
         client = marqo.Client(**self.client_settings)
         if settings_dict and kwargs:
             raise ValueError("Only one of settings_dict and kwargs can be specified")
-        kwargs = kwargs or {}
-        client.create_index(index_name, settings_dict=settings_dict, **kwargs)
+        if settings_dict:
+            client.create_index(index_name, settings_dict=settings_dict)
+        elif kwargs:
+            client.create_index(index_name, **kwargs)
+        else:
+            client.create_index(index_name)
         return index_name
 
     def mark_for_cleanup_and_add_documents(self, index_name: str, documents: list, *args,   **kwargs):
@@ -266,7 +289,10 @@ class MarqoTestCase(TestCase):
             self.client.config.instance_mapping.get_index_base_url(idx.index_name)
 
             if self.index_to_documents_cleanup_mapping.get(index_to_cleanup):
-                idx.delete_documents(list(self.index_to_documents_cleanup_mapping[index_to_cleanup]), auto_refresh=True)
+                res = idx.delete_documents(list(self.index_to_documents_cleanup_mapping[index_to_cleanup]),
+                                           auto_refresh=True)
+                if res['status'] == 'succeeded':
+                    self.index_to_documents_cleanup_mapping[index_to_cleanup] = set()
 
             if idx.get_stats()["numberOfDocuments"] > 0:
                 max_attempts = 100

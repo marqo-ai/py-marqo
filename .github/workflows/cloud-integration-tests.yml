@@ -12,16 +12,14 @@ on:
   workflow_dispatch:
     inputs:
       job_to_run:
-        description: 'Job to run (Options: delete_all_indexes, run_integration_tests)'
+        description: 'Job to run (Options: delete_all_indexes, run_integration_tests). Keep in mind
+          that delete_all_indexes will delete ALL indexes in the integration tests account that starts 
+          with the prefix "test-index". Even those that were not created by this workflow.'
         required: true
-        default: 'delete_all_indexes'
-  pull_request:
-    branches:  # temporarily not deleting to simplify testing process
-      - mainline
-      - 'releases/*'
-    review:
-      types:
-        - submitted
+        default: 'run_integration_tests'
+  pull_request_review:
+    types:
+      - submitted
   # allows other workflows to reuse these unit tests:
   workflow_call:
 
@@ -36,22 +34,6 @@ jobs:
     environment: cloud-tests
 
     steps:
-#      - name: Check Reviewer's Permissions
-#        run: |
-#          REVIEWER_USERNAME="${{ github.event.review.user.login }}"
-#          REPO_OWNER="marqo-ai"
-#          REPO_NAME="py-marqo"
-#
-#          # Check if the reviewer has write access
-#          write_access=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-#            "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/collaborators/$REVIEWER_USERNAME/permission" | jq -r '.permission == "write"')
-#
-#          if [[ "$write_access" == "true" ]]; then
-#            echo "Reviewer has write access."
-#          else
-#            echo "Reviewer does not have write access or did not approve the PR."
-#            exit 1
-#          fi
 
       - name: Checkout code
         uses: actions/checkout@v2

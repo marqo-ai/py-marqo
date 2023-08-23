@@ -1,3 +1,11 @@
+""" Script for running cloud tests. It receives passed arguments and passes them
+to pytest. It also handles 3 special arguments:
+    --create-indexes: creates the indexes for the tests
+    --delete-indexes: deletes the indexes after the tests
+    --use-unique-identifier: creates a unique identifier for the indexes,
+        so that multiple runs of the tests don't interfere with each other.
+        Defaults to cinteg or gets one from the environment variable MQ_TEST_RUN_IDENTIFIER.
+    """
 import os
 import signal
 import sys
@@ -15,7 +23,7 @@ def handle_interrupt(signum, frame):
     print("\nInterrupt received. Cleaning up and deleting indices.")
     if tests_specific_kwargs['delete-indexes']:
         delete_all_test_indices(wait_for_readiness=False)
-    sys.exit(1)
+    sys.exit(signum)
 
 
 def convert_string_to_boolean(string_value):
@@ -45,11 +53,11 @@ if __name__ == '__main__':
 
         import pytest
         pytest_args = ['tests/', '-m', 'not ignore_during_cloud_tests'] + sys.argv[1:]
-        print(pytest_args)
+        print("running integration tests with args:", pytest_args)
         pytest_exit_code = pytest.main(pytest_args)
         if pytest_exit_code != 0:
             raise RuntimeError(f"Pytest failed with exit code: {pytest_exit_code}")
-        print("All tests has been executed, proceeding to delete indices")
+        print("All tests has been executed successfully")
 
         if tests_specific_kwargs['delete-indexes']:
             delete_all_test_indices(wait_for_readiness=True)

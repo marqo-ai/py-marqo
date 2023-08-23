@@ -115,6 +115,7 @@ class TestSearch(MarqoTestCase):
 
         search_res = self.client.index(test_index_name).search(
             "this is a solid doc")
+        print(search_res)
         assert d2 == self.strip_marqo_fields(search_res['hits'][0], strip_id=False)
         assert search_res['hits'][0]['_highlights']["field X"] == "this is a solid doc"
 

@@ -4,6 +4,12 @@ import marqo
 
 
 def delete_all_test_indices(wait_for_readiness=False):
+    """ Delete all test indices from Marqo Cloud Account that match the following criteria:
+    - index name starts with 'test-index'
+    - index name contains the value of the environment variable MQ_TEST_RUN_IDENTIFIER
+    ( if not specified then all indices that start with 'test-index' will be deleted )
+    """
+    print("Deleting indices...")
     local_marqo_settings = {
         "url": os.environ.get("MARQO_URL", 'http://localhost:8882'),
     }
