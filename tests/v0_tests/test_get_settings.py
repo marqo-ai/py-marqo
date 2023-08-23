@@ -48,7 +48,7 @@ class TestGetSettings(MarqoTestCase):
         test_index_name = self.create_test_index(
             cloud_test_index_to_use=CloudTestIndex.text_index_with_custom_model,
             open_source_test_index_name=self.generic_test_index_name,
-            open_source_index_settings=index_settings,
+            open_source_index_settings_dict=index_settings,
         )
         ix = self.client.index(test_index_name)
         index_settings = ix.get_settings()

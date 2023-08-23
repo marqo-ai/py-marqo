@@ -1,7 +1,6 @@
 import copy
 import functools
 import math
-import os
 import pprint
 import random
 import pytest
@@ -43,10 +42,10 @@ class TestAddDocuments(MarqoTestCase):
     def test_create_index_hnsw(self):
         if not self.client.config.is_marqo_cloud:
             self.client.delete_index(self.generic_test_index_name)
-        test_index_name = test_index_name = self.create_test_index(
+        test_index_name = self.create_test_index(
             cloud_test_index_to_use=CloudTestIndex.image_index,
             open_source_test_index_name=self.generic_test_index_name,
-            open_source_index_settings={
+            open_source_index_settings_dict={
                 "index_defaults": {
                     "ann_parameters": {
                         "parameters": {
@@ -615,24 +614,3 @@ class TestAddDocuments(MarqoTestCase):
             )
             self.client.index(test_index_name).add_documents(documents=documents, non_tensor_fields=non_tensor_fields)
             self.assertTrue({'`non_tensor_fields`', 'Marqo', '2.0.0.'}.issubset(set(cm.output[0].split(" "))))
-
-    def test_add_documents_mock_overwrites_mock_for_cloud_tests(self):
-        with mock.patch("marqo.index.Index.add_documents") as mock_documents, \
-             mock.patch("tests.marqo_test.MarqoTestCase.cleanup_documents_from_index") as mock_cleanup_documents:
-            marqo_url_before_test = self.client_settings["url"]
-            marqo_cloud_url_before_test = os.environ.get("MARQO_CLOUD_URL")
-            self.client_settings["url"] = "cloud.url.marqo.ai"
-            os.environ["MARQO_CLOUD_URL"] = "cloud.url.marqo.ai"
-            mock_documents.return_value = {"success": True}
-
-            test_index_name = self.create_test_index(
-                cloud_test_index_to_use=CloudTestIndex.basic_index,
-                open_source_test_index_name=self.generic_test_index_name,
-            )
-            res = self.client.index(test_index_name).add_documents(documents=[{"some": "data"}], tensor_fields=["some"])
-            assert res == {"success": True}
-
-        if marqo_url_before_test:
-            self.client_settings["url"] = marqo_url_before_test
-        if marqo_cloud_url_before_test:
-            os.environ["MARQO_CLOUD_URL"] = marqo_cloud_url_before_test

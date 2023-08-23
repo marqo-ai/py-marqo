@@ -500,7 +500,7 @@ class TestSearch(MarqoTestCase):
         test_index_name = self.create_test_index(
             cloud_test_index_to_use=CloudTestIndex.image_index,
             open_source_test_index_name=self.generic_test_index_name,
-            open_source_index_settings=image_index_config
+            open_source_index_settings_dict=image_index_config
         )
         self.client.index(index_name=test_index_name).add_documents(
             documents=docs, tensor_fields=['loc a', 'loc b'], auto_refresh=True

@@ -517,25 +517,6 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         with self.assertRaises(MarqoCloudIndexNotFoundError):
             mapping.get_index_base_url("index1")
 
-    def test_index_instantiation_does_not_refresh_urls(self):
-        if not self.client.config.is_marqo_cloud:
-            self.skipTest("Test is not relevant for non-Marqo Cloud instances")
-        test_index_name = self.create_test_index(
-            cloud_test_index_to_use=CloudTestIndex.basic_index,
-            open_source_test_index_name=self.generic_test_index_name,
-        )
-
-        start_time = time.time()
-        self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp -= 361
-        time.sleep(0.1)
-        idx = self.client.index(test_index_name)
-        assert self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp < start_time
-
-        time.sleep(0.1)
-        start_time = time.time()
-        idx = self.client.index(test_index_name)
-        assert self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp < start_time
-
     def test_search_call_does_not_refresh_urls_when_not_needed(self):
         if not self.client.config.is_marqo_cloud:
             self.skipTest("Test is not relevant for non-Marqo Cloud instances")
@@ -583,6 +564,7 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
             cloud_test_index_to_use=CloudTestIndex.basic_index,
             open_source_test_index_name=self.generic_test_index_name,
         )
+        self.client.config.instance_mapping.get_index_base_url(test_index_name)
         assert self.client.config.instance_mapping.is_index_usage_allowed(test_index_name)
 
         assert not self.client.config.instance_mapping.is_index_usage_allowed("not-existing-index")

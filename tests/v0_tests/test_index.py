@@ -220,9 +220,9 @@ class TestIndex(MarqoTestCase):
             "number_of_replicas": intended_replicas,
         }
         test_index_name = self.create_test_index(
-            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            cloud_test_index_to_use=None,
             open_source_test_index_name=self.generic_test_index_name,
-            open_source_index_settings=settings
+            open_source_index_settings_dict=settings
         )
         index_setting = self.client.index(test_index_name).get_settings()
         print(index_setting)
