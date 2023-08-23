@@ -31,6 +31,8 @@ def delete_all_test_indices(wait_for_readiness=False):
         index = client.index(index_name)
         if index.get_status()["index_status"] == marqo.enums.IndexStatus.READY:
             index.delete(wait_for_readiness=False)
+        else:
+            print(f"Index {index_name} is not ready for deletion, status: {index.get_status()['index_status']}")
     if wait_for_readiness:
         max_retries = 100
         attempt = 0
