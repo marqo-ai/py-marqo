@@ -242,13 +242,6 @@ class MarqoTestCase(TestCase):
 
     def mark_for_cleanup_and_add_documents(self, index_name: str, documents: list, *args,   **kwargs):
         """Add documents to index and mark for cleanup after test is run."""
-        if kwargs.get("get_ix_name"):
-            return index_name
-        unclosed_mocks = {}
-        # print out all active mocks
-        for active_mock in mock._patch._active_patches:
-            unclosed_mocks[active_mock.kwargs['side_effect']] = active_mock.kwargs['side_effect']([], get_ix_name=True)
-        print(f"unclosed mocks: {unclosed_mocks}")
         self.add_documents_and_mark_for_cleanup_patch.stop()
         res = self.client.index(index_name).add_documents(documents, *args, **kwargs)
         self.add_documents_and_mark_for_cleanup_patch.start()
