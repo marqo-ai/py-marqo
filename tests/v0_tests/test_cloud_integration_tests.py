@@ -51,4 +51,5 @@ class TestCloudIntegrationTests(MarqoTestCase):
         assert self.client.index(test_index_name).get_stats()["numberOfDocuments"] == 0
         with self.assertRaises(MarqoWebError):
             self.client.index(test_index_name).get_document("lost")
+        add_documents_patch.stop()
 

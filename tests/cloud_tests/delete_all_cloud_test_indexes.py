@@ -29,6 +29,10 @@ def delete_all_test_indices(wait_for_readiness=False):
             elif suffix is None:
                 indices_to_delete.append(index.index_name)
 
+    if not indices_to_delete:
+        print("No indices to delete. Exiting.")
+        return
+
     print("Indices to delete: ", indices_to_delete)
     print("Marqo Cloud deletion responses:")
     for index_name in indices_to_delete:
