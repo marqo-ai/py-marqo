@@ -32,6 +32,12 @@ class TestCloudIntegrationTests(MarqoTestCase):
             os.environ["MARQO_CLOUD_URL"] = marqo_cloud_url_before_test
 
     def test_index_cleanup_works_with_add_documents_mocked(self):
+        """Test that index cleanup works even if add_documents is mocked.
+
+        This test ensures that the cleanup process for an index functions correctly,
+        even when the 'add_documents' method is mocked. It verifies that documents are properly added
+        to the cleanup mapping and deleted from the index during cleanup.
+        """
         if not self.client.config.is_marqo_cloud:
             self.skipTest("This test is only for cloud tests")
 
@@ -65,4 +71,3 @@ class TestCloudIntegrationTests(MarqoTestCase):
             assert self.client.index(test_index_name).get_stats()["numberOfDocuments"] == 0
             with self.assertRaises(MarqoWebError):
                 self.client.index(test_index_name).get_document("lost")
-
