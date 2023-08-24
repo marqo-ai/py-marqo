@@ -62,7 +62,6 @@ class TestTelemetry(MarqoTestCase):
             self.assertIn("telemetry", res)
             self.assertIn("timesMs", res["telemetry"])
 
-    @mark.ignore_during_cloud_tests
     def test_telemetry_bulk_search(self):
         test_index_name = self.create_test_index(
             cloud_test_index_to_use=CloudTestIndex.basic_index,

@@ -76,8 +76,9 @@ import os
 from random import choice
 from string import ascii_letters
 
+import requests
 from pydantic import BaseModel
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union, NamedTuple
 from unittest import mock, TestCase
 from tests.cloud_tests.cloud_test_index import CloudTestIndex
 
@@ -128,6 +129,9 @@ def mock_http_traffic(mock_config: List[MockHTTPTraffic], forbid_extra_calls: bo
                             if isinstance(response, InternalError):
                                 raise response
                             return response
+                        # performs check for get indexes which needs to pass for mappings during cloud tests
+                        if http_operation == "get" and path == "" and body is None and content_type is None:
+                            return
 
                     if forbid_extra_calls:
                         raise ValueError(
@@ -172,6 +176,75 @@ def with_documents(index_to_documents_fn: Callable[[], Dict[str, List[Dict[str, 
                     }])
                 new_args.append(docs)
             return test_func(self, *new_args, **kwargs)
+        return wrapper
+    return decorator
+
+
+class InstanceMappingIndexData(NamedTuple):
+    index_name: str
+    index_status: str
+    endpoint: str
+
+    @staticmethod
+    def get_basic_index_data():
+        return InstanceMappingIndexData(
+            index_name="test-index",
+            index_status="READY",
+            endpoint="endpoint"
+        )
+
+
+def mock_instance_mappings(indexes_list: Union[List[InstanceMappingIndexData], None], to_return_mock: bool = False):
+    """Function decorator to mock the instance mappings endpoint.
+
+    This decorator is used to mock the behavior of the requests.get function
+    within a specific test function. It allows you to set up mock responses for
+    requests to the "/indexes" URL while allowing real requests to other URLs.
+
+    Args:
+        indexes_list (Union[List[InstanceMappingIndexData], None]): A list of
+            InstanceMappingIndexData objects to be used for mocking responses
+            to requests to the "/indexes" URL. If None, no mock data will be used.
+        to_return_mock (bool): Indicates whether the decorated test function
+            should return the mock object or not. If True, the test function
+            will be called with the mock object as an argument; otherwise, it
+            will be called without the mock object.
+
+    Returns:
+        function: The decorated test function.
+
+    Example usage:
+        @mock_instance_mappings([...])  # Pass your mock data here
+        def test_example(mock_get):
+            # Your test logic here
+
+    """
+    def decorator(test_func):
+        @wraps(test_func)
+        def wrapper(self, *args, **kwargs):
+            with mock.patch("marqo.marqo_cloud_instance_mappings.requests.get") as mock_get:
+                return_value_is_set = False
+
+                def side_effect(url, *args, **kwargs):
+                    nonlocal return_value_is_set
+                    if url.endswith("/indexes"):
+                        if not return_value_is_set and instance_mappings is not None:
+                            mock_get.json.return_value = instance_mappings
+                            return_value_is_set = True
+
+                        return mock_get
+                    else:
+                        requests.get(url, *args, **kwargs)
+
+                if indexes_list is not None:
+                    instance_mappings = {"results": [index_data._asdict() for index_data in indexes_list]}
+                else:
+                    instance_mappings = None
+                mock_get.side_effect = side_effect
+                if not to_return_mock:
+                    test_func(self, *args, **kwargs)
+                else:
+                    return test_func(self, mock_get, *args, **kwargs)
         return wrapper
     return decorator
 
@@ -248,6 +321,7 @@ class MarqoTestCase(TestCase):
             self,
             cloud_test_index_to_use: Union[CloudTestIndex, None], open_source_test_index_name: Union[str, None],
             open_source_index_settings_dict: dict = None, open_source_index_kwargs: dict = None,
+            delete_index_documents_before_test: bool = True
     ):
         """Determines whether the test is executed in a cloud environment or within an open-source setup.
         If it's running in an open-source environment,
@@ -255,10 +329,25 @@ class MarqoTestCase(TestCase):
 
         In the case of cloud testing, it provides the name of the cloud index to be used.
         Additionally, it applies a unique run identifier to the index name and performs
-        cleanup operations on documents associated with the index.
+        cleanup operations on documents associated with the index if 'delete_index_documents_before_test' is True.
+
+        Args:
+            cloud_test_index_to_use (Union[CloudTestIndex, None]): The cloud test index to use in cloud environments.
+                If None, an error is raised.
+            open_source_test_index_name (Union[str, None]): The name of the open-source test index to create in
+                open-source environments. If None, no open-source index is created.
+            open_source_index_settings_dict (dict, optional): Additional settings to apply when creating
+                the open-source test index.
+            open_source_index_kwargs (dict, optional): Additional keyword arguments to pass when creating
+                the open-source test index.
+            delete_index_documents_before_test (bool, optional): If True, existing documents in the index will
+                be deleted before preparing it for testing. Default is True. Used only for cloud testing.
 
         Returns:
             The name of the index to be used, depending on the testing environment.
+
+        Raises:
+            ValueError: If 'cloud_test_index_to_use' is None in cloud environments.
 
         """
         client = marqo.Client(**self.client_settings)
@@ -266,14 +355,14 @@ class MarqoTestCase(TestCase):
             if cloud_test_index_to_use is None:
                 raise ValueError("cloud_test_index_to_use must be specified for cloud tests")
             index_name_to_return = f"{cloud_test_index_to_use.value}-{self.index_suffix}"
-            self.prepare_cloud_index_for_test(index_name_to_return)
+            self.prepare_cloud_index_for_test(index_name_to_return, delete_index_documents_before_test)
         else:
             index_name_to_return = self.create_open_source_index(
                 open_source_test_index_name, open_source_index_settings_dict, open_source_index_kwargs
             )
         return index_name_to_return
 
-    def prepare_cloud_index_for_test(self, index_name: str):
+    def prepare_cloud_index_for_test(self, index_name: str, delete_index_documents_before_test: bool = True):
         """
         Cleans up documents from the specified cloud index and prepares it for testing.
 
@@ -291,7 +380,8 @@ class MarqoTestCase(TestCase):
             index_name (str): The name of the cloud index to prepare for testing.
 
         """
-        self.cleanup_documents_from_index(index_name)
+        if delete_index_documents_before_test:
+            self.cleanup_documents_from_index(index_name)
         if not isinstance(marqo.index.Index.add_documents, mock.MagicMock):
             if hasattr(self, 'add_documents_and_mark_for_cleanup_patch'):
                 self.add_documents_and_mark_for_cleanup_patch.stop()
@@ -302,16 +392,25 @@ class MarqoTestCase(TestCase):
             self.add_documents_and_mark_for_cleanup_patch.start()
 
     def create_open_source_index(self, index_name: str, settings_dict: dict = None, kwargs: dict = None):
-        """Create an open source index with the given name and settings."""
+        """Create an open source index with the given name and settings.
+
+           Note:
+            If the index creation fails due to a MarqoWebError, the error message will be
+            printed, but it will not raise an exception. This behavior is designed to avoid
+            test failures when the index already exists."""
         client = marqo.Client(**self.client_settings)
         if settings_dict is not None and kwargs is not None:
             raise ValueError("Only one of settings_dict and kwargs can be specified")
-        if settings_dict is not None:
-            client.create_index(index_name, settings_dict=settings_dict)
-        elif kwargs is not None:
-            client.create_index(index_name, **kwargs)
-        else:
-            client.create_index(index_name)
+        try:
+            if settings_dict is not None:
+                client.create_index(index_name, settings_dict=settings_dict)
+            elif kwargs is not None:
+                client.create_index(index_name, **kwargs)
+            else:
+                client.create_index(index_name)
+        except MarqoWebError as e:
+            # we don't want to fail the test if the index already exists as it might be used in some scenarios
+            print(f"Index creation failed with error: {e}")
         return index_name
 
     def mark_for_cleanup_and_add_documents(self, index_name: str, documents: list, *args,   **kwargs):

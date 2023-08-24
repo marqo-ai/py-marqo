@@ -1,4 +1,6 @@
 import copy
+import os
+
 import marqo
 from marqo import enums
 from typing import Any, Dict, List
@@ -8,10 +10,13 @@ from marqo.errors import InvalidArgError
 import requests
 import random
 import math
-from tests.marqo_test import mock_http_traffic, with_documents, MockHTTPTraffic, MarqoTestCase
+
+from marqo.models import BulkSearchBody
+from tests.marqo_test import (mock_http_traffic, with_documents, MockHTTPTraffic, MarqoTestCase, mock_instance_mappings,
+                              InstanceMappingIndexData, CloudTestIndex
+                              )
 
 
-@mark.ignore_during_cloud_tests
 class TestBulkSearch(MarqoTestCase):
     @staticmethod
     def strip_marqo_fields(doc, strip_id=True):
@@ -60,6 +65,7 @@ class TestBulkSearch(MarqoTestCase):
             }
         )
     ], forbid_extra_calls=True)
+    @mock_instance_mappings([InstanceMappingIndexData.get_basic_index_data()])
     def test_bulk_search_with_context(self):
         """Check that context is passed to HTTP request correctly"""
         self.client.bulk_search([{
@@ -106,6 +112,7 @@ class TestBulkSearch(MarqoTestCase):
             }
         )
     ], forbid_extra_calls=True)
+    @mock_instance_mappings([InstanceMappingIndexData.get_basic_index_data()])
     def test_bulk_search_with_scoreModifiers(self):
         """Check that context is passed to HTTP request correctly"""
         self.client.bulk_search([{
@@ -130,8 +137,13 @@ class TestBulkSearch(MarqoTestCase):
         """
     }]}, warmup_query="title about some doc")
     def test_bulk_search_single(self, index_1_docs: List[Dict[str, Any]]):
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+            delete_index_documents_before_test=False
+        )
         resp = self.client.bulk_search([{
-            "index": self.generic_test_index_name,
+            "index": test_index_name,
             "q": "title about some doc"
         }])
         assert len(resp['result']) == 1
@@ -143,9 +155,12 @@ class TestBulkSearch(MarqoTestCase):
         assert {"Title", "Description"} & set(search_res["hits"][0]["_highlights"])
 
     def test_search_empty_index(self):
-        self.client.create_index(index_name=self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         resp = self.client.bulk_search([{
-            "index": self.generic_test_index_name,
+            "index": test_index_name,
             "q": "title about some doc"
         }])
         assert len(resp['result']) == 1
@@ -154,19 +169,25 @@ class TestBulkSearch(MarqoTestCase):
         assert len(search_res["hits"]) == 0
 
     def test_search__extra_parameters_raise_exception(self):
-        self.client.create_index(index_name=self.generic_test_index_name)
-        
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
+
         with self.assertRaises(InvalidArgError):
             self.client.bulk_search([{
-                "index": self.generic_test_index_name,
+                "index": test_index_name,
                 "q": "title about some doc",
                 "parameter-not-expected": 1,
             }])
 
     def test_search_highlights(self):
         """Tests if show_highlights works and if the deprecation behaviour is expected"""
-        self.client.create_index(index_name=self.generic_test_index_name)
-        self.client.index(index_name=self.generic_test_index_name).add_documents([{"f1": "some doc"}], tensor_fields=["f1"])
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
+        self.client.index(index_name=test_index_name).add_documents([{"f1": "some doc"}], tensor_fields=["f1"])
         for params, expected_highlights_presence in [
                 ({}, True),
                 ({"showHighlights": False}, False),
@@ -175,12 +196,12 @@ class TestBulkSearch(MarqoTestCase):
 
             if self.IS_MULTI_INSTANCE:
                 self.warm_request(self.client.bulk_search, [{**{
-                    "index": self.generic_test_index_name,
+                    "index": test_index_name,
                     "q": "title about some doc"
                 }, **params}])
 
             resp = self.client.bulk_search([{**{
-                "index": self.generic_test_index_name,
+                "index": test_index_name,
                 "q": "title about some doc"
             }, **params}])
             assert len(resp['result']) == 1
@@ -197,8 +218,13 @@ class TestBulkSearch(MarqoTestCase):
             "_id": "123456"
     }]}, warmup_query="this is a solid doc")
     def test_bulk_search_multi(self, index_1_docs):
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+            delete_index_documents_before_test=False
+        )
         resp = self.client.bulk_search([{
-            "index": self.generic_test_index_name,
+            "index": test_index_name,
             "q": "this is a solid doc"
         }])
         assert len(resp['result']) == 1
@@ -219,8 +245,13 @@ class TestBulkSearch(MarqoTestCase):
         }]}, warmup_query="Examples of leadership")
     def test_select_lexical(self, index_1_docs):
         # Ensure that vector search works
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+            delete_index_documents_before_test=False
+        )
         resp = self.client.bulk_search([{
-            "index": self.generic_test_index_name,
+            "index": test_index_name,
             "q": "Examples of leadership"
         }])
         assert len(resp['result']) == 1
@@ -231,12 +262,13 @@ class TestBulkSearch(MarqoTestCase):
 
         # try it with lexical search:
         #    can't find the above with synonym
-        assert len(self.client.index(self.generic_test_index_name).search(
+        assert len(self.client.index(test_index_name).search(
             "Examples of leadership", search_method=marqo.SearchMethods.LEXICAL)["hits"]) == 0
         #    but can look for a word
-        assert self.client.index(self.generic_test_index_name).search(
+        assert self.client.index(test_index_name).search(
             '"captain"')["hits"][0]["_id"] == "123456"
 
+    @mock_instance_mappings([InstanceMappingIndexData.get_basic_index_data()])
     def test_bulk_search_with_device(self):
         """use default as defined in config unless overridden"""
         temp_client = copy.deepcopy(self.client)
@@ -254,6 +286,7 @@ class TestBulkSearch(MarqoTestCase):
         args, _ = mock__post.call_args_list[0]
         assert "device=cuda2" in args[0]
 
+    @mock_instance_mappings([InstanceMappingIndexData.get_basic_index_data()])
     def test_bulk_search_with_no_device(self):
         """if no device is set, device should not be in path"""
         temp_client = copy.deepcopy(self.client)
@@ -272,7 +305,10 @@ class TestBulkSearch(MarqoTestCase):
         assert "device" not in args[0]
 
     def test_filter_string_and_searchable_attributes(self):
-        self.client.create_index(index_name=self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         docs = [
             {
                 "_id": "0",                     # content in field_a
@@ -301,7 +337,7 @@ class TestBulkSearch(MarqoTestCase):
                 "int_for_filtering": 1,
             }
         ]
-        res = self.client.index(self.generic_test_index_name).add_documents(docs,auto_refresh=True, tensor_fields=["field_a", "field_b"])
+        res = self.client.index(test_index_name).add_documents(docs,auto_refresh=True, tensor_fields=["field_a", "field_b"])
 
         test_cases = (
             {   # filter string only (str)
@@ -350,7 +386,7 @@ class TestBulkSearch(MarqoTestCase):
 
         for case in test_cases:
             query_object_0 = {
-                "index": self.generic_test_index_name,
+                "index": test_index_name,
                 "q": case["query"],
                 "filter": case.get("filter_string", ""),
                 "searchableAttributes": case.get("searchable_attributes", None)
@@ -361,9 +397,11 @@ class TestBulkSearch(MarqoTestCase):
             assert len(search_res["hits"]) == len(case["expected"])
             assert set([hit["_id"] for hit in search_res["hits"]]) == set(case["expected"])
 
-
     def test_attributes_to_retrieve(self):
-        self.client.create_index(index_name=self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         d1 = {
             "doc title": "Very heavy, dense metallic lead.",
             "abc-123": "some text blah",
@@ -378,7 +416,7 @@ class TestBulkSearch(MarqoTestCase):
             "an_int": 2345678,
             "_id": "123456"
         }
-        x = self.client.index(self.generic_test_index_name).add_documents([
+        x = self.client.index(test_index_name).add_documents([
             d1, d2
         ], auto_refresh=True, tensor_fields=["doc title", "field X", "abc-123", "field1", "an_int"])
         atts = ["doc title", "an_int"]
@@ -387,14 +425,14 @@ class TestBulkSearch(MarqoTestCase):
             
             if self.IS_MULTI_INSTANCE:
                 self.warm_request(self.client.bulk_search,[{
-                    "index": self.generic_test_index_name,
+                    "index": test_index_name,
                     "q": "blah blah",
                     "searchMethod": search_method,
                     "attributesToRetrieve": atts
                 }])
 
             resp = self.client.bulk_search([{
-                "index": self.generic_test_index_name,
+                "index": test_index_name,
                 "q": "blah blah",
                 "searchMethod": search_method,
                 "attributesToRetrieve": atts
@@ -406,9 +444,11 @@ class TestBulkSearch(MarqoTestCase):
             for hit in search_res['hits']:
                 assert {k for k in hit.keys() if not k.startswith('_')} == set(atts)
 
-
     def test_pagination_single_field(self):
-        self.client.create_index(index_name=self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         
         # 100 random words
         vocab_source = "https://www.mit.edu/~ecprice/wordlist.10000"
@@ -419,16 +459,16 @@ class TestBulkSearch(MarqoTestCase):
                             }
                         for i in range(num_docs)]
         
-        self.client.index(index_name=self.generic_test_index_name).add_documents(
+        self.client.index(test_index_name).add_documents(
             docs, auto_refresh=False, client_batch_size=50, tensor_fields=["Title"]
         )
-        self.client.index(index_name=self.generic_test_index_name).refresh()
+        self.client.index(test_index_name).refresh()
 
         for search_method in (enums.SearchMethods.TENSOR, enums.SearchMethods.LEXICAL):
             for doc_count in [100]:
                 # Query full results
                 resp = self.client.bulk_search([{
-                    "index": self.generic_test_index_name,
+                    "index": test_index_name,
                     "q": "a",
                     "searchMethod": search_method,
                     "limit":doc_count
@@ -443,7 +483,7 @@ class TestBulkSearch(MarqoTestCase):
                         lim = page_size
                         off = page_num * page_size
                         resp = self.client.bulk_search([{
-                            "index": self.generic_test_index_name,
+                            "index": test_index_name,
                             "q": "a",
                             "searchMethod": search_method,
                             "limit": lim,
@@ -474,8 +514,12 @@ class TestBulkSearch(MarqoTestCase):
                 'treat_urls_and_pointers_as_images': True
             }
         }
-        self.client.create_index(index_name=self.generic_test_index_name, settings_dict=image_index_config)
-        self.client.index(index_name=self.generic_test_index_name).add_documents(
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.image_index,
+            open_source_test_index_name=self.generic_test_index_name,
+            open_source_index_settings_dict=image_index_config
+        )
+        self.client.index(index_name=test_index_name).add_documents(
             documents=docs, auto_refresh=True, tensor_fields=["loc a", "loc b"]
         )
         queries_expected_ordering = [
@@ -489,7 +533,7 @@ class TestBulkSearch(MarqoTestCase):
         ]
         for query, expected_ordering in queries_expected_ordering:
             resp = self.client.bulk_search([{
-                "index": self.generic_test_index_name,
+                "index": test_index_name,
                 "q": query
             }])
             assert len(resp['result']) == 1
@@ -500,7 +544,10 @@ class TestBulkSearch(MarqoTestCase):
                 assert res['hits'][hit_position]['_id'] == expected_ordering[hit_position]
 
     def test_score_modifiers_in_bulk_search_end_to_end(self):
-        self.client.create_index(index_name=self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name
+        )
         d1 = {
             "doc title": "Very heavy, dense metallic lead.",
             "abc-123": "some text blah",
@@ -517,7 +564,7 @@ class TestBulkSearch(MarqoTestCase):
             "add": 1,
             "_id": "123456"
         }
-        x = self.client.index(self.generic_test_index_name).add_documents([
+        x = self.client.index(test_index_name).add_documents([
             d1, d2
         ], auto_refresh=True, tensor_fields=["doc title", "abc-123", "field X", "field1"])
 
@@ -529,13 +576,13 @@ class TestBulkSearch(MarqoTestCase):
         for search_method in [enums.SearchMethods.TENSOR]:
             if self.IS_MULTI_INSTANCE:
                 self.warm_request(self.client.bulk_search, [{
-                    "index": self.generic_test_index_name,
+                    "index": test_index_name,
                     "q": "blah blah",
                     "searchMethod": search_method,
                 }])
 
             resp = self.client.bulk_search([{
-                "index": self.generic_test_index_name,
+                "index": test_index_name,
                 "q": "blah blah",
                 "searchMethod": search_method,
                 "scoreModifiers": score_modifiers,
@@ -546,3 +593,98 @@ class TestBulkSearch(MarqoTestCase):
             assert len(search_res['hits']) == 2
             for hit in search_res['hits']:
                 assert hit["_score"] > 2
+
+    @mock_instance_mappings([InstanceMappingIndexData.get_basic_index_data()])
+    def test_query_validation_single_index_success(self):
+        cloud_client_config = self.client_settings.copy()
+        cloud_client_config["url"] = "cloud.url.marqo.ai"
+        marqo_cloud_url_before_test = os.environ.get("MARQO_CLOUD_URL")
+        os.environ["MARQO_CLOUD_URL"] = "cloud.url.marqo.ai"
+        client = marqo.Client(**cloud_client_config)
+        queries = [
+            {
+                "index": "test-index",
+                "q": "blah blah",
+                "searchMethod": enums.SearchMethods.TENSOR,
+            },
+            ]
+        parsed_queries = [BulkSearchBody(**q) for q in queries]
+        assert client._validate_all_indexes_belong_to_the_same_cluster(parsed_queries) is True
+
+        if marqo_cloud_url_before_test:
+            os.environ["MARQO_CLOUD_URL"] = marqo_cloud_url_before_test
+
+    @mock_instance_mappings([InstanceMappingIndexData("test-index", "READY", "example.com"),
+                             InstanceMappingIndexData("test-index-2", "READY", "example2.com")])
+    def test_query_validation_two_different_urls_fails(self):
+        cloud_client_config = self.client_settings.copy()
+        cloud_client_config["url"] = "cloud.url.marqo.ai"
+        marqo_cloud_url_before_test = os.environ.get("MARQO_CLOUD_URL")
+        os.environ["MARQO_CLOUD_URL"] = "cloud.url.marqo.ai"
+        client = marqo.Client(**cloud_client_config)
+        queries = [
+            {
+                "index": "test-index",
+                "q": "blah blah",
+                "searchMethod": enums.SearchMethods.TENSOR,
+            },
+            {
+                "index": "test-index-2",
+                "q": "blah blah",
+                "searchMethod": enums.SearchMethods.TENSOR,
+            },
+            ]
+        parsed_queries = [BulkSearchBody(**q) for q in queries]
+        with self.assertRaises(InvalidArgError):
+            client._validate_all_indexes_belong_to_the_same_cluster(parsed_queries)
+
+        if marqo_cloud_url_before_test:
+            os.environ["MARQO_CLOUD_URL"] = marqo_cloud_url_before_test
+
+    @mock_instance_mappings([InstanceMappingIndexData("test-index", "READY", "example.com"),
+                            InstanceMappingIndexData("test-index-2", "READY", "example.com")])
+    def test_query_validation_two_same_urls_success(self):
+        cloud_client_config = self.client_settings.copy()
+        cloud_client_config["url"] = "cloud.url.marqo.ai"
+        marqo_cloud_url_before_test = os.environ.get("MARQO_CLOUD_URL")
+        os.environ["MARQO_CLOUD_URL"] = "cloud.url.marqo.ai"
+        client = marqo.Client(**cloud_client_config)
+        queries = [
+            {
+                "index": "test-index",
+                "q": "blah blah",
+                "searchMethod": enums.SearchMethods.TENSOR,
+            },
+            {
+                "index": "test-index-2",
+                "q": "blah blah",
+                "searchMethod": enums.SearchMethods.TENSOR,
+            },
+            ]
+        parsed_queries = [BulkSearchBody(**q) for q in queries]
+        assert client._validate_all_indexes_belong_to_the_same_cluster(parsed_queries) is True
+
+        if marqo_cloud_url_before_test:
+            os.environ["MARQO_CLOUD_URL"] = marqo_cloud_url_before_test
+
+    @mock_instance_mappings([InstanceMappingIndexData("test-index", "NOT READY", "example.com")])
+    def test_query_validation_index_not_ready_fails(self):
+        cloud_client_config = self.client_settings.copy()
+        cloud_client_config["url"] = "cloud.url.marqo.ai"
+        marqo_cloud_url_before_test = os.environ.get("MARQO_CLOUD_URL")
+        os.environ["MARQO_CLOUD_URL"] = "cloud.url.marqo.ai"
+        client = marqo.Client(**cloud_client_config)
+        queries = [
+            {
+                "index": "test-index",
+                "q": "blah blah",
+                "searchMethod": enums.SearchMethods.TENSOR,
+            },
+            ]
+        parsed_queries = [BulkSearchBody(**q) for q in queries]
+        with self.assertRaises(marqo.errors.MarqoCloudIndexNotFoundError):
+            client._validate_all_indexes_belong_to_the_same_cluster(parsed_queries)
+
+        if marqo_cloud_url_before_test:
+            os.environ["MARQO_CLOUD_URL"] = marqo_cloud_url_before_test
+

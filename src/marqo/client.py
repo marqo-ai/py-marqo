@@ -192,10 +192,13 @@ class Client:
         except error_wrappers.ValidationError as e:
             raise errors.InvalidArgError(f"some parameters in search query(s) are invalid. Errors are: {e.errors()}")
 
+        self._validate_all_indexes_belong_to_the_same_cluster(parsed_queries)
+
         translated_device_param = f"{f'?&device={utils.translate_device_string_for_url(device)}' if device is not None else ''}"
         return self.http.post(
             f"indexes/bulk/search{translated_device_param}",
-            body=BulkSearchQuery(queries=parsed_queries).json()
+            body=BulkSearchQuery(queries=parsed_queries).json(),
+            index_name=parsed_queries[0].index
         )
 
     @staticmethod
@@ -277,4 +280,34 @@ class Client:
             f"The `mq.{function_name}()` API is not supported on Marqo Cloud. "
             f"Please Use `mq.index('your-index-name').{function_name}()` instead. "
             "Check `https://docs.marqo.ai/1.1.0/API-Reference/indexes/` for more details.")
+
+    def _validate_all_indexes_belong_to_the_same_cluster(self, parsed_queries: List[BulkSearchBody]):
+        """
+        Validates that all indices in the bulk request belong to the same cluster.
+
+        This method checks whether all the specified indices in a bulk search request
+        are associated with the same cluster. It ensures that the indexes are not spread
+        across multiple clusters, as a bulk search operation should be performed within
+        a single cluster to guarantee consistency and reliability.
+
+        Args:
+            parsed_queries (List[BulkSearchBody]): A list of parsed bulk search queries.
+
+        Raises:
+            errors.InvalidArgError: If the indices belong to different clusters.
+
+        Returns:
+            bool: True if all indices belong to the same cluster, False otherwise.
+        """
+        cluster = None
+        index_names = set([q.index for q in parsed_queries])
+        for index_name in index_names:
+            self.index(index_name)  # it will perform all basic checks for index readiness
+            if cluster is None:
+                cluster = self.config.instance_mapping.get_index_base_url(index_name)
+            if cluster != self.config.instance_mapping.get_index_base_url(index_name):
+                raise errors.InvalidArgError(
+                    "All indexes in bulk search request must belong to the same cluster."
+                )
+        return True
 
