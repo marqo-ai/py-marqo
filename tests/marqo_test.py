@@ -1,12 +1,56 @@
 """
-Before running the tests locally, ensure that you have a running Marqo instance to test against!
+Before running the tests locally, ensure that you have a running Marqo instance to test against (either a cloud account
+or a locally running Marqo instance)!
+
 Pass its settings to the local_marqo_settings.
 
-To run Cloud V2 tests, execute `tox -e cloud_tests`.
-When running Cloud V2 tests, make sure to set the following environment variables:
-- MARQO_CLOUD_URL: The URL that the config class uses to recognize the cloud environment.
-- MARQO_API_KEY: The API key used for authentication.
-- MARQO_URL: The URL of the Marqo cloud instance.
+# RUNNING OPEN SOURCE TESTS
+
+1. Have a Marqo instance running (please see Marqo README)
+2. Run the following command in the repo root directory:
+tox
+
+
+# RUNNING CLOUD TESTS
+
+  To run Cloud V2 tests, execute `tox -e cloud_tests`.
+  When running Cloud V2 tests, make sure you export the following environment variables:
+    - MARQO_CLOUD_URL: The URL that the config class uses to recognize the cloud environment.
+        For example: https://api.marqo.ai
+    - MARQO_API_KEY: The API key used for authentication.
+    - MARQO_URL: The URL of the Marqo cloud instance. This should be the same as: MARQO_CLOUD_URL.
+        For example: https://api.marqo.ai
+
+  Examples (running cloud tests)
+    # To run all tests and have them run on new cloud indexes, if they don't yet exist, and have them persist
+    # even after tests are done:
+    tox -e cloud_tests -- create-indexes=True
+
+    # To also delete the indexes after testing has complete:
+    tox -e cloud_tests -- create-indexes=True delete-indexes=True
+
+    # if the cloud indexes for testing already exist:
+    tox -e cloud_tests
+
+    # to run tests on cloud indexes that contain your own identifier do the following. This is
+    # useful if multiple users are doing these tests on the same Marqo cloud account
+    export MQ_TEST_RUN_IDENTIFIER=danyil
+    tox -e cloud_tests -- create-indexes=True
+
+  Examples (deleting existing cloud test indexes)
+
+    # To delete all cloud test indexes on the cloud account
+    python3 tests/cloud_tests/delete_all_cloud_test_indexes.py
+
+    # To delete all cloud test indexes specified by a certain test run identifier:
+    export MQ_TEST_RUN_IDENTIFIER=danyil
+    tests/cloud_tests/delete_all_cloud_test_indexes.py
+
+  For detailed information on available cloud test parameters and their functionality,
+  please refer to the docstring in 'tests/cloud_tests/run_cloud_test.py'.
+
+
+## NOTES ABOUT THE TEST SUITE BEHAVIOUR ##
 
 When `cluster.is_marqo_cloud` is set to True, the tests will have different setUp and tearDown procedures:
 - Indices will not be deleted after each test.
