@@ -1,5 +1,5 @@
 import marqo
-from tests.marqo_test import MarqoTestCase
+from tests.marqo_test import MarqoTestCase, CloudTestIndex
 
 marqo.set_log_level("INFO")
 
@@ -34,7 +34,11 @@ class TestLogging(MarqoTestCase):
         ]
 
     def _create_img_index(self, index_name):
-        return self.create_test_index(index_name=index_name, treat_urls_and_pointers_as_images=True, model='ViT-B/32')
+        return self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.image_index,
+            open_source_test_index_name=index_name,
+            open_source_index_kwargs={"treat_urls_and_pointers_as_images": True, "model": "ViT-B/32"}
+        )
 
     def test_add_document_warnings_no_batching(self):
         test_index_name = self._create_img_index(index_name=self.generic_test_index_name)

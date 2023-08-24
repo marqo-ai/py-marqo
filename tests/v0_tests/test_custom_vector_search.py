@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional
 
 from marqo.errors import MarqoWebError
-from tests.marqo_test import MarqoTestCase
+from tests.marqo_test import MarqoTestCase, CloudTestIndex
 from pytest import mark
 
 
@@ -9,7 +9,11 @@ class TestCustomVectorSearch(MarqoTestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        self.test_index_name = self.create_test_index(index_name=self.generic_test_index_name, model="ViT-B/32")
+        self.test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.image_index,
+            open_source_test_index_name=self.generic_test_index_name,
+            open_source_index_kwargs={"model": "ViT-B/32"}
+        )
         self.client.index(index_name=self.test_index_name).add_documents(
             [
                 {

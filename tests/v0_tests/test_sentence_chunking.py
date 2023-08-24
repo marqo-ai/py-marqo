@@ -1,5 +1,5 @@
 from marqo.client import Client
-from tests.marqo_test import MarqoTestCase
+from tests.marqo_test import MarqoTestCase, CloudTestIndex
 
 
 class TestSentenceChunking(MarqoTestCase):
@@ -16,9 +16,12 @@ class TestSentenceChunking(MarqoTestCase):
             "sentences_per_chunk":int(1e3),  
             "sentence_overlap":0 
             }
-        
-        test_index_name = self.create_test_index(self.generic_test_index_name, **settings)
 
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+            open_source_index_kwargs=settings
+        )
 
         document1 = {'_id': '1', # '_id' can be provided but is not required
             'attributes': 'hello. how are you. another one.',
@@ -47,9 +50,12 @@ class TestSentenceChunking(MarqoTestCase):
             "sentences_per_chunk":2,  
             "sentence_overlap":0 
             }
-        
-        test_index_name = self.create_test_index(self.generic_test_index_name, **settings)
 
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+            open_source_index_kwargs=settings
+        )
 
         document1 = {'_id': '1', # '_id' can be provided but is not required
             'attributes': 'hello. how are you. another one.',
@@ -106,8 +112,12 @@ class TestSentenceChunking(MarqoTestCase):
             "sentences_per_chunk":2,  
             "sentence_overlap":1
             }
-        
-        test_index_name = self.create_test_index(self.generic_test_index_name, **settings)
+
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.text_index_with_custom_model,
+            open_source_test_index_name=self.generic_test_index_name,
+            open_source_index_kwargs=settings
+        )
 
 
         document1 = {'_id': '1', # '_id' can be provided but is not required

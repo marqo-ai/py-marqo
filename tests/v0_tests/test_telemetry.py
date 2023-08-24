@@ -1,5 +1,5 @@
 from marqo.client import Client
-from tests.marqo_test import MarqoTestCase
+from tests.marqo_test import MarqoTestCase, CloudTestIndex
 import math
 from pytest import mark
 
@@ -12,7 +12,10 @@ class TestTelemetry(MarqoTestCase):
 
     def test_telemetry_add_documents(self):
         number_of_docs = 10
-        test_index_name = self.create_test_index(self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         doc = [{"Title": "Marqo is useful",
                 "Description": "Marqo is a very useful tool"}, ] * number_of_docs
 
@@ -45,7 +48,10 @@ class TestTelemetry(MarqoTestCase):
             {"q": "search query","search_method": "LEXICAL"},
             {"q": "search query","searchable_attributes": ["Description"]}]
 
-        test_index_name = self.create_test_index(self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         self.client.index(test_index_name).add_documents([{"Title": "A dummy document",}], tensor_fields=["Title"])
 
         if self.IS_MULTI_INSTANCE:
@@ -58,7 +64,10 @@ class TestTelemetry(MarqoTestCase):
 
     @mark.ignore_during_cloud_tests
     def test_telemetry_bulk_search(self):
-        test_index_name = self.create_test_index(self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         self.client.index(test_index_name).add_documents([{"Title": "A dummy document",}], tensor_fields=["Title"])
         bulk_search_query = [
             {
@@ -92,7 +101,10 @@ class TestTelemetry(MarqoTestCase):
         assert all([field in res["telemetry"]["timesMs"] for field in expected_fields])
 
     def test_telemetry_get_document(self):
-        test_index_name = self.create_test_index(self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         self.client.index(test_index_name).add_documents([{"_id": "123321", "Title": "Marqo is useful",}],
                                                            tensor_fields=["Title"])
         res = self.client.index(test_index_name).get_document("123321")
@@ -100,7 +112,10 @@ class TestTelemetry(MarqoTestCase):
         self.assertEqual(res["telemetry"], dict())
 
     def test_delete_documents(self):
-        test_index_name = self.create_test_index(self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         self.client.index(test_index_name).add_documents([{"_id": "123321", "Title": "Marqo is useful",}],
                                                            tensor_fields=["Title"])
         res = self.client.index(test_index_name).delete_documents(["123321"])

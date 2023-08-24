@@ -6,7 +6,7 @@ from unittest.mock import patch
 from pytest import mark
 
 from marqo.client import Client
-from tests.marqo_test import MarqoTestCase
+from tests.marqo_test import MarqoTestCase, CloudTestIndex
 from marqo.errors import BadRequestError
 from marqo.errors import BackendTimeoutError, BackendCommunicationError
 import warnings
@@ -42,13 +42,19 @@ class TestClient(MarqoTestCase):
                 self.assertIn("If you are trying to check the health on Marqo Cloud", cm.exception.message)
 
     def test_check_index_health_response(self):
-        test_index_name = self.create_test_index(self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         res = self.client.index(test_index_name).health()
         assert 'status' in res
         assert 'status' in res['backend']
 
     def test_check_index_health_query(self):
-        test_index_name = self.create_test_index(self.generic_test_index_name)
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
         with patch("marqo._httprequests.HttpRequests.get") as mock_get:
             res = self.client.index(test_index_name).health()
             args, kwargs = mock_get.call_args
