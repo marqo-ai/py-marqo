@@ -1,7 +1,9 @@
 import os
 from unittest import mock
 
+from marqo.errors import MarqoWebError
 from tests.marqo_test import MarqoTestCase, CloudTestIndex
+from marqo.index import Index
 
 
 class TestCloudIntegrationTests(MarqoTestCase):
@@ -28,3 +30,25 @@ class TestCloudIntegrationTests(MarqoTestCase):
             self.client_settings["url"] = marqo_url_before_test
         if marqo_cloud_url_before_test:
             os.environ["MARQO_CLOUD_URL"] = marqo_cloud_url_before_test
+
+    def test_index_cleanup_works_with_add_documents_mocked(self):
+        if not self.client.config.is_marqo_cloud:
+            self.skipTest("This test is only for cloud tests")
+        add_documents_patch = mock.patch.object(Index, "add_documents")
+        add_documents_patch.start()
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=None,
+        )
+        add_documents_patch.stop()
+        a = self.client.index(test_index_name).add_documents(
+            documents=[{"some": "data", "_id": "lost"}], tensor_fields=["some"]
+        )
+        add_documents_patch.start()
+        assert self.client.index(test_index_name).get_stats()["numberOfDocuments"] == 1
+        assert not self.index_to_documents_cleanup_mapping.get(test_index_name)  # None or empty set
+        self.cleanup_documents_from_index(test_index_name)
+        assert self.client.index(test_index_name).get_stats()["numberOfDocuments"] == 0
+        with self.assertRaises(MarqoWebError):
+            self.client.index(test_index_name).get_document("lost")
+

@@ -16,3 +16,4 @@ class IndexStatus:
     DELETED = "DELETED"
     MODIFYING = "MODIFYING"
     CREATING = "CREATING"
+    DELETING = "DELETING"
