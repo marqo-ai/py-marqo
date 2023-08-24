@@ -34,22 +34,35 @@ class TestCloudIntegrationTests(MarqoTestCase):
     def test_index_cleanup_works_with_add_documents_mocked(self):
         if not self.client.config.is_marqo_cloud:
             self.skipTest("This test is only for cloud tests")
-        add_documents_patch = mock.patch.object(Index, "add_documents")
-        add_documents_patch.start()
+
+        def wrap_for_add_docs(original):
+            def wrapped(*args, **kwargs):
+                return {**original(*args, **kwargs), "specific-test-key": 123}
+            return wrapped
+
         test_index_name = self.create_test_index(
             cloud_test_index_to_use=CloudTestIndex.basic_index,
             open_source_test_index_name=None,
         )
-        add_documents_patch.stop()
-        a = self.client.index(test_index_name).add_documents(
-            documents=[{"some": "data", "_id": "lost"}], tensor_fields=["some"]
-        )
-        add_documents_patch.start()
-        assert self.client.index(test_index_name).get_stats()["numberOfDocuments"] == 1
-        assert not self.index_to_documents_cleanup_mapping.get(test_index_name)  # None or empty set
-        self.cleanup_documents_from_index(test_index_name)
-        assert self.client.index(test_index_name).get_stats()["numberOfDocuments"] == 0
-        with self.assertRaises(MarqoWebError):
-            self.client.index(test_index_name).get_document("lost")
-        add_documents_patch.stop()
+        with mock.patch(
+                "marqo.index.Index.add_documents",
+                wraps=wrap_for_add_docs(Index(self.client.config, test_index_name).add_documents)
+        ):
+            # this check is for isolation case
+            if self.index_to_documents_cleanup_mapping.get(test_index_name) is not None:
+                assert "lost" not in self.index_to_documents_cleanup_mapping.get(test_index_name)
+
+            add_documents_response = self.client.index(test_index_name).add_documents(
+                documents=[{"some": "data", "_id": "lost"}], tensor_fields=["some"]
+            )
+
+            assert add_documents_response["specific-test-key"] == 123
+            assert "lost" in self.index_to_documents_cleanup_mapping.get(test_index_name)
+            assert self.client.index(test_index_name).get_stats()["numberOfDocuments"] == 1
+
+            self.cleanup_documents_from_index(test_index_name)
+
+            assert self.client.index(test_index_name).get_stats()["numberOfDocuments"] == 0
+            with self.assertRaises(MarqoWebError):
+                self.client.index(test_index_name).get_document("lost")
 
