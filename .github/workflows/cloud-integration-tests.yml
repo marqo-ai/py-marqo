@@ -30,7 +30,7 @@ jobs:
   integration_tests:
     name: Cloud Integration Tests
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.job_to_run == 'run_integration_tests' || github.event_name == 'pull_request' }}
+    if: ${{ github.event.inputs.job_to_run == 'run_integration_tests' || github.event_name != 'workflow_dispatch' }}
     environment: cloud-tests
 
     steps:

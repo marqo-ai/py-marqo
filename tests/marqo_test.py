@@ -57,8 +57,9 @@ When `cluster.is_marqo_cloud` is set to True, the tests will have different setU
 - However, documents will be deleted on every call for index.
 
 The function prepare_cloud_index_for_test will be triggered whenever an index is called for the cloud tests.
-It performs cleanup for index documents and mocks the 'add_documents' method to call add_documents_and_mark_for_cleanup_patch instead.
-This method stores a list of added documents for future cleanup of documents.
+It performs cleanup for index documents and mocks the 'add_documents' method to call
+add_documents_and_mark_for_cleanup_patch instead, which acts as as a decorator for the original method.
+This method stores a list of added documents for future cleanup of documents, and then performs the real request.
 
 We will not actually create and delete real cloud indexes
 during this test suite, because this slows down py-marqo <> Marqo cloud tests.
@@ -245,7 +246,7 @@ class MarqoTestCase(TestCase):
 
     def create_test_index(
             self,
-            cloud_test_index_to_use: Union[CloudTestIndex, None], open_source_test_index_name: str,
+            cloud_test_index_to_use: Union[CloudTestIndex, None], open_source_test_index_name: Union[str, None],
             open_source_index_settings_dict: dict = None, open_source_index_kwargs: dict = None,
     ):
         """Determines whether the test is executed in a cloud environment or within an open-source setup.
