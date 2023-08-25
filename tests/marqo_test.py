@@ -13,7 +13,7 @@ tox
 
 # RUNNING CLOUD TESTS
 
-  To run Cloud V2 tests, execute `tox -e cloud_tests`.
+  To run Cloud V2 tests, execute `tox -e cloud_test_logic`.
   When running Cloud V2 tests, make sure you export the following environment variables:
     - MARQO_CLOUD_URL: The URL that the config class uses to recognize the cloud environment.
         For example: https://api.marqo.ai
@@ -24,30 +24,30 @@ tox
   Examples (running cloud tests)
     # To run all tests and have them run on new cloud indexes, if they don't yet exist, and have them persist
     # even after tests are done:
-    tox -e cloud_tests -- create-indexes=True
+    tox -e cloud_test_logic -- create-indexes=True
 
     # To also delete the indexes after testing has complete:
-    tox -e cloud_tests -- create-indexes=True delete-indexes=True
+    tox -e cloud_test_logic -- create-indexes=True delete-indexes=True
 
     # if the cloud indexes for testing already exist:
-    tox -e cloud_tests
+    tox -e cloud_test_logic
 
     # to run tests on cloud indexes that contain your own identifier do the following. This is
     # useful if multiple users are doing these tests on the same Marqo cloud account
     export MQ_TEST_RUN_IDENTIFIER=danyil
-    tox -e cloud_tests -- create-indexes=True
+    tox -e cloud_test_logic -- create-indexes=True
 
   Examples (deleting existing cloud test indexes)
 
     # To delete all cloud test indexes on the cloud account
-    python3 tests/cloud_tests/delete_all_cloud_test_indexes.py
+    python3 tests/cloud_test_logic/delete_all_cloud_test_indexes.py
 
     # To delete all cloud test indexes specified by a certain test run identifier:
     export MQ_TEST_RUN_IDENTIFIER=danyil
-    tests/cloud_tests/delete_all_cloud_test_indexes.py
+    tests/cloud_test_logic/delete_all_cloud_test_indexes.py
 
   For detailed information on available cloud test parameters and their functionality,
-  please refer to the docstring in 'tests/cloud_tests/run_cloud_test.py'.
+  please refer to the docstring in 'tests/cloud_test_logic/run_cloud_test.py'.
 
 
 ## NOTES ABOUT THE TEST SUITE BEHAVIOUR ##
@@ -68,7 +68,6 @@ creation and deletion tests will be done elsewhere.
 """
 
 import logging
-import time
 from collections import defaultdict
 from functools import wraps
 import json
@@ -76,17 +75,16 @@ import os
 from random import choice
 from string import ascii_letters
 
-import requests
 from pydantic import BaseModel
-from typing import Any, Callable, Dict, List, Optional, Union, NamedTuple
+from typing import Any, Callable, Dict, List, Optional, Union
 from unittest import mock, TestCase
-from tests.cloud_tests.cloud_test_index import CloudTestIndex
+
+from tests.cloud_test_logic.cloud_test_index import CloudTestIndex
 
 import marqo
 from marqo._httprequests import HTTP_OPERATIONS
 from marqo.client import Client
 from marqo.errors import InternalError, MarqoWebError, MarqoError
-from marqo.cloud_helpers import cloud_wait_for_index_status
 from marqo.index import Index
 
 
@@ -176,75 +174,6 @@ def with_documents(index_to_documents_fn: Callable[[], Dict[str, List[Dict[str, 
                     }])
                 new_args.append(docs)
             return test_func(self, *new_args, **kwargs)
-        return wrapper
-    return decorator
-
-
-class InstanceMappingIndexData(NamedTuple):
-    index_name: str
-    index_status: str
-    endpoint: str
-
-    @staticmethod
-    def get_basic_index_data():
-        return InstanceMappingIndexData(
-            index_name="test-index",
-            index_status="READY",
-            endpoint="endpoint"
-        )
-
-
-def mock_instance_mappings(indexes_list: Union[List[InstanceMappingIndexData], None], to_return_mock: bool = False):
-    """Function decorator to mock the instance mappings endpoint.
-
-    This decorator is used to mock the behavior of the requests.get function
-    within a specific test function. It allows you to set up mock responses for
-    requests to the "/indexes" URL while allowing real requests to other URLs.
-
-    Args:
-        indexes_list (Union[List[InstanceMappingIndexData], None]): A list of
-            InstanceMappingIndexData objects to be used for mocking responses
-            to requests to the "/indexes" URL. If None, no mock data will be used.
-        to_return_mock (bool): Indicates whether the decorated test function
-            should return the mock object or not. If True, the test function
-            will be called with the mock object as an argument; otherwise, it
-            will be called without the mock object.
-
-    Returns:
-        function: The decorated test function.
-
-    Example usage:
-        @mock_instance_mappings([...])  # Pass your mock data here
-        def test_example(mock_get):
-            # Your test logic here
-
-    """
-    def decorator(test_func):
-        @wraps(test_func)
-        def wrapper(self, *args, **kwargs):
-            with mock.patch("marqo.marqo_cloud_instance_mappings.requests.get") as mock_get:
-                return_value_is_set = False
-
-                def side_effect(url, *args, **kwargs):
-                    nonlocal return_value_is_set
-                    if url.endswith("/indexes"):
-                        if not return_value_is_set and instance_mappings is not None:
-                            mock_get.json.return_value = instance_mappings
-                            return_value_is_set = True
-
-                        return mock_get
-                    else:
-                        requests.get(url, *args, **kwargs)
-
-                if indexes_list is not None:
-                    instance_mappings = {"results": [index_data._asdict() for index_data in indexes_list]}
-                else:
-                    instance_mappings = None
-                mock_get.side_effect = side_effect
-                if not to_return_mock:
-                    test_func(self, *args, **kwargs)
-                else:
-                    return test_func(self, mock_get, *args, **kwargs)
         return wrapper
     return decorator
 

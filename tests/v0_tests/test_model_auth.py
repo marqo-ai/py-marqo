@@ -1,5 +1,6 @@
 import json
-from tests.marqo_test import MarqoTestCase, mock_instance_mappings, InstanceMappingIndexData
+from tests.marqo_test import MarqoTestCase
+from tests.cloud_test_logic.cloud_instance_mappings import GetIndexesIndexResponseObject, mock_get_indexes_response
 from marqo.utils import convert_dict_to_url_params
 from unittest import mock
 
@@ -60,7 +61,7 @@ class TestAddDocumentsModelAuth(MarqoTestCase):
 
         assert run()
 
-    @mock_instance_mappings([InstanceMappingIndexData.get_basic_index_data()])
+    @mock_get_indexes_response([GetIndexesIndexResponseObject.get_default_index_object()])
     def test_bulk_search_model_auth(self):
         mock__post = mock.MagicMock()
 

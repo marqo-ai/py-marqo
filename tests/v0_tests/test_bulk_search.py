@@ -12,9 +12,9 @@ import random
 import math
 
 from marqo.models import BulkSearchBody
-from tests.marqo_test import (mock_http_traffic, with_documents, MockHTTPTraffic, MarqoTestCase, mock_instance_mappings,
-                              InstanceMappingIndexData, CloudTestIndex
+from tests.marqo_test import (mock_http_traffic, with_documents, MockHTTPTraffic, MarqoTestCase, CloudTestIndex
                               )
+from tests.cloud_test_logic.cloud_instance_mappings import GetIndexesIndexResponseObject, mock_get_indexes_response
 
 
 class TestBulkSearch(MarqoTestCase):
@@ -65,7 +65,7 @@ class TestBulkSearch(MarqoTestCase):
             }
         )
     ], forbid_extra_calls=True)
-    @mock_instance_mappings([InstanceMappingIndexData.get_basic_index_data()])
+    @mock_get_indexes_response([GetIndexesIndexResponseObject.get_default_index_object()])
     def test_bulk_search_with_context(self):
         """Check that context is passed to HTTP request correctly"""
         self.client.bulk_search([{
@@ -73,7 +73,6 @@ class TestBulkSearch(MarqoTestCase):
             "q": "title about some doc",
             "context": {"tensor": [{"vector": [1, ] * 3, "weight": 0}, {"vector": [2, ] * 2, "weight": 0}], }
         }], device="cpu")
-
 
     @mock_http_traffic([
         MockHTTPTraffic(
@@ -112,7 +111,7 @@ class TestBulkSearch(MarqoTestCase):
             }
         )
     ], forbid_extra_calls=True)
-    @mock_instance_mappings([InstanceMappingIndexData.get_basic_index_data()])
+    @mock_get_indexes_response([GetIndexesIndexResponseObject.get_default_index_object()])
     def test_bulk_search_with_scoreModifiers(self):
         """Check that context is passed to HTTP request correctly"""
         self.client.bulk_search([{
@@ -268,7 +267,7 @@ class TestBulkSearch(MarqoTestCase):
         assert self.client.index(test_index_name).search(
             '"captain"')["hits"][0]["_id"] == "123456"
 
-    @mock_instance_mappings([InstanceMappingIndexData.get_basic_index_data()])
+    @mock_get_indexes_response([GetIndexesIndexResponseObject.get_default_index_object()])
     def test_bulk_search_with_device(self):
         """use default as defined in config unless overridden"""
         temp_client = copy.deepcopy(self.client)
@@ -286,7 +285,7 @@ class TestBulkSearch(MarqoTestCase):
         args, _ = mock__post.call_args_list[0]
         assert "device=cuda2" in args[0]
 
-    @mock_instance_mappings([InstanceMappingIndexData.get_basic_index_data()])
+    @mock_get_indexes_response([GetIndexesIndexResponseObject.get_default_index_object()])
     def test_bulk_search_with_no_device(self):
         """if no device is set, device should not be in path"""
         temp_client = copy.deepcopy(self.client)
@@ -594,7 +593,7 @@ class TestBulkSearch(MarqoTestCase):
             for hit in search_res['hits']:
                 assert hit["_score"] > 2
 
-    @mock_instance_mappings([InstanceMappingIndexData.get_basic_index_data()])
+    @mock_get_indexes_response([GetIndexesIndexResponseObject.get_default_index_object()])
     def test_query_validation_single_index_success(self):
         cloud_client_config = self.client_settings.copy()
         cloud_client_config["url"] = "cloud.url.marqo.ai"
@@ -614,8 +613,8 @@ class TestBulkSearch(MarqoTestCase):
         if marqo_cloud_url_before_test:
             os.environ["MARQO_CLOUD_URL"] = marqo_cloud_url_before_test
 
-    @mock_instance_mappings([InstanceMappingIndexData("test-index", "READY", "example.com"),
-                             InstanceMappingIndexData("test-index-2", "READY", "example2.com")])
+    @mock_get_indexes_response([GetIndexesIndexResponseObject("test-index", "READY", "example.com"),
+                                GetIndexesIndexResponseObject("test-index-2", "READY", "example2.com")])
     def test_query_validation_two_different_urls_fails(self):
         cloud_client_config = self.client_settings.copy()
         cloud_client_config["url"] = "cloud.url.marqo.ai"
@@ -641,8 +640,8 @@ class TestBulkSearch(MarqoTestCase):
         if marqo_cloud_url_before_test:
             os.environ["MARQO_CLOUD_URL"] = marqo_cloud_url_before_test
 
-    @mock_instance_mappings([InstanceMappingIndexData("test-index", "READY", "example.com"),
-                            InstanceMappingIndexData("test-index-2", "READY", "example.com")])
+    @mock_get_indexes_response([GetIndexesIndexResponseObject("test-index", "READY", "example.com"),
+                                GetIndexesIndexResponseObject("test-index-2", "READY", "example.com")])
     def test_query_validation_two_same_urls_success(self):
         cloud_client_config = self.client_settings.copy()
         cloud_client_config["url"] = "cloud.url.marqo.ai"
@@ -667,7 +666,92 @@ class TestBulkSearch(MarqoTestCase):
         if marqo_cloud_url_before_test:
             os.environ["MARQO_CLOUD_URL"] = marqo_cloud_url_before_test
 
-    @mock_instance_mappings([InstanceMappingIndexData("test-index", "NOT READY", "example.com")])
+    @mark.ignore_during_cloud_tests
+    def test_opensource_can_bulk_search_2_indices(self):
+        self.client.create_index(self.generic_test_index_name)
+        self.client.create_index(self.generic_test_index_name_2)
+
+        d1 = {
+            "doc title": "Very heavy, dense metallic lead.",
+            "abc-123": "some text blah",
+            "multiply": 2,
+            "add": 1,
+            "_id": "my-cool-doc"
+        }
+        d2 = {
+            "doc title": "The captain bravely lead her followers into battle."
+                         " She directed her soldiers to and fro.",
+            "field X": "this is a solid doc blah",
+            "field1": "other things",
+            "multiply": 2,
+            "add": 1,
+            "_id": "123456"
+        }
+
+        self.client.index(self.generic_test_index_name).add_documents([d1], tensor_fields=["doc title"])
+        self.client.index(self.generic_test_index_name_2).add_documents([d2], tensor_fields=["doc title"])
+
+        for search_method in [enums.SearchMethods.TENSOR]:
+            resp = self.client.bulk_search([{
+                "index": self.generic_test_index_name,
+                "q": "blah blah",
+                "searchMethod": search_method,
+            }, {
+                "index": self.generic_test_index_name_2,
+                "q": "blah blah",
+                "searchMethod": search_method,
+            }])
+            assert len(resp['result']) == 2
+            for search_res in resp['result']:
+                assert len(search_res['hits']) == 1
+
+    def test_cloud_fails_to_bulk_search_2_different_indices(self):
+        if not self.client.config.is_marqo_cloud:
+            self.skipTest("This test is only for cloud")
+
+        test_index_name_1 = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=None
+        )
+        test_index_name_2 = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.text_index_with_custom_model,
+            open_source_test_index_name=None
+        )
+
+        d1 = {
+            "doc title": "Very heavy, dense metallic lead.",
+            "abc-123": "some text blah",
+            "multiply": 2,
+            "add": 1,
+            "_id": "my-cool-doc"
+        }
+        d2 = {
+            "doc title": "The captain bravely lead her followers into battle."
+                         " She directed her soldiers to and fro.",
+            "field X": "this is a solid doc blah",
+            "field1": "other things",
+            "multiply": 2,
+            "add": 1,
+            "_id": "123456"
+        }
+
+        self.client.index(test_index_name_1).add_documents([d1], tensor_fields=["doc title"])
+        self.client.index(test_index_name_2).add_documents([d2], tensor_fields=["doc title"])
+
+        for search_method in [enums.SearchMethods.TENSOR]:
+            with self.assertRaises(InvalidArgError):
+                resp = self.client.bulk_search([{
+                    "index": test_index_name_1,
+                    "q": "blah blah",
+                    "searchMethod": search_method,
+                }, {
+                    "index": test_index_name_2,
+                    "q": "blah blah",
+                    "searchMethod": search_method,
+                }])
+
+
+    @mock_get_indexes_response([GetIndexesIndexResponseObject("test-index", "NOT READY", "example.com")])
     def test_query_validation_index_not_ready_fails(self):
         cloud_client_config = self.client_settings.copy()
         cloud_client_config["url"] = "cloud.url.marqo.ai"
