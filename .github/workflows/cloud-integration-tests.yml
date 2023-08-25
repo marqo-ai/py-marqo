@@ -54,7 +54,7 @@ jobs:
           MARQO_URL: ${{ secrets.CLOUD_MARQO_URL }}
           MARQO_CLOUD_URL: ${{ secrets.CLOUD_MARQO_URL }}
           MARQO_API_KEY: ${{ secrets.CLOUD_MARQO_API_KEY }}
-        run: tox -e cloud_test_logic -- create-indexes=True use-unique-identifier=True delete-indexes=True
+        run: tox -e cloud_tests -- create-indexes=True use-unique-identifier=True delete-indexes=True
 
   cleanup_indexes:
     name: Cleanup cloud indexes
