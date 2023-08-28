@@ -691,7 +691,7 @@ class TestBulkSearch(MarqoTestCase):
         self.client.index(self.generic_test_index_name).add_documents([d1], tensor_fields=["doc title"])
         self.client.index(self.generic_test_index_name_2).add_documents([d2], tensor_fields=["doc title"])
 
-        for search_method in [enums.SearchMethods.TENSOR]:
+        for search_method in [enums.SearchMethods.TENSOR, enums.SearchMethods.LEXICAL]:
             resp = self.client.bulk_search([{
                 "index": self.generic_test_index_name,
                 "q": "blah blah",

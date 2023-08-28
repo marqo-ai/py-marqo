@@ -43,16 +43,19 @@ def mock_get_indexes_response(indexes_list: Union[List[GetIndexesIndexResponseOb
     This decorator is used to mock the behavior of the requests.get which is used by
     MarqoCloudInstanceMappings object to retrieve and store specific information about
     cloud indexes: index_name, index status and index endpoint.
-    It allows you to set up mock responses for requests to the "/indexes" URL
-    while allowing real requests to other URLs.
+    It allows you to set up mock responses for requests to the "/indexes" URL.
+    Requests will be handled by side_effect function, which will return mock_get object
+    if url ends with "/indexes", and will call requests.get otherwise.
+    mock_get object can be argument of the decorated function, if to_return_mock is True.
 
     Args:
         indexes_list (Union[List[GetIndexesIndexResponseObject], None]): A list of
             InstanceMappingIndexData objects to be used for mocking responses
-            to requests to the "/indexes" URL. If None, no mock data will be used.
+            to requests to the "/indexes" URL. If None, mock object will not
+            have return_value set for it.
         to_return_mock (bool): Indicates whether the decorated test function
-            should return the mock object or not. If True, the test function
-            will be called with the mock object as an argument; otherwise, it
+            should return the mock_get object or not. If True, the test function
+            will be called with the mock_get object as an argument; otherwise, it
             will be called without the mock object. It might be useful in cases
             where you want to use the mock object to assert that it was called
             or to modify it after it was called.

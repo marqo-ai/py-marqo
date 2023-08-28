@@ -307,7 +307,7 @@ class Client:
                 cluster = self.config.instance_mapping.get_index_base_url(index_name)
             if cluster != self.config.instance_mapping.get_index_base_url(index_name):
                 raise errors.InvalidArgError(
-                    "All indexes in a bulk search request must belong to the same Marqo cluster."
+                    "All indexes in a bulk search request must belong to the same Marqo cluster.\n"
                     "- If you are using Marqo Cloud, make sure all search requests"
                     " in your bulk search use the same index"
                 )

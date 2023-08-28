@@ -13,7 +13,7 @@ tox
 
 # RUNNING CLOUD TESTS
 
-  To run Cloud V2 tests, execute `tox -e cloud_test_logic`.
+  To run Cloud V2 tests, execute `tox -e cloud_tests`.
   When running Cloud V2 tests, make sure you export the following environment variables:
     - MARQO_CLOUD_URL: The URL that the config class uses to recognize the cloud environment.
         For example: https://api.marqo.ai
@@ -24,18 +24,18 @@ tox
   Examples (running cloud tests)
     # To run all tests and have them run on new cloud indexes, if they don't yet exist, and have them persist
     # even after tests are done:
-    tox -e cloud_test_logic -- create-indexes=True
+    tox -e cloud_tests -- create-indexes=True
 
     # To also delete the indexes after testing has complete:
-    tox -e cloud_test_logic -- create-indexes=True delete-indexes=True
+    tox -e cloud_tests -- create-indexes=True delete-indexes=True
 
     # if the cloud indexes for testing already exist:
-    tox -e cloud_test_logic
+    tox -e cloud_tests
 
     # to run tests on cloud indexes that contain your own identifier do the following. This is
     # useful if multiple users are doing these tests on the same Marqo cloud account
     export MQ_TEST_RUN_IDENTIFIER=danyil
-    tox -e cloud_test_logic -- create-indexes=True
+    tox -e cloud_tests -- create-indexes=True
 
   Examples (deleting existing cloud test indexes)
 
