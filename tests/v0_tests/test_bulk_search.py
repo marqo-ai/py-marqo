@@ -2,6 +2,7 @@ import copy
 import os
 
 import marqo
+from marqo.index import marqo_url_and_version_cache
 from marqo import enums
 from typing import Any, Dict, List
 from unittest import mock
@@ -68,11 +69,15 @@ class TestBulkSearch(MarqoTestCase):
     @mock_get_indexes_response([GetIndexesIndexResponseObject.get_default_index_object()])
     def test_bulk_search_with_context(self):
         """Check that context is passed to HTTP request correctly"""
+        marqo_url_and_version_cache.clear()
+        cache_url = self.client.config.instance_mapping.get_index_base_url(self.generic_test_index_name)
+        marqo_url_and_version_cache[cache_url] = "v0"
         self.client.bulk_search([{
             "index": self.generic_test_index_name,
             "q": "title about some doc",
             "context": {"tensor": [{"vector": [1, ] * 3, "weight": 0}, {"vector": [2, ] * 2, "weight": 0}], }
         }], device="cpu")
+        marqo_url_and_version_cache.clear()
 
     @mock_http_traffic([
         MockHTTPTraffic(
@@ -114,7 +119,11 @@ class TestBulkSearch(MarqoTestCase):
     @mock_get_indexes_response([GetIndexesIndexResponseObject.get_default_index_object()])
     def test_bulk_search_with_scoreModifiers(self):
         """Check that context is passed to HTTP request correctly"""
-        self.client.bulk_search([{
+        marqo_url_and_version_cache.clear()
+        cache_url = self.client.config.instance_mapping.get_index_base_url(self.generic_test_index_name)
+        marqo_url_and_version_cache[cache_url] = "v0"
+        client = marqo.Client(**self.client_settings)
+        client.bulk_search([{
             "index": self.generic_test_index_name,
             "q": "title about some doc",
             "scoreModifiers": {
@@ -128,6 +137,7 @@ class TestBulkSearch(MarqoTestCase):
                 ]
             }
         }], device="cpu")
+        marqo_url_and_version_cache.clear()
 
     @with_documents(lambda self: {self.generic_test_index_name: [{
         "Title": "This is a title about some doc. ",

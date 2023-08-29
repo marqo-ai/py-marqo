@@ -127,9 +127,6 @@ def mock_http_traffic(mock_config: List[MockHTTPTraffic], forbid_extra_calls: bo
                             if isinstance(response, InternalError):
                                 raise response
                             return response
-                        # performs check for get indexes which needs to pass for mappings during cloud tests
-                        if http_operation == "get" and path == "" and body is None and content_type is None:
-                            return
 
                     if forbid_extra_calls:
                         raise ValueError(
@@ -278,6 +275,11 @@ class MarqoTestCase(TestCase):
         Raises:
             ValueError: If 'cloud_test_index_to_use' is None in cloud environments.
 
+        Notes:
+            - 'delete_index_documents_before_test' is set to True by default in cloud testing to ensure a clean
+              environment. However, in some scenarios, such as when using the with_documents decorator,
+              it may be desirable to set it to False. This allows existing documents to persist when calling
+              'create_test_index' multiple times in the same test.
         """
         client = marqo.Client(**self.client_settings)
         if client.config.is_marqo_cloud:

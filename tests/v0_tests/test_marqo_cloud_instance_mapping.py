@@ -11,7 +11,7 @@ from marqo.errors import MarqoCloudIndexNotFoundError, MarqoCloudIndexNotReadyEr
 
 
 class TestMarqoCloudInstanceMappings(MarqoTestCase):
-    @mock_get_indexes_response([GetIndexesIndexResponseObject("index1", IndexStatus.READY, "example.com"),
+    @mock_get_indexes_response([GetIndexesIndexResponseObject("index1", "READY", "example.com"),
                                 GetIndexesIndexResponseObject("index2", IndexStatus.READY, "example2.com")])
     def test_refresh_urls_if_needed(self):
         mapping = MarqoCloudInstanceMappings(
@@ -33,7 +33,7 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
             "index2": "example2.com",
         }
 
-    @mock_get_indexes_response([GetIndexesIndexResponseObject("index1", IndexStatus.READY, "example.com"),
+    @mock_get_indexes_response([GetIndexesIndexResponseObject("index1", "READY", "example.com"),
                                 GetIndexesIndexResponseObject("index2", IndexStatus.READY, "example2.com")],
                                to_return_mock=True)
     def test_refresh_urls_if_needed_index_exists(self, mock_get: MagicMock):
@@ -60,7 +60,7 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
             "index2": "example2.com",
         }
 
-    @mock_get_indexes_response([GetIndexesIndexResponseObject("index1", IndexStatus.READY, "example.com"),
+    @mock_get_indexes_response([GetIndexesIndexResponseObject("index1", "READY", "example.com"),
                                 GetIndexesIndexResponseObject("index2", IndexStatus.READY, "example2.com")],
                                to_return_mock=True)
     def test_refresh_urls_if_needed_cache_duration_not_passed(self, mock_get: MagicMock):
@@ -88,7 +88,7 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         }
 
     @mock_get_indexes_response([GetIndexesIndexResponseObject("index1", IndexStatus.READY, "example.com"),
-                                GetIndexesIndexResponseObject("index2", IndexStatus.READY, "example2.com")],
+                                GetIndexesIndexResponseObject("index2", "READY", "example2.com")],
                                to_return_mock=True)
     def test_refresh_urls_if_needed_no_index(self, mock_get: MagicMock):
         """
@@ -172,7 +172,7 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
             assert mapping._refresh_urls(timeout=5) is None
             assert expected_message in cm.output[0]
 
-    @mock_get_indexes_response([GetIndexesIndexResponseObject("index1", IndexStatus.READY, "example.com"),
+    @mock_get_indexes_response([GetIndexesIndexResponseObject("index1", "READY", "example.com"),
                                 GetIndexesIndexResponseObject("index2", IndexStatus.CREATING, "example2.com")])
     def test_ok_to_get_index_before_ready(self):
         mapping = MarqoCloudInstanceMappings(
@@ -181,14 +181,14 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         assert 'example2.com' == mapping.get_index_base_url("index2")
 
     @mock_get_indexes_response([GetIndexesIndexResponseObject("index1", IndexStatus.READY, "example.com"),
-                                GetIndexesIndexResponseObject("index2", IndexStatus.MODIFYING, "example2.com")])
+                                GetIndexesIndexResponseObject("index2", "MODIFYING", "example2.com")])
     def test_modifying_state_returns_as_ready(self):
         mapping = MarqoCloudInstanceMappings(
             control_base_url="https://api.marqo.ai", api_key="your-api-key", url_cache_duration=60
         )
         assert mapping.get_index_base_url("index2") == "example2.com"
 
-    @mock_get_indexes_response([GetIndexesIndexResponseObject("index1", IndexStatus.READY, "example.com"), ])
+    @mock_get_indexes_response([GetIndexesIndexResponseObject("index1", "READY", "example.com"), ])
     def test_request_of_not_existing_index_raises_error(self):
         mapping = MarqoCloudInstanceMappings(
             control_base_url="https://api.marqo.ai", api_key="your-api-key", url_cache_duration=60
@@ -250,7 +250,7 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         with self.assertRaises(MarqoCloudIndexNotFoundError):
             mapping.get_index_base_url("index2")
 
-    @mock_get_indexes_response([GetIndexesIndexResponseObject("index1", IndexStatus.READY, "example.com"),
+    @mock_get_indexes_response([GetIndexesIndexResponseObject("index1", "READY", "example.com"),
                                 GetIndexesIndexResponseObject("index2", IndexStatus.DELETED, "example2.com")])
     def test_deleted_status_raises_error(self):
         mapping = MarqoCloudInstanceMappings(
@@ -331,7 +331,7 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         # now we can search with the correct URL
         ix.search('test query')
 
-        assert len(mappings._urls_mapping[IndexStatus.READY][test_index_name]) > 0
+        assert len(mappings._urls_mapping["READY"][test_index_name]) > 0
         assert (mappings._urls_mapping[IndexStatus.READY][test_index_name] != bad_url)
 
     def test_when_needed_http_request_for_get_indexes_is_sent(self):
@@ -508,14 +508,14 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         idx.search("test")
         assert self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp == last_refresh
 
-    @mock_get_indexes_response([GetIndexesIndexResponseObject("index2", IndexStatus.READY, "example.com"),
+    @mock_get_indexes_response([GetIndexesIndexResponseObject("index2", "READY", "example.com"),
                                 GetIndexesIndexResponseObject("index3", IndexStatus.CREATING, "example.com")])
     def test_index_http_error_handler(self):
         mappings = MarqoCloudInstanceMappings(
             control_base_url="https://api.marqo.ai", api_key="your-api-key"
         )
         mappings._urls_mapping[IndexStatus.READY]['index1'] = "example.com"
-        mappings._urls_mapping[IndexStatus.READY]['index2'] = "example.com"
+        mappings._urls_mapping["READY"]['index2'] = "example.com"
         mappings._urls_mapping[IndexStatus.CREATING]['index1'] = "example.com"
 
         mappings.index_http_error_handler('index1')
@@ -540,7 +540,7 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
 
     @mock_get_indexes_response([GetIndexesIndexResponseObject("index1", IndexStatus.CREATING, "example.com"),
                                 GetIndexesIndexResponseObject("index2", IndexStatus.MODIFYING, "example2.com"),
-                                GetIndexesIndexResponseObject("index3", IndexStatus.READY, "example3.com"),
+                                GetIndexesIndexResponseObject("index3", "READY", "example3.com"),
                                 GetIndexesIndexResponseObject("index4", "DELETING", "example4.com"),
                                 GetIndexesIndexResponseObject("index5", "BLAH", "example5.com")])
     def test_is_index_usage_allowed_combinations(self):
@@ -553,5 +553,11 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         assert not mapping.is_index_usage_allowed("index5")
         assert mapping.is_index_usage_allowed("index3")
         assert mapping.is_index_usage_allowed("index2")
+
+    def test_enum_matches_expected_string(self):
+        assert IndexStatus.CREATING == "CREATING"
+        assert IndexStatus.MODIFYING == "MODIFYING"
+        assert IndexStatus.READY == "READY"
+        assert IndexStatus.DELETED == "DELETED"
 
 
