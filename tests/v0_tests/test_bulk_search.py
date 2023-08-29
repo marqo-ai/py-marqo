@@ -70,6 +70,8 @@ class TestBulkSearch(MarqoTestCase):
     def test_bulk_search_with_context(self):
         """Check that context is passed to HTTP request correctly"""
         marqo_url_and_version_cache.clear()
+        # this is done to prevent extra call to get_marqo in _marqo_minimum_supported_version_check
+        # which would raise issue due to forbid_extra_calls=True
         cache_url = self.client.config.instance_mapping.get_index_base_url(self.generic_test_index_name)
         marqo_url_and_version_cache[cache_url] = "v0"
         self.client.bulk_search([{
@@ -120,6 +122,8 @@ class TestBulkSearch(MarqoTestCase):
     def test_bulk_search_with_scoreModifiers(self):
         """Check that context is passed to HTTP request correctly"""
         marqo_url_and_version_cache.clear()
+        # this is done to prevent extra call to get_marqo in _marqo_minimum_supported_version_check
+        # which would raise issue due to forbid_extra_calls=True
         cache_url = self.client.config.instance_mapping.get_index_base_url(self.generic_test_index_name)
         marqo_url_and_version_cache[cache_url] = "v0"
         client = marqo.Client(**self.client_settings)

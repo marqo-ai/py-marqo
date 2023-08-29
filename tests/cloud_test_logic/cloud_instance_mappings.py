@@ -44,9 +44,11 @@ def mock_get_indexes_response(indexes_list: Union[List[GetIndexesIndexResponseOb
     MarqoCloudInstanceMappings object to retrieve and store specific information about
     cloud indexes: index_name, index status and index endpoint.
     It allows you to set up mock responses for requests to the "/indexes" URL.
-    Requests will be handled by side_effect function, which will return mock_get object
-    if url ends with "/indexes", and will call requests.get otherwise.
+    Requests are handled by side_effect function.
+    if url ends with "/indexes" it returns mock_get object, and will call requests.get otherwise.
+    mock_get object is a MagicMock object with return_value set to indexes_list.
     mock_get object can be argument of the decorated function, if to_return_mock is True.
+    It can be used to modify the response of requests.get or to assert that it was called.
 
     Args:
         indexes_list (Union[List[GetIndexesIndexResponseObject], None]): A list of
