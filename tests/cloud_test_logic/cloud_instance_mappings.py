@@ -45,8 +45,8 @@ def mock_get_indexes_response(indexes_list: Union[List[GetIndexesIndexResponseOb
     cloud indexes: index_name, index status and index endpoint.
     It allows you to set up mock responses for requests to the "/indexes" URL.
     Requests are handled by side_effect function.
-    if url ends with "/indexes" it returns mock_get object, and will call requests.get otherwise.
-    mock_get object is a MagicMock object with return_value set to indexes_list.
+    if url ends with "/indexes" it returns a mock_get object, otherwise `requests.get` is called normally.
+    A mock_get object is a MagicMock object with its return_value set to indexes_list.
     mock_get object can be argument of the decorated function, if to_return_mock is True.
     It can be used to modify the response of requests.get or to assert that it was called.
 
