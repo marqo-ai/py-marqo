@@ -37,6 +37,9 @@ class TestCloudIntegrationTests(MarqoTestCase):
         This test ensures that the cleanup process for an index functions correctly,
         even when the 'add_documents' method is mocked. It verifies that documents are properly added
         to the cleanup mapping and deleted from the index during cleanup.
+
+        Additionally, it ensures that the MarqoTest 'add_documents' mocking functionality
+        does not interfere with the mocking of 'add_documents' used during actual testing.
         """
         if not self.client.config.is_marqo_cloud:
             self.skipTest("This test is only for cloud tests")

@@ -40,14 +40,14 @@ tox
   Examples (deleting existing cloud test indexes)
 
     # To delete all cloud test indexes on the cloud account
-    python3 tests/cloud_tests/delete_all_cloud_test_indexes.py
+    python3 tests/cloud_test_logic/delete_all_cloud_test_indexes.py
 
     # To delete all cloud test indexes specified by a certain test run identifier:
     export MQ_TEST_RUN_IDENTIFIER=danyil
-    tests/cloud_tests/delete_all_cloud_test_indexes.py
+    tests/cloud_test_logic/delete_all_cloud_test_indexes.py
 
   For detailed information on available cloud test parameters and their functionality,
-  please refer to the docstring in 'tests/cloud_tests/run_cloud_test.py'.
+  please refer to the docstring in 'tests/cloud_test_logic/run_cloud_test.py'.
 
 
 ## NOTES ABOUT THE TEST SUITE BEHAVIOUR ##
@@ -68,7 +68,6 @@ creation and deletion tests will be done elsewhere.
 """
 
 import logging
-import time
 from collections import defaultdict
 from functools import wraps
 import json
@@ -79,13 +78,13 @@ from string import ascii_letters
 from pydantic import BaseModel
 from typing import Any, Callable, Dict, List, Optional, Union
 from unittest import mock, TestCase
-from tests.cloud_tests.cloud_test_index import CloudTestIndex
+
+from tests.cloud_test_logic.cloud_test_index import CloudTestIndex
 
 import marqo
 from marqo._httprequests import HTTP_OPERATIONS
 from marqo.client import Client
 from marqo.errors import InternalError, MarqoWebError, MarqoError
-from marqo.cloud_helpers import cloud_wait_for_index_status
 from marqo.index import Index
 
 
@@ -248,6 +247,7 @@ class MarqoTestCase(TestCase):
             self,
             cloud_test_index_to_use: Union[CloudTestIndex, None], open_source_test_index_name: Union[str, None],
             open_source_index_settings_dict: dict = None, open_source_index_kwargs: dict = None,
+            delete_index_documents_before_test: bool = True
     ):
         """Determines whether the test is executed in a cloud environment or within an open-source setup.
         If it's running in an open-source environment,
@@ -255,25 +255,45 @@ class MarqoTestCase(TestCase):
 
         In the case of cloud testing, it provides the name of the cloud index to be used.
         Additionally, it applies a unique run identifier to the index name and performs
-        cleanup operations on documents associated with the index.
+        cleanup operations on documents associated with the index if 'delete_index_documents_before_test' is True.
+
+        Args:
+            cloud_test_index_to_use (Union[CloudTestIndex, None]): The cloud test index to use in cloud environments.
+                If None, an error is raised.
+            open_source_test_index_name (Union[str, None]): The name of the open-source test index to create in
+                open-source environments. If None, no open-source index is created.
+            open_source_index_settings_dict (dict, optional): Additional settings to apply when creating
+                the open-source test index.
+            open_source_index_kwargs (dict, optional): Additional keyword arguments to pass when creating
+                the open-source test index.
+            delete_index_documents_before_test (bool, optional): If True, existing documents in the index will
+                be deleted before preparing it for testing. Default is True. Used only for cloud testing.
 
         Returns:
             The name of the index to be used, depending on the testing environment.
 
+        Raises:
+            ValueError: If 'cloud_test_index_to_use' is None in cloud environments.
+
+        Notes:
+            - 'delete_index_documents_before_test' is set to True by default in cloud testing to ensure a clean
+              environment. However, in some scenarios, such as when using the with_documents decorator,
+              it may be desirable to set it to False. This allows existing documents to persist when calling
+              'create_test_index' multiple times in the same test.
         """
         client = marqo.Client(**self.client_settings)
         if client.config.is_marqo_cloud:
             if cloud_test_index_to_use is None:
                 raise ValueError("cloud_test_index_to_use must be specified for cloud tests")
             index_name_to_return = f"{cloud_test_index_to_use.value}-{self.index_suffix}"
-            self.prepare_cloud_index_for_test(index_name_to_return)
+            self.prepare_cloud_index_for_test(index_name_to_return, delete_index_documents_before_test)
         else:
             index_name_to_return = self.create_open_source_index(
                 open_source_test_index_name, open_source_index_settings_dict, open_source_index_kwargs
             )
         return index_name_to_return
 
-    def prepare_cloud_index_for_test(self, index_name: str):
+    def prepare_cloud_index_for_test(self, index_name: str, delete_index_documents_before_test: bool = True):
         """
         Cleans up documents from the specified cloud index and prepares it for testing.
 
@@ -291,7 +311,8 @@ class MarqoTestCase(TestCase):
             index_name (str): The name of the cloud index to prepare for testing.
 
         """
-        self.cleanup_documents_from_index(index_name)
+        if delete_index_documents_before_test:
+            self.cleanup_documents_from_index(index_name)
         if not isinstance(marqo.index.Index.add_documents, mock.MagicMock):
             if hasattr(self, 'add_documents_and_mark_for_cleanup_patch'):
                 self.add_documents_and_mark_for_cleanup_patch.stop()
@@ -302,16 +323,25 @@ class MarqoTestCase(TestCase):
             self.add_documents_and_mark_for_cleanup_patch.start()
 
     def create_open_source_index(self, index_name: str, settings_dict: dict = None, kwargs: dict = None):
-        """Create an open source index with the given name and settings."""
+        """Create an open source index with the given name and settings.
+
+           Note:
+            If the index creation fails due to a MarqoWebError, the error message will be
+            printed, but it will not raise an exception. This behavior is designed to avoid
+            test failures when the index already exists."""
         client = marqo.Client(**self.client_settings)
         if settings_dict is not None and kwargs is not None:
             raise ValueError("Only one of settings_dict and kwargs can be specified")
-        if settings_dict is not None:
-            client.create_index(index_name, settings_dict=settings_dict)
-        elif kwargs is not None:
-            client.create_index(index_name, **kwargs)
-        else:
-            client.create_index(index_name)
+        try:
+            if settings_dict is not None:
+                client.create_index(index_name, settings_dict=settings_dict)
+            elif kwargs is not None:
+                client.create_index(index_name, **kwargs)
+            else:
+                client.create_index(index_name)
+        except MarqoWebError as e:
+            # we don't want to fail the test if the index already exists as it might be used in some scenarios
+            print(f"Index creation failed with error: {e}")
         return index_name
 
     def mark_for_cleanup_and_add_documents(self, index_name: str, documents: list, *args,   **kwargs):
