@@ -1,4 +1,5 @@
 import functools
+import inspect
 import json
 import pprint
 import time
@@ -77,8 +78,10 @@ class Index:
             cloud_wait_for_index_status(self.http, self.index_name, IndexStatus.DELETED)
         return response
 
-
     @staticmethod
+    @utils.deprecate_parameters(
+        "inference_node_type", "storage_node_type", "inference_node_count", "storage_node_count", "replicas_count"
+    )
     def create(config: Config, index_name: str,
                treat_urls_and_pointers_as_images=False,
                model=None,
@@ -92,7 +95,12 @@ class Index:
                inference_node_count: int = 1,
                storage_node_count: int = 1,
                replicas_count: int = 0,
-               wait_for_readiness=True
+               wait_for_readiness=True,
+               inference_type: str = None,
+               storage_class: str = None,
+               number_of_inferences: int = 1,
+               number_of_shards: int = 1,
+               number_of_replicas: int = 0
                ) -> Dict[str, Any]:
         """Create the index.
 
@@ -108,20 +116,29 @@ class Index:
             settings_dict: if specified, overwrites all other setting
                 parameters, and is passed directly as the index's
                 index_settings
-            inference_node_type: inference type for the index
-            storage_node_type: storage type for the index
-            inference_node_count: number of inference nodes for the index
-            storage_node_count: number of storage nodes for the index
-            replicas_count: number of replicas for the index
+            inference_node_type (deprecated): inference type for the index
+            storage_node_type (deprecated): storage type for the index
+            inference_node_count (deprecated): number of inference nodes for the index
+            storage_node_count (deprecated): number of storage nodes for the index
+            replicas_count (deprecated): number of replicas for the index
             wait_for_readiness: Marqo Cloud specific, whether to wait until
                 operation is completed or to proceed without waiting for status,
                 won't do anything if config.is_marqo_cloud=False
+            inference_type: inference type for the index
+            storage_class: storage class for the index
+            number_of_inferences: number of inferences for the index
+            number_of_shards: number of shards for the index
+            number_of_replicas: number of replicas for the index
         Returns:
             Response body, containing information about index creation result
         """
         req = HttpRequests(config)
-
         if settings_dict is not None and settings_dict:
+            if not utils.is_key_arguments_default(
+                    inspect.currentframe(), Index.create, arguments_to_ignore=["settings_dict"]
+            ):
+                raise ValueError(
+                    "Other settings can't be passed when settings dict is specified")
             response = req.post(f"indexes/{index_name}", body=settings_dict)
             if config.is_marqo_cloud and wait_for_readiness:
                 cloud_wait_for_index_status(req, index_name, IndexStatus.READY)
@@ -144,11 +161,21 @@ class Index:
                 cl_img_preprocessing['patch_method'] = image_preprocessing_method
             if not config.is_marqo_cloud:
                 return req.post(f"indexes/{index_name}", body=cl_settings)
-            cl_settings['inference_type'] = inference_node_type
-            cl_settings['storage_class'] = storage_node_type
-            cl_settings['number_of_inferences'] = inference_node_count
-            cl_settings['number_of_replicas'] = replicas_count
-            cl_settings['number_of_shards'] = storage_node_count
+            cl_settings['inference_type'] = utils.use_one_of_two_arguments(
+                Index.create, value_name='inference_type', value=inference_type,
+                deprecated_value_name='inference_node_type', deprecated_value=inference_node_type)
+            cl_settings['storage_class'] = utils.use_one_of_two_arguments(
+                Index.create, value_name='storage_class', value=storage_class,
+                deprecated_value_name='storage_node_type', deprecated_value=storage_node_type)
+            cl_settings['number_of_inferences'] = utils.use_one_of_two_arguments(
+                Index.create, value_name='number_of_inferences', value=number_of_inferences,
+                deprecated_value_name='inference_node_count', deprecated_value=inference_node_count)
+            cl_settings['number_of_replicas'] = utils.use_one_of_two_arguments(
+                Index.create, value_name='number_of_replicas', value=number_of_replicas,
+                deprecated_value_name='replicas_count', deprecated_value=replicas_count)
+            cl_settings['number_of_shards'] = utils.use_one_of_two_arguments(
+                Index.create, value_name='number_of_shards', value=number_of_shards,
+                deprecated_value_name='storage_node_count', deprecated_value=storage_node_count)
             response = req.post(f"indexes/{index_name}", body=cl_settings)
             if wait_for_readiness:
                 cloud_wait_for_index_status(req, index_name, IndexStatus.READY)

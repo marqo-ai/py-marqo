@@ -69,6 +69,7 @@ class Client:
         )
         self.http = HttpRequests(self.config)
 
+
     def create_index(
             self, index_name: str,
             treat_urls_and_pointers_as_images=False, model=None,
@@ -82,8 +83,13 @@ class Client:
             inference_node_count=1,
             storage_node_count=1,
             replicas_count=0,
-            wait_for_readiness=True
-    ) -> Dict[str, Any]:
+            wait_for_readiness=True,
+            inference_type: str = None,
+            storage_class: str = None,
+            number_of_inferences: int = 1,
+            number_of_shards: int = 1,
+            number_of_replicas: int = 0
+) -> Dict[str, Any]:
         """Create the index. Please refer to the marqo cloud to see options for inference and storage node types.
 
         Args:
@@ -103,6 +109,11 @@ class Client:
             storage_node_count:
             replicas_count:
             wait_for_readiness:
+            inference_type;
+            storage_class:
+            number_of_inferences:
+            number_of_shards:
+            number_of_replicas:
         Returns:
             Response body, containing information about index creation result
         """
@@ -114,7 +125,9 @@ class Client:
             image_preprocessing_method=image_preprocessing_method,
             settings_dict=settings_dict, inference_node_type=inference_node_type, storage_node_type=storage_node_type,
             storage_node_count=storage_node_count, replicas_count=replicas_count,
-            inference_node_count=inference_node_count, wait_for_readiness=wait_for_readiness
+            inference_node_count=inference_node_count, wait_for_readiness=wait_for_readiness,
+            inference_type=inference_type, storage_class=storage_class, number_of_inferences=number_of_inferences,
+            number_of_shards=number_of_shards, number_of_replicas=number_of_replicas
         )
 
     def delete_index(self, index_name: str, wait_for_readiness=True) -> Dict[str, Any]:
