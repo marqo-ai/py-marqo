@@ -43,6 +43,12 @@ index_defaults_deprecated_to_new_params_mapping = {
     "replicas_count": "number_of_replicas",
 }
 
+create_index_cloud_params = [
+    "inference_type", "storage_class", "number_of_inferences", "number_of_shards", "number_of_replicas",
+    "wait_for_readiness", "inference_node_type", "storage_node_type", "inference_node_count", "storage_node_count",
+    "replicas_count"
+]
+
 
 class CreateIndexSettings:
     """
@@ -110,6 +116,7 @@ class CreateIndexSettings:
                  replicas_count, wait_for_readiness, inference_type, storage_class, number_of_inferences,
                  number_of_shards, number_of_replicas):
         self.specified_values = []
+        self.specified_non_cloud_params = []
         for arg_name, arg_value in locals().items():
             if arg_name != 'self':
                 self._set_value(arg_value, arg_name)
@@ -126,7 +133,9 @@ class CreateIndexSettings:
         if value is not None:
             setattr(self, parameter_name, value)
             self.specified_values.append(parameter_name)
-            if "settings_dict" in self.specified_values and len(self.specified_values) > 1:
+            if parameter_name not in create_index_cloud_params:
+                self.specified_non_cloud_params.append(parameter_name)
+            if "settings_dict" in self.specified_values and len(self.specified_non_cloud_params) > 1:
                 raise ValueError("settings_dict cannot be specified with other parameters.")
 
     def _raise_deprecated_warning(self):
