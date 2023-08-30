@@ -69,26 +69,26 @@ class Client:
         )
         self.http = HttpRequests(self.config)
 
-
     def create_index(
             self, index_name: str,
-            treat_urls_and_pointers_as_images=False, model=None,
-            normalize_embeddings=True,
-            sentences_per_chunk=2,
-            sentence_overlap=0,
+            treat_urls_and_pointers_as_images=None,
+            model=None,
+            normalize_embeddings=None,
+            sentences_per_chunk=None,
+            sentence_overlap=None,
             image_preprocessing_method=None,
             settings_dict=None,
             inference_node_type=None,
             storage_node_type=None,
-            inference_node_count=1,
-            storage_node_count=1,
-            replicas_count=0,
-            wait_for_readiness=True,
-            inference_type: str = None,
-            storage_class: str = None,
-            number_of_inferences: int = 1,
-            number_of_shards: int = 1,
-            number_of_replicas: int = 0
+            inference_node_count=None,
+            storage_node_count=None,
+            replicas_count=None,
+            wait_for_readiness=None,
+            inference_type=None,
+            storage_class=None,
+            number_of_inferences=None,
+            number_of_shards=None,
+            number_of_replicas=None
 ) -> Dict[str, Any]:
         """Create the index. Please refer to the marqo cloud to see options for inference and storage node types.
 
@@ -105,11 +105,11 @@ class Client:
                 index_settings
             inference_node_type:
             storage_node_type:
-            inference_node_count;
+            inference_node_count:
             storage_node_count:
             replicas_count:
             wait_for_readiness:
-            inference_type;
+            inference_type:
             storage_class:
             number_of_inferences:
             number_of_shards:

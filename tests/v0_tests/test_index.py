@@ -24,15 +24,12 @@ class TestIndex(MarqoTestCase):
 
     def test_create_index_settings_dict(self):
         """if settings_dict exists, it should override existing params"""
-        for non_settings_dicts_param, settings_dict, expected_treat_urls_and_pointers_as_images in [
-                    ({"treat_urls_and_pointers_as_images": False},
-                     {"index_defaults": {"treat_urls_and_pointers_as_images": True}},
+        for settings_dict, expected_treat_urls_and_pointers_as_images in [
+                    ({"index_defaults": {"treat_urls_and_pointers_as_images": True}},
                      True),
-                    ({"treat_urls_and_pointers_as_images": False},
-                     None,
+                    (None,
                      False),
-                    ({"treat_urls_and_pointers_as_images": False},
-                     {},
+                    ({},
                      False),
                 ]:
             mock__post = mock.MagicMock()
@@ -44,8 +41,7 @@ class TestIndex(MarqoTestCase):
             def run():
                 test_index_name = self.client.create_index(
                     index_name=self.generic_test_index_name,
-                    settings_dict=settings_dict,
-                    **non_settings_dicts_param)
+                    settings_dict=settings_dict)
                 return True
             assert run()
             args, kwargs = mock__post.call_args
