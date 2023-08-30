@@ -7,7 +7,7 @@ import time
 from requests import RequestException
 
 from marqo import defaults
-from marqo.models import CreateIndexSettings
+from marqo.models.create_index_settings import CreateIndexSettings
 from marqo.cloud_helpers import cloud_wait_for_index_status
 from marqo.enums import IndexStatus
 import typing

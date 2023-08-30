@@ -12,7 +12,7 @@ import requests
 import random
 import math
 
-from marqo.models import BulkSearchBody
+from marqo.models.search_models import BulkSearchBody
 from tests.marqo_test import (mock_http_traffic, with_documents, MockHTTPTraffic, MarqoTestCase, CloudTestIndex
                               )
 from tests.cloud_test_logic.cloud_instance_mappings import GetIndexesIndexResponseObject, mock_get_indexes_response

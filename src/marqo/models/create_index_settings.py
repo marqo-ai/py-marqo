@@ -1,39 +1,4 @@
-from typing import Dict, List, Optional, Union
-from pydantic import BaseModel
-
 from marqo.marqo_logging import mq_logger
-
-
-class BaseMarqoModel(BaseModel):
-    class Config:
-        extra: str = "forbid"
-    pass
-
-
-class SearchBody(BaseMarqoModel):
-    q: Union[str, Dict[str, float]]
-    searchableAttributes: Union[None, List[str]] = None
-    searchMethod: Union[None, str] = "TENSOR"
-    limit: int = 10
-    offset: int = 0
-    showHighlights: bool = True
-    reRanker: str = None
-    filter: str = None
-    attributesToRetrieve: Union[None, List[str]] = None
-    boost: Optional[Dict] = None
-    image_download_headers: Optional[Dict] = None
-    context: Optional[Dict] = None
-    scoreModifiers: Optional[Dict] = None
-    modelAuth: Optional[Dict] = None
-
-
-class BulkSearchBody(SearchBody):
-    index: str
-
-
-class BulkSearchQuery(BaseMarqoModel):
-    queries: List[BulkSearchBody]
-
 
 index_defaults_deprecated_to_new_params_mapping = {
     "inference_node_type": "inference_type",
@@ -42,7 +7,6 @@ index_defaults_deprecated_to_new_params_mapping = {
     "storage_node_count": "number_of_shards",
     "replicas_count": "number_of_replicas",
 }
-
 params_that_can_be_specified_with_settings_dict = ["wait_for_readiness", "settings_dict"]
 
 

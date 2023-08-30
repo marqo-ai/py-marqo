@@ -12,7 +12,7 @@ from marqo.index import Index
 from marqo.config import Config
 from marqo.instance_mappings import InstanceMappings
 from marqo.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
-from marqo.models import BulkSearchBody, BulkSearchQuery
+from marqo.models.search_models import BulkSearchBody, BulkSearchQuery
 from marqo._httprequests import HttpRequests
 from marqo import utils, enums
 from marqo import errors
