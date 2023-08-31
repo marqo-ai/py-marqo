@@ -24,13 +24,16 @@ class CreateIndexSettings(BaseModel):
             image_preprocessing_method (str): Image preprocessing method.
             settings_dict (dict): If specified, overwrites all other setting parameters, and is
             passed directly as the index's index_settings.
-            inference_node_type (str, deprecated): Inference type for the index.
-            storage_node_type (str, deprecated): Storage type for the index.
-            inference_node_count (int, deprecated): Number of inference nodes for the index.
-            storage_node_count (int, deprecated): Number of storage nodes for the index.
-            replicas_count (int, deprecated): Number of replicas for the index.
-            wait_for_readiness (bool): Marqo Cloud specific, whether to wait until the operation is completed or to proceed
-            without waiting for status; won't do anything if config.is_marqo_cloud=False.
+            inference_node_type (str, deprecated): Inference type for the index. Deprecated, use inference_type instead.
+            storage_node_type (str, deprecated): Storage type for the index. Deprecated, use storage_class instead.
+            inference_node_count (int, deprecated): Number of inference nodes for the index. Deprecated,
+            use number_of_inferences instead.
+            storage_node_count (int, deprecated): Number of storage nodes for the index. Deprecated,
+            use number_of_shards instead.
+            replicas_count (int, deprecated): Number of replicas for the index. Deprecated,
+            use number_of_replicas instead.
+            wait_for_readiness (bool): Marqo Cloud specific, whether to wait until the operation is completed or to
+            proceed without waiting for status; won't do anything if config.is_marqo_cloud=False.
             inference_type (str): Inference type for the index.
             storage_class (str): Storage class for the index.
             number_of_inferences (int): Number of inferences for the index.

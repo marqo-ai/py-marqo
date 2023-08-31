@@ -108,11 +108,11 @@ class Client:
             settings_dict: if specified, overwrites all other setting
                 parameters, and is passed directly as the index's
                 index_settings
-            inference_node_type:
-            storage_node_type:
-            inference_node_count:
-            storage_node_count:
-            replicas_count:
+            inference_node_type (deprecated): inference type for the index. replaced by inference_type
+            storage_node_type (deprecated): storage type for the index. replaced by storage_class
+            inference_node_count (deprecated): number of inference nodes for the index. replaced by number_of_inferences
+            storage_node_count (deprecated): number of storage nodes for the index. replaced by number_of_shards
+            replicas_count (deprecated): number of replicas for the index. replaced by number_of_replicas
             wait_for_readiness:
             inference_type:
             storage_class:

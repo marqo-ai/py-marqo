@@ -119,11 +119,11 @@ class Index:
             settings_dict: if specified, overwrites all other setting
                 parameters, and is passed directly as the index's
                 index_settings
-            inference_node_type (deprecated): inference type for the index
-            storage_node_type (deprecated): storage type for the index
-            inference_node_count (deprecated): number of inference nodes for the index
-            storage_node_count (deprecated): number of storage nodes for the index
-            replicas_count (deprecated): number of replicas for the index
+            inference_node_type (deprecated): inference type for the index. replaced by inference_type
+            storage_node_type (deprecated): storage type for the index. replaced by storage_class
+            inference_node_count (deprecated): number of inference nodes for the index. replaced by number_of_inferences
+            storage_node_count (deprecated): number of storage nodes for the index. replaced by number_of_shards
+            replicas_count (deprecated): number of replicas for the index. replaced by number_of_replicas
             wait_for_readiness: Marqo Cloud specific, whether to wait until
                 operation is completed or to proceed without waiting for status,
                 won't do anything if config.is_marqo_cloud=False
