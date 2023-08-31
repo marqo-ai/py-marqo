@@ -3,7 +3,7 @@ import copy
 from pytest import mark
 
 from marqo.errors import BackendCommunicationError, BackendTimeoutError, \
-    UnsupportedOperationError
+    UnsupportedOperationError, MarqoWebError
 
 from marqo.index import marqo_url_and_version_cache
 from tests.marqo_test import MarqoTestCase, CloudTestIndex
@@ -500,6 +500,19 @@ class TestIndex(MarqoTestCase):
         assert 'status' in res
         assert 'status' in res['backend']
 
+    def test_get_health_status_red(self):
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
+        with mock.patch("marqo.index.Index.health") as mock_health:
+            mock_health.return_value = {'status': 'red', 'backend': {'status': 'red'}}
+            res = self.client.index(test_index_name).health()
+            assert 'status' in res
+            assert 'status' in res['backend']
+            assert res['status'] == 'red'
+            assert res['backend']['status'] == 'red'
+
     @mark.ignore_during_cloud_tests
     def test_get_status_raises_error_on_local_index(self):
         index = self.client.index(self.generic_test_index_name)
@@ -528,4 +541,19 @@ class TestIndex(MarqoTestCase):
             mock_warning.assert_not_called()
             mock_get_marqo.assert_not_called()
 
+    def test_get_cpu_info(self):
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
+        res = self.client.index(test_index_name).get_cpu_info()
+        assert 'cpu_usage_percent' in res
+
+    def test_get_cuda_info_raises_exception(self):
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
+        with self.assertRaises(MarqoWebError):
+            res = self.client.index(test_index_name).get_cuda_info()
 
