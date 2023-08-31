@@ -49,7 +49,6 @@ class TestModelCacheManagement(MarqoTestCase):
             open_source_index_kwargs=settings
         )
         res = self.client.index(test_index_name).get_loaded_models()
-        print(res)
 
         if "models" not in res:
             raise AssertionError

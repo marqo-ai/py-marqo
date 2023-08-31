@@ -221,7 +221,6 @@ class TestIndex(MarqoTestCase):
             open_source_index_settings_dict=settings
         )
         index_setting = self.client.index(test_index_name).get_settings()
-        print(index_setting)
         assert intended_replicas == index_setting['number_of_replicas']
 
     @mock.patch("marqo._httprequests.HttpRequests.post", return_value={"acknowledged": True})
