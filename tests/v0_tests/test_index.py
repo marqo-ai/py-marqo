@@ -238,9 +238,9 @@ class TestIndex(MarqoTestCase):
 
         mock_post.assert_called_with('indexes/test-index', body={
             'index_defaults': {
-                'treat_urls_and_pointers_as_images': False, 'model': 'hf/all_datasets_v4_MiniLM-L6', 'normalize_embeddings': True,
+                'treat_urls_and_pointers_as_images': False, 'normalize_embeddings': True,
                 'text_preprocessing': {'split_length': 2, 'split_overlap': 0, 'split_method': 'sentence'},
-                'image_preprocessing': {'patch_method': None}
+                'image_preprocessing': {}
             },
             'number_of_shards': 1, 'number_of_replicas': 0,
             'inference_type': "marqo.CPU.large", 'storage_class': "marqo.basic", 'number_of_inferences': 1})
@@ -261,12 +261,12 @@ class TestIndex(MarqoTestCase):
 
         mock_post.assert_called_with('indexes/test-index', body={
             'index_defaults': {
-                'treat_urls_and_pointers_as_images': False, 'model': 'hf/all_datasets_v4_MiniLM-L6', 'normalize_embeddings': True,
+                'treat_urls_and_pointers_as_images': False, 'normalize_embeddings': True,
                 'text_preprocessing': {'split_length': 2, 'split_overlap': 0, 'split_method': 'sentence'},
-                'image_preprocessing': {'patch_method': None}
+                'image_preprocessing': {}
             },
             'number_of_shards': 1, 'number_of_replicas': 0,
-            'inference_type': None, 'storage_class': "marqo.basic", 'number_of_inferences': 1})
+            'storage_class': "marqo.basic", 'number_of_inferences': 1})
         mock_get.assert_called_with("indexes/test-index/status")
         assert result == {"error": "inference_type is required"}
 
@@ -284,12 +284,12 @@ class TestIndex(MarqoTestCase):
 
         mock_post.assert_called_with('indexes/test-index', body={
             'index_defaults': {
-                'treat_urls_and_pointers_as_images': False, 'model': 'hf/all_datasets_v4_MiniLM-L6', 'normalize_embeddings': True,
+                'treat_urls_and_pointers_as_images': False, 'normalize_embeddings': True,
                 'text_preprocessing': {'split_length': 2, 'split_overlap': 0, 'split_method': 'sentence'},
-                'image_preprocessing': {'patch_method': None}
+                'image_preprocessing': {}
             },
             'number_of_shards': 1, 'number_of_replicas': 0,
-            'inference_type': "marqo.CPU.large", 'storage_class': None, 'number_of_inferences': 1})
+            'inference_type': "marqo.CPU.large", 'number_of_inferences': 1})
         mock_get.assert_called_with("indexes/test-index/status")
         assert result == {"error": "storage_class is required"}
 
@@ -308,9 +308,9 @@ class TestIndex(MarqoTestCase):
 
         mock_post.assert_called_with('indexes/test-index', body={
             'index_defaults': {
-                'treat_urls_and_pointers_as_images': False, 'model': 'hf/all_datasets_v4_MiniLM-L6', 'normalize_embeddings': True,
+                'treat_urls_and_pointers_as_images': False, 'normalize_embeddings': True,
                 'text_preprocessing': {'split_length': 2, 'split_overlap': 0, 'split_method': 'sentence'},
-                'image_preprocessing': {'patch_method': None}
+                'image_preprocessing': {}
             },
             'number_of_shards': 1, 'number_of_replicas': 0,
             'inference_type': "marqo.CPU.large", 'storage_class': "marqo.basic", 'number_of_inferences': -1})

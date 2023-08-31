@@ -91,6 +91,11 @@ class Client:
             number_of_replicas=None
 ) -> Dict[str, Any]:
         """Create the index. Please refer to the marqo cloud to see options for inference and storage node types.
+        Calls Index.create() with the same parameters.
+        All parameters are optional, and will be set to their default values if not specified.
+        Default values can be found in models/create_index_settings.py CreateIndexSettings class.
+
+
 
         Args:
             index_name: name of the index.

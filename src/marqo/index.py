@@ -100,7 +100,12 @@ class Index:
                number_of_shards=None,
                number_of_replicas=None
                ) -> Dict[str, Any]:
-        """Create the index.
+        """Create the index. Please refer to the marqo cloud to see options for inference and storage node types.
+        Creates CreateIndexSettings object and then uses it to create the index.
+        CreateIndexSettings object sets all parameters to their default values if not specified.
+
+        All parameters are optional, and will be set to their default values if not specified.
+        Default values can be found in models/create_index_settings.py CreateIndexSettings class.
 
         Args:
             config: config instance
@@ -165,8 +170,10 @@ class Index:
             cl_ix_defaults = cl_settings['index_defaults']
             cl_ix_defaults['treat_urls_and_pointers_as_images'] = \
                 create_index_settings.treat_urls_and_pointers_as_images
-            if model is not None:
+            if create_index_settings.model is not None:
                 cl_ix_defaults['model'] = create_index_settings.model
+            else:
+                cl_ix_defaults.pop('model', None)
             cl_ix_defaults['normalize_embeddings'] = create_index_settings.normalize_embeddings
             cl_text_preprocessing = cl_ix_defaults['text_preprocessing']
             cl_text_preprocessing['split_overlap'] = create_index_settings.sentence_overlap
@@ -174,10 +181,18 @@ class Index:
             cl_img_preprocessing = cl_ix_defaults['image_preprocessing']
             if image_preprocessing_method is not None:
                 cl_img_preprocessing['patch_method'] = create_index_settings.image_preprocessing_method
+            else:
+                cl_img_preprocessing.pop('patch_method', None)
             if not config.is_marqo_cloud:
                 return req.post(f"indexes/{index_name}", body=cl_settings)
-            cl_settings['inference_type'] = create_index_settings.inference_type
-            cl_settings['storage_class'] = create_index_settings.storage_class
+            if create_index_settings.inference_type is not None:
+                cl_settings['inference_type'] = create_index_settings.inference_type
+            else:
+                cl_settings.pop('inference_node_type', None)
+            if create_index_settings.storage_class is not None:
+                cl_settings['storage_class'] = create_index_settings.storage_class
+            else:
+                cl_settings.pop('storage_class', None)
             cl_settings['number_of_inferences'] = create_index_settings.number_of_inferences
             cl_settings['number_of_replicas'] = create_index_settings.number_of_replicas
             cl_settings['number_of_shards'] = create_index_settings.number_of_shards

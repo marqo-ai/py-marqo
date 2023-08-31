@@ -1,14 +1,14 @@
 from marqo.marqo_logging import mq_logger
 from pydantic import root_validator, BaseModel, validator
 
-index_defaults_deprecated_to_new_params_mapping = {
+DEPRECATED_TO_NEW_PARAMS_MAPPING = {
     "inference_node_type": "inference_type",
     "storage_node_type": "storage_class",
     "inference_node_count": "number_of_inferences",
     "storage_node_count": "number_of_shards",
     "replicas_count": "number_of_replicas",
 }
-params_that_can_be_specified_with_settings_dict = ["wait_for_readiness", "settings_dict"]
+SETTINGS_DICT_COMPATIBLE_PARAMS = ["wait_for_readiness", "settings_dict"]
 
 
 class CreateIndexSettings(BaseModel):
@@ -76,37 +76,53 @@ class CreateIndexSettings(BaseModel):
         }
         super().__init__(**passed_parameters_without_none_values)
 
-    @validator("*", pre=True)
-    def use_passed_parameters(cls, v, field):
-        return v
-
     @root_validator(pre=True)
     def handle_deprecated_parameters(cls, values):
+        """ Handles deprecated parameters and raises deprecation warnings.
+        Ensures that deprecated parameters are not specified along with their new counterparts.
+        If both deprecated and new parameters are specified, raises a ValueError.
+        If only deprecated parameters are specified, sets new parameters to the values of deprecated parameters.
+        DEPRECATED_TO_NEW_PARAMS_MAPPING is a dictionary that maps deprecated parameters to
+        their new counterparts.
+
+        Notes:
+            if you want to add a new deprecated parameter, add it to DEPRECATED_TO_NEW_PARAMS_MAPPING.
+        """
         deprecated_parameters_passed = [
-            deprecated_parameter for deprecated_parameter in index_defaults_deprecated_to_new_params_mapping.keys()
+            deprecated_parameter for deprecated_parameter in DEPRECATED_TO_NEW_PARAMS_MAPPING
             if deprecated_parameter in values
         ]
         if deprecated_parameters_passed:
             cls.raise_deprecated_warning(deprecated_parameters_passed)
         for deprecated_parameter in deprecated_parameters_passed:
-            if index_defaults_deprecated_to_new_params_mapping[deprecated_parameter] in values:
+            if DEPRECATED_TO_NEW_PARAMS_MAPPING[deprecated_parameter] in values:
                 raise ValueError(
-                    f"Both {index_defaults_deprecated_to_new_params_mapping[deprecated_parameter]} and "
+                    f"Both {DEPRECATED_TO_NEW_PARAMS_MAPPING[deprecated_parameter]} and "
                     f"it's deprecated reference {deprecated_parameter} "
-                    f"are specified. Please consider using only "
-                    f"{index_defaults_deprecated_to_new_params_mapping[deprecated_parameter]}."
+                    f"are specified. Please use only "
+                    f"{DEPRECATED_TO_NEW_PARAMS_MAPPING[deprecated_parameter]}."
                 )
-            values[index_defaults_deprecated_to_new_params_mapping[deprecated_parameter]] = values.pop(
+            values[DEPRECATED_TO_NEW_PARAMS_MAPPING[deprecated_parameter]] = values.pop(
                 deprecated_parameter
             )
         return values
 
     @root_validator(pre=True)
     def check_settings_dict_compatibility(cls, values):
+        """ Ensures that settings_dict is not specified along with other parameters.
+        SETTINGS_DICT_COMPATIBLE_PARAMS is a list of parameters that can be specified along with settings_dict.
+        If any other parameter is specified along with settings_dict, raises a ValueError
+        with a message that settings_dict cannot be specified with other parameters.
+
+        Notes:
+            if you want to add a new parameter that can be specified along with settings_dict, add it to
+            SETTINGS_DICT_COMPATIBLE_PARAMS.
+        """
         if values.get("settings_dict") is not None and any(
-                [arg_name for arg_name in values if arg_name not in params_that_can_be_specified_with_settings_dict]
+                [arg_name for arg_name in values if arg_name not in SETTINGS_DICT_COMPATIBLE_PARAMS]
         ):
-            raise ValueError("settings_dict cannot be specified with other parameters.")
+            raise ValueError(f"settings_dict cannot be specified with other parameters. "
+                             f"Besides {', '.join(SETTINGS_DICT_COMPATIBLE_PARAMS)}")
         return values
 
     @staticmethod
