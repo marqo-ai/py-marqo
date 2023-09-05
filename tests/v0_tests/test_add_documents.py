@@ -614,3 +614,25 @@ class TestAddDocuments(MarqoTestCase):
             )
             self.client.index(test_index_name).add_documents(documents=documents, non_tensor_fields=non_tensor_fields)
             self.assertTrue({'`non_tensor_fields`', 'Marqo', '2.0.0.'}.issubset(set(cm.output[0].split(" "))))
+
+    def test_add_empty_docs(self):
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
+
+        try:
+            res = self.client.index(test_index_name).add_documents(documents=[], tensor_fields=["field a"])
+            raise AssertionError
+        except MarqoWebError as e:
+            assert e.code == "bad_request"
+            assert "empty add documents request" in e.message["message"]
+    
+    def test_add_empty_docs_batched(self):
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
+
+        res = self.client.index(test_index_name).add_documents(documents=[], client_batch_size=5, tensor_fields="field a")
+        assert res == []
