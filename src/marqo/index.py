@@ -159,7 +159,7 @@ class Index:
 
         if create_index_settings.settings_dict is not None and create_index_settings.settings_dict:
             response = req.post(f"indexes/{index_name}", body=create_index_settings.settings_dict)
-            if config.is_marqo_cloud and wait_for_readiness:
+            if config.is_marqo_cloud and create_index_settings.wait_for_readiness:
                 cloud_wait_for_index_status(req, index_name, IndexStatus.READY)
             return response
 
