@@ -212,21 +212,21 @@ class TestDemo(MarqoTestCase):
                     "Title": "Flying Plane",
                     "captioned_image": {
                         "caption": "An image of a passenger plane flying in front of the moon.",
-                        "image": "https://raw.githubusercontent.com/marqo-ai/marqo/mainline/examples/ImageSearchGuide/data/image2.jpg",
+                        "image": "https://marqo-assets.s3.amazonaws.com/tests/images/image2.jpg",
                     },
                 },
                 {
                     "Title": "Red Bus",
                     "captioned_image": {
                         "caption": "A red double decker London bus traveling to Aldwych",
-                        "image": "https://raw.githubusercontent.com/marqo-ai/marqo/mainline/examples/ImageSearchGuide/data/image4.jpg",
+                        "image": "https://marqo-assets.s3.amazonaws.com/tests/images/image4.jpg",
                     },
                 },
                 {
                     "Title": "Horse Jumping",
                     "captioned_image": {
                         "caption": "A person riding a horse over a jump in a competition.",
-                        "image": "https://raw.githubusercontent.com/marqo-ai/marqo/mainline/examples/ImageSearchGuide/data/image1.jpg",
+                        "image": "https://marqo-assets.s3.amazonaws.com/tests/images/image1.jpg",
                     },
                 },
             ],
