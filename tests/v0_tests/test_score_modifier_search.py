@@ -17,7 +17,7 @@ class TestScoreModifierSearch(MarqoTestCase):
         self.client.index(index_name=self.test_index_name).add_documents(
             documents=[
                 {"my_text_field": "A rider is riding a horse jumping over the barrier.",
-                 "my_image_field": "https://raw.githubusercontent.com/marqo-ai/marqo/mainline/examples/ImageSearchGuide/data/image2.jpg",
+                 "my_image_field": "https://marqo-assets.s3.amazonaws.com/tests/images/image2.jpg",
                  # 4 fields
                  "multiply_1": 1,
                  "multiply_2": 20.0,
@@ -26,7 +26,7 @@ class TestScoreModifierSearch(MarqoTestCase):
                  "_id": "1"
                  },
                 {"my_text_field": "A rider is riding a horse jumping over the barrier.",
-                 "my_image_field": "https://raw.githubusercontent.com/marqo-ai/marqo/mainline/examples/ImageSearchGuide/data/image2.jpg",
+                 "my_image_field": "https://marqo-assets.s3.amazonaws.com/tests/images/image2.jpg",
                  "_id": "0",
                  "filter": "original"
                  },
