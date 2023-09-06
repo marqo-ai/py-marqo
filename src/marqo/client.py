@@ -12,7 +12,7 @@ from marqo.index import Index
 from marqo.config import Config
 from marqo.instance_mappings import InstanceMappings
 from marqo.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
-from marqo.models import BulkSearchBody, BulkSearchQuery
+from marqo.models.search_models import BulkSearchBody, BulkSearchQuery
 from marqo._httprequests import HttpRequests
 from marqo import utils, enums
 from marqo import errors
@@ -71,20 +71,31 @@ class Client:
 
     def create_index(
             self, index_name: str,
-            treat_urls_and_pointers_as_images=False, model=None,
-            normalize_embeddings=True,
-            sentences_per_chunk=2,
-            sentence_overlap=0,
+            treat_urls_and_pointers_as_images=None,
+            model=None,
+            normalize_embeddings=None,
+            sentences_per_chunk=None,
+            sentence_overlap=None,
             image_preprocessing_method=None,
             settings_dict=None,
             inference_node_type=None,
             storage_node_type=None,
-            inference_node_count=1,
-            storage_node_count=1,
-            replicas_count=0,
-            wait_for_readiness=True
-    ) -> Dict[str, Any]:
+            inference_node_count=None,
+            storage_node_count=None,
+            replicas_count=None,
+            wait_for_readiness=None,
+            inference_type=None,
+            storage_class=None,
+            number_of_inferences=None,
+            number_of_shards=None,
+            number_of_replicas=None
+) -> Dict[str, Any]:
         """Create the index. Please refer to the marqo cloud to see options for inference and storage node types.
+        Calls Index.create() with the same parameters.
+        All parameters are optional, and will be set to their default values if not specified.
+        Default values can be found in models/create_index_settings.py CreateIndexSettings class.
+
+
 
         Args:
             index_name: name of the index.
@@ -97,12 +108,17 @@ class Client:
             settings_dict: if specified, overwrites all other setting
                 parameters, and is passed directly as the index's
                 index_settings
-            inference_node_type:
-            storage_node_type:
-            inference_node_count;
-            storage_node_count:
-            replicas_count:
+            inference_node_type (deprecated): inference type for the index. replaced by inference_type
+            storage_node_type (deprecated): storage type for the index. replaced by storage_class
+            inference_node_count (deprecated): number of inference nodes for the index. replaced by number_of_inferences
+            storage_node_count (deprecated): number of storage nodes for the index. replaced by number_of_shards
+            replicas_count (deprecated): number of replicas for the index. replaced by number_of_replicas
             wait_for_readiness:
+            inference_type:
+            storage_class:
+            number_of_inferences:
+            number_of_shards:
+            number_of_replicas:
         Returns:
             Response body, containing information about index creation result
         """
@@ -114,7 +130,9 @@ class Client:
             image_preprocessing_method=image_preprocessing_method,
             settings_dict=settings_dict, inference_node_type=inference_node_type, storage_node_type=storage_node_type,
             storage_node_count=storage_node_count, replicas_count=replicas_count,
-            inference_node_count=inference_node_count, wait_for_readiness=wait_for_readiness
+            inference_node_count=inference_node_count, wait_for_readiness=wait_for_readiness,
+            inference_type=inference_type, storage_class=storage_class, number_of_inferences=number_of_inferences,
+            number_of_shards=number_of_shards, number_of_replicas=number_of_replicas
         )
 
     def delete_index(self, index_name: str, wait_for_readiness=True) -> Dict[str, Any]:

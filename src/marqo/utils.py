@@ -1,7 +1,12 @@
+import inspect
 import json
 import urllib.parse
+from functools import wraps
+
 from marqo import errors
 from typing import Any, Optional, List
+
+from marqo.marqo_logging import mq_logger
 
 
 def construct_authorized_url(url_base: str, username: str, password: str) -> str:
@@ -65,4 +70,3 @@ def convert_dict_to_url_params(d: dict) -> str:
     as_str = json.dumps(d)
     url_encoded = urllib.parse.quote_plus(as_str)
     return url_encoded
-

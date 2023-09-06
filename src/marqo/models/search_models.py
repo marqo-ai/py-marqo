@@ -24,9 +24,11 @@ class SearchBody(BaseMarqoModel):
     scoreModifiers: Optional[Dict] = None
     modelAuth: Optional[Dict] = None
 
+
 class BulkSearchBody(SearchBody):
     index: str
 
 
 class BulkSearchQuery(BaseMarqoModel):
     queries: List[BulkSearchBody]
+
