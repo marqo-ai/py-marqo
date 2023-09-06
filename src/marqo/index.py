@@ -188,7 +188,7 @@ class Index:
             if create_index_settings.inference_type is not None:
                 cl_settings['inference_type'] = create_index_settings.inference_type
             else:
-                cl_settings.pop('inference_node_type', None)
+                cl_settings.pop('inference_type', None)
             if create_index_settings.storage_class is not None:
                 cl_settings['storage_class'] = create_index_settings.storage_class
             else:
