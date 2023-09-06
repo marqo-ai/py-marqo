@@ -71,6 +71,8 @@ class TestCreateIndexSettings(unittest.TestCase):
         assert settings.number_of_inferences == 2
         assert settings.number_of_shards == 2
         assert settings.number_of_replicas == 1
+        assert settings.storage_node_type is None
+        assert settings.inference_node_type is None
 
     def test_pass_all_valid_parameters_except_settings_dict(self):
         settings = CreateIndexSettings(
