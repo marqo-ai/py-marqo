@@ -499,7 +499,7 @@ Marqo is a community project with the goal of making tensor search accessible to
 ## Support
 
 - Ask questions and share your creations with the community on our [Discourse forum](https://community.marqo.ai).
-- Join our [Slack community](https://join.slack.com/t/marqo-community/shared_invite/zt-1d737l76e-u~b3Rvey2IN2nGM4wyr44w) and chat with other community members about ideas.
+- Join our [Slack community](https://bit.ly/marqo-slack) and chat with other community members about ideas.
 
 ### Stargazers
 
