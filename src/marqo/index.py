@@ -1,4 +1,5 @@
 import functools
+import inspect
 import json
 import pprint
 import time
@@ -6,6 +7,7 @@ import time
 from requests import RequestException
 
 from marqo import defaults
+from marqo.models.create_index_settings import CreateIndexSettings
 from marqo.cloud_helpers import cloud_wait_for_index_status
 from marqo.enums import IndexStatus
 import typing
@@ -77,24 +79,33 @@ class Index:
             cloud_wait_for_index_status(self.http, self.index_name, IndexStatus.DELETED)
         return response
 
-
     @staticmethod
     def create(config: Config, index_name: str,
-               treat_urls_and_pointers_as_images=False,
+               treat_urls_and_pointers_as_images=None,
                model=None,
-               normalize_embeddings=True,
-               sentences_per_chunk=2,
-               sentence_overlap=0,
+               normalize_embeddings=None,
+               sentences_per_chunk=None,
+               sentence_overlap=None,
                image_preprocessing_method=None,
-               settings_dict: dict = None,
-               inference_node_type: str = None,
-               storage_node_type: str = None,
-               inference_node_count: int = 1,
-               storage_node_count: int = 1,
-               replicas_count: int = 0,
-               wait_for_readiness=True
+               settings_dict=None,
+               inference_node_type=None,
+               storage_node_type=None,
+               inference_node_count=None,
+               storage_node_count=None,
+               replicas_count=None,
+               wait_for_readiness=None,
+               inference_type=None,
+               storage_class=None,
+               number_of_inferences=None,
+               number_of_shards=None,
+               number_of_replicas=None
                ) -> Dict[str, Any]:
-        """Create the index.
+        """Create the index. Please refer to the marqo cloud to see options for inference and storage node types.
+        Creates CreateIndexSettings object and then uses it to create the index.
+        CreateIndexSettings object sets all parameters to their default values if not specified.
+
+        All parameters are optional, and will be set to their default values if not specified.
+        Default values can be found in models/create_index_settings.py CreateIndexSettings class.
 
         Args:
             config: config instance
@@ -108,22 +119,47 @@ class Index:
             settings_dict: if specified, overwrites all other setting
                 parameters, and is passed directly as the index's
                 index_settings
-            inference_node_type: inference type for the index
-            storage_node_type: storage type for the index
-            inference_node_count: number of inference nodes for the index
-            storage_node_count: number of storage nodes for the index
-            replicas_count: number of replicas for the index
+            inference_node_type (deprecated): inference type for the index. replaced by inference_type
+            storage_node_type (deprecated): storage type for the index. replaced by storage_class
+            inference_node_count (deprecated): number of inference nodes for the index. replaced by number_of_inferences
+            storage_node_count (deprecated): number of storage nodes for the index. replaced by number_of_shards
+            replicas_count (deprecated): number of replicas for the index. replaced by number_of_replicas
             wait_for_readiness: Marqo Cloud specific, whether to wait until
                 operation is completed or to proceed without waiting for status,
                 won't do anything if config.is_marqo_cloud=False
+            inference_type: inference type for the index
+            storage_class: storage class for the index
+            number_of_inferences: number of inferences for the index
+            number_of_shards: number of shards for the index
+            number_of_replicas: number of replicas for the index
         Returns:
             Response body, containing information about index creation result
         """
         req = HttpRequests(config)
+        create_index_settings = CreateIndexSettings(
+            treat_urls_and_pointers_as_images=treat_urls_and_pointers_as_images,
+            model=model,
+            normalize_embeddings=normalize_embeddings,
+            sentences_per_chunk=sentences_per_chunk,
+            sentence_overlap=sentence_overlap,
+            image_preprocessing_method=image_preprocessing_method,
+            settings_dict=settings_dict,
+            inference_node_type=inference_node_type,
+            storage_node_type=storage_node_type,
+            inference_node_count=inference_node_count,
+            storage_node_count=storage_node_count,
+            replicas_count=replicas_count,
+            inference_type=inference_type,
+            storage_class=storage_class,
+            number_of_inferences=number_of_inferences,
+            number_of_shards=number_of_shards,
+            number_of_replicas=number_of_replicas,
+            wait_for_readiness=wait_for_readiness
+        )
 
-        if settings_dict is not None and settings_dict:
-            response = req.post(f"indexes/{index_name}", body=settings_dict)
-            if config.is_marqo_cloud and wait_for_readiness:
+        if create_index_settings.settings_dict is not None and create_index_settings.settings_dict:
+            response = req.post(f"indexes/{index_name}", body=create_index_settings.settings_dict)
+            if config.is_marqo_cloud and create_index_settings.wait_for_readiness:
                 cloud_wait_for_index_status(req, index_name, IndexStatus.READY)
             return response
 
@@ -132,40 +168,51 @@ class Index:
             #  settings
             cl_settings = defaults.get_cloud_default_index_settings()
             cl_ix_defaults = cl_settings['index_defaults']
-            cl_ix_defaults['treat_urls_and_pointers_as_images'] = treat_urls_and_pointers_as_images
-            if model is not None:
-                cl_ix_defaults['model'] = model
-            cl_ix_defaults['normalize_embeddings'] = normalize_embeddings
+            cl_ix_defaults['treat_urls_and_pointers_as_images'] = \
+                create_index_settings.treat_urls_and_pointers_as_images
+            if create_index_settings.model is not None:
+                cl_ix_defaults['model'] = create_index_settings.model
+            else:
+                cl_ix_defaults.pop('model', None)
+            cl_ix_defaults['normalize_embeddings'] = create_index_settings.normalize_embeddings
             cl_text_preprocessing = cl_ix_defaults['text_preprocessing']
-            cl_text_preprocessing['split_overlap'] = sentence_overlap
-            cl_text_preprocessing['split_length'] = sentences_per_chunk
+            cl_text_preprocessing['split_overlap'] = create_index_settings.sentence_overlap
+            cl_text_preprocessing['split_length'] = create_index_settings.sentences_per_chunk
             cl_img_preprocessing = cl_ix_defaults['image_preprocessing']
             if image_preprocessing_method is not None:
-                cl_img_preprocessing['patch_method'] = image_preprocessing_method
+                cl_img_preprocessing['patch_method'] = create_index_settings.image_preprocessing_method
+            else:
+                cl_img_preprocessing.pop('patch_method', None)
             if not config.is_marqo_cloud:
                 return req.post(f"indexes/{index_name}", body=cl_settings)
-            cl_settings['inference_type'] = inference_node_type
-            cl_settings['storage_class'] = storage_node_type
-            cl_settings['number_of_inferences'] = inference_node_count
-            cl_settings['number_of_replicas'] = replicas_count
-            cl_settings['number_of_shards'] = storage_node_count
+            if create_index_settings.inference_type is not None:
+                cl_settings['inference_type'] = create_index_settings.inference_type
+            else:
+                cl_settings.pop('inference_type', None)
+            if create_index_settings.storage_class is not None:
+                cl_settings['storage_class'] = create_index_settings.storage_class
+            else:
+                cl_settings.pop('storage_class', None)
+            cl_settings['number_of_inferences'] = create_index_settings.number_of_inferences
+            cl_settings['number_of_replicas'] = create_index_settings.number_of_replicas
+            cl_settings['number_of_shards'] = create_index_settings.number_of_shards
             response = req.post(f"indexes/{index_name}", body=cl_settings)
-            if wait_for_readiness:
+            if create_index_settings.wait_for_readiness:
                 cloud_wait_for_index_status(req, index_name, IndexStatus.READY)
             return response
 
         return req.post(f"indexes/{index_name}", body={
             "index_defaults": {
-                "treat_urls_and_pointers_as_images": treat_urls_and_pointers_as_images,
-                "model": model,
-                "normalize_embeddings": normalize_embeddings,
+                "treat_urls_and_pointers_as_images": create_index_settings.treat_urls_and_pointers_as_images,
+                "model": create_index_settings.model,
+                "normalize_embeddings": create_index_settings.normalize_embeddings,
                 "text_preprocessing": {
-                    "split_overlap": sentence_overlap,
-                    "split_length": sentences_per_chunk,
+                    "split_overlap": create_index_settings.sentence_overlap,
+                    "split_length": create_index_settings.sentences_per_chunk,
                     "split_method": "sentence"
                 },
                 "image_preprocessing": {
-                    "patch_method": image_preprocessing_method
+                    "patch_method": create_index_settings.image_preprocessing_method
                 }
             }
         })

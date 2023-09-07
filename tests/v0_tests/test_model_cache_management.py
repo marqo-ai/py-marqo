@@ -1,6 +1,8 @@
+from unittest.mock import patch
+
 from marqo.errors import MarqoWebError
 from tests.marqo_test import MarqoTestCase, CloudTestIndex
-
+from pytest import mark
 
 class TestModelCacheManagement(MarqoTestCase):
     MODEL = "ViT-B/32"
@@ -50,6 +52,18 @@ class TestModelCacheManagement(MarqoTestCase):
 
         if "models" not in res:
             raise AssertionError
+
+    def test_eject_all_models(self) -> None:
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
+        res = self.client.index(test_index_name).get_loaded_models()
+        for model in res["models"]:
+            self.client.index(test_index_name).eject_model(model["model_name"], model["model_device"])
+        res = self.client.index(test_index_name).get_loaded_models()
+        assert len(res["models"]) == 0
+        assert res["models"] == []
 
     def test_eject_no_cached_model(self) -> None:
         # test a model that is not cached
