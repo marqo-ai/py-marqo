@@ -125,7 +125,7 @@ class CreateIndexSettings(BaseModel):
                 [arg_name for arg_name in values if arg_name not in SETTINGS_DICT_COMPATIBLE_PARAMS]
         ):
             raise ValueError(f"settings_dict cannot be specified with other index creation parameters, "
-                             f"besides {', '.join(SETTINGS_DICT_COMPATIBLE_PARAMS)}")
+                             f"besides [{', '.join(SETTINGS_DICT_COMPATIBLE_PARAMS)}]")
         return values
 
     @staticmethod
