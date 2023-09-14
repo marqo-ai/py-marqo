@@ -211,49 +211,6 @@ class TestAddDocuments(MarqoTestCase):
     def test_update_docs_updates_chunks(self):
         """TODO"""
 
-    # delete documents tests:
-
-    def test_delete_docs(self):
-        test_index_name = self.create_test_index(
-            cloud_test_index_to_use=CloudTestIndex.basic_index,
-            open_source_test_index_name=self.generic_test_index_name,
-        )
-        self.client.index(test_index_name).add_documents([
-            {"abc": "wow camel", "_id": "123"},
-            {"abc": "camels are cool", "_id": "foo"}
-        ], tensor_fields=["abc"])
-
-        if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(test_index_name).search, "wow camel")
-
-        res0 = self.client.index(test_index_name).search("wow camel")
-        print("res0res0")
-        pprint.pprint(res0)
-        assert res0['hits'][0]["_id"] == "123"
-        assert len(res0['hits']) == 2
-        self.client.index(test_index_name).delete_documents(["123"])
-
-        if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.index(test_index_name).search, "wow camel")
-        res1 = self.client.index(test_index_name).search("wow camel")
-        assert res1['hits'][0]["_id"] == "foo"
-        assert len(res1['hits']) == 1
-
-    def test_delete_docs_empty_ids(self):
-        test_index_name = self.create_test_index(
-            cloud_test_index_to_use=CloudTestIndex.basic_index,
-            open_source_test_index_name=self.generic_test_index_name,
-        )
-        self.client.index(test_index_name).add_documents([{"abc": "efg", "_id": "123"}], tensor_fields=["abc"])
-        try:
-            self.client.index(test_index_name).delete_documents([])
-            raise AssertionError
-        except MarqoWebError as e:
-            assert "can't be empty" in str(e) or "value_error.missing" in str(e)
-        res = self.client.index(test_index_name).get_document("123")
-        print(res)
-        assert "abc" in res
-
     def test_get_document(self):
         my_doc = {"abc": "efg", "_id": "123"}
         test_index_name = self.create_test_index(
@@ -278,7 +235,7 @@ class TestAddDocuments(MarqoTestCase):
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
         def run():
             temp_client.index(self.generic_test_index_name).add_documents(documents=[
-                {"d1": "blah"}, {"d2", "some data"}
+                {"d1": "blah"}, {"d2": "some data"}
             ], device="cuda:45", tensor_fields=["d1", "d2"])
             return True
 
@@ -295,47 +252,28 @@ class TestAddDocuments(MarqoTestCase):
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
         def run():
             temp_client.index(self.generic_test_index_name).add_documents(documents=[
-                {"d1": "blah"}, {"d2", "some data"}, {"d2331": "blah"}, {"45d2", "some data"}
+                {"d1": "blah"}, {"d2": "some data"}, {"d2331": "blah"}, {"45d2": "some data"}
             ], client_batch_size=2, device="cuda:37", tensor_fields=["d1", "d2", "d2331", "45d2"])
             return True
 
         assert run()
-        assert len(mock__post.call_args_list) == 3
-        for args, kwargs in mock__post.call_args_list[:-1]:
+
+        print(mock__post.call_args_list)
+        assert len(mock__post.call_args_list) == 2
+        for args, kwargs in mock__post.call_args_list:
             assert "device=cuda37" in kwargs["path"]
-
-    def test_add_documents_device_not_set(self):
-        """If no device is set, do not even add device parameter to the API call
-        """
-        temp_client = copy.deepcopy(self.client)
-        mock__post = mock.MagicMock()
-
-        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
-        def run():
-            temp_client.index(self.generic_test_index_name).add_documents(documents=[
-                {"d1": "blah"}, {"d2", "some data"}
-            ], tensor_fields=["d1", "d2"])
-            return True
-
-        assert run()
-
-        args, kwargs = mock__post.call_args
-        assert "device" not in kwargs["path"]
 
     def test_add_documents_set_refresh(self):
         temp_client = copy.deepcopy(self.client)
-        temp_client.config.search_device = enums.Devices.cpu
-        temp_client.config.indexing_device = enums.Devices.cpu
-
         mock__post = mock.MagicMock()
 
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
         def run():
             temp_client.index(self.generic_test_index_name).add_documents(documents=[
-                {"d1": "blah"}, {"d2", "some data"}
+                {"d1": "blah"}, {"d2": "some data"}
             ], auto_refresh=False, tensor_fields=["d1", "d2"])
             temp_client.index(self.generic_test_index_name).add_documents(documents=[
-                {"d1": "blah"}, {"d2", "some data"}
+                {"d1": "blah"}, {"d2": "some data"}
             ], auto_refresh=True, tensor_fields=["d1", "d2"])
             return True
 
@@ -345,6 +283,119 @@ class TestAddDocuments(MarqoTestCase):
         assert "refresh=false" in kwargs0["path"]
         args, kwargs1 = mock__post.call_args_list[1]
         assert "refresh=true" in kwargs1["path"]
+    
+    def test_add_documents_query_string_unbatched(self):
+        """
+        Ensures that the query string (no client batching) is properly constructed.
+        This string consists of refresh and device parameters.
+        """
+        temp_client = copy.deepcopy(self.client)
+        mock__post = mock.MagicMock()
+
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        def run():
+            # Neither device nor auto-refresh set
+            temp_client.index(self.generic_test_index_name).add_documents(
+                documents=[{"d1": "blah"}], 
+                tensor_fields=["d1"],
+            )
+
+            # Only device set
+            temp_client.index(self.generic_test_index_name).add_documents(
+                documents=[{"d1": "blah"}],
+                tensor_fields=["d1"],
+                device="cpu"
+            )
+
+            # Only auto-refresh set
+            temp_client.index(self.generic_test_index_name).add_documents(
+                documents=[{"d1": "blah"}],
+                tensor_fields=["d1"],
+                auto_refresh=True
+            )
+
+            # Both device and auto-refresh set
+            temp_client.index(self.generic_test_index_name).add_documents(
+                documents=[{"d1": "blah"}],
+                tensor_fields=["d1"],
+                device="cpu",
+                auto_refresh=True
+            )
+            return True
+
+        assert run()
+
+        args, kwargs0 = mock__post.call_args_list[0]
+        assert "refresh" not in kwargs0["path"] and "device" not in kwargs0["path"]
+        args, kwargs1 = mock__post.call_args_list[1]
+        assert "?device=cpu" in kwargs1["path"] and "refresh" not in kwargs1["path"]
+        args, kwargs2 = mock__post.call_args_list[2]
+        assert "?refresh=true" in kwargs2["path"] and "device" not in kwargs2["path"]
+        args, kwargs3 = mock__post.call_args_list[3]
+        assert "?refresh=true&device=cpu" in kwargs3["path"]
+
+    def test_add_documents_batched_with_refresh(self):
+        """
+        Ensure that refresh is manually called after the last batch
+        """
+        temp_client = copy.deepcopy(self.client)
+
+        mock__post = mock.MagicMock()
+
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        def run():
+            temp_client.index(self.generic_test_index_name).add_documents(documents=[
+                    {"d1": "blah"}, 
+                    {"d2": "some data"}
+                ], 
+                client_batch_size=1,
+                tensor_fields=["d1", "d2"],
+                auto_refresh=True
+            )
+            return True
+
+        assert run()
+        
+        print(mock__post.call_args_list)
+
+        # 2 batch calls, the 3rd call is the refresh.
+        assert len(mock__post.call_args_list) == 3
+        args, kwargs = mock__post.call_args_list[-1]
+        assert kwargs["path"] == f"indexes/{self.generic_test_index_name}/refresh" 
+
+    def test_add_documents_defaults(self):
+        """
+        Ensure that the expected default values are used for the add documents API call
+        Note that some parameters should have no default created by the client, thus should
+        not be present in the request.
+        """
+        temp_client = copy.deepcopy(self.client)
+        mock__post = mock.MagicMock()
+
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        def run():
+            temp_client.index(self.generic_test_index_name).add_documents(
+                documents=[{"d1": "blah"}, {"d2": "some data"}], 
+                tensor_fields=["d1", "d2"]
+            )
+            return True
+
+        assert run()
+
+        args, kwargs0 = mock__post.call_args_list[0]
+
+       # Ensure client does NOT autofill refresh and device parameters
+        assert "refresh" not in kwargs0["path"]
+        assert "device" not in kwargs0["path"]
+
+        assert kwargs0["body"]["useExistingTensors"] == False
+        assert kwargs0["body"]["imageDownloadHeaders"] == {}
+        assert kwargs0["body"]["mappings"] is None
+        assert kwargs0["body"]["modelAuth"] is None
+
+        # These parameters were explicitly defined:
+        assert kwargs0["body"]["documents"] == [{'d1': 'blah'}, {'d2': 'some data'}]
+        assert kwargs0["body"]["tensorFields"] == ['d1', 'd2']
 
     def test_add_documents_with_no_processes(self):
         mock__post = mock.MagicMock()
@@ -352,7 +403,7 @@ class TestAddDocuments(MarqoTestCase):
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
         def run():
             self.client.index(self.generic_test_index_name).add_documents(documents=[
-                {"d1": "blah"}, {"d2", "some data"}
+                {"d1": "blah"}, {"d2": "some data"}
             ], tensor_fields=["d1", "d2"])
             return True
 
