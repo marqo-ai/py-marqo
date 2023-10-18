@@ -653,6 +653,102 @@ class TestAddDocuments(MarqoTestCase):
         assert doc_res['_tensor_facets'][0]["my_custom_vector"] == "custom vector text"
         assert doc_res['_tensor_facets'][0]['_embedding'] == [1.0 for _ in range(512)]
     
+    def test_no_model_custom_vector_doc(self):
+        settings = {
+            "index_defaults": {
+                "model": "no_model",
+                "model_properties": {
+                    "dimensions": 123
+                }
+            }
+        }
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.image_index,
+            open_source_test_index_name=self.generic_test_index_name,
+            open_source_index_settings_dict=settings
+        )
+
+        custom_vector_1 = [1.0 for _ in range(123)]
+        custom_vector_2 = [i for i in range(123)]
+        custom_vector_3 = [1/(i+1) for i in range(123)]
+
+        self.client.index(index_name=test_index_name).add_documents(
+            documents=[
+                {
+                    "my_custom_vector": {
+                        "content": "custom vector text",
+                        "vector": custom_vector_1,
+                    },
+                    "_id": "doc1",
+                },
+                {
+                    "my_custom_vector": {
+                        "content": "second text",
+                        "vector": custom_vector_2,
+                    },
+                    "_id": "doc2",
+                },
+                {
+                    "my_custom_vector": {
+                        "content": "third text",
+                        "vector": custom_vector_3,
+                    },
+                    "_id": "doc3",
+                },
+            ], mappings={
+                "my_custom_vector": {
+                    "type": "custom_vector"
+                }
+            }, 
+            auto_refresh=True, tensor_fields=["my_custom_vector"])
+
+        # lexical search test
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(test_index_name).search,
+                              "custom vector text", search_method="lexical")
+
+        lexical_res = self.client.index(test_index_name).search(
+            "custom vector text", search_method="lexical")
+        assert lexical_res["hits"][0]["_id"] == "doc1"
+
+        # filter string test
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(test_index_name).search,
+                              context={"tensor": [{"vector": custom_vector_2, "weight": 1}]},
+                              filter_string="my_custom_vector:(second text)")
+
+        filtering_res = self.client.index(test_index_name).search(
+            context={"tensor": [{"vector": custom_vector_2, "weight": 1}]},     # no text query
+            filter_string="my_custom_vector:(second text)")
+        assert filtering_res["hits"][0]["_id"] == "doc2"
+
+        # tensor search test
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(test_index_name).search, context={"tensor": [{"vector": custom_vector_3, "weight": 1}]})
+
+        tensor_res = self.client.index(test_index_name).search(
+            context={"tensor": [{"vector": custom_vector_3, "weight": 1}]}  # no text query
+        )
+        assert tensor_res["hits"][0]["_id"] == "doc3"
+
+        # bulk search test
+        resp = self.client.bulk_search([{
+            "index": test_index_name,
+            "context": {"tensor": [{"vector": custom_vector_1, "weight": 1}]},  # no text query
+        }])
+        assert len(resp['result']) == 1
+        search_res = resp['result'][0]
+        assert search_res["hits"][0]["_id"] == "doc1"
+
+        # get document test
+        doc_res = self.client.index(test_index_name).get_document(
+            document_id="doc1",
+            expose_facets=True
+        )
+        assert doc_res["my_custom_vector"] == "custom vector text"
+        assert doc_res['_tensor_facets'][0]["my_custom_vector"] == "custom vector text"
+        assert doc_res['_tensor_facets'][0]['_embedding'] == custom_vector_1
+    
     def test_add_docs_image_download_headers(self):
         mock__post = mock.MagicMock()
 
