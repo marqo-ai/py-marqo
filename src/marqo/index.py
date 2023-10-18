@@ -228,7 +228,7 @@ class Index:
         else:
             raise UnsupportedOperationError("This operation is only supported for Marqo Cloud")
 
-    def search(self, q: Union[str, dict], searchable_attributes: Optional[List[str]] = None,
+    def search(self, q: Optional[Union[str, dict]] = None, searchable_attributes: Optional[List[str]] = None,
                limit: int = 10, offset: int = 0, search_method: Union[SearchMethods.TENSOR, str] = SearchMethods.TENSOR,
                highlights=None, device: Optional[str] = None, filter_string: str = None,
                show_highlights=True, reranker=None, image_download_headers: Optional[Dict] = None,
@@ -245,6 +245,8 @@ class Index:
 
                 If queries are weighted, each weight act as a (possibly negative)
                 multiplier for that query, relative to the other queries.
+
+                Optional. Marqo will evaluate whether context is given.
             searchable_attributes:  attributes to search
             limit: The max number of documents to be returned
             offset: The number of search results to skip (for pagination)
@@ -276,7 +278,6 @@ class Index:
             f"{f'?&device={utils.translate_device_string_for_url(device)}' if device is not None else ''}"
         )
         body = {
-            "q": q,
             "searchableAttributes": searchable_attributes,
             "limit": limit,
             "offset": offset,
@@ -285,6 +286,8 @@ class Index:
             "reRanker": reranker,
             "boost": boost,
         }
+        if q is not None:
+            body["q"] = q
         if attributes_to_retrieve is not None:
             body["attributesToRetrieve"] = attributes_to_retrieve
         if filter_string is not None:
