@@ -198,6 +198,7 @@ class TestAddDocuments(MarqoTestCase):
         assert len(docs) == 100
         ix.add_documents(docs, client_batch_size=4, tensor_fields=["Title", "Generic text"])
         ix.refresh()
+        time.sleep(3)
         # takes too long to search for all...
         for _id in [0, 19, 20, 99]:
             original_doc = docs[_id].copy()
