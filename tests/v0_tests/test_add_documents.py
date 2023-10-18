@@ -198,6 +198,7 @@ class TestAddDocuments(MarqoTestCase):
         assert len(docs) == 100
         ix.add_documents(docs, client_batch_size=4, tensor_fields=["Title", "Generic text"])
         ix.refresh()
+        time.sleep(3)
         # takes too long to search for all...
         for _id in [0, 19, 20, 99]:
             original_doc = docs[_id].copy()
@@ -586,6 +587,72 @@ class TestAddDocuments(MarqoTestCase):
         space_tensor_res = self.client.index(test_index_name).search("")
         assert space_tensor_res["hits"][0]["_id"] == "111"
 
+    def test_custom_vector_doc(self):
+        settings = {
+            "treat_urls_and_pointers_as_images": True,
+            "model": "ViT-B/32",    # dimension is 512
+        }
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.image_index,
+            open_source_test_index_name=self.generic_test_index_name,
+            open_source_index_kwargs=settings
+        )
+        self.client.index(index_name=test_index_name).add_documents(
+            documents=[
+                {
+                    "my_custom_vector": {
+                        "content": "custom vector text",
+                        "vector": [1.0 for _ in range(512)],
+                    },
+                    "my_normal_text_field": "normal text",
+                    "_id": "doc1",
+                },
+                {
+                    "my_normal_text_field": "second doc",
+                    "_id": "doc2"
+                }
+            ], mappings={
+                "my_custom_vector": {
+                    "type": "custom_vector"
+                }
+            }, 
+            auto_refresh=True, tensor_fields=["my_custom_vector"])
+
+        # lexical search test
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(test_index_name).search,
+                              "custom vector text", search_method="lexical")
+
+        lexical_res = self.client.index(test_index_name).search(
+            "custom vector text", search_method="lexical")
+        assert lexical_res["hits"][0]["_id"] == "doc1"
+
+        # filter string test
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(test_index_name).search,
+                              "",
+                              filter_string="my_custom_vector:(custom vector text)")
+
+        filtering_res = self.client.index(test_index_name).search(
+            "", filter_string="my_custom_vector:(custom vector text)")
+        assert filtering_res["hits"][0]["_id"] == "doc1"
+
+        # tensor search test
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(test_index_name).search, q={"dummy text": 0}, context={"tensor": [{"vector": [1.0 for _ in range(512)], "weight": 1}]})
+
+        tensor_res = self.client.index(test_index_name).search(q={"dummy text": 0}, context={"tensor": [{"vector": [1.0 for _ in range(512)], "weight": 1}]})
+        assert tensor_res["hits"][0]["_id"] == "doc1"
+
+        # get document test
+        doc_res = self.client.index(test_index_name).get_document(
+            document_id="doc1",
+            expose_facets=True
+        )
+        assert doc_res["my_custom_vector"] == "custom vector text"
+        assert doc_res['_tensor_facets'][0]["my_custom_vector"] == "custom vector text"
+        assert doc_res['_tensor_facets'][0]['_embedding'] == [1.0 for _ in range(512)]
+    
     def test_add_docs_image_download_headers(self):
         mock__post = mock.MagicMock()
 
