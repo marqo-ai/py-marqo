@@ -1,3 +1,4 @@
+import time
 import copy
 import os
 
@@ -476,6 +477,7 @@ class TestBulkSearch(MarqoTestCase):
             docs, auto_refresh=False, client_batch_size=50, tensor_fields=["Title"]
         )
         self.client.index(test_index_name).refresh()
+        time.sleep(3)
 
         for search_method in (enums.SearchMethods.TENSOR, enums.SearchMethods.LEXICAL):
             for doc_count in [100]:
