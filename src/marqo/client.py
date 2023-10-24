@@ -47,6 +47,8 @@ class Client:
             matching url is passed, the client will use the Marqo Cloud instance mappings.
         instance_mappings:
             An instance of InstanceMappings that maps index names to urls
+        return_telemetry:
+            If True, returns telemetry object with HTTP responses. Used for measuring timing.
         api_key:
             The api key to use for authentication with the Marqo API
         """
