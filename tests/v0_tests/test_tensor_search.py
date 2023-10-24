@@ -448,6 +448,7 @@ class TestSearch(MarqoTestCase):
             docs, tensor_fields=["Title"], auto_refresh=False, client_batch_size=50
         )
         self.client.index(index_name=test_index_name).refresh()
+        time.sleep(3)
 
         for search_method in (enums.SearchMethods.TENSOR, enums.SearchMethods.LEXICAL):
             for doc_count in [100]:
