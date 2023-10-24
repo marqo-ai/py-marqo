@@ -588,6 +588,15 @@ class TestAddDocuments(MarqoTestCase):
         assert space_tensor_res["hits"][0]["_id"] == "111"
 
     def test_custom_vector_doc(self):
+        """
+        Tests the custom_vector field type.
+        Ensures the following features work on this field:
+        1. lexical search
+        2. filter string search
+        3. tensor search
+        4. get document
+        """
+
         settings = {
             "treat_urls_and_pointers_as_images": True,
             "model": "ViT-B/32",    # dimension is 512
@@ -654,6 +663,17 @@ class TestAddDocuments(MarqoTestCase):
         assert doc_res['_tensor_facets'][0]['_embedding'] == [1.0 for _ in range(512)]
     
     def test_no_model_custom_vector_doc(self):
+        """
+        Tests the `no_model` index model and searching with no `q` parameter.
+        Executed on documents with custom_vector field type.
+
+        Ensures the following features work on this index:
+        1. lexical search
+        2. filter string search
+        3. tensor search
+        4. bulk search
+        5. get document
+        """
         settings = {
             "index_defaults": {
                 "model": "no_model",
