@@ -39,7 +39,8 @@ class TestAddDocumentsModelAuth(MarqoTestCase):
                 _, kwargs = call
                 assert expected_str in kwargs['path'] or ('refresh' in kwargs['path'])
 
-            assert len(mock__post.call_args_list) == 3
+            # 2 batches (10 docs each). No refresh call.
+            assert len(mock__post.call_args_list) == 2
 
             return True
 

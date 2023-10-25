@@ -356,7 +356,7 @@ class Index:
     def add_documents(
         self,
         documents: List[Dict[str, Any]],
-        auto_refresh: bool = True,
+        auto_refresh: bool = None,
         client_batch_size: int = None,
         device: str = None,
         tensor_fields: List[str] = None,
@@ -417,7 +417,7 @@ class Index:
     def _add_docs_organiser(
         self,
         documents: List[Dict[str, Any]],
-        auto_refresh=True,
+        auto_refresh=None,
         client_batch_size: int = None,
         device: str = None,
         tensor_fields: List = None,
@@ -441,8 +441,10 @@ class Index:
         t0 = timer()
         start_time_client_process = timer()
         base_path = f"indexes/{self.index_name}/documents"
+        # Note: refresh is not included here since if the request is client batched, the refresh is explicity called after all batches are added.
+        # telemetry is not included here since it is implemented at the client level, not the request level.
         query_str_params = (
-            f"{f'&device={utils.translate_device_string_for_url(device)}' if device is not None else ''}"
+            f"{f'device={utils.translate_device_string_for_url(device)}' if device is not None else ''}"
         )
 
         base_body = {
@@ -471,8 +473,19 @@ class Index:
 
         else:
             # no Client Batching
-            refresh_option = f"?refresh={str(auto_refresh).lower()}"
-            path_with_query_str = f"{base_path}{refresh_option}{query_str_params}"
+
+            # Build the query string
+            path_with_query_str = f"{base_path}"
+            if auto_refresh is not None:
+                # Add refresh if it has been user-specified
+                path_with_query_str += f"?refresh={str(auto_refresh).lower()}"
+                if query_str_params:
+                    # Also add device if it has been user-specified
+                    path_with_query_str += f"&{query_str_params}"
+            else:
+                if query_str_params:
+                    # Only add device if it has been user-specified
+                    path_with_query_str += f"?{query_str_params}"
 
             # ADD DOCS TIMER-LOGGER (2)
             start_time_client_request = timer()
@@ -504,7 +517,7 @@ class Index:
 
         Args:
             ids: List of identifiers of documents.
-            auto_refresh: if true refreshes the index
+            auto_refresh: if true refreshes the index after deletion
 
         Returns:
             A dict with information about the delete operation.
@@ -534,7 +547,7 @@ class Index:
     def _batch_request(
             self, docs: List[Dict],  base_path: str,
             query_str_params: str, base_body: dict, verbose: bool = True,
-            auto_refresh: bool = True, batch_size: int = 50,
+            auto_refresh: bool = None, batch_size: int = 50,
     ) -> List[Dict[str, Any]]:
         """Batches a large chunk of documents to be sent as multiple
         add_documents invocations
@@ -543,13 +556,20 @@ class Index:
             docs: A list of documents
             batch_size: Size of a batch passed into a single add_documents
                 call
+            base_path: The base path for the add_documents call
+            query_str_params: The query string parameters for the add_documents call
+            base_body: The base body for the add_documents call
+            auto_refresh: If true, refreshes the index AFTER all batches are added. Not included in any batch query string.
             verbose: If true, prints out info about the documents
 
         Returns:
             A list of responses, which have information about the batch
             operation
         """
-        path_with_query_str = f"{base_path}?refresh=false{query_str_params}"
+        path_with_query_str = f"{base_path}?refresh=false"
+        if query_str_params:
+            # Only add device if it has been user-specified
+            path_with_query_str += f"&{query_str_params}"
 
         mq_logger.debug(f"starting batch ingestion with batch size {batch_size}")
         error_detected_message = ('Errors detected in add documents call. '
