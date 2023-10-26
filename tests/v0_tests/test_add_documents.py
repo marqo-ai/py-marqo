@@ -253,13 +253,13 @@ class TestAddDocuments(MarqoTestCase):
         def run():
             temp_client.index(self.generic_test_index_name).add_documents(documents=[
                 {"d1": "blah"}, {"d2": "some data"}, {"d2331": "blah"}, {"45d2": "some data"}
-            ], client_batch_size=2, device="cuda:37", tensor_fields=["d1", "d2", "d2331", "45d2"], auto_refresh=True)
+            ], client_batch_size=2, device="cuda:37", tensor_fields=["d1", "d2", "d2331", "45d2"])
             return True
 
         assert run()
 
         print(mock__post.call_args_list)
-        assert len(mock__post.call_args_list) == 2
+        assert len(mock__post.call_args_list) == 2      # 2 batches, no refresh
         for args, kwargs in mock__post.call_args_list:
             assert "device=cuda37" in kwargs["path"]
 
