@@ -652,7 +652,7 @@ class TestAddDocuments(MarqoTestCase):
             "model": "ViT-B/32",    # dimension is 512
         }
         test_index_name = self.create_test_index(
-            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            cloud_test_index_to_use=CloudTestIndex.image_index,
             open_source_test_index_name=self.generic_test_index_name,
             open_source_index_kwargs=settings
         )
@@ -733,7 +733,7 @@ class TestAddDocuments(MarqoTestCase):
             }
         }
         test_index_name = self.create_test_index(
-            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            cloud_test_index_to_use=CloudTestIndex.no_model_index,
             open_source_test_index_name=self.generic_test_index_name,
             open_source_index_settings_dict=settings
         )
