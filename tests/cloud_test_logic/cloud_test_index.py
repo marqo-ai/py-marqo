@@ -65,4 +65,5 @@ index_name_to_settings_mappings = {
             }
         },
         "inference_type": "marqo.CPU.large", "storage_class": "marqo.basic",
+    }
 }
