@@ -9,7 +9,7 @@ class BaseMarqoModel(BaseModel):
 
 
 class SearchBody(BaseMarqoModel):
-    q: Union[str, Dict[str, float]]
+    q: Optional[Union[str, Dict[str, float]]] = None
     searchableAttributes: Union[None, List[str]] = None
     searchMethod: Union[None, str] = "TENSOR"
     limit: int = 10

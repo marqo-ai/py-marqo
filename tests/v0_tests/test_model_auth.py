@@ -14,7 +14,7 @@ class TestAddDocumentsModelAuth(MarqoTestCase):
             mock_s3_model_auth = {'s3': {'aws_access_key_id': 'some_acc_key',
                                          'aws_secret_access_key': 'some_sec_acc_key'}}
             self.client.index(index_name=self.generic_test_index_name).add_documents(
-                documents=[{"some": "data"}], model_auth=mock_s3_model_auth, tensor_fields=["some"])
+                documents=[{"some": "data"}], model_auth=mock_s3_model_auth, tensor_fields=["some"], auto_refresh=True)
             args, kwargs = mock__post.call_args
             assert "modelAuth" in kwargs['body']
             assert kwargs['body']['modelAuth'] == mock_s3_model_auth
@@ -39,7 +39,8 @@ class TestAddDocumentsModelAuth(MarqoTestCase):
                 _, kwargs = call
                 assert expected_str in kwargs['path'] or ('refresh' in kwargs['path'])
 
-            assert len(mock__post.call_args_list) == 3
+            # 2 batches (10 docs each). No refresh call.
+            assert len(mock__post.call_args_list) == 2
 
             return True
 

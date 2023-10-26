@@ -44,7 +44,7 @@ class TestLogging(MarqoTestCase):
         test_index_name = self._create_img_index(index_name=self.generic_test_index_name)
         with self.assertLogs('marqo', level='INFO') as cm:
             self.client.index(index_name=test_index_name).add_documents(self._get_docs_to_index(), device="cpu",
-                                                                          tensor_fields=["Title"])
+                                                                          tensor_fields=["Title"], auto_refresh=True)
             assert len(cm.output) == 1
             assert "errors detected" in cm.output[0].lower()
             assert "info" in cm.output[0].lower()
@@ -62,7 +62,7 @@ class TestLogging(MarqoTestCase):
 
             with self.assertLogs('marqo', level='INFO') as cm:
                 self.client.index(index_name=test_index_name).add_documents(
-                    documents=self._get_docs_to_index(), device="cpu", **params, tensor_fields=["Title"])
+                    documents=self._get_docs_to_index(), device="cpu", **params, tensor_fields=["Title"], auto_refresh=True)
                 print(params, expected)
                 assert len(cm.output) == expected['num_log_msgs']
                 error_messages = [msg.lower() for msg in cm.output if "errors detected" in msg.lower()]

@@ -28,7 +28,7 @@ class TestSentenceChunking(MarqoTestCase):
             'description': 'the image chunking. can (optionally) chunk. the image into sub-patches (aking to segmenting text). by using either. a learned model. or simple box generation and cropping.',
             'misc':'sasasasaifjfnonfqeno asadsdljknjdfln'}
 
-        client.index(test_index_name).add_documents([document1], tensor_fields=['attributes', 'description', 'misc'])
+        client.index(test_index_name).add_documents([document1], tensor_fields=['attributes', 'description', 'misc'], auto_refresh=True)
 
         # test the search works
         if self.IS_MULTI_INSTANCE:
@@ -62,7 +62,7 @@ class TestSentenceChunking(MarqoTestCase):
             'description': 'the image chunking. can (optionally) chunk. the image into sub-patches (aking to segmenting text). by using either. a learned model. or simple box generation and cropping.',
             'misc':'sasasasaifjfnonfqeno asadsdljknjdfln'}
 
-        client.index(test_index_name).add_documents([document1], tensor_fields=['attributes', 'description', 'misc'])
+        client.index(test_index_name).add_documents([document1], tensor_fields=['attributes', 'description', 'misc'], auto_refresh=True)
 
         # search with a term we know is an exact chunk and will then show in the highlights
         search_term = 'hello. how are you.'
@@ -125,7 +125,7 @@ class TestSentenceChunking(MarqoTestCase):
             'description': 'the image chunking. can (optionally) chunk. the image into sub-patches (aking to segmenting text). by using either. a learned model. or simple box generation and cropping.',
             'misc':'sasasasaifjfnonfqeno asadsdljknjdfln'}
 
-        client.index(test_index_name).add_documents([document1], tensor_fields=['attributes', 'description', 'misc'])
+        client.index(test_index_name).add_documents([document1], tensor_fields=['attributes', 'description', 'misc'], auto_refresh=True)
 
         # search with a term we know is an exact chunk and will then show in the highlights
         search_term = 'hello. how are you.'

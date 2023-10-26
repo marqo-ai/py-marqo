@@ -163,7 +163,7 @@ def with_documents(index_to_documents_fn: Callable[[], Dict[str, List[Dict[str, 
                     cloud_test_index_to_use=CloudTestIndex.basic_index,
                     open_source_test_index_name=index_name
                 )
-                self.client.index(index_name).add_documents(docs, non_tensor_fields=[])
+                self.client.index(index_name).add_documents(docs, non_tensor_fields=[], auto_refresh=True)
                 if self.IS_MULTI_INSTANCE:
                     self.warm_request(self.client.bulk_search, [{
                         "index": index_name,
