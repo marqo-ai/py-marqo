@@ -94,7 +94,7 @@ class TestModelCacheManagement(MarqoTestCase):
             "doc title": "Cool Document 1",
             "field 1": "some extra info"
         }
-        self.client.index(test_index_name).add_documents([d1], device="cpu", tensor_fields=["doc title", "field 1"])
+        self.client.index(test_index_name).add_documents([d1], device="cpu", tensor_fields=["doc title", "field 1"], auto_refresh=True)
         res = self.client.index(test_index_name).eject_model(self.MODEL, "cpu")
         assert res["result"] == "success"
         assert res["message"].startswith("successfully eject")

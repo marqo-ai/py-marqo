@@ -40,7 +40,7 @@ class TestImageChunking(MarqoTestCase):
             'description': 'the image chunking can (optionally) chunk the image into sub-patches (aking to segmenting text) by using either a learned model or simple box generation and cropping',
             'location': temp_file_name}
 
-        client.index(test_index_name).add_documents([document1], tensor_fields=['location', 'description', 'attributes'])
+        client.index(test_index_name).add_documents([document1], tensor_fields=['location', 'description', 'attributes'], auto_refresh=True)
 
         # test the search works
         if self.IS_MULTI_INSTANCE:
@@ -91,7 +91,7 @@ class TestImageChunking(MarqoTestCase):
             'description': 'the image chunking can (optionally) chunk the image into sub-patches (akin to segmenting text) by using either a learned model or simple box generation and cropping',
             'location': temp_file_name}
 
-        client.index(test_index_name).add_documents([document1], tensor_fields=['location', 'description', 'attributes'])
+        client.index(test_index_name).add_documents([document1], tensor_fields=['location', 'description', 'attributes'], auto_refresh=True)
 
         # test the search works
         if self.IS_MULTI_INSTANCE:

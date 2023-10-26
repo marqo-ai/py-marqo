@@ -68,7 +68,7 @@ class TestGetIndexes(MarqoTestCase):
             raise AssertionError
 
         assert my_ix.get_stats()['numberOfDocuments'] == 0
-        my_ix.add_documents([{'some doc': 'gold fish'}], tensor_fields=['some doc'])
+        my_ix.add_documents([{'some doc': 'gold fish'}], tensor_fields=['some doc'], auto_refresh=True)
 
         if self.IS_MULTI_INSTANCE:
             time.sleep(1)

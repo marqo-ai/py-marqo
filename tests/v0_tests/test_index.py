@@ -69,7 +69,7 @@ class TestIndex(MarqoTestCase):
         }
         self.client.index(test_index_name).add_documents([
             d1, d2
-        ], tensor_fields=["Blurb", "Title"])
+        ], tensor_fields=["Blurb", "Title"], auto_refresh=True)
         res = self.client.index(test_index_name).get_documents(
             ["article_152", "article_490", "article_985"]
         )
@@ -103,7 +103,7 @@ class TestIndex(MarqoTestCase):
         }
         self.client.index(test_index_name).add_documents([
             d1, d2
-        ], tensor_fields=["Blurb", "Title"])
+        ], tensor_fields=["Blurb", "Title"], auto_refresh=True)
         res = self.client.index(test_index_name).get_documents(
             ["article_152", "article_490", "article_985"],
             expose_facets=True
@@ -135,7 +135,7 @@ class TestIndex(MarqoTestCase):
         }
         self.client.index(test_index_name).add_documents([
             d1
-        ], tensor_fields=["Blurb", "Title"])
+        ], tensor_fields=["Blurb", "Title"], auto_refresh=True)
         doc_res = self.client.index(test_index_name).get_document(
             document_id="article_152",
             expose_facets=True

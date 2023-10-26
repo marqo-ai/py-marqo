@@ -24,7 +24,7 @@ class TestDeleteDocuments(MarqoTestCase):
         self.client.index(test_index_name).add_documents([
             {"abc": "wow camel", "_id": "123"},
             {"abc": "camels are cool", "_id": "foo"}
-        ], tensor_fields=["abc"])
+        ], tensor_fields=["abc"], auto_refresh=True)
 
         if self.IS_MULTI_INSTANCE:
             self.warm_request(self.client.index(test_index_name).search, "wow camel")
@@ -32,7 +32,7 @@ class TestDeleteDocuments(MarqoTestCase):
         res0 = self.client.index(test_index_name).search("wow camel")
         assert res0['hits'][0]["_id"] == "123"
         assert len(res0['hits']) == 2
-        self.client.index(test_index_name).delete_documents(["123"])
+        self.client.index(test_index_name).delete_documents(["123"], auto_refresh=True)
 
         if self.IS_MULTI_INSTANCE:
             self.warm_request(self.client.index(test_index_name).search, "wow camel")
@@ -52,7 +52,7 @@ class TestDeleteDocuments(MarqoTestCase):
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
         def run():
             temp_client.index(self.generic_test_index_name).delete_documents(
-                ids=['0', '1', '2'], 
+                ids=['0', '1', '2']
             )
             return True
 
@@ -96,7 +96,7 @@ class TestDeleteDocuments(MarqoTestCase):
             cloud_test_index_to_use=CloudTestIndex.basic_index,
             open_source_test_index_name=self.generic_test_index_name,
         )
-        self.client.index(test_index_name).add_documents([{"abc": "efg", "_id": "123"}], tensor_fields=["abc"])
+        self.client.index(test_index_name).add_documents([{"abc": "efg", "_id": "123"}], tensor_fields=["abc"], auto_refresh=True)
         try:
             self.client.index(test_index_name).delete_documents([])
             raise AssertionError
