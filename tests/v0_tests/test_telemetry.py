@@ -52,7 +52,7 @@ class TestTelemetry(MarqoTestCase):
             cloud_test_index_to_use=CloudTestIndex.basic_index,
             open_source_test_index_name=self.generic_test_index_name,
         )
-        self.client.index(test_index_name).add_documents([{"Title": "A dummy document",}], tensor_fields=["Title"])
+        self.client.index(test_index_name).add_documents([{"Title": "A dummy document",}], tensor_fields=["Title"], auto_refresh=True)
 
         if self.IS_MULTI_INSTANCE:
             self.warm_request(self.client.index(test_index_name).search, **search_kwargs_list[0])
@@ -67,7 +67,7 @@ class TestTelemetry(MarqoTestCase):
             cloud_test_index_to_use=CloudTestIndex.basic_index,
             open_source_test_index_name=self.generic_test_index_name,
         )
-        self.client.index(test_index_name).add_documents([{"Title": "A dummy document",}], tensor_fields=["Title"])
+        self.client.index(test_index_name).add_documents([{"Title": "A dummy document",}], tensor_fields=["Title"], auto_refresh=True)
         bulk_search_query = [
             {
                 "index": test_index_name,
@@ -105,7 +105,7 @@ class TestTelemetry(MarqoTestCase):
             open_source_test_index_name=self.generic_test_index_name,
         )
         self.client.index(test_index_name).add_documents([{"_id": "123321", "Title": "Marqo is useful",}],
-                                                           tensor_fields=["Title"])
+                                                           tensor_fields=["Title"], auto_refresh=True)
         res = self.client.index(test_index_name).get_document("123321")
         self.assertIn("telemetry", res)
         self.assertEqual(res["telemetry"], dict())
@@ -116,8 +116,8 @@ class TestTelemetry(MarqoTestCase):
             open_source_test_index_name=self.generic_test_index_name,
         )
         self.client.index(test_index_name).add_documents([{"_id": "123321", "Title": "Marqo is useful",}],
-                                                           tensor_fields=["Title"])
-        res = self.client.index(test_index_name).delete_documents(["123321"])
+                                                           tensor_fields=["Title"], auto_refresh=True)
+        res = self.client.index(test_index_name).delete_documents(["123321"], auto_refresh=True)
         self.assertIn("telemetry", res)
         self.assertEqual(res["telemetry"], dict())
 

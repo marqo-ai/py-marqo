@@ -201,7 +201,7 @@ class TestBulkSearch(MarqoTestCase):
             cloud_test_index_to_use=CloudTestIndex.basic_index,
             open_source_test_index_name=self.generic_test_index_name,
         )
-        self.client.index(index_name=test_index_name).add_documents([{"f1": "some doc"}], tensor_fields=["f1"])
+        self.client.index(index_name=test_index_name).add_documents([{"f1": "some doc"}], tensor_fields=["f1"], auto_refresh=True)
         for params, expected_highlights_presence in [
                 ({}, True),
                 ({"showHighlights": False}, False),
@@ -351,7 +351,7 @@ class TestBulkSearch(MarqoTestCase):
                 "int_for_filtering": 1,
             }
         ]
-        res = self.client.index(test_index_name).add_documents(docs,auto_refresh=True, tensor_fields=["field_a", "field_b"])
+        res = self.client.index(test_index_name).add_documents(docs, auto_refresh=True, tensor_fields=["field_a", "field_b"])
 
         test_cases = (
             {   # filter string only (str)
@@ -704,8 +704,8 @@ class TestBulkSearch(MarqoTestCase):
             "_id": "123456"
         }
 
-        self.client.index(self.generic_test_index_name).add_documents([d1], tensor_fields=["doc title"])
-        self.client.index(self.generic_test_index_name_2).add_documents([d2], tensor_fields=["doc title"])
+        self.client.index(self.generic_test_index_name).add_documents([d1], tensor_fields=["doc title"], auto_refresh=True)
+        self.client.index(self.generic_test_index_name_2).add_documents([d2], tensor_fields=["doc title"], auto_refresh=True)
 
         for search_method in [enums.SearchMethods.TENSOR, enums.SearchMethods.LEXICAL]:
             resp = self.client.bulk_search([{
@@ -751,8 +751,8 @@ class TestBulkSearch(MarqoTestCase):
             "_id": "123456"
         }
 
-        self.client.index(test_index_name_1).add_documents([d1], tensor_fields=["doc title"])
-        self.client.index(test_index_name_2).add_documents([d2], tensor_fields=["doc title"])
+        self.client.index(test_index_name_1).add_documents([d1], tensor_fields=["doc title"], auto_refresh=True)
+        self.client.index(test_index_name_2).add_documents([d2], tensor_fields=["doc title"], auto_refresh=True)
 
         for search_method in [enums.SearchMethods.TENSOR]:
             with self.assertRaises(InvalidArgError):

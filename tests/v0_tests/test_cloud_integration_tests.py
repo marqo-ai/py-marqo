@@ -22,7 +22,7 @@ class TestCloudIntegrationTests(MarqoTestCase):
                 cloud_test_index_to_use=CloudTestIndex.basic_index,
                 open_source_test_index_name=self.generic_test_index_name,
             )
-            res = self.client.index(test_index_name).add_documents(documents=[{"some": "data"}], tensor_fields=["some"])
+            res = self.client.index(test_index_name).add_documents(documents=[{"some": "data"}], tensor_fields=["some"], auto_refresh=True)
             assert res == {"success": True}
             mock_documents.assert_called_once()
 
@@ -62,7 +62,7 @@ class TestCloudIntegrationTests(MarqoTestCase):
                 assert "lost" not in self.index_to_documents_cleanup_mapping.get(test_index_name)
 
             add_documents_response = self.client.index(test_index_name).add_documents(
-                documents=[{"some": "data", "_id": "lost"}], tensor_fields=["some"]
+                documents=[{"some": "data", "_id": "lost"}], tensor_fields=["some"], auto_refresh=True
             )
 
             assert add_documents_response["specific-test-key"] == 123
