@@ -23,7 +23,8 @@ class TestBoostSearch(MarqoTestCase):
                     "_id": "d2"
                 }
             ],
-            tensor_fields=["Title", "Description"]
+            tensor_fields=["Title", "Description"],
+            auto_refresh=True
         )
 
         self.query = "What are the best pets"

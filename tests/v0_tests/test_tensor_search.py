@@ -37,7 +37,7 @@ class TestSearch(MarqoTestCase):
             The editor-in-chief Katharine Viner succeeded Alan Rusbridger in 2015.[10][11] Since 2018, the paper's main newsprint sections have been published in tabloid format. As of July 2021, its print edition had a daily circulation of 105,134.[4] The newspaper has an online edition, TheGuardian.com, as well as two international websites, Guardian Australia (founded in 2013) and Guardian US (founded in 2011). The paper's readership is generally on the mainstream left of British political opinion,[12][13][14][15] and the term "Guardian reader" is used to imply a stereotype of liberal, left-wing or "politically correct" views.[3] Frequent typographical errors during the age of manual typesetting led Private Eye magazine to dub the paper the "Grauniad" in the 1960s, a nickname still used occasionally by the editors for self-mockery.[16]
             """
         }
-        add_doc_res = self.client.index(test_index_name).add_documents([d1], tensor_fields=["Title", "Description"])
+        add_doc_res = self.client.index(test_index_name).add_documents([d1], tensor_fields=["Title", "Description"], auto_refresh=True)
         
         if self.IS_MULTI_INSTANCE:
             self.warm_request(self.client.index(test_index_name).search,
@@ -70,7 +70,7 @@ class TestSearch(MarqoTestCase):
             cloud_test_index_to_use=CloudTestIndex.basic_index,
             open_source_test_index_name=self.generic_test_index_name,
         )
-        self.client.index(index_name=test_index_name).add_documents([{"f1": "some doc"}], tensor_fields=["f1"])
+        self.client.index(index_name=test_index_name).add_documents([{"f1": "some doc"}], tensor_fields=["f1"], auto_refresh=True)
         for params, expected_highlights_presence in [
                 ({"highlights": True, "show_highlights": False}, False),
                 ({"highlights": False, "show_highlights": True}, False),
@@ -107,7 +107,7 @@ class TestSearch(MarqoTestCase):
         }
         res = self.client.index(test_index_name).add_documents([
             d1, d2
-        ], tensor_fields=["doc title", "field X"])
+        ], tensor_fields=["doc title", "field X"], auto_refresh=True)
 
         if self.IS_MULTI_INSTANCE:
             self.warm_request(self.client.index(test_index_name).search,
@@ -136,7 +136,7 @@ class TestSearch(MarqoTestCase):
         }
         res = self.client.index(test_index_name).add_documents([
             d1, d2
-        ], tensor_fields=['doc title', 'field X'])
+        ], tensor_fields=['doc title', 'field X'], auto_refresh=True)
 
         # Ensure that vector search works
         if self.IS_MULTI_INSTANCE:
@@ -225,7 +225,7 @@ class TestSearch(MarqoTestCase):
                 "int_for_filtering": 1,
             }
         ]
-        res = self.client.index(test_index_name).add_documents(docs,auto_refresh=True, tensor_fields=["field_a", "field_b"])
+        res = self.client.index(test_index_name).add_documents(docs, auto_refresh=True, tensor_fields=["field_a", "field_b"])
 
         test_cases = (
             {   # filter string only (str)

@@ -30,7 +30,7 @@ class TestDemo(MarqoTestCase):
                 S2Search is based in Melbourne. Melbourne has beautiful waterways running through it.
                 """
             },
-        ], tensor_fields=["Title", "Description", "Key Points"])
+        ], tensor_fields=["Title", "Description", "Key Points"], auto_refresh=True)
         print("\nSearching the phrase 'River' across all fields")
         
         if self.IS_MULTI_INSTANCE:
@@ -70,7 +70,7 @@ class TestDemo(MarqoTestCase):
                     "_id": "article_591"
                 }
             ],
-            tensor_fields=["Title", "Description"]
+            tensor_fields=["Title", "Description"], auto_refresh=True
         )
 
         if self.IS_MULTI_INSTANCE:
@@ -110,7 +110,7 @@ class TestDemo(MarqoTestCase):
         r5 = mq.index(test_index_name).search('adventure', searchable_attributes=['Title'])
         assert len(r5["hits"]) == 2
 
-        r6 = mq.index(test_index_name).delete_documents(ids=["article_591", "article_602"])
+        r6 = mq.index(test_index_name).delete_documents(ids=["article_591", "article_602"], auto_refresh=True)
         assert r6['details']['deletedDocuments'] == 1
 
         if not self.client.config.is_marqo_cloud:
@@ -143,7 +143,7 @@ class TestDemo(MarqoTestCase):
                     "The last known of its species died in 1936.",
                 },
             ],
-            tensor_fields=["Title", "Description"]
+            tensor_fields=["Title", "Description"], auto_refresh=True
         )
 
         r1 = mq.index(test_index_name).get_stats()
@@ -239,7 +239,7 @@ class TestDemo(MarqoTestCase):
                     },
                 }
             },
-            tensor_fields=["captioned_image"],
+            tensor_fields=["captioned_image"], auto_refresh=True
         )
 
         r1 = mq.index(test_index_name).get_stats()

@@ -228,7 +228,7 @@ class Index:
         else:
             raise UnsupportedOperationError("This operation is only supported for Marqo Cloud")
 
-    def search(self, q: Union[str, dict], searchable_attributes: Optional[List[str]] = None,
+    def search(self, q: Optional[Union[str, dict]] = None, searchable_attributes: Optional[List[str]] = None,
                limit: int = 10, offset: int = 0, search_method: Union[SearchMethods.TENSOR, str] = SearchMethods.TENSOR,
                highlights=None, device: Optional[str] = None, filter_string: str = None,
                show_highlights=True, reranker=None, image_download_headers: Optional[Dict] = None,
@@ -245,6 +245,8 @@ class Index:
 
                 If queries are weighted, each weight act as a (possibly negative)
                 multiplier for that query, relative to the other queries.
+
+                Optional. Marqo will evaluate whether context is given.
             searchable_attributes:  attributes to search
             limit: The max number of documents to be returned
             offset: The number of search results to skip (for pagination)
@@ -276,7 +278,6 @@ class Index:
             f"{f'?&device={utils.translate_device_string_for_url(device)}' if device is not None else ''}"
         )
         body = {
-            "q": q,
             "searchableAttributes": searchable_attributes,
             "limit": limit,
             "offset": offset,
@@ -285,6 +286,8 @@ class Index:
             "reRanker": reranker,
             "boost": boost,
         }
+        if q is not None:
+            body["q"] = q
         if attributes_to_retrieve is not None:
             body["attributesToRetrieve"] = attributes_to_retrieve
         if filter_string is not None:
@@ -356,7 +359,7 @@ class Index:
     def add_documents(
         self,
         documents: List[Dict[str, Any]],
-        auto_refresh: bool = True,
+        auto_refresh: bool = None,
         client_batch_size: int = None,
         device: str = None,
         tensor_fields: List[str] = None,
@@ -417,7 +420,7 @@ class Index:
     def _add_docs_organiser(
         self,
         documents: List[Dict[str, Any]],
-        auto_refresh=True,
+        auto_refresh=None,
         client_batch_size: int = None,
         device: str = None,
         tensor_fields: List = None,
@@ -441,8 +444,10 @@ class Index:
         t0 = timer()
         start_time_client_process = timer()
         base_path = f"indexes/{self.index_name}/documents"
+        # Note: refresh is not included here since if the request is client batched, the refresh is explicity called after all batches are added.
+        # telemetry is not included here since it is implemented at the client level, not the request level.
         query_str_params = (
-            f"{f'&device={utils.translate_device_string_for_url(device)}' if device is not None else ''}"
+            f"{f'device={utils.translate_device_string_for_url(device)}' if device is not None else ''}"
         )
 
         base_body = {
@@ -471,8 +476,19 @@ class Index:
 
         else:
             # no Client Batching
-            refresh_option = f"?refresh={str(auto_refresh).lower()}"
-            path_with_query_str = f"{base_path}{refresh_option}{query_str_params}"
+
+            # Build the query string
+            path_with_query_str = f"{base_path}"
+            if auto_refresh is not None:
+                # Add refresh if it has been user-specified
+                path_with_query_str += f"?refresh={str(auto_refresh).lower()}"
+                if query_str_params:
+                    # Also add device if it has been user-specified
+                    path_with_query_str += f"&{query_str_params}"
+            else:
+                if query_str_params:
+                    # Only add device if it has been user-specified
+                    path_with_query_str += f"?{query_str_params}"
 
             # ADD DOCS TIMER-LOGGER (2)
             start_time_client_request = timer()
@@ -504,7 +520,7 @@ class Index:
 
         Args:
             ids: List of identifiers of documents.
-            auto_refresh: if true refreshes the index
+            auto_refresh: if true refreshes the index after deletion
 
         Returns:
             A dict with information about the delete operation.
@@ -534,7 +550,7 @@ class Index:
     def _batch_request(
             self, docs: List[Dict],  base_path: str,
             query_str_params: str, base_body: dict, verbose: bool = True,
-            auto_refresh: bool = True, batch_size: int = 50,
+            auto_refresh: bool = None, batch_size: int = 50,
     ) -> List[Dict[str, Any]]:
         """Batches a large chunk of documents to be sent as multiple
         add_documents invocations
@@ -543,13 +559,20 @@ class Index:
             docs: A list of documents
             batch_size: Size of a batch passed into a single add_documents
                 call
+            base_path: The base path for the add_documents call
+            query_str_params: The query string parameters for the add_documents call
+            base_body: The base body for the add_documents call
+            auto_refresh: If true, refreshes the index AFTER all batches are added. Not included in any batch query string.
             verbose: If true, prints out info about the documents
 
         Returns:
             A list of responses, which have information about the batch
             operation
         """
-        path_with_query_str = f"{base_path}?refresh=false{query_str_params}"
+        path_with_query_str = f"{base_path}?refresh=false"
+        if query_str_params:
+            # Only add device if it has been user-specified
+            path_with_query_str += f"&{query_str_params}"
 
         mq_logger.debug(f"starting batch ingestion with batch size {batch_size}")
         error_detected_message = ('Errors detected in add documents call. '
