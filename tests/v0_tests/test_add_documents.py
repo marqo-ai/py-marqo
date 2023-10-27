@@ -735,8 +735,9 @@ class TestAddDocuments(MarqoTestCase):
                 }
             }
         }
+        
         test_index_name = self.create_test_index(
-            cloud_test_index_to_use=CloudTestIndex.no_model_index,
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
             open_source_test_index_name=self.generic_test_index_name,
             open_source_index_settings_dict=settings
         )
