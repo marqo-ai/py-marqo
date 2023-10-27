@@ -712,6 +712,7 @@ class TestAddDocuments(MarqoTestCase):
         assert doc_res['_tensor_facets'][0]["my_custom_vector"] == "custom vector text"
         assert doc_res['_tensor_facets'][0]['_embedding'] == [1.0 for _ in range(512)]
     
+    @mark.ignore_during_cloud_tests
     def test_no_model_custom_vector_doc(self):
         """
         Tests the `no_model` index model and searching with no `q` parameter.
@@ -723,6 +724,8 @@ class TestAddDocuments(MarqoTestCase):
         3. tensor search
         4. bulk search
         5. get document
+
+        Note: `no_model` is not yet supported on Cloud.
         """
         settings = {
             "index_defaults": {
