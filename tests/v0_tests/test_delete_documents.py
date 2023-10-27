@@ -49,9 +49,14 @@ class TestDeleteDocuments(MarqoTestCase):
         temp_client = copy.deepcopy(self.client)
         mock__post = mock.MagicMock()
 
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
+
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
         def run():
-            temp_client.index(self.generic_test_index_name).delete_documents(
+            temp_client.index(test_index_name).delete_documents(
                 ids=['0', '1', '2']
             )
             return True
@@ -69,15 +74,21 @@ class TestDeleteDocuments(MarqoTestCase):
         """
         Ensure that refresh parameter for delete docs is properly set in API call
         """
+
+        test_index_name = self.create_test_index(
+            cloud_test_index_to_use=CloudTestIndex.basic_index,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
+
         temp_client = copy.deepcopy(self.client)
         mock__post = mock.MagicMock()
 
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
         def run():
-            temp_client.index(self.generic_test_index_name).delete_documents(
+            temp_client.index(test_index_name).delete_documents(
                 ids=['0', '1', '2'], auto_refresh=True
             )
-            temp_client.index(self.generic_test_index_name).delete_documents(
+            temp_client.index(test_index_name).delete_documents(
                 ids=['0', '1', '2'], auto_refresh=False
             )
             return True
@@ -111,23 +122,23 @@ class TestDeleteDocuments(MarqoTestCase):
         items list, index_name, status, type, details, duration, startedAt, finishedAt
         """
 
-        self.create_test_index(
+        test_index_name = self.create_test_index(
             cloud_test_index_to_use=CloudTestIndex.basic_index,
             open_source_test_index_name=self.generic_test_index_name,
         )
-        self.client.index(self.generic_test_index_name).add_documents([
+        self.client.index(test_index_name).add_documents([
             {"_id": "doc1", "abc": "wow camel"},
             {"_id": "doc2", "abc": "camels are cool"},
             {"_id": "doc3", "abc": "wow camels again"}
         ], tensor_fields=[], auto_refresh=True)
 
-        res = self.client.index(self.generic_test_index_name).delete_documents(["doc1", "doc2", "missingdoc"], auto_refresh=True)
+        res = self.client.index(test_index_name).delete_documents(["doc1", "doc2", "missingdoc"], auto_refresh=True)
         
         assert "duration" in res
         assert "startedAt" in res
         assert "finishedAt" in res
 
-        assert res["index_name"] == self.generic_test_index_name
+        assert res["index_name"] == test_index_name
         assert res["type"] == "documentDeletion"
         assert res["status"] == "succeeded"
         assert res["details"] == {
