@@ -10,7 +10,7 @@ class CloudTestIndex(str, Enum):
     image_index = "test-index-image"
     text_index_with_custom_model = "test-index-custom"
     image_index_with_preprocessing_method = "test-index-preprocess"
-    # no_model_index = "test-index-no-model"
+    no_model_index = "test-index-no-model"
 
 
 index_name_to_settings_mappings = {
