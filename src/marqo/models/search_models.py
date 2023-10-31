@@ -2,13 +2,13 @@ from typing import Dict, List, Optional, Union
 from pydantic import BaseModel
 
 
-class BaseMarqoModel(BaseModel):
+class StrictBaseModel(BaseModel):
     class Config:
         extra: str = "forbid"
     pass
 
 
-class SearchBody(BaseMarqoModel):
+class SearchBody(StrictBaseModel):
     q: Optional[Union[str, Dict[str, float]]] = None
     searchableAttributes: Union[None, List[str]] = None
     searchMethod: Union[None, str] = "TENSOR"
@@ -29,6 +29,6 @@ class BulkSearchBody(SearchBody):
     index: str
 
 
-class BulkSearchQuery(BaseMarqoModel):
+class BulkSearchQuery(StrictBaseModel):
     queries: List[BulkSearchBody]
 
