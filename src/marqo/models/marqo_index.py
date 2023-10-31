@@ -4,12 +4,12 @@ from typing import List, Optional, Dict, Any
 from marqo.models.strict_base_model import StrictBaseModel
 
 
-class IndexType(Enum):
+class IndexType(str, Enum):
     Structured = 'structured'
     Unstructured = 'unstructured'
 
 
-class FieldType(Enum):
+class FieldType(str, Enum):
     Text = 'text'
     Bool = 'bool'
     Int = 'int'
@@ -21,18 +21,18 @@ class FieldType(Enum):
     MultimodalCombination = 'multimodal_combination'
 
 
-class VectorNumericType(Enum):
+class VectorNumericType(str, Enum):
     Float = 'float'
     Bfloat16 = 'bfloat16'
 
 
-class FieldFeature(Enum):
+class FieldFeature(str, Enum):
     LexicalSearch = 'lexical_search'
     ScoreModifier = 'score_modifier'
     Filter = 'filter'
 
 
-class DistanceMetric(Enum):
+class DistanceMetric(str, Enum):
     Euclidean = 'euclidean'
     Angular = 'angular'
     DotProduct = 'dotproduct'
@@ -41,14 +41,14 @@ class DistanceMetric(Enum):
     Hamming = 'hamming'
 
 
-class TextSplitMethod(Enum):
+class TextSplitMethod(str, Enum):
     Character = 'character'
     Word = 'word'
     Sentence = 'sentence'
     Passage = 'passage'
 
 
-class PatchMethod(Enum):
+class PatchMethod(str, Enum):
     Simple = 'simple'
     Frcnn = 'frcnn'
 

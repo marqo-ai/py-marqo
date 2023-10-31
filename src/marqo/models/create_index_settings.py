@@ -6,14 +6,6 @@ import marqo.models.marqo_index as core
 from marqo.models.strict_base_model import StrictBaseModel
 
 
-class EnumEncoder(json.JSONEncoder):
-    """A help class to encode enums as strings in json.dumps()"""
-    def default(self, o: Any) -> Any:
-        if isinstance(o, Enum):
-            return o.value
-        return super().default(o)
-
-
 class Field(StrictBaseModel):
     name: str
     type: core.FieldType
@@ -39,7 +31,7 @@ class IndexSettings(StrictBaseModel):
     ann_parameters: Optional[AnnParameters]
 
     @property
-    def request_body(self):
+    def request_body(self) -> dict:
         return self.dict(exclude_none=True)
 
 
@@ -50,8 +42,7 @@ class CreateIndexSettings(StrictBaseModel):
     settings_dict: Optional[Dict]
 
     @property
-    def request_body(self) -> str:
+    def request_body(self) -> dict:
         """A json encoded string of the request body"""
-        request_body = self.settings_dict if self.settings_dict is not None \
+        return self.settings_dict if self.settings_dict is not None \
             else self.index_settings.request_body
-        return json.dumps(request_body, cls=EnumEncoder)
