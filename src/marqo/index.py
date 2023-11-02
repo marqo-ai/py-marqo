@@ -19,7 +19,7 @@ from marqo.config import Config
 from marqo.enums import SearchMethods, Devices
 from marqo import errors, utils
 from marqo.models.create_index_settings import Field, AnnParameters, IndexSettings, CreateIndexSettings
-import marqo.models.marqo_index as core
+from marqo.models import marqo_index
 from marqo.errors import MarqoWebError, UnsupportedOperationError, MarqoCloudIndexNotFoundError
 from marqo.marqo_logging import mq_logger
 from marqo.version import minimum_supported_marqo_version
@@ -83,16 +83,16 @@ class Index:
     @staticmethod
     def create(config: Config,
                index_name: str,
-               type: Optional[core.IndexType] = None,
+               type: Optional[marqo_index.IndexType] = None,
                settings_dict: Optional[Dict[str, Any]] = None,
                all_fields: Optional[List[Field]] = None,
                tensor_fields: Optional[List[str]] = None,
                model: Optional[str] = None,
                model_properties: Optional[Dict[str, Any]] = None,
                normalize_embeddings: Optional[bool] = None,
-               text_preprocessing: Optional[core.TextPreProcessing] = None,
-               image_preprocessing: Optional[core.ImagePreProcessing] = None,
-               vector_numeric_type: Optional[core.VectorNumericType] = None,
+               text_preprocessing: Optional[marqo_index.TextPreProcessing] = None,
+               image_preprocessing: Optional[marqo_index.ImagePreProcessing] = None,
+               vector_numeric_type: Optional[marqo_index.VectorNumericType] = None,
                ann_parameters: Optional[AnnParameters] = None
                ) -> Dict[str, Any]:
         """Create the index. Please refer to the marqo cloud to see options for inference and storage node types.

@@ -1,11 +1,5 @@
 from typing import Dict, List, Optional, Union
-from pydantic import BaseModel
-
-
-class StrictBaseModel(BaseModel):
-    class Config:
-        extra: str = "forbid"
-    pass
+from marqo.models.strict_base_model import StrictBaseModel
 
 
 class SearchBody(StrictBaseModel):
