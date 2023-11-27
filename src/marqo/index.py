@@ -654,3 +654,17 @@ class Index:
                 marqo_url_and_version_cache[url] = "_skipped"
         return
 
+    @staticmethod
+    def create_batch(index_names_and_settings_list: List[Dict]):
+        # TODO implement
+        raise NotImplemented
+
+    @staticmethod
+    def delete_batch(index_names: List[str]):
+        # TODO implement
+        raise NotImplemented
+
+    @staticmethod
+    def clear_batch(index_names: List[str]):
+        # TODO implement
+        raise NotImplemented
