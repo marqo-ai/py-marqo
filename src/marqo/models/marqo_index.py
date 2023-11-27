@@ -62,12 +62,6 @@ class Field(StrictBaseModel):
     filter_field_name: Optional[str]
 
 
-class TensorField(StrictBaseModel):
-    name: str
-    chunk_field_name: Optional[str]
-    embeddings_field_name: Optional[str]
-
-
 class HnswConfig(StrictBaseModel):
     ef_construction: int
     m: int
@@ -87,3 +81,10 @@ class Model(StrictBaseModel):
     name: str
     properties: Optional[Dict[str, Any]]
     custom: bool = False
+
+
+class FieldRequest(StrictBaseModel):
+    name: str
+    type: FieldType
+    features: List[FieldFeature] = []
+    dependent_fields: Optional[Dict[str, float]]

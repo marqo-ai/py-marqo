@@ -5,13 +5,6 @@ from pydantic import root_validator
 from marqo.models.strict_base_model import StrictBaseModel
 
 
-class Field(StrictBaseModel):
-    name: str
-    type: marqo_index.FieldType
-    features: List[marqo_index.FieldFeature] = []
-    dependent_fields: Optional[Dict[str, float]]
-
-
 class AnnParameters(StrictBaseModel):
     space_type: marqo_index.DistanceMetric
     parameters: marqo_index.HnswConfig
@@ -37,8 +30,9 @@ class IndexSettings(StrictBaseModel):
     """
 
     type: Optional[marqo_index.IndexType]
-    all_fields: Optional[List[Field]]
+    all_fields: Optional[List[marqo_index.FieldRequest]]
     tensor_fields: Optional[List[str]]
+    treat_urls_and_pointers_as_images: Optional[bool]
     model: Optional[str]
     model_properties: Optional[Dict[str, Any]]
     normalize_embeddings: Optional[bool]
