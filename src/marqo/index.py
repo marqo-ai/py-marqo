@@ -655,16 +655,20 @@ class Index:
         return
 
     @staticmethod
-    def create_batch(index_names_and_settings_list: List[Dict]):
-        # TODO implement
-        raise NotImplemented
+    def create_batch(config: Config, index_names_and_settings_list: List[Dict]):
+        req = HttpRequests(config)
+
+        index_names = [index_name_and_settings["index_name"] for index_name_and_settings in index_names_and_settings_list]
+        settings_dict_list = [index_name_and_settings["settings_dict"] for index_name_and_settings in index_names_and_settings_list]
+
+        return req.post(f"indexes/create-batch", body={"index_names": index_names, "settings_list": settings_dict_list})
 
     @staticmethod
-    def delete_batch(index_names: List[str]):
-        # TODO implement
-        raise NotImplemented
+    def delete_batch(config: Config, index_names: List[str]):
+        req = HttpRequests(config)
+        req.post(path="indexes/documents/delete-batch", body={"index_names": index_names})
 
     @staticmethod
-    def clear_batch(index_names: List[str]):
-        # TODO implement
-        raise NotImplemented
+    def clear_batch(config: Config, index_names: List[str]):
+        req = HttpRequests(config)
+        req.post(path="indexes/documents/delete-batch", body={"index_names": index_names})
