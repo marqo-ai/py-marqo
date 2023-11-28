@@ -23,7 +23,7 @@ class SearchBody(BaseMarqoModel):
     context: Optional[Dict] = None
     scoreModifiers: Optional[Dict] = None
     modelAuth: Optional[Dict] = None
-    testQueryPrefix: Optional[str] = None
+    textQueryPrefix: Optional[str] = None
 
 
 class BulkSearchBody(SearchBody):
