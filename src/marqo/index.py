@@ -18,7 +18,7 @@ from marqo._httprequests import HttpRequests
 from marqo.config import Config
 from marqo.enums import SearchMethods, Devices
 from marqo import errors, utils
-from marqo.models.create_index_settings import Field, AnnParameters, IndexSettings, CreateIndexSettings
+from marqo.models.create_index_settings import AnnParameters, IndexSettings, CreateIndexSettings
 from marqo.models import marqo_index
 from marqo.errors import MarqoWebError, UnsupportedOperationError, MarqoCloudIndexNotFoundError
 from marqo.marqo_logging import mq_logger
@@ -85,7 +85,7 @@ class Index:
                index_name: str,
                type: Optional[marqo_index.IndexType] = None,
                settings_dict: Optional[Dict[str, Any]] = None,
-               all_fields: Optional[List[Field]] = None,
+               all_fields: Optional[List[marqo_index.FieldRequest]] = None,
                tensor_fields: Optional[List[str]] = None,
                model: Optional[str] = None,
                model_properties: Optional[Dict[str, Any]] = None,
@@ -653,22 +653,3 @@ class Index:
             if url is not None:
                 marqo_url_and_version_cache[url] = "_skipped"
         return
-
-    @staticmethod
-    def create_batch(config: Config, index_names_and_settings_list: List[Dict]):
-        req = HttpRequests(config)
-
-        index_names = [index_name_and_settings["index_name"] for index_name_and_settings in index_names_and_settings_list]
-        settings_dict_list = [index_name_and_settings["settings_dict"] for index_name_and_settings in index_names_and_settings_list]
-
-        return req.post(f"indexes/create-batch", body={"index_names": index_names, "settings_list": settings_dict_list})
-
-    @staticmethod
-    def delete_batch(config: Config, index_names: List[str]):
-        req = HttpRequests(config)
-        req.post(path="indexes/documents/delete-batch", body={"index_names": index_names})
-
-    @staticmethod
-    def clear_batch(config: Config, index_names: List[str]):
-        req = HttpRequests(config)
-        req.post(path="indexes/documents/delete-batch", body={"index_names": index_names})

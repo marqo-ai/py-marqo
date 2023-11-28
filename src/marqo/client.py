@@ -19,7 +19,7 @@ from marqo import errors
 from marqo.marqo_logging import mq_logger
 from marqo.errors import MarqoWebError
 from marqo.models import marqo_index
-from marqo.models.create_index_settings import Field, AnnParameters
+from marqo.models.create_index_settings import AnnParameters
 # we want to avoid name conflicts with marqo.version
 from json import JSONDecodeError
 
@@ -77,7 +77,7 @@ class Client:
         self, index_name: str,
         type: Optional[marqo_index.IndexType] = None,
         settings_dict: Optional[Dict[str, Any]] = None,
-        all_fields: Optional[List[Field]] = None,
+        all_fields: Optional[List[marqo_index.FieldRequest]] = None,
         tensor_fields: Optional[List[str]] = None,
         model: Optional[str] = None,
         model_properties: Optional[Dict[str, Any]] = None,
@@ -320,32 +320,3 @@ class Client:
                     " in your bulk search use the same index"
                 )
         return True
-
-    def create_batch_indexes(self, index_names_and_settings_list: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Create multiple indexes in a single request. For internal test use only.
-
-        Args:
-            index_names_and_settings_list: list of dictionaries, each dictionary
-                containing the name of the index and its settings
-            [{"index_name": "index1", "settings_dict": {"type": "unstructured"}}, ...]
-        """
-        return Index.create_batch(
-            config=self.config, index_names_and_settings_list=index_names_and_settings_list
-        )
-
-    def delete_batch_indexes(self, index_names: List[str]) -> Dict[str, Any]:
-        """Delete multiple indexes in a single request. For internal test use only.
-
-        Args:
-            index_names: list of index names to be deleted
-        """
-        return Index.delete_batch(config=self.config, index_names=index_names)
-
-    def clear_batch_indexes(self, index_names: List[str]) -> Dict[str, Any]:
-        """Delete all the documents in the given indexes. For internal test use only.
-
-        Args:
-            index_names: list of index names to be cleared
-        """
-        return Index.clear_batch(config=self.config, index_names=index_names)
-

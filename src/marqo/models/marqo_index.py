@@ -53,15 +53,6 @@ class PatchMethod(str, Enum):
     Frcnn = 'frcnn'
 
 
-class Field(StrictBaseModel):
-    name: str
-    type: FieldType
-    features: List[FieldFeature] = []
-    dependent_fields: Optional[Dict[str, float]]
-    lexical_field_name: Optional[str]
-    filter_field_name: Optional[str]
-
-
 class HnswConfig(StrictBaseModel):
     ef_construction: int
     m: int
