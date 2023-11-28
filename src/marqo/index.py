@@ -233,7 +233,8 @@ class Index:
                highlights=None, device: Optional[str] = None, filter_string: str = None,
                show_highlights=True, reranker=None, image_download_headers: Optional[Dict] = None,
                attributes_to_retrieve: Optional[List[str]] = None, boost: Optional[Dict[str,List[Union[float, int]]]] = None,
-               context: Optional[dict] = None, score_modifiers: Optional[dict] = None, model_auth: Optional[dict] = None
+               context: Optional[dict] = None, score_modifiers: Optional[dict] = None, model_auth: Optional[dict] = None,
+               text_query_prefix: Optional[str] = None
                ) -> Dict[str, Any]:
         """Search the index.
 
@@ -263,6 +264,7 @@ class Index:
             context: a dictionary to allow you to bring your own vectors and more into search.
             score_modifiers: a dictionary to modify the score based on field values, for tensor search only
             model_auth: authorisation that lets Marqo download a private model, if required
+            text_query_prefix: a string to prefix all text queries
         Returns:
             Dictionary with hits and other metadata
         """
@@ -300,6 +302,9 @@ class Index:
             body["scoreModifiers"] = score_modifiers
         if model_auth is not None:
             body["modelAuth"] = model_auth
+        if text_query_prefix is not None:
+            body["textQueryPrefix"] = text_query_prefix
+        
         res = self.http.post(
             path=path_with_query_str,
             body=body,
@@ -367,7 +372,8 @@ class Index:
         use_existing_tensors: bool = False,
         image_download_headers: dict = None,
         mappings: dict = None,
-        model_auth: dict = None
+        model_auth: dict = None,
+        text_chunk_prefix: str = None,
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """Add documents to this index. Does a partial update on existing documents,
         based on their ID. Adds unseen documents to the index.
@@ -392,6 +398,7 @@ class Index:
                 for URLs found in documents
             mappings: a dictionary to help handle the object fields. e.g., multimodal_combination field
             model_auth: used to authorise a private model
+            text_chunk_prefix: a string to prefix all text chunks with internally
         Returns:
             Response body outlining indexing result
         """
@@ -414,7 +421,7 @@ class Index:
             documents=documents, auto_refresh=auto_refresh,
             client_batch_size=client_batch_size, device=device, tensor_fields=tensor_fields,
             non_tensor_fields=non_tensor_fields, use_existing_tensors=use_existing_tensors,
-            image_download_headers=image_download_headers, mappings=mappings, model_auth=model_auth
+            image_download_headers=image_download_headers, mappings=mappings, model_auth=model_auth, text_chunk_prefix=text_chunk_prefix
         )
 
     def _add_docs_organiser(
@@ -428,7 +435,8 @@ class Index:
         use_existing_tensors: bool = False,
         image_download_headers: dict = None,
         mappings: dict = None,
-        model_auth: dict = None
+        model_auth: dict = None,
+        text_chunk_prefix: str = None,
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
 
         if (tensor_fields is None and non_tensor_fields is None) \
@@ -461,6 +469,9 @@ class Index:
         else:
             base_body['nonTensorFields'] = non_tensor_fields
 
+        if text_chunk_prefix is not None:
+            base_body['textChunkPrefix'] = text_chunk_prefix
+        
         end_time_client_process = timer()
         total_client_process_time = end_time_client_process - start_time_client_process
         mq_logger.debug(f"add_documents pre-processing: took {(total_client_process_time):.3f}s for {num_docs} docs.")
