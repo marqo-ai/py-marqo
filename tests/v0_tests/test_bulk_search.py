@@ -61,7 +61,8 @@ class TestBulkSearch(MarqoTestCase):
                         },
                         "scoreModifiers": None,
                         "modelAuth": None,
-                        "index": "test-index"
+                        "index": "test-index",
+                        "textQueryPrefix": None
                     }
                 ]
             }
@@ -113,7 +114,8 @@ class TestBulkSearch(MarqoTestCase):
                             ]
                         },
                         "modelAuth": None,
-                        "index": "test-index"
+                        "index": "test-index",
+                        "textQueryPrefix": None
                     }
                 ]
             }

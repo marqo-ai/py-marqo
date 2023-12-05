@@ -191,6 +191,7 @@ class MarqoTestCase(TestCase):
         cls.index_to_documents_cleanup_mapping = {}
         cls.generic_test_index_name = 'test-index'  # used as a prefix when index is created with settings
         cls.generic_test_index_name_2 = cls.generic_test_index_name + '-2'
+        cls.generic_test_index_name_3 = cls.generic_test_index_name + '-3'
 
         # class property to indicate if test is being run on multi
         cls.IS_MULTI_INSTANCE = (True if os.environ.get("IS_MULTI_INSTANCE", False) in ["True", "TRUE", "true", True] else False)

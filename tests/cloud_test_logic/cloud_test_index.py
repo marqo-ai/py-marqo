@@ -67,4 +67,7 @@ index_name_to_settings_mappings = {
     #     },
     #     "inference_type": "marqo.CPU.large", "storage_class": "marqo.basic",
     # }
+
+    # TODO: Index using model with prefix (maybe E5)
+    # TODO: Index using text_preprocessing override
 }
