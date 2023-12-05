@@ -16,7 +16,6 @@ from unittest import mock
 import numpy as np
 
 
-@mark.ignore_during_cloud_tests
 class TestChunkPrefix(MarqoTestCase):
     def setUp(self):
         super().setUp()
@@ -52,6 +51,7 @@ class TestChunkPrefix(MarqoTestCase):
         )
 
 
+    @mark.ignore_during_cloud_tests
     def test_chunk_prefix_use_model_default(self):
         # Doc A should have prefix from model default, Doc B should have prefix from built in text
         self.client.index(self.test_index_with_model_default_prefix).add_documents(
@@ -68,6 +68,7 @@ class TestChunkPrefix(MarqoTestCase):
         assert np.allclose(retrieved_doc_a["_tensor_facets"][0]["_embedding"], retrieved_doc_b["_tensor_facets"][0]["_embedding"], atol=1e-5)
 
 
+    @mark.ignore_during_cloud_tests
     def test_chunk_prefix_use_index_override(self):
         # Doc A should have prefix from index override, Doc B should have prefix from built in text
         self.client.index(self.test_index_with_index_override_prefix).add_documents(
@@ -84,6 +85,7 @@ class TestChunkPrefix(MarqoTestCase):
         assert np.allclose(retrieved_doc_a["_tensor_facets"][0]["_embedding"], retrieved_doc_b["_tensor_facets"][0]["_embedding"], atol=1e-5)
 
 
+    @mark.ignore_during_cloud_tests
     def test_chunk_prefix_use_add_docs_override(self):
         # Doc A should have prefix from add docs override, Doc B should have prefix from built in text
         self.client.index(self.test_index_with_index_override_prefix).add_documents(
@@ -100,7 +102,25 @@ class TestChunkPrefix(MarqoTestCase):
         assert np.allclose(retrieved_doc_a["_tensor_facets"][0]["_embedding"], retrieved_doc_b["_tensor_facets"][0]["_embedding"], atol=1e-5)
 
 
-@mark.ignore_during_cloud_tests
+    def test_cloud_chunk_prefix_parameter(self):
+        """
+        Using the basic cloud index (with no default prefix), just show that tensors generated from text with prefix parameter are the same
+        as tensors generated from text with prefix built in.
+        """
+        self.client.index(self.test_index_with_no_prefix).add_documents(
+            documents=[{"_id": "doc_a", "text": "HELLO"}], 
+            auto_refresh=True, tensor_fields=["text"], text_chunk_prefix="add docs passage: "
+        )
+        self.client.index(self.test_index_with_no_prefix).add_documents(
+            documents=[{"_id": "doc_b", "text": "add docs passage: HELLO"}], 
+            auto_refresh=True, tensor_fields=["text"]
+        )
+
+        retrieved_docs = self.client.index(self.test_index_with_no_prefix).get_documents(document_ids=["doc_a", "doc_b"], expose_facets=True)
+        retrieved_doc_a = retrieved_docs["results"][0]
+        retrieved_doc_b = retrieved_docs["results"][1]
+        assert np.allclose(retrieved_doc_a["_tensor_facets"][0]["_embedding"], retrieved_doc_b["_tensor_facets"][0]["_embedding"], atol=1e-5)
+
 class TestQueryPrefix(MarqoTestCase):
     def setUp(self):
         super().setUp()
@@ -167,16 +187,30 @@ class TestQueryPrefix(MarqoTestCase):
                 auto_refresh=True, tensor_fields=["text"]
             )
     
+
+    @mark.ignore_during_cloud_tests
     def test_query_prefix_use_model_default(self):
         res = self.client.index(self.test_index_with_model_default_prefix).search(q="HELLO", search_method="TENSOR")
         assert res["hits"][0]["_id"] == "doc_model_default_prefix"
 
 
+    @mark.ignore_during_cloud_tests
     def test_query_prefix_use_index_override(self):
         res = self.client.index(self.test_index_with_index_override_prefix).search(q="HELLO", search_method="TENSOR")
         assert res["hits"][0]["_id"] == "doc_index_override_prefix"
 
 
+    @mark.ignore_during_cloud_tests
     def test_query_prefix_use_search_override(self):
         res = self.client.index(self.test_index_with_index_override_prefix).search(q="HELLO", search_method="TENSOR", text_query_prefix="search query: ")
+        assert res["hits"][0]["_id"] == "doc_search_override_prefix"
+    
+    def test_cloud_query_prefix_parameter(self):
+        """
+        Using the basic cloud index (with no default prefix), just show that querying with a prefix gets the correct result.
+        """
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(self.client.index(self.test_index_with_no_prefix).search, q="HELLO", search_method="TENSOR", text_query_prefix="search query: ")
+        
+        res = self.client.index(self.test_index_with_no_prefix).search(q="HELLO", search_method="TENSOR", text_query_prefix="search query: ")
         assert res["hits"][0]["_id"] == "doc_search_override_prefix"
