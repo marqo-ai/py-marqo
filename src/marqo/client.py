@@ -115,7 +115,7 @@ class Client:
         """
         return Index.create(
             config=self.config, index_name=index_name,
-            type=type, settingsDict=settings_dict,
+            type=type, settings_dict=settings_dict,
             treat_urls_and_pointers_as_images=treat_urls_and_pointers_as_images,
             all_fields=all_fields, tensor_fields=tensor_fields,
             model=model, model_properties=model_properties,

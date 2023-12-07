@@ -123,7 +123,7 @@ class Index:
             Response body, containing information about index creation result
         """
         req = HttpRequests(config)
-        create_index_settings: CreateIndexSettings = CreateIndexSettings(index_settings=IndexSettings(
+        create_index_settings: CreateIndexSettings = CreateIndexSettings(indexSettings=IndexSettings(
             type=type,
             allFields=all_fields,
             treatUrlsAndPointersAsImages=treat_urls_and_pointers_as_images,
@@ -135,7 +135,7 @@ class Index:
             imagePreprocessing=image_preprocessing,
             vectorNumericType=vector_numeric_type,
             annParameters=ann_parameters
-        ), settings_dict=settings_dict)
+        ), settingsDict=settings_dict)
 
         # if create_index_settings.settings_dict is not None and create_index_settings.settings_dict:
         #     response = req.post(f"indexes/{index_name}", body=create_index_settings.settings_dict)
