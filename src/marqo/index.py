@@ -180,7 +180,6 @@ class Index:
         #     if create_index_settings.wait_for_readiness:
         #         cloud_wait_for_index_status(req, index_name, IndexStatus.READY)
         #     return response
-
         return req.post(f"indexes/{index_name}", body=create_index_settings.request_body)
 
     def refresh(self):

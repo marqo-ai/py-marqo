@@ -54,14 +54,14 @@ class PatchMethod(str, Enum):
 
 
 class HnswConfig(StrictBaseModel):
-    ef_construction: int
-    m: int
+    ef_construction: Optional[int] = None
+    m: Optional[int] = None
 
 
 class TextPreProcessing(StrictBaseModel):
-    splitLength: int
-    splitOverlap: int
-    splitMethod: TextSplitMethod
+    splitLength: Optional[int] = None
+    splitOverlap: Optional[int] = None
+    splitMethod: Optional[TextSplitMethod] = None
 
 
 class ImagePreProcessing(StrictBaseModel):
@@ -69,9 +69,9 @@ class ImagePreProcessing(StrictBaseModel):
 
 
 class Model(StrictBaseModel):
-    name: str
+    name: Optional[str] = None
     properties: Optional[Dict[str, Any]]
-    custom: bool = False
+    custom: Optional[bool] = None
 
 
 class FieldRequest(StrictBaseModel):
