@@ -85,6 +85,7 @@ class Index:
                index_name: str,
                type: Optional[marqo_index.IndexType] = None,
                settings_dict: Optional[Dict[str, Any]] = None,
+               treat_urls_and_pointers_as_images: Optional[bool] = None,
                all_fields: Optional[List[marqo_index.FieldRequest]] = None,
                tensor_fields: Optional[List[str]] = None,
                model: Optional[str] = None,
@@ -124,15 +125,16 @@ class Index:
         req = HttpRequests(config)
         create_index_settings: CreateIndexSettings = CreateIndexSettings(index_settings=IndexSettings(
             type=type,
-            all_fields=all_fields,
-            tensor_fields=tensor_fields,
+            allFields=all_fields,
+            treatUrlsAndPointersAsImages=treat_urls_and_pointers_as_images,
+            tensorFields=tensor_fields,
             model=model,
-            model_properties=model_properties,
-            normalize_embeddings=normalize_embeddings,
-            text_preprocessing=text_preprocessing,
-            image_preprocessing=image_preprocessing,
-            vector_numeric_type=vector_numeric_type,
-            ann_parameters=ann_parameters
+            modelProperties=model_properties,
+            normalizeEmbeddings=normalize_embeddings,
+            textPreprocessing=text_preprocessing,
+            imagePreprocessing=image_preprocessing,
+            vectorNumericType=vector_numeric_type,
+            annParameters=ann_parameters
         ), settings_dict=settings_dict)
 
         # if create_index_settings.settings_dict is not None and create_index_settings.settings_dict:

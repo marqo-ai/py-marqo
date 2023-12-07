@@ -59,13 +59,13 @@ class HnswConfig(StrictBaseModel):
 
 
 class TextPreProcessing(StrictBaseModel):
-    split_length: int
-    split_overlap: int
-    split_method: TextSplitMethod
+    splitLength: int
+    splitOverlap: int
+    splitMethod: TextSplitMethod
 
 
 class ImagePreProcessing(StrictBaseModel):
-    patch_method: Optional[PatchMethod]
+    patchMethod: Optional[PatchMethod]
 
 
 class Model(StrictBaseModel):

@@ -77,6 +77,7 @@ class Client:
         self, index_name: str,
         type: Optional[marqo_index.IndexType] = None,
         settings_dict: Optional[Dict[str, Any]] = None,
+        treat_urls_and_pointers_as_images: Optional[bool] = None,
         all_fields: Optional[List[marqo_index.FieldRequest]] = None,
         tensor_fields: Optional[List[str]] = None,
         model: Optional[str] = None,
@@ -98,6 +99,7 @@ class Client:
             settings_dict: if specified, overwrites all other setting
                 parameters, and is passed directly as the index's
                 index_settings
+            treat_urls_and_pointers_as_images: whether to treat urls and pointers as images
             all_fields: list of all the fields in the structured index
             tensor_fields: list of fields to be tensorized
             model: name of the model to be used for the index
@@ -113,7 +115,8 @@ class Client:
         """
         return Index.create(
             config=self.config, index_name=index_name,
-            type=type, settings_dict=settings_dict,
+            type=type, settingsDict=settings_dict,
+            treat_urls_and_pointers_as_images=treat_urls_and_pointers_as_images,
             all_fields=all_fields, tensor_fields=tensor_fields,
             model=model, model_properties=model_properties,
             normalize_embeddings=normalize_embeddings,
