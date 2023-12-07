@@ -323,7 +323,6 @@ class Index:
     def add_documents(
         self,
         documents: List[Dict[str, Any]],
-        auto_refresh: bool = None,
         client_batch_size: int = None,
         device: str = None,
         tensor_fields: List[str] = None,
@@ -337,9 +336,6 @@ class Index:
 
         Args:
             documents: List of documents. Each document should be a dictionary.
-            auto_refresh: Automatically refresh the index. If you are making
-                lots of requests, it is advised to set this to False to
-                increase performance.
             client_batch_size: if it is set, documents will be indexed into batches
                 in the client, before being sent off. Otherwise documents are unbatched
                 client-side.
@@ -358,7 +354,7 @@ class Index:
         if image_download_headers is None:
             image_download_headers = dict()
         return self._add_docs_organiser(
-            documents=documents, auto_refresh=auto_refresh,
+            documents=documents,
             client_batch_size=client_batch_size, device=device, tensor_fields=tensor_fields, use_existing_tensors=use_existing_tensors,
             image_download_headers=image_download_headers, mappings=mappings, model_auth=model_auth
         )
@@ -366,7 +362,6 @@ class Index:
     def _add_docs_organiser(
         self,
         documents: List[Dict[str, Any]],
-        auto_refresh=None,
         client_batch_size: int = None,
         device: str = None,
         tensor_fields: List = None,
@@ -408,7 +403,7 @@ class Index:
             if client_batch_size <= 0:
                 raise errors.InvalidArgError("Batch size can't be less than 1!")
             res = self._batch_request(
-                base_path=base_path, auto_refresh=auto_refresh,
+                base_path=base_path,
                 docs=documents, verbose=False,
                 query_str_params=query_str_params, batch_size=client_batch_size, base_body = base_body
             )
@@ -418,16 +413,9 @@ class Index:
 
             # Build the query string
             path_with_query_str = f"{base_path}"
-            if auto_refresh is not None:
-                # Add refresh if it has been user-specified
-                path_with_query_str += f"?refresh={str(auto_refresh).lower()}"
-                if query_str_params:
-                    # Also add device if it has been user-specified
-                    path_with_query_str += f"&{query_str_params}"
-            else:
-                if query_str_params:
-                    # Only add device if it has been user-specified
-                    path_with_query_str += f"?{query_str_params}"
+            if query_str_params:
+                # Only add device if it has been user-specified
+                path_with_query_str += f"?{query_str_params}"
 
             # ADD DOCS TIMER-LOGGER (2)
             start_time_client_request = timer()
@@ -454,20 +442,18 @@ class Index:
         mq_logger.debug(f"add_documents completed. total time taken: {(total_add_docs_time):.3f}s.")
         return res
 
-    def delete_documents(self, ids: List[str], auto_refresh: bool = None) -> Dict[str, int]:
+    def delete_documents(self, ids: List[str]) -> Dict[str, int]:
         """Delete documents from this index by a list of their ids.
 
         Args:
             ids: List of identifiers of documents.
-            auto_refresh: if true refreshes the index after deletion
 
         Returns:
             A dict with information about the delete operation.
         """
         base_path = f"indexes/{self.index_name}/documents/delete-batch"
-        path_with_refresh = base_path if auto_refresh is None else base_path + f"?refresh={str(auto_refresh).lower()}"
 
-        return self.http.post(path=path_with_refresh, body=ids, index_name=self.index_name,)
+        return self.http.post(path=base_path, body=ids, index_name=self.index_name,)
 
     def get_stats(self) -> Dict[str, Any]:
         """Get stats about the index"""
@@ -488,8 +474,7 @@ class Index:
 
     def _batch_request(
             self, docs: List[Dict],  base_path: str,
-            query_str_params: str, base_body: dict, verbose: bool = True,
-            auto_refresh: bool = None, batch_size: int = 50,
+            query_str_params: str, base_body: dict, verbose: bool = True, batch_size: int = 50,
     ) -> List[Dict[str, Any]]:
         """Batches a large chunk of documents to be sent as multiple
         add_documents invocations
@@ -501,7 +486,6 @@ class Index:
             base_path: The base path for the add_documents call
             query_str_params: The query string parameters for the add_documents call
             base_body: The base body for the add_documents call
-            auto_refresh: If true, refreshes the index AFTER all batches are added. Not included in any batch query string.
             verbose: If true, prints out info about the documents
 
         Returns:
@@ -579,8 +563,6 @@ class Index:
             return res
 
         results = [verbosely_add_docs(i, docs) for i, docs in enumerate(batched)]
-        if auto_refresh:
-            self.refresh()
         mq_logger.debug('completed batch ingestion.')
         return results
 
