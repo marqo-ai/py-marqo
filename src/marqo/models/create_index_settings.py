@@ -6,7 +6,7 @@ from marqo.models.strict_base_model import StrictBaseModel
 
 
 class AnnParameters(StrictBaseModel):
-    spaceType: marqo_index.DistanceMetric
+    spaceType: marqo_index.DistanceMetric = Field(alias="space_type")
     parameters: marqo_index.HnswConfig
 
 
