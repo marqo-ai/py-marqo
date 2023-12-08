@@ -2,15 +2,15 @@ from typing import Dict, Any, Optional, List
 
 from marqo.models import marqo_index
 from pydantic import root_validator, Field
-from marqo.models.strict_base_model import StrictBaseModel
+from marqo.models.strict_base_model import StrictBaseModel, StrictAllowPopulationBaseModel
 
 
-class AnnParameters(StrictBaseModel):
-    spaceType: marqo_index.DistanceMetric = Field(alias="space_type")
-    parameters: marqo_index.HnswConfig
+class AnnParameters(StrictAllowPopulationBaseModel):
+    spaceType: Optional[marqo_index.DistanceMetric] = Field(None, alias="space_type")
+    parameters: Optional[marqo_index.HnswConfig] = None
 
 
-class IndexSettings(StrictBaseModel):
+class IndexSettings(StrictAllowPopulationBaseModel):
     """
     Args:
         type: The type of the index. Can be structured or unstructured.
@@ -29,24 +29,24 @@ class IndexSettings(StrictBaseModel):
     Refer to Marqo for the default values.
     """
 
-    type: Optional[marqo_index.IndexType]
-    allFields: Optional[List[marqo_index.FieldRequest]]
-    tensorFields: Optional[List[str]]
-    treatUrlsAndPointersAsImages: Optional[bool]
-    model: Optional[str]
-    modelProperties: Optional[Dict[str, Any]]
-    normalizeEmbeddings: Optional[bool]
-    textPreprocessing: Optional[marqo_index.TextPreProcessing]
-    imagePreprocessing: Optional[marqo_index.ImagePreProcessing]
-    vectorNumericType: Optional[marqo_index.VectorNumericType]
-    annParameters: Optional[AnnParameters]
+    type: Optional[marqo_index.IndexType] = Field(None, alias="type")
+    allFields: Optional[List[marqo_index.FieldRequest]] = Field(None, alias="all_fields")
+    tensorFields: Optional[List[str]] = Field(None, alias="tensor_fields")
+    treatUrlsAndPointersAsImages: Optional[bool] = Field(None, alias="treat_urls_and_pointers_as_images")
+    model: Optional[str] = None
+    modelProperties: Optional[Dict[str, Any]] = Field(None, alias="model_properties")
+    normalizeEmbeddings: Optional[bool] = Field(None, alias="normalize_embeddings")
+    textPreprocessing: Optional[marqo_index.TextPreProcessing] = Field(None, alias="text_preprocessing")
+    imagePreprocessing: Optional[marqo_index.ImagePreProcessing] = Field(None, alias="image_preprocessing")
+    vectorNumericType: Optional[marqo_index.VectorNumericType] = Field(None, alias="vector_numeric_type")
+    annParameters: Optional[AnnParameters] = Field(None, alias="ann_parameters")
 
     @property
     def request_body(self) -> dict:
         return self.dict(exclude_none=True)
 
 
-class CreateIndexSettings(StrictBaseModel):
+class CreateIndexSettings(StrictAllowPopulationBaseModel):
     """A wrapper to create an index and a request body with explicit settings parameters
     or with a settings dict"""
     indexSettings: IndexSettings
