@@ -2,7 +2,7 @@ from enum import Enum
 from typing import List, Optional, Dict, Any
 
 from pydantic import Field
-from marqo.models.strict_base_model import StrictBaseModel, StrictAllowPopulationBaseModel
+from marqo.models.marqo_models import StrictBaseModel
 
 
 class IndexType(str, Enum):
@@ -54,28 +54,28 @@ class PatchMethod(str, Enum):
     Frcnn = 'frcnn'
 
 
-class HnswConfig(StrictAllowPopulationBaseModel):
+class HnswConfig(StrictBaseModel):
     efConstruction: Optional[int] = Field(None, alias="ef_construction")
     m: Optional[int] = None
 
 
-class TextPreProcessing(StrictAllowPopulationBaseModel):
+class TextPreProcessing(StrictBaseModel):
     splitLength: Optional[int] = Field(None, alias="split_length")
     splitOverlap: Optional[int] = Field(None, alias="split_overlap")
     splitMethod: Optional[TextSplitMethod] = Field(None, alias="split_method")
 
 
-class ImagePreProcessing(StrictAllowPopulationBaseModel):
+class ImagePreProcessing(StrictBaseModel):
     patchMethod: Optional[PatchMethod] = Field(None, alias="patch_method")
 
 
-class Model(StrictAllowPopulationBaseModel):
+class Model(StrictBaseModel):
     name: Optional[str] = None
     properties: Optional[Dict[str, Any]]
     custom: Optional[bool] = None
 
 
-class FieldRequest(StrictAllowPopulationBaseModel):
+class FieldRequest(StrictBaseModel):
     name: str
     type: FieldType
     features: List[FieldFeature] = []

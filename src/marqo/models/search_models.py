@@ -1,5 +1,5 @@
 from typing import Dict, List, Optional, Union
-from marqo.models.strict_base_model import StrictBaseModel
+from marqo.models.marqo_models import StrictBaseModel
 
 
 class SearchBody(StrictBaseModel):

@@ -2,15 +2,15 @@ from typing import Dict, Any, Optional, List
 
 from marqo.models import marqo_index
 from pydantic import root_validator, Field
-from marqo.models.strict_base_model import StrictBaseModel, StrictAllowPopulationBaseModel
+from marqo.models.marqo_models import StrictBaseModel
 
 
-class AnnParameters(StrictAllowPopulationBaseModel):
+class AnnParameters(StrictBaseModel):
     spaceType: Optional[marqo_index.DistanceMetric] = Field(None, alias="space_type")
     parameters: Optional[marqo_index.HnswConfig] = None
 
 
-class IndexSettings(StrictAllowPopulationBaseModel):
+class IndexSettings(StrictBaseModel):
     """
     Args:
         type: The type of the index. Can be structured or unstructured.
@@ -21,7 +21,7 @@ class IndexSettings(StrictAllowPopulationBaseModel):
         normalizeEmbeddings: Whether to normalize embeddings.
         textPreprocessing: The text preprocessing method to use.
         imagePreprocessing: The image preprocessing method to use.
-        vectorNumeric_type: The numeric type of the vector.
+        vectorNumericType: The numeric type of the vector.
         annParameters: The ANN parameters to use.
 
     Please note, we don't note set default values in the py-marqo side. All the
@@ -46,7 +46,7 @@ class IndexSettings(StrictAllowPopulationBaseModel):
         return self.dict(exclude_none=True)
 
 
-class CreateIndexSettings(StrictAllowPopulationBaseModel):
+class CreateIndexSettings(StrictBaseModel):
     """A wrapper to create an index and a request body with explicit settings parameters
     or with a settings dict"""
     indexSettings: IndexSettings
