@@ -19,7 +19,6 @@ from marqo import errors
 from marqo.marqo_logging import mq_logger
 from marqo.errors import MarqoWebError
 from marqo.models import marqo_index
-from marqo.models.create_index_settings import AnnParameters
 # we want to avoid name conflicts with marqo.version
 from json import JSONDecodeError
 
@@ -86,7 +85,7 @@ class Client:
         text_preprocessing: Optional[marqo_index.TextPreProcessing] = None,
         image_preprocessing: Optional[marqo_index.ImagePreProcessing] = None,
         vector_numeric_type: Optional[marqo_index.VectorNumericType] = None,
-        ann_parameters: Optional[AnnParameters] = None,
+        ann_parameters: Optional[marqo_index.AnnParameters] = None,
     ) -> Dict[str, Any]:
         """Create the index. Please refer to the marqo cloud to see options for inference and storage node types.
         Calls Index.create() with the same parameters.

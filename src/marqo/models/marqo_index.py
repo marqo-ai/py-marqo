@@ -80,3 +80,8 @@ class FieldRequest(StrictBaseModel):
     type: FieldType
     features: List[FieldFeature] = []
     dependentFields: Optional[Dict[str, float]] = Field(None, alias="dependent_fields")
+
+
+class AnnParameters(StrictBaseModel):
+    spaceType: Optional[DistanceMetric] = Field(None, alias="space_type")
+    parameters: Optional[HnswConfig] = None

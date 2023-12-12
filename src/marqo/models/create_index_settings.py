@@ -5,11 +5,6 @@ from pydantic import root_validator, Field
 from marqo.models.marqo_models import StrictBaseModel
 
 
-class AnnParameters(StrictBaseModel):
-    spaceType: Optional[marqo_index.DistanceMetric] = Field(None, alias="space_type")
-    parameters: Optional[marqo_index.HnswConfig] = None
-
-
 class IndexSettings(StrictBaseModel):
     """
     Args:
@@ -39,7 +34,7 @@ class IndexSettings(StrictBaseModel):
     textPreprocessing: Optional[marqo_index.TextPreProcessing] = Field(None, alias="text_preprocessing")
     imagePreprocessing: Optional[marqo_index.ImagePreProcessing] = Field(None, alias="image_preprocessing")
     vectorNumericType: Optional[marqo_index.VectorNumericType] = Field(None, alias="vector_numeric_type")
-    annParameters: Optional[AnnParameters] = Field(None, alias="ann_parameters")
+    annParameters: Optional[marqo_index.AnnParameters] = Field(None, alias="ann_parameters")
 
     @property
     def request_body(self) -> dict:
