@@ -3,8 +3,6 @@ import os
 from typing import Any, Dict, List, Optional, Union
 
 from pydantic import error_wrappers
-from requests.exceptions import RequestException
-from typing_extensions import deprecated
 
 from marqo.cloud_helpers import cloud_wait_for_index_status
 from marqo.default_instance_mappings import DefaultInstanceMappings
@@ -242,73 +240,6 @@ class Client:
             data: bytes
     ) -> str:
         return base64.urlsafe_b64encode(data).decode('utf-8').replace('=', '')
-
-    @deprecated(
-        "This method is deprecated and will be removed in Marqo 2.0.0. "
-        "Please use `mq.index(index_name).get_marqo()` instead. "
-        "Check `https://docs.marqo.ai/1.1.0/API-Reference/indexes/` for more details."
-    )
-    def get_marqo(self):
-        if self.config.is_marqo_cloud:
-            self.raise_error_for_cloud("get_marqo")
-        return self.http.get(path="")
-
-    @deprecated(
-        "This method is deprecated and will be removed in Marqo 2.0.0. "
-        "Please use `mq.index(index_name).health()` instead. "
-        "Check `https://docs.marqo.ai/1.1.0/API-Reference/indexes/` for more details."
-    )
-    def health(self):
-        if self.config.is_marqo_cloud:
-            self.raise_error_for_cloud("health")
-        try:
-            return self.http.get(path="health")
-        except (MarqoWebError, RequestException, TypeError, KeyError) as e:
-            raise errors.BadRequestError("Marqo encountered an error trying to check the health of the Marqo instance. "
-                                         "If you are trying to check the health on Marqo Cloud, please note that "
-                                         "the `client.health()` API is not supported on Marqo Cloud and will be removed in "
-                                         "Marqo 2.0.0. Please Use `client.index('your-index-name').health()` instead. "
-                                         "Check `https://docs.marqo.ai/1.1.0/API-Reference/indexes/` for more details.")
-
-    @deprecated(
-        "This method is deprecated and will be removed in Marqo 2.0.0. "
-        "Please use 'mq.index(index_name).eject_model() instead. "
-        "Check `https://docs.marqo.ai/1.1.0/API-Reference/indexes/` for more details."
-    )
-    def eject_model(self, model_name: str, model_device: str):
-        if self.config.is_marqo_cloud:
-            self.raise_error_for_cloud("eject_model")
-        return self.http.delete(path=f"models?model_name={model_name}&model_device={model_device}")
-
-    @deprecated(
-        "This method is deprecated and will be removed in Marqo 2.0.0. "
-        "Please use 'mq.index(index_name).get_loaded_models() instead. "
-        "Check `https://docs.marqo.ai/1.1.0/API-Reference/indexes/` for more details."
-    )
-    def get_loaded_models(self):
-        if self.config.is_marqo_cloud:
-            self.raise_error_for_cloud("get_loaded_models")
-        return self.http.get(path="models")
-
-    @deprecated(
-        "This method is deprecated and will be removed in Marqo 2.0.0. "
-        "Please use 'mq.index(index_name).get_cuda_info() instead. "
-        "Check `https://docs.marqo.ai/1.1.0/API-Reference/indexes/` for more details."
-    )
-    def get_cuda_info(self):
-        if self.config.is_marqo_cloud:
-            self.raise_error_for_cloud("get_cuda_info")
-        return self.http.get(path="device/cuda")
-
-    @deprecated(
-        "This method is deprecated and will be removed in Marqo 2.0.0. "
-        "Please use 'mq.index(index_name).get_cpu_info() instead. "
-        "Check `https://docs.marqo.ai/1.1.0/API-Reference/indexes/` for more details."
-    )
-    def get_cpu_info(self):
-        if self.config.is_marqo_cloud:
-            self.raise_error_for_cloud("get_cpu_info")
-        return self.http.get(path="device/cpu")
 
     @staticmethod
     def raise_error_for_cloud(function_name: str = None):
