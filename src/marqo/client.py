@@ -77,6 +77,7 @@ class Client:
         type: Optional[marqo_index.IndexType] = None,
         settings_dict: Optional[Dict[str, Any]] = None,
         treat_urls_and_pointers_as_images: Optional[bool] = None,
+        short_string_length_threshold: Optional[int] = None,
         all_fields: Optional[List[marqo_index.FieldRequest]] = None,
         tensor_fields: Optional[List[str]] = None,
         model: Optional[str] = None,
@@ -86,6 +87,12 @@ class Client:
         image_preprocessing: Optional[marqo_index.ImagePreProcessing] = None,
         vector_numeric_type: Optional[marqo_index.VectorNumericType] = None,
         ann_parameters: Optional[marqo_index.AnnParameters] = None,
+        wait_for_readiness: Optional[bool] = None,
+        inference_type: Optional[str] = None,
+        storage_class: Optional[str] = None,
+        number_of_shards: Optional[int] = None,
+        number_of_replicas: Optional[int] = None,
+        number_of_inferences: Optional[int] = None,
     ) -> Dict[str, Any]:
         """Create the index. Please refer to the marqo cloud to see options for inference and storage node types.
         Calls Index.create() with the same parameters.
@@ -99,6 +106,8 @@ class Client:
                 parameters, and is passed directly as the index's
                 index_settings
             treat_urls_and_pointers_as_images: whether to treat urls and pointers as images
+            short_string_length_threshold: threshold for short string length in unstructured indexes,
+                Marqo can filter on short strings but can not filter on long strings
             all_fields: list of all the fields in the structured index
             tensor_fields: list of fields to be tensorized
             model: name of the model to be used for the index
@@ -108,6 +117,16 @@ class Client:
             image_preprocessing: image preprocessing settings
             vector_numeric_type: vector numeric type
             ann_parameters: approximate nearest neighbors parameters
+            # Below are cloud specific parameters
+            wait_for_readiness: Marqo Cloud specific, whether to wait until
+                operation is completed or to proceed without waiting for status,
+                won't do anything if config.is_marqo_cloud=False
+            inference_type: inference type for the index
+            storage_class: storage class for the index
+            number_of_inferences: number of inferences for the index
+            number_of_shards: number of shards for the index
+            number_of_replicas: number of replicas for the index
+
 
         Returns:
             Response body, containing information about index creation result
@@ -116,13 +135,20 @@ class Client:
             config=self.config, index_name=index_name,
             type=type, settings_dict=settings_dict,
             treat_urls_and_pointers_as_images=treat_urls_and_pointers_as_images,
+            short_string_length_threshold=short_string_length_threshold,
             all_fields=all_fields, tensor_fields=tensor_fields,
             model=model, model_properties=model_properties,
             normalize_embeddings=normalize_embeddings,
             text_preprocessing=text_preprocessing,
             image_preprocessing=image_preprocessing,
             vector_numeric_type=vector_numeric_type,
-            ann_parameters=ann_parameters
+            ann_parameters=ann_parameters,
+            wait_for_readiness=wait_for_readiness,
+            inference_type=inference_type,
+            storage_class=storage_class,
+            number_of_shards=number_of_shards,
+            number_of_replicas=number_of_replicas,
+            number_of_inferences=number_of_inferences,
         )
 
 

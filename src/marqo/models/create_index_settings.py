@@ -11,6 +11,8 @@ class IndexSettings(StrictBaseModel):
         type: The type of the index. Can be structured or unstructured.
         allFields: A list of all fields in the index.
         tensorFields: A list of all tensor fields in the index.
+        treatUrlsAndPointersAsImages: Whether to treat urls and pointers as images.
+        shortStringLengthThreshold: The threshold for short string length.
         model: The name of the model to use for the index.
         modelProperties: A dictionary of model properties.
         normalizeEmbeddings: Whether to normalize embeddings.
@@ -28,6 +30,7 @@ class IndexSettings(StrictBaseModel):
     allFields: Optional[List[marqo_index.FieldRequest]] = Field(None, alias="all_fields")
     tensorFields: Optional[List[str]] = Field(None, alias="tensor_fields")
     treatUrlsAndPointersAsImages: Optional[bool] = Field(None, alias="treat_urls_and_pointers_as_images")
+    shortStringLengthThreshold: Optional[int] = Field(None, alias="short_string_length_threshold")
     model: Optional[str] = None
     modelProperties: Optional[Dict[str, Any]] = Field(None, alias="model_properties")
     normalizeEmbeddings: Optional[bool] = Field(None, alias="normalize_embeddings")
