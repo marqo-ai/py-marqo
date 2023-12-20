@@ -1,6 +1,6 @@
 import base64
 import os
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from pydantic import error_wrappers
 
@@ -14,13 +14,7 @@ from marqo.models.search_models import BulkSearchBody, BulkSearchQuery
 from marqo._httprequests import HttpRequests
 from marqo import utils, enums
 from marqo import errors
-from marqo.marqo_logging import mq_logger
-from marqo.errors import MarqoWebError
 from marqo.models import marqo_index
-# we want to avoid name conflicts with marqo.version
-from json import JSONDecodeError
-
-# A dictionary to cache the marqo url and version for compatibility check
 
 
 class Client:
@@ -149,7 +143,6 @@ class Client:
             number_of_inferences=number_of_inferences,
         )
 
-
     def delete_index(self, index_name: str, wait_for_readiness=True) -> Dict[str, Any]:
         """Deletes an index
 
@@ -168,7 +161,6 @@ class Client:
             return res
         except errors.MarqoWebError as e:
             return e.message
-
 
     def get_index(self, index_name: str) -> Index:
         """Get the index.
