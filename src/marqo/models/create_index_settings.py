@@ -42,7 +42,8 @@ class IndexSettings(StrictBaseModel):
 
     def generate_request_body(self) -> dict:
         """A json encoded string of the request body"""
-        if self.settingsDict:
+        # We return settingsDict if it is not None, otherwise we return the dict
+        if self.settingsDict is not None:
             return self.settingsDict
         else:
             return self.dict(exclude_none=True, exclude={"settingsDict"})
