@@ -15,6 +15,7 @@ from marqo._httprequests import HttpRequests
 from marqo import utils, enums
 from marqo import errors
 from marqo.models import marqo_index
+from marqo.models.marqo_cloud import IndexResponseEnum
 
 
 class Client:
@@ -206,7 +207,7 @@ class Client:
         response['results'] = [
             Index(
                 config=self.config,
-                index_name=index_info["index_name"],
+                index_name=index_info[IndexResponseEnum.indexName],
             )
             for index_info in response["results"]
         ]
