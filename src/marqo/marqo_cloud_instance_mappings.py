@@ -50,7 +50,7 @@ class MarqoCloudInstanceMappings(InstanceMappings):
     def _refresh_urls(self, timeout=None):
         mq_logger.debug("Refreshing Marqo Cloud index URL cache")
         try:
-            response = requests.get(f'{self.get_control_base_url()}/indexes',
+            response = requests.get(f'{self.get_control_base_url()}/v2/indexes',
                                     headers={"x-api-key": self.api_key}, timeout=timeout)
         except Timeout:
             mq_logger.warning(
@@ -66,10 +66,10 @@ class MarqoCloudInstanceMappings(InstanceMappings):
         response_json = response.json()
         self._urls_mapping = {IndexStatus.READY: {}, IndexStatus.CREATING: {}}
         for index in response_json['results']:
-            if index.get('index_status') in [IndexStatus.READY, IndexStatus.MODIFYING]:
-                self._urls_mapping[IndexStatus.READY][index['index_name']] = index.get('endpoint')
-            elif index.get('index_status') == IndexStatus.CREATING:
-                self._urls_mapping[IndexStatus.CREATING][index['index_name']] = index.get('endpoint')
+            if index.get('indexStatus') in [IndexStatus.READY, IndexStatus.MODIFYING]:
+                self._urls_mapping[IndexStatus.READY][index['indexName']] = index.get('marqoEndpoint')
+            elif index.get('indexStatus') == IndexStatus.CREATING:
+                self._urls_mapping[IndexStatus.CREATING][index['indexName']] = index.get('marqoEndpoint')
         if self._urls_mapping:
             self.latest_index_mappings_refresh_timestamp = time.time()
 
