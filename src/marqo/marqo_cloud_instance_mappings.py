@@ -11,6 +11,7 @@ from marqo.errors import (
 from marqo.instance_mappings import InstanceMappings
 from marqo.marqo_logging import mq_logger
 from marqo.enums import IndexStatus
+from marqo.models.marqo_cloud import ListIndexesResponse, IndexResponseEnum
 
 
 class MarqoCloudInstanceMappings(InstanceMappings):
@@ -65,11 +66,12 @@ class MarqoCloudInstanceMappings(InstanceMappings):
             return None
         response_json = response.json()
         self._urls_mapping = {IndexStatus.READY: {}, IndexStatus.CREATING: {}}
-        for index in response_json['results']:
-            if index.get('indexStatus') in [IndexStatus.READY, IndexStatus.MODIFYING]:
-                self._urls_mapping[IndexStatus.READY][index['indexName']] = index.get('marqoEndpoint')
-            elif index.get('indexStatus') == IndexStatus.CREATING:
-                self._urls_mapping[IndexStatus.CREATING][index['indexName']] = index.get('marqoEndpoint')
+        for raw_response in response_json['results']:
+            index_response = ListIndexesResponse(**raw_response)
+            if index_response.indexStatus in [IndexStatus.READY, IndexStatus.MODIFYING]:
+                self._urls_mapping[IndexStatus.READY][index_response.indexName] = index_response.marqoEndpoint
+            elif index_response.indexStatus == IndexStatus.CREATING:
+                self._urls_mapping[IndexStatus.CREATING][index_response.indexName] = index_response.marqoEndpoint
         if self._urls_mapping:
             self.latest_index_mappings_refresh_timestamp = time.time()
 

@@ -18,7 +18,7 @@ from marqo._httprequests import HttpRequests
 from marqo.config import Config
 from marqo.enums import SearchMethods, Devices
 from marqo import errors, utils
-from marqo.models.marqo_cloud_index_settings import CloudIndexSettings
+from marqo.models.marqo_cloud import CloudIndexSettings
 from marqo.models.create_index_settings import IndexSettings, CreateIndexSettings
 from marqo.models import marqo_index
 from marqo.errors import MarqoWebError, UnsupportedOperationError, MarqoCloudIndexNotFoundError
