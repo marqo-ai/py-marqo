@@ -3,6 +3,7 @@ import time
 from marqo.marqo_logging import mq_logger
 from marqo._httprequests import HttpRequests
 from marqo.enums import IndexStatus
+from marqo.models.marqo_cloud import IndexResponseEnum
 
 
 def cloud_wait_for_index_status(req: HttpRequests, index_name: str, status: IndexStatus):
@@ -15,9 +16,9 @@ def cloud_wait_for_index_status(req: HttpRequests, index_name: str, status: Inde
         status (IndexStatus): expected status of the index
     """
     current_status = req.get(f"indexes/{index_name}/status")
-    while current_status['index_status'] != status:
+    while current_status[IndexResponseEnum.indexStatus] != status:
         time.sleep(10)
         current_status = req.get(f"indexes/{index_name}/status")
-        mq_logger.info(f"Current index status: {current_status['index_status']}")
+        mq_logger.info(f"Current index status: {current_status[IndexResponseEnum.indexStatus]}")
     mq_logger.info(f"Index achieved status {status} successfully")
     return True
