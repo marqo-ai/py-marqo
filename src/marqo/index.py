@@ -19,7 +19,7 @@ from marqo.config import Config
 from marqo.enums import SearchMethods, Devices
 from marqo import errors, utils
 from marqo.models.marqo_cloud import CloudIndexSettings
-from marqo.models.create_index_settings import IndexSettings, CreateIndexSettings
+from marqo.models.create_index_settings import IndexSettings
 from marqo.models import marqo_index
 from marqo.errors import MarqoWebError, UnsupportedOperationError, MarqoCloudIndexNotFoundError
 from marqo.marqo_logging import mq_logger
@@ -143,9 +143,10 @@ class Index:
 
         # py-marqo against local Marqo
         if not config.api_key:
-            local_create_index_settings: CreateIndexSettings = CreateIndexSettings(indexSettings=IndexSettings(
+            local_create_index_settings: IndexSettings = IndexSettings(
                 type=type,
                 allFields=all_fields,
+                settingsDict=settings_dict,
                 treatUrlsAndPointersAsImages=treat_urls_and_pointers_as_images,
                 shortStringLengthThreshold=short_string_length_threshold,
                 tensorFields=tensor_fields,
@@ -156,9 +157,9 @@ class Index:
                 imagePreprocessing=image_preprocessing,
                 vectorNumericType=vector_numeric_type,
                 annParameters=ann_parameters
-            ), settingsDict=settings_dict)
+            )
 
-            return req.post(f"indexes/{index_name}", body=local_create_index_settings.request_body)
+            return req.post(f"indexes/{index_name}", body=local_create_index_settings.generate_request_body())
 
         # py-marqo against Marqo Cloud
         elif config.api_key:
@@ -167,6 +168,7 @@ class Index:
                 cloud_index_settings: CloudIndexSettings = CloudIndexSettings(
                     type=type,
                     allFields=all_fields,
+                    settingsDict=settings_dict,
                     treatUrlsAndPointersAsImages=treat_urls_and_pointers_as_images,
                     shortStringLengthThreshold=short_string_length_threshold,
                     tensorFields=tensor_fields,
@@ -188,6 +190,7 @@ class Index:
                 cloud_index_settings: CloudIndexSettings = CloudIndexSettings(
                     type=type,
                     allFields=all_fields,
+                    settingsDict=settings_dict,
                     treatUrlsAndPointersAsImages=treat_urls_and_pointers_as_images,
                     shortStringLengthThreshold=short_string_length_threshold,
                     tensorFields=tensor_fields,
@@ -199,7 +202,7 @@ class Index:
                     vectorNumericType=vector_numeric_type,
                     annParameters=ann_parameters,
                 )
-            response = req.post(f"indexes/{index_name}", body=cloud_index_settings.request_body)
+            response = req.post(f"indexes/{index_name}", body=cloud_index_settings.generate_request_body())
             if wait_for_readiness:
                 cloud_wait_for_index_status(req, index_name, IndexStatus.READY)
             return response

@@ -28,6 +28,7 @@ class IndexSettings(StrictBaseModel):
 
     type: Optional[marqo_index.IndexType] = Field(None, alias="type")
     allFields: Optional[List[marqo_index.FieldRequest]] = Field(None, alias="all_fields")
+    settingsDict: Optional[Dict] = Field(None, alias="settings_dict")
     tensorFields: Optional[List[str]] = Field(None, alias="tensor_fields")
     treatUrlsAndPointersAsImages: Optional[bool] = Field(None, alias="treat_urls_and_pointers_as_images")
     shortStringLengthThreshold: Optional[int] = Field(None, alias="short_string_length_threshold")
@@ -39,26 +40,21 @@ class IndexSettings(StrictBaseModel):
     vectorNumericType: Optional[marqo_index.VectorNumericType] = Field(None, alias="vector_numeric_type")
     annParameters: Optional[marqo_index.AnnParameters] = Field(None, alias="ann_parameters")
 
-    @property
-    def request_body(self) -> dict:
-        return self.dict(exclude_none=True)
-
-
-class CreateIndexSettings(StrictBaseModel):
-    """A wrapper to create an index and a request body with explicit settings parameters
-    or with a settings dict"""
-    indexSettings: IndexSettings
-    settingsDict: Optional[Dict]
-
-    @property
-    def request_body(self) -> dict:
+    def generate_request_body(self) -> dict:
         """A json encoded string of the request body"""
-        return self.settingsDict if self.settingsDict is not None \
-            else self.indexSettings.request_body
+        if self.settingsDict:
+            return self.settingsDict
+        else:
+            return self.dict(exclude_none=True, exclude={"settingsDict"})
 
     @root_validator(pre=True)
     def check_settings_dict_compatibility(cls, values):
-        if values.get("settings_dict") is not None and \
-                values.get("index_settings").dict(exclude_none=True) != {}:
-            raise ValueError("settings_dict and index_settings cannot be used together")
+        """ Ensures that settingsDict is not specified along with other parameters.
+
+        Notes:
+            if you want to add a new parameter that can be specified along with settings_dict, add it to
+            SETTINGS_DICT_COMPATIBLE_PARAMS.
+        """
+        if values.get("settings_dict") is not None and any(arg_name for arg_name in values):
+            raise ValueError(f"settings_dict cannot be specified with other index creation parameters.")
         return values

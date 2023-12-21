@@ -14,7 +14,7 @@ class CloudIndexSettings(IndexSettings):
     numberOfInferences: Optional[int] = Field(None, alias="number_of_inferences")
 
 
-class ListIndexesResponse(IndexSettings):
+class ListIndexesResponse(CloudIndexSettings):
     Created: Optional[str] = None
     indexName: Optional[str] = None
     errorMsg: Optional[str] = None
