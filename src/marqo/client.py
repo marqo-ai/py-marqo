@@ -79,7 +79,7 @@ class Client:
         image_preprocessing: Optional[marqo_index.ImagePreProcessing] = None,
         vector_numeric_type: Optional[marqo_index.VectorNumericType] = None,
         ann_parameters: Optional[marqo_index.AnnParameters] = None,
-        wait_for_readiness: Optional[bool] = None,
+        wait_for_readiness: bool = True,
         inference_type: Optional[str] = None,
         storage_class: Optional[str] = None,
         number_of_shards: Optional[int] = None,

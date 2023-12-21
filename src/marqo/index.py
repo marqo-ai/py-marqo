@@ -97,12 +97,12 @@ class Index:
                image_preprocessing: Optional[marqo_index.ImagePreProcessing] = None,
                vector_numeric_type: Optional[marqo_index.VectorNumericType] = None,
                ann_parameters: Optional[marqo_index.AnnParameters] = None,
-               wait_for_readiness: Optional[bool] = None,
                inference_type: Optional[str] = None,
                storage_class: Optional[str] = None,
                number_of_shards: Optional[int] = None,
                number_of_replicas: Optional[int] = None,
                number_of_inferences: Optional[int] = None,
+               wait_for_readiness: bool = True,
                ) -> Dict[str, Any]:
         """Create the index. Please refer to the marqo cloud to see options for inference and storage node types.
         Creates CreateIndexSettings object and then uses it to create the index.
