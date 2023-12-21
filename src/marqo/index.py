@@ -162,7 +162,7 @@ class Index:
 
         # py-marqo against Marqo Cloud
         elif config.api_key:
-            # Generic marqo api
+            # client instantiated with api endpoint
             if config.is_marqo_cloud:
                 cloud_index_settings: CloudIndexSettings = CloudIndexSettings(
                     type=type,
@@ -183,7 +183,7 @@ class Index:
                     numberOfReplicas=number_of_replicas,
                     storageClass=storage_class,
                 )
-            # Data plane api
+            # client instantiated with endpoint url
             else:
                 cloud_index_settings: CloudIndexSettings = CloudIndexSettings(
                     type=type,
