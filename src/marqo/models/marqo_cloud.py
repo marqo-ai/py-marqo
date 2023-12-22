@@ -19,7 +19,6 @@ class ListIndexesResponse(CloudIndexSettings):
     indexName: Optional[str] = None
     errorMsg: Optional[str] = None
     marqoEndpoint: Optional[str] = None
-    index_defaults: Optional[dict] = None
     marqoVersion: Optional[str] = None
     indexStatus: Optional[str] = None
 
