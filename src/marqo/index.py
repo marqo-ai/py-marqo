@@ -6,11 +6,8 @@ import time
 
 from requests import RequestException
 
-from marqo import defaults
 from marqo.cloud_helpers import cloud_wait_for_index_status
 from marqo.enums import IndexStatus
-import typing
-from urllib import parse
 from datetime import datetime
 from timeit import default_timer as timer
 from typing import Any, Dict, Generator, List, Optional, Union
@@ -163,45 +160,27 @@ class Index:
 
         # py-marqo against Marqo Cloud
         elif config.api_key:
-            # client instantiated with api endpoint
-            if config.is_marqo_cloud:
-                cloud_index_settings: CloudIndexSettings = CloudIndexSettings(
-                    type=type,
-                    allFields=all_fields,
-                    settingsDict=settings_dict,
-                    treatUrlsAndPointersAsImages=treat_urls_and_pointers_as_images,
-                    shortStringLengthThreshold=short_string_length_threshold,
-                    tensorFields=tensor_fields,
-                    model=model,
-                    modelProperties=model_properties,
-                    normalizeEmbeddings=normalize_embeddings,
-                    textPreprocessing=text_preprocessing,
-                    imagePreprocessing=image_preprocessing,
-                    vectorNumericType=vector_numeric_type,
-                    annParameters=ann_parameters,
-                    numberOfInferences=number_of_inferences,
-                    inferenceType=inference_type,
-                    numberOfShards=number_of_shards,
-                    numberOfReplicas=number_of_replicas,
-                    storageClass=storage_class,
-                )
-            # client instantiated with endpoint url
-            else:
-                cloud_index_settings: CloudIndexSettings = CloudIndexSettings(
-                    type=type,
-                    allFields=all_fields,
-                    settingsDict=settings_dict,
-                    treatUrlsAndPointersAsImages=treat_urls_and_pointers_as_images,
-                    shortStringLengthThreshold=short_string_length_threshold,
-                    tensorFields=tensor_fields,
-                    model=model,
-                    modelProperties=model_properties,
-                    normalizeEmbeddings=normalize_embeddings,
-                    textPreprocessing=text_preprocessing,
-                    imagePreprocessing=image_preprocessing,
-                    vectorNumericType=vector_numeric_type,
-                    annParameters=ann_parameters,
-                )
+            cloud_index_settings: CloudIndexSettings = CloudIndexSettings(
+                type=type,
+                allFields=all_fields,
+                settingsDict=settings_dict,
+                treatUrlsAndPointersAsImages=treat_urls_and_pointers_as_images,
+                shortStringLengthThreshold=short_string_length_threshold,
+                tensorFields=tensor_fields,
+                model=model,
+                modelProperties=model_properties,
+                normalizeEmbeddings=normalize_embeddings,
+                textPreprocessing=text_preprocessing,
+                imagePreprocessing=image_preprocessing,
+                vectorNumericType=vector_numeric_type,
+                annParameters=ann_parameters,
+                numberOfInferences=number_of_inferences,
+                inferenceType=inference_type,
+                numberOfShards=number_of_shards,
+                numberOfReplicas=number_of_replicas,
+                storageClass=storage_class,
+            )
+
             response = req.post(f"indexes/{index_name}", body=cloud_index_settings.generate_request_body())
             if wait_for_readiness:
                 cloud_wait_for_index_status(req, index_name, IndexStatus.READY)

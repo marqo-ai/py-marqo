@@ -42,9 +42,11 @@ class HttpRequests:
         # Add v2 prefix if the request is sent to controller index API
         if base_url.lower().startswith(os.environ.get("MARQO_CLOUD_URL", "https://api.marqo.ai")) and \
                 path.startswith("indexes"):
-            path = f"v2/{path}"
-
-        url = f"{base_url}/{path}"
+            # Control plane endpoints are versioned now
+            url = f"{base_url}/v2/{path}"
+        else:
+            # Data plane endpoints are not version
+            url = f"{base_url}/{path}"
 
         if self.config.use_telemetry:
             delimeter= "?" if "?" not in f"{base_url}/{path}" else "&"

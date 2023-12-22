@@ -10,8 +10,11 @@ class IndexSettings(StrictBaseModel):
     Args:
         type: The type of the index. Can be structured or unstructured.
         allFields: A list of all fields in the index.
+        settingsDict: A dictionary of all the settings of the index. All fields should be in camel case.
+            Can not be specified with other parameters.
         tensorFields: A list of all tensor fields in the index.
         treatUrlsAndPointersAsImages: Whether to treat urls and pointers as images.
+            This unstructured index only parameter.
         shortStringLengthThreshold: The threshold for short string length.
         model: The name of the model to use for the index.
         modelProperties: A dictionary of model properties.
@@ -26,19 +29,19 @@ class IndexSettings(StrictBaseModel):
     Refer to Marqo for the default values.
     """
 
-    type: Optional[marqo_index.IndexType] = Field(None, alias="type")
-    allFields: Optional[List[marqo_index.FieldRequest]] = Field(None, alias="all_fields")
-    settingsDict: Optional[Dict] = Field(None, alias="settings_dict")
-    tensorFields: Optional[List[str]] = Field(None, alias="tensor_fields")
-    treatUrlsAndPointersAsImages: Optional[bool] = Field(None, alias="treat_urls_and_pointers_as_images")
-    shortStringLengthThreshold: Optional[int] = Field(None, alias="short_string_length_threshold")
+    type: Optional[marqo_index.IndexType] = None
+    allFields: Optional[List[marqo_index.FieldRequest]] = None
+    settingsDict: Optional[Dict] = None
+    tensorFields: Optional[List[str]] = None
+    treatUrlsAndPointersAsImages: Optional[bool] = None
+    shortStringLengthThreshold: Optional[int] = None
     model: Optional[str] = None
-    modelProperties: Optional[Dict[str, Any]] = Field(None, alias="model_properties")
-    normalizeEmbeddings: Optional[bool] = Field(None, alias="normalize_embeddings")
-    textPreprocessing: Optional[marqo_index.TextPreProcessing] = Field(None, alias="text_preprocessing")
-    imagePreprocessing: Optional[marqo_index.ImagePreProcessing] = Field(None, alias="image_preprocessing")
-    vectorNumericType: Optional[marqo_index.VectorNumericType] = Field(None, alias="vector_numeric_type")
-    annParameters: Optional[marqo_index.AnnParameters] = Field(None, alias="ann_parameters")
+    modelProperties: Optional[Dict[str, Any]] = None
+    normalizeEmbeddings: Optional[bool] = None
+    textPreprocessing: Optional[marqo_index.TextPreProcessing] = None
+    imagePreprocessing: Optional[marqo_index.ImagePreProcessing] = None
+    vectorNumericType: Optional[marqo_index.VectorNumericType] = None
+    annParameters: Optional[marqo_index.AnnParameters] = None
 
     def generate_request_body(self) -> dict:
         """A json encoded string of the request body"""
@@ -50,12 +53,7 @@ class IndexSettings(StrictBaseModel):
 
     @root_validator(pre=True)
     def check_settings_dict_compatibility(cls, values):
-        """ Ensures that settingsDict is not specified along with other parameters.
-
-        Notes:
-            if you want to add a new parameter that can be specified along with settings_dict, add it to
-            SETTINGS_DICT_COMPATIBLE_PARAMS.
-        """
+        """ Ensures that settingsDict is not specified along with other parameters."""
         if values.get("settings_dict") is not None and any(arg_name for arg_name in values):
             raise ValueError(f"settings_dict cannot be specified with other index creation parameters.")
         return values

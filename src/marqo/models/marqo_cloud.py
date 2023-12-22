@@ -19,6 +19,7 @@ class ListIndexesResponse(CloudIndexSettings):
     indexName: Optional[str] = None
     errorMsg: Optional[str] = None
     marqoEndpoint: Optional[str] = None
+    # TODO Remove this attribute after cloud is updated
     index_defaults: Optional[dict] = None
     marqoVersion: Optional[str] = None
     indexStatus: Optional[str] = None
