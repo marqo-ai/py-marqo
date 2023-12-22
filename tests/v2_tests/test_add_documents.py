@@ -16,6 +16,21 @@ from unittest import mock
 
 
 class TestAddDocuments(MarqoTestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls.create_open_source_indexes([
+            {
+                "indexName": "unstructured_index",
+                "type": "unstructured",
+                "model":
+
+            }
+        ])
+
+
+
+
     # Add documents tests:
     def test_add_documents_with_ids(self):
         test_index_name = self.create_test_index(

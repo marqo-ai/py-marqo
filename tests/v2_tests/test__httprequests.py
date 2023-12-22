@@ -82,7 +82,6 @@ class TestConstructCloudPath(unittest.TestCase):
                 result = self.construct_path_helper(self.cloud_url, path)
                 self.assertEqual(f"{self.cloud_url}/api/v2/{path}", result)
 
-
     def test_path_not_start_with_indexes(self):
         test_cases = [
             "indexe/", "test_indexes/my_index_name/documents", "bill_indexes/my_index_name/search",

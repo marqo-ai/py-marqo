@@ -308,32 +308,36 @@ class MarqoTestCase(TestCase):
             )
             self.add_documents_and_mark_for_cleanup_patch.start()
 
-    def create_open_source_indexes(self, index_settings_with_name: List[Dict]):
+    @classmethod
+    def create_open_source_indexes(cls, index_settings_with_name: List[Dict]):
         """A function to call the internal Marqo API to create a batch of indexes.
          Use camelCase for the keys."""
-        if self.client.config.is_marqo_cloud:
+        if cls.client.config.is_marqo_cloud:
             raise MarqoError("create_open_source_indexes is not supported in cloud environments")
 
-        r = requests.post(f"{self.authorized_url}/batch/indexes/create", data=json.dumps(index_settings_with_name))
+        r = requests.post(f"{cls.authorized_url}/batch/indexes/create", data=json.dumps(index_settings_with_name))
+        cls.open_source_indexes_list = [index['indexName'] for index in index_settings_with_name]
         try:
             r.raise_for_status()
         except requests.exceptions.HTTPError as e:
             raise MarqoWebError(e)
 
-    def delete_open_source_indexes(self, index_names: List[str]):
-        if self.client.config.is_marqo_cloud:
+    @classmethod
+    def delete_open_source_indexes(cls, index_names: List[str]):
+        if cls.client.config.is_marqo_cloud:
             raise MarqoError("delete_open_source_indexes is not supported in cloud environments")
-        r = requests.post(f"{self.authorized_url}/batch/indexes/delete", data=json.dumps(index_names))
+        r = requests.post(f"{cls.authorized_url}/batch/indexes/delete", data=json.dumps(index_names))
         try:
             r.raise_for_status()
         except requests.exceptions.HTTPError as e:
             raise MarqoWebError(e)
 
-    def clear_open_source_indexes(self, index_names: List[str]):
-        if self.client.config.is_marqo_cloud:
+    @classmethod
+    def clear_open_source_indexes(cls, index_names: List[str]):
+        if cls.client.config.is_marqo_cloud:
             raise MarqoError("clear_open_source_indexes is not supported in cloud environments")
         for index_name in index_names:
-            r = requests.delete(f"{self.authorized_url}/indexes/{index_name}/documents/delete-all")
+            r = requests.delete(f"{cls.authorized_url}/indexes/{index_name}/documents/delete-all")
             try:
                 r.raise_for_status()
             except requests.exceptions.HTTPError as e:
