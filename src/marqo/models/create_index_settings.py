@@ -53,12 +53,7 @@ class IndexSettings(StrictBaseModel):
 
     @root_validator(pre=True)
     def check_settings_dict_compatibility(cls, values):
-        """ Ensures that settingsDict is not specified along with other parameters.
-
-        Notes:
-            if you want to add a new parameter that can be specified along with settings_dict, add it to
-            SETTINGS_DICT_COMPATIBLE_PARAMS.
-        """
+        """ Ensures that settingsDict is not specified along with other parameters."""
         if values.get("settings_dict") is not None and any(arg_name for arg_name in values):
             raise ValueError(f"settings_dict cannot be specified with other index creation parameters.")
         return values
