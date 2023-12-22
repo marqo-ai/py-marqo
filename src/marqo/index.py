@@ -6,11 +6,8 @@ import time
 
 from requests import RequestException
 
-from marqo import defaults
 from marqo.cloud_helpers import cloud_wait_for_index_status
 from marqo.enums import IndexStatus
-import typing
-from urllib import parse
 from datetime import datetime
 from timeit import default_timer as timer
 from typing import Any, Dict, Generator, List, Optional, Union
