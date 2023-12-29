@@ -4,6 +4,8 @@ from marqo.errors import MarqoWebError
 import marqo
 from cloud_test_index import index_name_to_settings_mappings
 
+INDEX_NAME_SEPARATOR = "_"
+
 
 def populate_indices():
     populate_indices_start_time = time.time()
@@ -22,7 +24,7 @@ def populate_indices():
         print(f"Creating {index_name} with config: {index_settings_dicts}")
         try:
             print(mq.create_index(
-                index_name=index_name + '_' + test_uniqueness_id,
+                index_name=index_name + INDEX_NAME_SEPARATOR + test_uniqueness_id,
                 wait_for_readiness=False,
                 settings_dict=index_settings_dicts
                 )
@@ -35,7 +37,7 @@ def populate_indices():
     max_retries = 200
     attempt = 0
     while True:
-        if all(creating_index + '-' + test_uniqueness_id in mq.config.instance_mapping._urls_mapping["READY"].keys()
+        if all(creating_index + INDEX_NAME_SEPARATOR + test_uniqueness_id in mq.config.instance_mapping._urls_mapping["READY"].keys()
                for creating_index in index_name_to_settings_mappings.keys()):
             break
         mq.config.instance_mapping._refresh_urls()
