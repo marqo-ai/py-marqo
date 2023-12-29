@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import patch, MagicMock
 
+import pytest
 import requests.exceptions
 
 from marqo._httprequests import HttpRequests
@@ -9,6 +10,7 @@ from marqo.default_instance_mappings import DefaultInstanceMappings
 from marqo.errors import MarqoWebError
 
 
+@pytest.mark.fixed
 class TestConstructPath(unittest.TestCase):
 
     def setUp(self):
@@ -39,8 +41,9 @@ class TestConstructPath(unittest.TestCase):
     @patch("requests.sessions.Session.request")
     @patch("marqo._httprequests.HttpRequests._validate")
     @patch("marqo.default_instance_mappings.DefaultInstanceMappings.index_http_error_handler")
-    def test_send_request_calls_index_http_error_handler(self, mock_index_http_error_handler: MagicMock, mock_validate: MagicMock,
-                                                  mock_requests: MagicMock, ):
+    def test_send_request_calls_index_http_error_handler(self, mock_index_http_error_handler: MagicMock,
+                                                         mock_validate: MagicMock,
+                                                         mock_requests: MagicMock, ):
         # Set up mock behavior to raise MarqoWebError
         mock_validate.side_effect = requests.exceptions.ConnectionError()
 
