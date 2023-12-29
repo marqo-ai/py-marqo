@@ -22,10 +22,10 @@ def populate_indices():
         print(f"Creating {index_name} with config: {index_settings_dicts}")
         try:
             print(mq.create_index(
-                index_name=index_name + '-' + test_uniqueness_id,
+                index_name=index_name + '_' + test_uniqueness_id,
                 wait_for_readiness=False,
                 settings_dict=index_settings_dicts
-            )
+                )
             )
         except MarqoWebError as e:
             print(f"Attempting to create index {index_name} resulting in error {e}")
