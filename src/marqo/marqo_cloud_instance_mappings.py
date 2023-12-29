@@ -11,6 +11,7 @@ from marqo.errors import (
 from marqo.instance_mappings import InstanceMappings
 from marqo.marqo_logging import mq_logger
 from marqo.enums import IndexStatus
+from marqo.models.marqo_cloud import ListIndexesResponse, IndexResponseEnum
 
 
 class MarqoCloudInstanceMappings(InstanceMappings):
@@ -50,7 +51,7 @@ class MarqoCloudInstanceMappings(InstanceMappings):
     def _refresh_urls(self, timeout=None):
         mq_logger.debug("Refreshing Marqo Cloud index URL cache")
         try:
-            response = requests.get(f'{self.get_control_base_url()}/indexes',
+            response = requests.get(f'{self.get_control_base_url()}/v2/indexes',
                                     headers={"x-api-key": self.api_key}, timeout=timeout)
         except Timeout:
             mq_logger.warning(
@@ -65,11 +66,12 @@ class MarqoCloudInstanceMappings(InstanceMappings):
             return None
         response_json = response.json()
         self._urls_mapping = {IndexStatus.READY: {}, IndexStatus.CREATING: {}}
-        for index in response_json['results']:
-            if index.get('index_status') in [IndexStatus.READY, IndexStatus.MODIFYING]:
-                self._urls_mapping[IndexStatus.READY][index['index_name']] = index.get('endpoint')
-            elif index.get('index_status') == IndexStatus.CREATING:
-                self._urls_mapping[IndexStatus.CREATING][index['index_name']] = index.get('endpoint')
+        for raw_response in response_json['results']:
+            index_response = ListIndexesResponse(**raw_response)
+            if index_response.indexStatus in [IndexStatus.READY, IndexStatus.MODIFYING]:
+                self._urls_mapping[IndexStatus.READY][index_response.indexName] = index_response.marqoEndpoint
+            elif index_response.indexStatus == IndexStatus.CREATING:
+                self._urls_mapping[IndexStatus.CREATING][index_response.indexName] = index_response.marqoEndpoint
         if self._urls_mapping:
             self.latest_index_mappings_refresh_timestamp = time.time()
 

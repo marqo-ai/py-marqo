@@ -6,11 +6,8 @@ import time
 
 from requests import RequestException
 
-from marqo import defaults
 from marqo.cloud_helpers import cloud_wait_for_index_status
 from marqo.enums import IndexStatus
-import typing
-from urllib import parse
 from datetime import datetime
 from timeit import default_timer as timer
 from typing import Any, Dict, Generator, List, Optional, Union
@@ -18,7 +15,8 @@ from marqo._httprequests import HttpRequests
 from marqo.config import Config
 from marqo.enums import SearchMethods, Devices
 from marqo import errors, utils
-from marqo.models.create_index_settings import IndexSettings, CreateIndexSettings
+from marqo.models.marqo_cloud import CloudIndexSettings
+from marqo.models.create_index_settings import IndexSettings
 from marqo.models import marqo_index
 from marqo.errors import MarqoWebError, UnsupportedOperationError, MarqoCloudIndexNotFoundError
 from marqo.marqo_logging import mq_logger
@@ -86,6 +84,7 @@ class Index:
                type: Optional[marqo_index.IndexType] = None,
                settings_dict: Optional[Dict[str, Any]] = None,
                treat_urls_and_pointers_as_images: Optional[bool] = None,
+               short_string_length_threshold: Optional[int] = None,
                all_fields: Optional[List[marqo_index.FieldRequest]] = None,
                tensor_fields: Optional[List[str]] = None,
                model: Optional[str] = None,
@@ -94,7 +93,13 @@ class Index:
                text_preprocessing: Optional[marqo_index.TextPreProcessing] = None,
                image_preprocessing: Optional[marqo_index.ImagePreProcessing] = None,
                vector_numeric_type: Optional[marqo_index.VectorNumericType] = None,
-               ann_parameters: Optional[marqo_index.AnnParameters] = None
+               ann_parameters: Optional[marqo_index.AnnParameters] = None,
+               inference_type: Optional[str] = None,
+               storage_class: Optional[str] = None,
+               number_of_shards: Optional[int] = None,
+               number_of_replicas: Optional[int] = None,
+               number_of_inferences: Optional[int] = None,
+               wait_for_readiness: bool = True,
                ) -> Dict[str, Any]:
         """Create the index. Please refer to the marqo cloud to see options for inference and storage node types.
         Creates CreateIndexSettings object and then uses it to create the index.
@@ -119,68 +124,67 @@ class Index:
             image_preprocessing: image preprocessing settings
             vector_numeric_type: vector numeric type
             ann_parameters: approximate nearest neighbors parameters
+            # Below are cloud specific parameters
+            wait_for_readiness: Marqo Cloud specific, whether to wait until
+                operation is completed or to proceed without waiting for status,
+                won't do anything if config.is_marqo_cloud=False
+            inference_type: inference type for the index
+            storage_class: storage class for the index
+            number_of_inferences: number of inferences for the index
+            number_of_shards: number of shards for the index
+            number_of_replicas: number of replicas for the index
         Returns:
             Response body, containing information about index creation result
         """
         req = HttpRequests(config)
-        create_index_settings: CreateIndexSettings = CreateIndexSettings(indexSettings=IndexSettings(
-            type=type,
-            allFields=all_fields,
-            treatUrlsAndPointersAsImages=treat_urls_and_pointers_as_images,
-            tensorFields=tensor_fields,
-            model=model,
-            modelProperties=model_properties,
-            normalizeEmbeddings=normalize_embeddings,
-            textPreprocessing=text_preprocessing,
-            imagePreprocessing=image_preprocessing,
-            vectorNumericType=vector_numeric_type,
-            annParameters=ann_parameters
-        ), settingsDict=settings_dict)
 
-        # if create_index_settings.settings_dict is not None and create_index_settings.settings_dict:
-        #     response = req.post(f"indexes/{index_name}", body=create_index_settings.settings_dict)
-        #     if config.is_marqo_cloud and create_index_settings.wait_for_readiness:
-        #         cloud_wait_for_index_status(req, index_name, IndexStatus.READY)
-        #     return response
+        # py-marqo against local Marqo
+        if not config.api_key:
+            local_create_index_settings: IndexSettings = IndexSettings(
+                type=type,
+                allFields=all_fields,
+                settingsDict=settings_dict,
+                treatUrlsAndPointersAsImages=treat_urls_and_pointers_as_images,
+                shortStringLengthThreshold=short_string_length_threshold,
+                tensorFields=tensor_fields,
+                model=model,
+                modelProperties=model_properties,
+                normalizeEmbeddings=normalize_embeddings,
+                textPreprocessing=text_preprocessing,
+                imagePreprocessing=image_preprocessing,
+                vectorNumericType=vector_numeric_type,
+                annParameters=ann_parameters
+            )
 
-        # if config.api_key is not None:
-        #     # making the keyword settings params override the default cloud
-        #     #  settings
-        #     cl_settings = defaults.get_cloud_default_index_settings()
-        #     cl_ix_defaults = cl_settings['index_defaults']
-        #     cl_ix_defaults['treat_urls_and_pointers_as_images'] = \
-        #         create_index_settings.treat_urls_and_pointers_as_images
-        #     if create_index_settings.model is not None:
-        #         cl_ix_defaults['model'] = create_index_settings.model
-        #     else:
-        #         cl_ix_defaults.pop('model', None)
-        #     cl_ix_defaults['normalize_embeddings'] = create_index_settings.normalize_embeddings
-        #     cl_text_preprocessing = cl_ix_defaults['text_preprocessing']
-        #     cl_text_preprocessing['split_overlap'] = create_index_settings.sentence_overlap
-        #     cl_text_preprocessing['split_length'] = create_index_settings.sentences_per_chunk
-        #     cl_img_preprocessing = cl_ix_defaults['image_preprocessing']
-        #     if image_preprocessing_method is not None:
-        #         cl_img_preprocessing['patch_method'] = create_index_settings.image_preprocessing_method
-        #     else:
-        #         cl_img_preprocessing.pop('patch_method', None)
-        #     if not config.is_marqo_cloud:
-        #         return req.post(f"indexes/{index_name}", body=cl_settings)
-        #     if create_index_settings.inference_type is not None:
-        #         cl_settings['inference_type'] = create_index_settings.inference_type
-        #     else:
-        #         cl_settings.pop('inference_type', None)
-        #     if create_index_settings.storage_class is not None:
-        #         cl_settings['storage_class'] = create_index_settings.storage_class
-        #     else:
-        #         cl_settings.pop('storage_class', None)
-        #     cl_settings['number_of_inferences'] = create_index_settings.number_of_inferences
-        #     cl_settings['number_of_replicas'] = create_index_settings.number_of_replicas
-        #     cl_settings['number_of_shards'] = create_index_settings.number_of_shards
-        #     response = req.post(f"indexes/{index_name}", body=cl_settings)
-        #     if create_index_settings.wait_for_readiness:
-        #         cloud_wait_for_index_status(req, index_name, IndexStatus.READY)
-        #     return response
-        return req.post(f"indexes/{index_name}", body=create_index_settings.request_body)
+            return req.post(f"indexes/{index_name}", body=local_create_index_settings.generate_request_body())
+
+        # py-marqo against Marqo Cloud
+        elif config.api_key:
+            cloud_index_settings: CloudIndexSettings = CloudIndexSettings(
+                type=type,
+                allFields=all_fields,
+                settingsDict=settings_dict,
+                treatUrlsAndPointersAsImages=treat_urls_and_pointers_as_images,
+                shortStringLengthThreshold=short_string_length_threshold,
+                tensorFields=tensor_fields,
+                model=model,
+                modelProperties=model_properties,
+                normalizeEmbeddings=normalize_embeddings,
+                textPreprocessing=text_preprocessing,
+                imagePreprocessing=image_preprocessing,
+                vectorNumericType=vector_numeric_type,
+                annParameters=ann_parameters,
+                numberOfInferences=number_of_inferences,
+                inferenceType=inference_type,
+                numberOfShards=number_of_shards,
+                numberOfReplicas=number_of_replicas,
+                storageClass=storage_class,
+            )
+
+            response = req.post(f"indexes/{index_name}", body=cloud_index_settings.generate_request_body())
+            if wait_for_readiness:
+                cloud_wait_for_index_status(req, index_name, IndexStatus.READY)
+            return response
 
     def refresh(self):
         """refreshes the index"""

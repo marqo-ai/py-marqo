@@ -1,5 +1,6 @@
 import copy
 import json
+import os
 from typing import get_args, Any, Callable, Dict, Literal, List, Optional, Tuple, Union
 import requests
 from json.decoder import JSONDecodeError
@@ -37,7 +38,16 @@ class HttpRequests:
         """Augment the URL request path based if telemetry is required."""
         base_url = self.config.instance_mapping.get_index_base_url(index_name=index_name) if index_name \
             else self.config.instance_mapping.get_control_base_url()
-        url = f"{base_url}/{path}"
+
+        # Add v2 prefix if the request is sent to controller index API
+        if base_url.lower().startswith(os.environ.get("MARQO_CLOUD_URL", "https://api.marqo.ai")) and \
+                path.startswith("indexes"):
+            # Control plane endpoints are versioned now
+            url = f"{base_url}/v2/{path}"
+        else:
+            # Data plane endpoints are not version
+            url = f"{base_url}/{path}"
+
         if self.config.use_telemetry:
             delimeter= "?" if "?" not in f"{base_url}/{path}" else "&"
             return url + f"{delimeter}telemetry=True"
