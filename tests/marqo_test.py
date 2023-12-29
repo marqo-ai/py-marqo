@@ -195,7 +195,7 @@ class MarqoTestCase(TestCase):
         cls.index_to_documents_cleanup_mapping = {}
         cls.generic_test_index_name = 'test-index'  # used as a prefix when index is created with settings
         cls.generic_test_index_name_2 = cls.generic_test_index_name + '-2'
-        cls.client=marqo.Client(cls.client_settings)
+        cls.client=marqo.Client(**cls.client_settings)
 
         # class property to indicate if test is being run on multi
         cls.IS_MULTI_INSTANCE = (True if os.environ.get("IS_MULTI_INSTANCE", False) in ["True", "TRUE", "true", True] else False)
@@ -229,29 +229,30 @@ class MarqoTestCase(TestCase):
         for i in range(5):
             func(*args, **kwargs)
 
-    def create_test_index(
+    def get_test_index_name(
             self,
-            cloud_test_index_to_use: Union[CloudTestIndex, None], open_source_test_index_name: Union[str, None],
-            open_source_index_settings_dict: dict = None, open_source_index_kwargs: dict = None,
+            cloud_test_index_to_use: Union[CloudTestIndex, None],
+            open_source_test_index_name: Union[str, None],
             delete_index_documents_before_test: bool = True
     ):
-        """Determines whether the test is executed in a cloud environment or within an open-source setup.
-        If it's running in an open-source environment,
-        this function creates the corresponding index and returns its name.
+        """Get the test index name for unittest test cases, based on whether the test is running in a cloud environment.
 
         In the case of cloud testing, it provides the name of the cloud index to be used.
         Additionally, it applies a unique run identifier to the index name and performs
         cleanup operations on documents associated with the index if 'delete_index_documents_before_test' is True.
+
+        In the case of open-source testing, it will return the open-source index name to be used. The documents
+        in the index are cleaned by 'setUp' function of the test case.
+
+        Note: Index creation for both cloud and open-source environments is NOT included in this function.
+        In the case of cloud testing, the index created at the start of py-marqo test.
+        In the case of open-source testing, the index is created in the 'setUpClass' method of the test case.
 
         Args:
             cloud_test_index_to_use (Union[CloudTestIndex, None]): The cloud test index to use in cloud environments.
                 If None, an error is raised.
             open_source_test_index_name (Union[str, None]): The name of the open-source test index to create in
                 open-source environments. If None, no open-source index is created.
-            open_source_index_settings_dict (dict, optional): Additional settings to apply when creating
-                the open-source test index.
-            open_source_index_kwargs (dict, optional): Additional keyword arguments to pass when creating
-                the open-source test index.
             delete_index_documents_before_test (bool, optional): If True, existing documents in the index will
                 be deleted before preparing it for testing. Default is True. Used only for cloud testing.
 
@@ -274,9 +275,7 @@ class MarqoTestCase(TestCase):
             index_name_to_return = f"{cloud_test_index_to_use.value}-{self.index_suffix}"
             self.prepare_cloud_index_for_test(index_name_to_return, delete_index_documents_before_test)
         else:
-            index_name_to_return = self.create_open_source_index(
-                open_source_test_index_name, open_source_index_settings_dict, open_source_index_kwargs
-            )
+            index_name_to_return = open_source_test_index_name
         return index_name_to_return
 
     def prepare_cloud_index_for_test(self, index_name: str, delete_index_documents_before_test: bool = True):
@@ -311,7 +310,11 @@ class MarqoTestCase(TestCase):
     @classmethod
     def create_open_source_indexes(cls, index_settings_with_name: List[Dict]):
         """A function to call the internal Marqo API to create a batch of indexes.
-         Use camelCase for the keys."""
+         Use camelCase for the keys.
+
+         Indexes created by this function will be added to cls.open_source_indexes_list, thus will be deleted
+         in tearDownClass, cleared in setUp.
+         """
         if cls.client.config.is_marqo_cloud:
             raise MarqoError("create_open_source_indexes is not supported in cloud environments")
 

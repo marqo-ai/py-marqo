@@ -23,31 +23,92 @@ class CloudTestIndex(str, Enum):
     # no_model_index = "test-index-no-model"
 
 
-index_name_to_settings_mappings = {
+unstructured_index_name_to_settings_mappings = {
+    CloudTestIndex.unstructured_basic_index: {
         "type": "unstructured",
-        "vectorNumericType": "float",
-        "model": "sentence-transformers/all-MiniLM-L6-v2",
+        "inferenceType": "marqo.CPU.large",
+        "storageClass": "marqo.basic"
+    },
+    CloudTestIndex.unstructured_image_index: {
+        "type": "unstructured",
+        "treatUrlsAndPointersAsImages": True,
+        "model": "open_clip/ViT-B-32/laion400m_e32",
+        "inferenceType": "marqo.CPU.large",
+        "storageClass": "marqo.basic"
+    },
+    CloudTestIndex.unstructured_text_index_with_custom_model: {
+        "type": "unstructured",
+        "treatUrlsAndPointersAsImages": False,
+        "model": "test-model",
+        "modelProperties": {
+            "name": "sentence-transformers/multi-qa-MiniLM-L6-cos-v1",
+            "dimensions": 384,
+            "tokens": 128,
+            "type": "sbert"
+        },
+        "normalizeEmbeddings": True,
         "textPreprocessing": {
             "splitLength": 2,
-            "splitOverlap": 0,
-            "splitMethod": "sentence"
+            "splitOverlap": 1,
         },
+        "inferenceType": "marqo.CPU.large",
+        "storageClass": "marqo.basic"
+    },
+    CloudTestIndex.unstructured_image_index_with_preprocessing_method: {
+        "type": "unstructured",
+        "treatUrlsAndPointersAsImages": True,
+        "model": "open_clip/ViT-B-16/laion400m_e31",
         "imagePreprocessing": {
             "patchMethod": "simple"
         },
-        "annParameters": {
-            "spaceType": "prenormalized-angular",
-            "parameters": {
-                "efConstruction": 128,
-                "m": 16
-            }
-        },
-        "numberOfShards": 1,
-        "numberOfReplicas": 0,
-        "numberOfInferences": 1,
-        "inferenceType": "marqo.CPU.small",
+        "inferenceType": "marqo.CPU.large",
         "storageClass": "marqo.basic"
-    }
+    },
+}
+
+
+structured_index_name_to_settings_mappings = {
+    CloudTestIndex.structured_basic_index: {
+        "type": "structured",
+        "inferenceType": "marqo.CPU.large",
+        "storageClass": "marqo.basic"
+    },
+    CloudTestIndex.structured_image_index: {
+        "type": "structured",
+        "treatUrlsAndPointersAsImages": True,
+        "model": "open_clip/ViT-B-32/laion400m_e32",
+        "inferenceType": "marqo.CPU.large",
+        "storageClass": "marqo.basic"
+    },
+    CloudTestIndex.structured_text_index_with_custom_model: {
+        "type": "structured",
+        "treatUrlsAndPointersAsImages": False,
+        "model": "test-model",
+        "modelProperties": {
+            "name": "sentence-transformers/multi-qa-MiniLM-L6-cos-v1",
+            "dimensions": 384,
+            "tokens": 128,
+            "type": "sbert"
+        },
+        "normalizeEmbeddings": True,
+        "textPreprocessing": {
+            "splitLength": 2,
+            "splitOverlap": 1,
+        },
+        "inferenceType": "marqo.CPU.large",
+        "storageClass": "marqo.basic"
+    },
+    CloudTestIndex.structured_image_index_with_preprocessing_method: {
+        "type": "structured",
+        "treatUrlsAndPointersAsImages": True,
+        "model": "open_clip/ViT-B-16/laion400m_e31",
+        "imagePreprocessing": {
+            "patchMethod": "simple"
+        },
+        "inferenceType": "marqo.CPU.large",
+        "storageClass": "marqo.basic"
+    },
+}
 
 
 
