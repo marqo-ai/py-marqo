@@ -51,9 +51,9 @@ jobs:
 
       - name: Run tox
         env:
-          MARQO_URL: ${{ secrets.CLOUD_MARQO_URL }}
-          MARQO_CLOUD_URL: ${{ secrets.CLOUD_MARQO_URL }}
-          MARQO_API_KEY: ${{ secrets.CLOUD_MARQO_API_KEY }}
+          MARQO_URL: ${{ secrets.STAGING_CLOUD_MARQO_URL }}
+          MARQO_CLOUD_URL: ${{ secrets.STAGING_CLOUD_MARQO_URL }}
+          MARQO_API_KEY: ${{ secrets.STAGING_CLOUD_MARQO_API_KEY }}
         run: tox -e cloud_tests -- create-indexes=True use-unique-identifier=True delete-indexes=True
 
   cleanup_indexes:
@@ -79,7 +79,7 @@ jobs:
 
       - name: Run cleanup_indexes.py
         env:
-          MARQO_URL: ${{ secrets.CLOUD_MARQO_URL }}
-          MARQO_CLOUD_URL: ${{ secrets.CLOUD_MARQO_URL }}
-          MARQO_API_KEY: ${{ secrets.CLOUD_MARQO_API_KEY }}
+          MARQO_URL: ${{ secrets.STAGING_CLOUD_MARQO_URL }}
+          MARQO_CLOUD_URL: ${{ secrets.STAGING_CLOUD_MARQO_URL }}
+          MARQO_API_KEY: ${{ secrets.STAGING_CLOUD_MARQO_API_KEY }}
         run: python tests/cloud_test_logic/delete_all_cloud_test_indexes.py
