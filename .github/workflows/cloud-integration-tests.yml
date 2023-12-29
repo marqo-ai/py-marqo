@@ -51,6 +51,7 @@ jobs:
 
       - name: Run tox
         env:
+          # TODO change back to PROD once marqo v2 is in prod
           MARQO_URL: ${{ secrets.STAGING_CLOUD_MARQO_URL }}
           MARQO_CLOUD_URL: ${{ secrets.STAGING_CLOUD_MARQO_URL }}
           MARQO_API_KEY: ${{ secrets.STAGING_CLOUD_MARQO_API_KEY }}
@@ -79,6 +80,7 @@ jobs:
 
       - name: Run cleanup_indexes.py
         env:
+          # TODO change back to PROD once marqo v2 is in prod
           MARQO_URL: ${{ secrets.STAGING_CLOUD_MARQO_URL }}
           MARQO_CLOUD_URL: ${{ secrets.STAGING_CLOUD_MARQO_URL }}
           MARQO_API_KEY: ${{ secrets.STAGING_CLOUD_MARQO_API_KEY }}
