@@ -4,7 +4,7 @@
 # There is also manual trigger to the workflow in which user can specify
 # which job to run. Either delete_all_indexes or run_integration_tests.
 # Keep in mind that delete_all_indexes will delete ALL indexes in the
-# integration tests account that starts with the prefix "test-index".
+# integration tests account that starts with the prefix "test_index".
 
 name: Cloud Integration Tests
 
@@ -14,7 +14,7 @@ on:
       job_to_run:
         description: 'Job to run (Options: delete_all_indexes, run_integration_tests). Keep in mind
           that delete_all_indexes will delete ALL indexes in the integration tests account that starts 
-          with the prefix "test-index". Even those that were not created by this workflow.'
+          with the prefix "test_index". Even those that were not created by this workflow.'
         required: true
         default: 'run_integration_tests'
   pull_request_review:

@@ -193,8 +193,6 @@ class MarqoTestCase(TestCase):
         cls.client_settings = local_marqo_settings
         cls.authorized_url = cls.client_settings["url"]
         cls.index_to_documents_cleanup_mapping = {}
-        cls.generic_test_index_name = 'test-index'  # used as a prefix when index is created with settings
-        cls.generic_test_index_name_2 = cls.generic_test_index_name + '-2'
         cls.client=marqo.Client(**cls.client_settings)
 
         # class property to indicate if test is being run on multi

@@ -5,9 +5,9 @@ import marqo
 
 def delete_all_test_indices(wait_for_readiness=False):
     """ Delete all test indices from Marqo Cloud Account that match the following criteria:
-    - index name starts with 'test-index'
+    - index name starts with 'test_index'
     - index name contains the value of the environment variable MQ_TEST_RUN_IDENTIFIER
-    ( if not specified then all indices that start with 'test-index' will be deleted )
+    ( if not specified then all indices that start with 'test_index' will be deleted )
     """
     local_marqo_settings = {
         "url": os.environ.get("MARQO_URL", 'http://localhost:8882'),
@@ -17,14 +17,14 @@ def delete_all_test_indices(wait_for_readiness=False):
     if api_key:
         local_marqo_settings["api_key"] = api_key
     print(f"Deleting all test indices from Marqo Cloud Account that match the following criteria:")
-    print(f"- index name starts with 'test-index'")
+    print(f"- index name starts with 'test_index'")
     print(f"- index name contains the value of the environment variable MQ_TEST_RUN_IDENTIFIER: {suffix}\n")
     client = marqo.Client(**local_marqo_settings)
     indexes = client.get_indexes()
     indices_to_delete = []
     for index in indexes['results']:
-        if index.index_name.startswith('test-index'):
-            if suffix is not None and suffix in index.index_name.split('-'):
+        if index.index_name.startswith('test_index'):
+            if suffix is not None and suffix in index.index_name.split('_'):
                 indices_to_delete.append(index.index_name)
             elif suffix is None:
                 indices_to_delete.append(index.index_name)

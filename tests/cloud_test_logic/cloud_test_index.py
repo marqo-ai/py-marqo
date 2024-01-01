@@ -6,17 +6,17 @@ class CloudTestIndex(str, Enum):
     and used in cloud tests,
 
     Please try to keep names short to avoid hitting name-length limits"""
-    unstructured_basic_index = "unstructured_test_index"
-    structured_basic_index = "structured_test_index"
+    unstructured_basic_index = "test_index_unstr_basic"
+    structured_basic_index = "test_index_str_basic"
 
-    unstructured_image_index = "unstructured_test_index_image"
-    structured_image_index = "structured_test_index_image"
+    unstructured_image_index = "test_index_unstr_cimage"
+    structured_image_index = "test_index_str_image"
 
-    unstructured_text_index_with_custom_model = "unstructured_test_index_custom"
-    structured_text_index_with_custom_model = "structured_test_index_custom"
+    unstructured_text_index_with_custom_model = "test_index_unstr_custom"
+    structured_text_index_with_custom_model = "test_index_str_custom"
 
-    unstructured_image_index_with_preprocessing_method = "unstructured_test_index_preprocess"
-    structured_image_index_with_preprocessing_method = "structured_test_index_preprocess"
+    unstructured_image_index_with_preprocessing_method = "test_index_unstr_prepro"
+    structured_image_index_with_preprocessing_method = "test_index_str_prepro"
     # no_model_index = "test-index-no-model"
 
 
