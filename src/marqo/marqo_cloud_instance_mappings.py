@@ -62,7 +62,7 @@ class MarqoCloudInstanceMappings(InstanceMappings):
         except Timeout:
             mq_logger.warning(
                 f"Timeout getting and caching URLs for Marqo Cloud indexes from the"
-                f" /api/indexes/ endpoint. Please contact marqo support at support@marqo.ai if this message"
+                f" /api/v2/indexes/ endpoint. Please contact marqo support at support@marqo.ai if this message"
                 f" persists."
             )
             return None
