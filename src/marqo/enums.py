@@ -16,7 +16,3 @@ class IndexStatus(str, Enum):
     DELETED = "DELETED"
     MODIFYING = "MODIFYING"
     CREATING = "CREATING"
-
-
-class ResponseAttributes(str, Enum):
-    indexName = "indexName"
