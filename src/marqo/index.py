@@ -124,7 +124,6 @@ class Index:
             image_preprocessing: image preprocessing settings
             vector_numeric_type: vector numeric type
             ann_parameters: approximate nearest neighbors parameters
-            # Below are cloud specific parameters
             wait_for_readiness: Marqo Cloud specific, whether to wait until
                 operation is completed or to proceed without waiting for status,
                 won't do anything if config.is_marqo_cloud=False
@@ -133,13 +132,16 @@ class Index:
             number_of_inferences: number of inferences for the index
             number_of_shards: number of shards for the index
             number_of_replicas: number of replicas for the index
+        Note:
+            wait_for_readiness, inference_type, storage_class, number_of_inferences,
+            number_of_shards, number_of_replicas are Marqo Cloud specific parameters,
         Returns:
             Response body, containing information about index creation result
         """
         req = HttpRequests(config)
 
         # py-marqo against local Marqo
-        if not config.api_key:
+        if config.api_key is None:
             local_create_index_settings: IndexSettings = IndexSettings(
                 type=type,
                 allFields=all_fields,
@@ -159,7 +161,7 @@ class Index:
             return req.post(f"indexes/{index_name}", body=local_create_index_settings.generate_request_body())
 
         # py-marqo against Marqo Cloud
-        elif config.api_key:
+        else:
             cloud_index_settings: CloudIndexSettings = CloudIndexSettings(
                 type=type,
                 allFields=all_fields,

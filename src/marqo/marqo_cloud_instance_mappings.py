@@ -11,7 +11,7 @@ from marqo.errors import (
 from marqo.instance_mappings import InstanceMappings
 from marqo.marqo_logging import mq_logger
 from marqo.enums import IndexStatus
-from marqo.models.marqo_cloud import ListIndexesResponse, IndexResponseEnum
+from marqo.models.marqo_cloud import ListIndexesResponse
 
 
 class MarqoCloudInstanceMappings(InstanceMappings):
@@ -23,8 +23,12 @@ class MarqoCloudInstanceMappings(InstanceMappings):
         self.url_cache_duration = url_cache_duration
         self._control_base_url = control_base_url
 
-    def get_control_base_url(self) -> str:
-        return f"{self._control_base_url}/api"
+    def get_control_base_url(self, path: str = "") -> str:
+        if path.startswith('indexes'):
+            # Add v2 prefix if the request is sent to controller index API
+            return f"{self._control_base_url}/api/v2"
+        else:
+            return f"{self._control_base_url}/api"
 
     def get_index_base_url(self, index_name: str) -> str:
         """Returns the index_name's base URL regardless of its status.

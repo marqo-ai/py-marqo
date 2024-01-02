@@ -15,7 +15,6 @@ from marqo._httprequests import HttpRequests
 from marqo import utils, enums
 from marqo import errors
 from marqo.models import marqo_index
-from marqo.models.marqo_cloud import IndexResponseEnum
 
 
 class Client:
@@ -110,7 +109,6 @@ class Client:
             image_preprocessing: image preprocessing settings
             vector_numeric_type: vector numeric type
             ann_parameters: approximate nearest neighbors parameters
-            # Below are cloud specific parameters
             wait_for_readiness: Marqo Cloud specific, whether to wait until
                 operation is completed or to proceed without waiting for status,
                 won't do anything if config.is_marqo_cloud=False
@@ -119,6 +117,10 @@ class Client:
             number_of_inferences: number of inferences for the index
             number_of_shards: number of shards for the index
             number_of_replicas: number of replicas for the index
+        Note:
+            wait_for_readiness, inference_type, storage_class, number_of_inferences,
+            number_of_shards, number_of_replicas are Marqo Cloud specific parameters,
+
 
 
         Returns:
@@ -207,7 +209,7 @@ class Client:
         response['results'] = [
             Index(
                 config=self.config,
-                index_name=index_info[IndexResponseEnum.indexName],
+                index_name=index_info[enums.ResponseAttributes.indexName],
             )
             for index_info in response["results"]
         ]
