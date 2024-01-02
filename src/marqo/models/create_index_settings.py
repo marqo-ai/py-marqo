@@ -2,10 +2,10 @@ from typing import Dict, Any, Optional, List
 
 from marqo.models import marqo_index
 from pydantic import root_validator, Field
-from marqo.models.marqo_models import StrictBaseModel
+from marqo.models.marqo_models import MarqoBaseModel
 
 
-class IndexSettings(StrictBaseModel):
+class IndexSettings(MarqoBaseModel):
     """
     Args:
         type: The type of the index. Can be structured or unstructured.
