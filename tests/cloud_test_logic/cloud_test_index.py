@@ -48,6 +48,7 @@ index_name_to_settings_mappings = {
         "textPreprocessing": {
             "splitLength": 2,
             "splitOverlap": 1,
+            "splitMethod": "sentence",
         },
         "inferenceType": "marqo.CPU.large",
         "storageClass": "marqo.basic"
@@ -96,6 +97,7 @@ index_name_to_settings_mappings = {
         "textPreprocessing": {
             "splitLength": 2,
             "splitOverlap": 1,
+            "splitMethod": "sentence",
         },
         "inferenceType": "marqo.CPU.large",
         "storageClass": "marqo.basic"
