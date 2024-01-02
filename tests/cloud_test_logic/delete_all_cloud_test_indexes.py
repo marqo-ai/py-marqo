@@ -37,9 +37,9 @@ def delete_all_test_indices(wait_for_readiness=False):
     print("Marqo Cloud deletion responses:")
     for index_name in indices_to_delete:
         index = client.index(index_name)
-        if index.get_status()["index_status"] == marqo.enums.IndexStatus.READY:
+        if index.get_status()["indexStatus"] == marqo.enums.IndexStatus.READY:
             print(index_name, index.delete(wait_for_readiness=False))
-        elif index.get_status()["index_status"] == 'DELETING':
+        elif index.get_status()["indexStatus"] == 'DELETING':
             print(f"Index {index_name} is already being deleted")
         else:
             print(f"Index {index_name} is not ready for deletion, status: {index.get_status()['index_status']}")
