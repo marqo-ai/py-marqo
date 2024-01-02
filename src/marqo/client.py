@@ -205,7 +205,12 @@ class Client:
         Returns:
         Indexes, a dictionary with the name of indexes.
         """
-        return self.http.get(path='indexes')
+        response = self.http.get(path='indexes')
+        return {
+            "results": [
+                {"indexName": index_info["indexName"]} for index_info in response["results"]
+            ]
+        }
 
     def bulk_search(self, queries: List[Dict[str, Any]], device: Optional[str] = None) -> Dict[str, Any]:
         try:
