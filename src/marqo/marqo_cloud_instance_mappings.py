@@ -57,7 +57,7 @@ class MarqoCloudInstanceMappings(InstanceMappings):
         path = "indexes"
         base_url = self.get_control_base_url(path=path)
         try:
-            response = requests.get(f'{path}/{base_url}',
+            response = requests.get(f'{base_url}/{path}',
                                     headers={"x-api-key": self.api_key}, timeout=timeout)
         except Timeout:
             mq_logger.warning(
