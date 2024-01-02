@@ -199,21 +199,13 @@ class Client:
             return Index(self.config, index_name=index_name)
         raise Exception('The index UID should not be None')
 
-    def get_indexes(self) -> Dict[str, List[Index]]:
+    def get_indexes(self) -> Dict[str, List[Dict[str, str]]]:
         """Get all indexes.
 
         Returns:
         Indexes, a dictionary with the name of indexes.
         """
-        response = self.http.get(path='indexes')
-        response['results'] = [
-            Index(
-                config=self.config,
-                index_name=index_info[enums.ResponseAttributes.indexName],
-            )
-            for index_info in response["results"]
-        ]
-        return response
+        return self.http.get(path='indexes')
 
     def bulk_search(self, queries: List[Dict[str, Any]], device: Optional[str] = None) -> Dict[str, Any]:
         try:
