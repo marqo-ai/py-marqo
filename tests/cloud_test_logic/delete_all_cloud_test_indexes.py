@@ -23,11 +23,11 @@ def delete_all_test_indices(wait_for_readiness=False):
     indexes = client.get_indexes()
     indices_to_delete = []
     for index in indexes['results']:
-        if index.index_name.startswith('test_index'):
-            if suffix is not None and suffix in index.index_name.split('_'):
-                indices_to_delete.append(index.index_name)
+        if index["indexName"].startswith('test_index'):
+            if suffix is not None and suffix in index["indexName"].split('_'):
+                indices_to_delete.append(index["indexName"])
             elif suffix is None:
-                indices_to_delete.append(index.index_name)
+                indices_to_delete.append(index["indexName"])
 
     if not indices_to_delete:
         print("No indices to delete. Exiting.")
