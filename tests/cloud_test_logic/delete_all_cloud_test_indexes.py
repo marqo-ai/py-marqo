@@ -42,7 +42,7 @@ def delete_all_test_indices(wait_for_readiness=False):
         elif index.get_status()["indexStatus"] == 'DELETING':
             print(f"Index {index_name} is already being deleted")
         else:
-            print(f"Index {index_name} is not ready for deletion, status: {index.get_status()['index_status']}")
+            print(f"Index {index_name} is not ready for deletion, status: {index.get_status()['indexStatus']}")
     if wait_for_readiness:
         max_retries = 100
         attempt = 0
