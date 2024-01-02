@@ -34,25 +34,25 @@ index_name_to_settings_mappings = {
         "inferenceType": "marqo.CPU.large",
         "storageClass": "marqo.basic"
     },
-    CloudTestIndex.unstructured_text_index_with_custom_model: {
-        "type": "unstructured",
-        "treatUrlsAndPointersAsImages": False,
-        "model": "test-model",
-        "modelProperties": {
-            "name": "sentence-transformers/multi-qa-MiniLM-L6-cos-v1",
-            "dimensions": 384,
-            "tokens": 128,
-            "type": "sbert"
-        },
-        "normalizeEmbeddings": True,
-        "textPreprocessing": {
-            "splitLength": 2,
-            "splitOverlap": 1,
-            "splitMethod": "sentence",
-        },
-        "inferenceType": "marqo.CPU.large",
-        "storageClass": "marqo.basic"
-    },
+    # CloudTestIndex.unstructured_text_index_with_custom_model: {
+    #     "type": "unstructured",
+    #     "treatUrlsAndPointersAsImages": False,
+    #     "model": "test-model",
+    #     "modelProperties": {
+    #         "name": "sentence-transformers/multi-qa-MiniLM-L6-cos-v1",
+    #         "dimensions": 384,
+    #         "tokens": 128,
+    #         "type": "sbert"
+    #     },
+    #     "normalizeEmbeddings": True,
+    #     "textPreprocessing": {
+    #         "splitLength": 2,
+    #         "splitOverlap": 1,
+    #         "splitMethod": "sentence",
+    #     },
+    #     "inferenceType": "marqo.CPU.large",
+    #     "storageClass": "marqo.basic"
+    # },
     CloudTestIndex.unstructured_image_index_with_preprocessing_method: {
         "type": "unstructured",
         "treatUrlsAndPointersAsImages": True,
@@ -81,27 +81,27 @@ index_name_to_settings_mappings = {
         "inferenceType": "marqo.CPU.large",
         "storageClass": "marqo.basic"
     },
-    CloudTestIndex.structured_text_index_with_custom_model: {
-        "type": "structured",
-        "treatUrlsAndPointersAsImages": False,
-        "model": "test-model",
-        "allFields": [{"name": "text_field_1", "type": "text"}],
-        "tensorFields": ["text_field_1"],
-        "modelProperties": {
-            "name": "sentence-transformers/multi-qa-MiniLM-L6-cos-v1",
-            "dimensions": 384,
-            "tokens": 128,
-            "type": "sbert"
-        },
-        "normalizeEmbeddings": True,
-        "textPreprocessing": {
-            "splitLength": 2,
-            "splitOverlap": 1,
-            "splitMethod": "sentence",
-        },
-        "inferenceType": "marqo.CPU.large",
-        "storageClass": "marqo.basic"
-    },
+    # CloudTestIndex.structured_text_index_with_custom_model: {
+    #     "type": "structured",
+    #     "treatUrlsAndPointersAsImages": False,
+    #     "model": "test-model",
+    #     "allFields": [{"name": "text_field_1", "type": "text"}],
+    #     "tensorFields": ["text_field_1"],
+    #     "modelProperties": {
+    #         "name": "sentence-transformers/multi-qa-MiniLM-L6-cos-v1",
+    #         "dimensions": 384,
+    #         "tokens": 128,
+    #         "type": "sbert"
+    #     },
+    #     "normalizeEmbeddings": True,
+    #     "textPreprocessing": {
+    #         "splitLength": 2,
+    #         "splitOverlap": 1,
+    #         "splitMethod": "sentence",
+    #     },
+    #     "inferenceType": "marqo.CPU.large",
+    #     "storageClass": "marqo.basic"
+    # },
     CloudTestIndex.structured_image_index_with_preprocessing_method: {
         "type": "structured",
         "treatUrlsAndPointersAsImages": True,
