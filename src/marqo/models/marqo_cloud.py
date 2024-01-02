@@ -4,6 +4,8 @@ from enum import Enum
 from pydantic import Field
 
 from marqo.models.create_index_settings import IndexSettings
+from marqo.models.marqo_models import MarqoBaseModel
+from marqo.enums import IndexStatus
 
 
 class CloudIndexSettings(IndexSettings):
@@ -15,7 +17,7 @@ class CloudIndexSettings(IndexSettings):
 
 
 class ListIndexesResponse(CloudIndexSettings):
-    Created: Optional[str] = None
+    created: Optional[str] = Field(None, alias="Created")
     indexName: Optional[str] = None
     errorMsg: Optional[str] = None
     marqoEndpoint: Optional[str] = None
@@ -25,8 +27,7 @@ class ListIndexesResponse(CloudIndexSettings):
     indexStatus: Optional[str] = None
 
 
-class IndexResponseEnum(str, Enum):
-    indexStatus: str = "indexStatus"
-    indexName: str = "indexName"
+class IndexStatusResponse(MarqoBaseModel):
+    indexStatus: Optional[IndexStatus] = None
 
 

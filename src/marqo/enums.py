@@ -11,8 +11,12 @@ class Devices:
     cuda = "cuda"
 
 
-class IndexStatus:
+class IndexStatus(str, Enum):
     READY = "READY"
     DELETED = "DELETED"
     MODIFYING = "MODIFYING"
     CREATING = "CREATING"
+
+
+class ResponseAttributes(str, Enum):
+    indexName = "indexName"
