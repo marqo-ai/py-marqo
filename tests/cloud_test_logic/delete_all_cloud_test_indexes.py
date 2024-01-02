@@ -47,10 +47,10 @@ def delete_all_test_indices(wait_for_readiness=False):
         max_retries = 100
         attempt = 0
         while indices_to_delete:
-            resp = requests.get(f"{client.config.instance_mapping.get_control_base_url()}/indexes",
+            resp = requests.get(f"{client.config.instance_mapping.get_control_base_url()}/v2/indexes",
                                 headers={"x-api-key": client.config.api_key})
             resp_json = resp.json()
-            all_index_names = [index["index_name"] for index in resp_json['results']]
+            all_index_names = [index["indexName"] for index in resp_json['results']]
             for index_for_deletion_name in indices_to_delete:
                 if index_for_deletion_name not in all_index_names:
                     indices_to_delete.remove(index_for_deletion_name)
