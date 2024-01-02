@@ -1,9 +1,10 @@
 import copy
 import json
-import os
-from typing import get_args, Any, Callable, Dict, Literal, List, Optional, Tuple, Union
-import requests
 from json.decoder import JSONDecodeError
+from typing import get_args, Any, Callable, Dict, Literal, List, Optional, Tuple, Union
+
+import requests
+
 from marqo.config import Config
 from marqo.errors import (
     MarqoWebError,
