@@ -23,6 +23,7 @@ class CloudTestIndex(str, Enum):
 index_name_to_settings_mappings = {
     CloudTestIndex.unstructured_basic_index: {
         "type": "unstructured",
+        "model": "sentence-transformers/all-MiniLM-L6-v2",
         "inferenceType": "marqo.CPU.large",
         "storageClass": "marqo.basic"
     },
@@ -65,6 +66,7 @@ index_name_to_settings_mappings = {
     CloudTestIndex.structured_basic_index: {
         "type": "structured",
         "inferenceType": "marqo.CPU.large",
+        "model": "sentence-transformers/all-MiniLM-L6-v2",
         "allFields": [{"name": "text_field_1", "type": "text"}],
         "tensorFields": ["text_field_1"],
         "storageClass": "marqo.basic"
