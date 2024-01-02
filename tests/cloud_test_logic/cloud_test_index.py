@@ -27,13 +27,13 @@ index_name_to_settings_mappings = {
         "inferenceType": "marqo.CPU.large",
         "storageClass": "marqo.basic"
     },
-    CloudTestIndex.unstructured_image_index: {
-        "type": "unstructured",
-        "treatUrlsAndPointersAsImages": True,
-        "model": "open_clip/ViT-B-32/laion400m_e32",
-        "inferenceType": "marqo.CPU.large",
-        "storageClass": "marqo.basic"
-    },
+    # CloudTestIndex.unstructured_image_index: {
+    #     "type": "unstructured",
+    #     "treatUrlsAndPointersAsImages": True,
+    #     "model": "open_clip/ViT-B-32/laion400m_e32",
+    #     "inferenceType": "marqo.CPU.large",
+    #     "storageClass": "marqo.basic"
+    # },
     # CloudTestIndex.unstructured_text_index_with_custom_model: {
     #     "type": "unstructured",
     #     "treatUrlsAndPointersAsImages": False,
@@ -53,16 +53,16 @@ index_name_to_settings_mappings = {
     #     "inferenceType": "marqo.CPU.large",
     #     "storageClass": "marqo.basic"
     # },
-    CloudTestIndex.unstructured_image_index_with_preprocessing_method: {
-        "type": "unstructured",
-        "treatUrlsAndPointersAsImages": True,
-        "model": "open_clip/ViT-B-16/laion400m_e31",
-        "imagePreprocessing": {
-            "patchMethod": "simple"
-        },
-        "inferenceType": "marqo.CPU.large",
-        "storageClass": "marqo.basic"
-    },
+    # CloudTestIndex.unstructured_image_index_with_preprocessing_method: {
+    #     "type": "unstructured",
+    #     "treatUrlsAndPointersAsImages": True,
+    #     "model": "open_clip/ViT-B-16/laion400m_e31",
+    #     "imagePreprocessing": {
+    #         "patchMethod": "simple"
+    #     },
+    #     "inferenceType": "marqo.CPU.large",
+    #     "storageClass": "marqo.basic"
+    # },
     #Structured indexes
     CloudTestIndex.structured_basic_index: {
         "type": "structured",
@@ -72,15 +72,15 @@ index_name_to_settings_mappings = {
         "tensorFields": ["text_field_1"],
         "storageClass": "marqo.basic"
     },
-    CloudTestIndex.structured_image_index: {
-        "type": "structured",
-        "treatUrlsAndPointersAsImages": True,
-        "model": "open_clip/ViT-B-32/laion400m_e32",
-        "allFields": [{"name": "text_field_1", "type": "text"}],
-        "tensorFields": ["text_field_1"],
-        "inferenceType": "marqo.CPU.large",
-        "storageClass": "marqo.basic"
-    },
+    # CloudTestIndex.structured_image_index: {
+    #     "type": "structured",
+    #     "treatUrlsAndPointersAsImages": True,
+    #     "model": "open_clip/ViT-B-32/laion400m_e32",
+    #     "allFields": [{"name": "text_field_1", "type": "text"}],
+    #     "tensorFields": ["text_field_1"],
+    #     "inferenceType": "marqo.CPU.large",
+    #     "storageClass": "marqo.basic"
+    # },
     # CloudTestIndex.structured_text_index_with_custom_model: {
     #     "type": "structured",
     #     "treatUrlsAndPointersAsImages": False,
@@ -102,16 +102,16 @@ index_name_to_settings_mappings = {
     #     "inferenceType": "marqo.CPU.large",
     #     "storageClass": "marqo.basic"
     # },
-    CloudTestIndex.structured_image_index_with_preprocessing_method: {
-        "type": "structured",
-        "treatUrlsAndPointersAsImages": True,
-        "model": "open_clip/ViT-B-16/laion400m_e31",
-        "allFields": [{"name": "text_field_1", "type": "text"}],
-        "tensorFields": ["text_field_1"],
-        "imagePreprocessing": {
-            "patchMethod": "simple"
-        },
-        "inferenceType": "marqo.CPU.large",
-        "storageClass": "marqo.basic"
-    },
+    # CloudTestIndex.structured_image_index_with_preprocessing_method: {
+    #     "type": "structured",
+    #     "treatUrlsAndPointersAsImages": True,
+    #     "model": "open_clip/ViT-B-16/laion400m_e31",
+    #     "allFields": [{"name": "text_field_1", "type": "text"}],
+    #     "tensorFields": ["text_field_1"],
+    #     "imagePreprocessing": {
+    #         "patchMethod": "simple"
+    #     },
+    #     "inferenceType": "marqo.CPU.large",
+    #     "storageClass": "marqo.basic"
+    # },
 }
