@@ -9,7 +9,7 @@ class CloudTestIndex(str, Enum):
     unstructured_basic_index = "test_index_unstr_basic"
     structured_basic_index = "test_index_str_basic"
 
-    unstructured_image_index = "test_index_unstr_cimage"
+    unstructured_image_index = "test_index_unstr_image"
     structured_image_index = "test_index_str_image"
 
     unstructured_text_index_with_custom_model = "test_index_unstr_custom"
