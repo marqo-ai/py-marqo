@@ -146,7 +146,7 @@ class TestCreateIndex(MarqoTestCase):
             'textPreprocessing': {'split_length': 2, 'split_overlap': 0, 'split_method': 'sentence'},
             'imagePreprocessing': {},
             'vectorNumericType': 'float',
-            'annParameters': {'spaceType': 'angular', 'parameters': {'ef_construction': 128, 'm': 16}}}
+            'annParameters': {'spaceType': 'prenormalized-angular', 'parameters': {'ef_construction': 128, 'm': 16}}}
         self.assertEqual(expected_index_settings, index_settings)
 
     def test_create_structured_image_index(self):
