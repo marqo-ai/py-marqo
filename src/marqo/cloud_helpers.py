@@ -16,9 +16,9 @@ def cloud_wait_for_index_status(req: HttpRequests, index_name: str, status: Inde
         status (IndexStatus): expected status of the index
     """
     current_status = IndexStatusResponse(**req.get(f"indexes/{index_name}/status"))
-    while current_status[current_status.indexStatus] != status:
+    while current_status.indexStatus != status:
         time.sleep(10)
-        current_status = req.get(f"indexes/{index_name}/status")
-        mq_logger.info(f"Current index status: {current_status[current_status.indexStatus]}")
+        current_status = IndexStatusResponse(**req.get(f"indexes/{index_name}/status"))
+        mq_logger.info(f"Current index status: {current_status.indexStatus}")
     mq_logger.info(f"Index achieved status {status} successfully")
     return True
