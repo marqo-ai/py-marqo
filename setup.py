@@ -8,7 +8,7 @@ setup(
     install_requires=[
         # client:
         "requests",
-        "urllib3<2.0.0",
+        "urllib3<2.0.0, >=1.26.0",
         "pydantic<2.0.0",
         "typing-extensions>=4.5.0",
         "packaging"
