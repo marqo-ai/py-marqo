@@ -1,6 +1,7 @@
 import os
 import unittest
 from unittest.mock import patch, MagicMock
+import pytest
 
 import requests.exceptions
 
@@ -11,6 +12,7 @@ from marqo.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
 from marqo.errors import MarqoWebError
 
 
+@pytest.mark.fixed
 class TestConstructLocalPath(unittest.TestCase):
 
     def setUp(self):
@@ -55,6 +57,7 @@ class TestConstructLocalPath(unittest.TestCase):
         mock_index_http_error_handler.assert_called_with("test_index")
 
 
+@pytest.mark.fixed
 class TestConstructCloudPath(unittest.TestCase):
     """If the request is sent to the cloud (e.g.,"https://api.marqo.ai"), and the API starts with
     indexes/, we should send api/v2/indexes instead
