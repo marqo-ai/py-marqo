@@ -18,3 +18,4 @@ class IndexStatus(str, Enum):
     MODIFYING = "MODIFYING"
     CREATING = "CREATING"
     DELETING = "DELETING"
+    FAILED = "FAILED"
