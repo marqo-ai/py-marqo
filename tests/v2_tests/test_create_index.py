@@ -1,25 +1,18 @@
+import uuid
+
 from pytest import mark
 
-from tests.marqo_test import MarqoTestCase
 from marqo.errors import MarqoWebError
+from tests.marqo_test import MarqoTestCase
+
 
 @mark.fixed
 @mark.ignore_during_cloud_tests
 class TestCreateIndex(MarqoTestCase):
-
-    def setUp(self) -> None:
-        """As this test class is testing index creation,
-        we need to create/delete index before/after each test"""
-        super().setUp()
-        self.index_name = "test_index"
-        try:
-            self.client.delete_index(index_name=self.index_name)
-        except MarqoWebError:
-            pass
+    index_name = "test_create_index" + str(uuid.uuid4()).replace('-', '')
 
     def tearDown(self):
         super().tearDown()
-        self.index_name = "test_index"
         try:
             self.client.delete_index(index_name=self.index_name)
         except MarqoWebError:
