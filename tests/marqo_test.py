@@ -207,7 +207,8 @@ class MarqoTestCase(TestCase):
                 if index.index_name.endswith(cls.index_suffix):
                     cls.cleanup_documents_from_index(cls, index.index_name)
         else:
-            cls.delete_open_source_indexes(cls.open_source_indexes_list)
+            if cls.open_source_indexes_list:
+                cls.delete_open_source_indexes(cls.open_source_indexes_list)
 
     def setUp(self) -> None:
         if not self.client.config.is_marqo_cloud and self.open_source_indexes_list:
