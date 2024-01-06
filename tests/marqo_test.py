@@ -211,6 +211,8 @@ class MarqoTestCase(TestCase):
                 cls.delete_open_source_indexes(cls.open_source_indexes_list)
 
     def setUp(self) -> None:
+        # We only clear indexes in open-source tests here as cloud tests indexes
+        # are cleared in prepare_cloud_index_for_test
         if not self.client.config.is_marqo_cloud and self.open_source_indexes_list:
             self.clear_open_source_indexes(self.open_source_indexes_list)
 
@@ -234,7 +236,9 @@ class MarqoTestCase(TestCase):
             open_source_test_index_name: Union[str, None],
             delete_index_documents_before_test: bool = True
     ):
-        """Get the test index name for unittest test cases, based on whether the test is running in a cloud environment.
+        """
+        Gets the name of an index that is used in a given unittest test case, based on whether the test is
+        running in a cloud environment. The names of indexes on the cloud and in open source are slightly different.
 
         In the case of cloud testing, it provides the name of the cloud index to be used.
         Additionally, it applies a unique run identifier to the index name and performs
