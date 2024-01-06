@@ -73,6 +73,7 @@ index_name_to_settings_mappings = {
             "splitMethod": "sentence",
         },
 
+        "storageClass": "marqo.balanced",
         "numberOfReplicas": 1,
     },
     # Structured indexes
@@ -116,7 +117,7 @@ index_name_to_settings_mappings = {
         "tensorFields": ["text_field_1", "image_field_1", "text_field_2"],
 
         "inferenceType": "marqo.CPU.large",
-        "numberOfReplicas": 2,
+        "numberOfInferences": 2,
     },
     CloudTestIndex.structured_text: {
         "type": "structured",
