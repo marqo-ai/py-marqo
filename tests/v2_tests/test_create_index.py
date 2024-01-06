@@ -6,10 +6,9 @@ from marqo.errors import MarqoWebError
 from tests.marqo_test import MarqoTestCase
 
 
-@mark.fixed
 @mark.ignore_during_cloud_tests
 class TestCreateIndex(MarqoTestCase):
-    index_name = "test_create_index" + str(uuid.uuid4()).replace('-', '')
+    index_name = "test-create_index" + str(uuid.uuid4()).replace('-', '')
 
     def tearDown(self):
         super().tearDown()
@@ -221,3 +220,19 @@ class TestCreateIndex(MarqoTestCase):
         self.assertEqual(["test", "image"], index_settings["tensorFields"])
         self.assertEqual("open_clip/ViT-B-16/laion400m_e31", index_settings["model"])
         self.assertEqual("simple", index_settings['imagePreprocessing']['patch_method'])
+
+    def test_dash_and_underscore_in_index_name(self):
+        """Test that we can create indexes with dash and underscore in the index name and
+        these two indexes are different indexes."""
+        self.client.create_index(index_name="test-dash-and-under-score", type="unstructured")
+        self.client.create_index(index_name="test_dash_and_under_score", type="unstructured")
+
+        self.client.index("test-dash-and-under-score").add_documents([{"test": "test"}], tensor_fields=["test"])
+        self.client.index("test_dash_and_under_score").add_documents([{"test": "test"}], tensor_fields=["test"])
+
+        res = self.client.index("test-dash-and-under-score").search(q="test", search_method="TENSOR")
+        self.assertEqual(1, len(res['hits']))
+
+        res = self.client.index("test_dash_and_under_score").search(q="test", search_method="TENSOR")
+        self.assertEqual(1, len(res['hits']))
+        self.open_source_indexes_list = ["test-dash-and-under-score", "test_dash_and_under_score"]
