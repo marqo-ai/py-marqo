@@ -52,19 +52,26 @@ tox
 
 ## NOTES ABOUT THE TEST SUITE BEHAVIOUR ##
 
-When `cluster.is_marqo_cloud` is set to True, the tests will have different setUp and tearDown procedures:
-- Indices will not be deleted after each test.
-- However, documents will be deleted on every call for index.
+The index creation and deletion is handled differently for cloud and open-source tests.
 
+
+1) Cloud Environment:
+When `cluster.is_marqo_cloud` is set to True:
+- All the indexes will be created at the start of the test suite, in file
+marqo.tests.populate_indices_for_cloud_tests.py
+- Indices will not be deleted until the end of the workflow
+- However, documents will be deleted on every call for index, in function prepare_cloud_index_for_test.
 The function prepare_cloud_index_for_test will be triggered whenever an index is called for the cloud tests.
 It performs cleanup for index documents and mocks the 'add_documents' method to call
-add_documents_and_mark_for_cleanup_patch instead, which acts as as a decorator for the original method.
+add_documents_and_mark_for_cleanup_patch instead, which acts as a decorator for the original method.
 This method stores a list of added documents for future cleanup of documents, and then performs the real request.
 
-We will not actually create and delete real cloud indexes
-during this test suite, because this slows down py-marqo <> Marqo cloud tests.
-We should still test these methods with mocking. End-to-end
-creation and deletion tests will be done elsewhere.
+2) Open-Source Environment:
+When `cluster.is_marqo_cloud` is set to False:
+- All the indexes will be created in the setUpClass method of the test suite. We should only use the
+created indexes in a test class.
+- Indices will not be deleted after each unittest, but will be cleared in the tearDownClass method of the test suite.
+- Documents will be deleted in the setUp method of each test class, before running any unittest.
 """
 
 import logging
