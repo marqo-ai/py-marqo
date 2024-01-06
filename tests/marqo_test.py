@@ -57,10 +57,10 @@ The index creation and deletion is handled differently for cloud and open-source
 
 1) Cloud Environment:
 When `cluster.is_marqo_cloud` is set to True:
-- All the indexes will be created at the start of the test suite, in file
+- All the indexes will be created at the start of the test run, in file
 marqo.tests.populate_indices_for_cloud_tests.py
 - Indices will not be deleted until the end of the workflow
-- However, documents will be deleted on every call for index, in function prepare_cloud_index_for_test.
+- However, documents will be deleted every time you call prepare_cloud_index_for_test.
 The function prepare_cloud_index_for_test will be triggered whenever an index is called for the cloud tests.
 It performs cleanup for index documents and mocks the 'add_documents' method to call
 add_documents_and_mark_for_cleanup_patch instead, which acts as a decorator for the original method.
@@ -70,8 +70,8 @@ This method stores a list of added documents for future cleanup of documents, an
 When `cluster.is_marqo_cloud` is set to False:
 - All the indexes will be created in the setUpClass method of the test suite. We should only use the
 created indexes in a test class.
-- Indices will not be deleted after each unittest, but will be cleared in the tearDownClass method of the test suite.
-- Documents will be deleted in the setUp method of each test class, before running any unittest.
+- Indices will not be deleted after each test method, but will be cleared in the tearDownClass method of the test suite.
+- Documents will be deleted before every test method runs in, via the test class' setUp() method.
 """
 
 import logging
@@ -218,8 +218,8 @@ class MarqoTestCase(TestCase):
                 cls.delete_open_source_indexes(cls.open_source_indexes_list)
 
     def setUp(self) -> None:
-        # We only clear indexes in open-source tests here as cloud tests indexes
-        # are cleared in prepare_cloud_index_for_test
+        """We only clear indexes in open-source tests here as cloud tests indexes
+        are cleared in prepare_cloud_index_for_test"""
         if not self.client.config.is_marqo_cloud and self.open_source_indexes_list:
             self.clear_open_source_indexes(self.open_source_indexes_list)
 

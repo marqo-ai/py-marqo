@@ -14,6 +14,7 @@ class CloudTestIndex(str, Enum):
     4) structured_image_prepro: a structured index with image-compatible models with image preprocessing
     5) structured_image_custom: a structured index with custom image-compatible models using 2 inference pods
     6) structured_text: a text-only index with balanced storage class and 2 shards.
+    For more information on the settings of each index, please refer to index_name_to_settings_mappings.
 
     We design these indexes to maximize the coverage of different settings and features. For each test method,
     we will have to manually specify which index to use.
