@@ -51,7 +51,7 @@ index_name_to_settings_mappings = {
 
         "inferenceType": "marqo.CPU.large",
         "storageClass": "marqo.balanced",
-        "numberOfReplicas": 2,
+        "numberOfReplicas": 1,
     },
     CloudTestIndex.unstructured_text_index_with_custom_model_and_text_preprocessing: {
         "type": "unstructured",
@@ -95,7 +95,7 @@ index_name_to_settings_mappings = {
 
         "inferenceType": "marqo.CPU.large",
         "storageClass": "marqo.balanced",
-        "numberOfReplicas": 2,
+        "numberOfReplicas": 1,
     },
     CloudTestIndex.structured_text_index_with_custom_model_and_text_preprocessing: {
         "type": "structured",
