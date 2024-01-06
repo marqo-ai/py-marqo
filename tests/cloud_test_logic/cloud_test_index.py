@@ -29,8 +29,8 @@ class CloudTestIndex(str, Enum):
     unstructured_image_index_with_image_preprocessing = "test_index_unstr_image"
     structured_image_index_with_image_preprocessing = "test_index_str_image"
 
-    unstructured_text_index_with_custom_model_and_text_preprocessing = "test_index_unstr_text_custom_model"
-    structured_text_index_with_custom_model_and_text_preprocessing = "test_index_str_text_custom_model"
+    unstructured_text_index_with_custom_model_and_text_preprocessing = "test_index_unstr_text"
+    structured_text_index_with_custom_model_and_text_preprocessing = "test_index_str_text"
     # no_model_index = "test-index-no-model"
 
 
