@@ -21,8 +21,7 @@ on:
     branches:
       - mainline
       - 'releases/*'
-      - mainline-poc  # TODO remove this once we have a mainline branch for V2
-  # allows other workflows to reuse these unit tests:
+   # allows other workflows to reuse these unit tests:
   workflow_call:
 
 permissions:
