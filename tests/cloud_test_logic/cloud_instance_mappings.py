@@ -31,7 +31,7 @@ class GetIndexesIndexResponseObject(NamedTuple):
     @staticmethod
     def get_default_index_object():
         return GetIndexesIndexResponseObject(
-            index_name="test-index",
+            index_name="test_index",
             index_status="READY",
             endpoint="endpoint"
         )

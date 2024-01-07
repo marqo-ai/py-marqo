@@ -115,6 +115,7 @@ jobs:
         run: |
           docker pull ${{ steps.prepare.outputs.registry }}/${{ steps.prepare.outputs.image_repo }}:${{ steps.prepare.outputs.image_tag }}
           docker run --name marqo -d --privileged -p 8882:8882 --add-host host.docker.internal:host-gateway \
+            -e MARQO_ENABLE_BATCH_APIS=True \
             ${{ steps.prepare.outputs.registry }}/${{ steps.prepare.outputs.image_repo }}:${{ steps.prepare.outputs.image_tag }}
                     
           # wait for marqo to start with timeout of 10 minutes

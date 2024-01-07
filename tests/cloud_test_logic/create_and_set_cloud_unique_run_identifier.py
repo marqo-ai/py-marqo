@@ -10,4 +10,4 @@ import uuid
 def set_unique_run_identifier():
     index_suffix = os.environ.get("MQ_TEST_RUN_IDENTIFIER", "")
     if not index_suffix:
-        os.environ["MQ_TEST_RUN_IDENTIFIER"] = str(uuid.uuid4())[:8]
+        os.environ["MQ_TEST_RUN_IDENTIFIER"] = str(uuid.uuid4())[:4]
