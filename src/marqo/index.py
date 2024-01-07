@@ -184,10 +184,6 @@ class Index:
                 cloud_wait_for_index_status(req, index_name, IndexStatus.READY)
             return response
 
-    def refresh(self):
-        """refreshes the index"""
-        return self.http.post(path=F"indexes/{self.index_name}/refresh", index_name=self.index_name,)
-
     def get_status(self):
         """gets the status of the index"""
         if self.config.is_marqo_cloud:
