@@ -34,7 +34,8 @@ def populate_indices():
 
 
     # Around 30 min:
-    max_retries = 200
+    # TODO Temporarily bump this to 3600s (1 hour) due to the slow performance of the staging environment
+    max_retries = 360
     attempt = 0
     while True:
         if all(creating_index + INDEX_NAME_SEPARATOR + test_uniqueness_id in mq.config.instance_mapping._urls_mapping["READY"].keys()
