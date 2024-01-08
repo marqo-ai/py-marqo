@@ -15,7 +15,7 @@ class IndexSettings(MarqoBaseModel):
         tensorFields: A list of all tensor fields in the index.
         treatUrlsAndPointersAsImages: Whether to treat urls and pointers as images.
             This unstructured index only parameter.
-        filterStringMaxLength: The threshold for short string length.
+        filterStringMaxLength: The max length of the filter string in unstructured index
         model: The name of the model to use for the index.
         modelProperties: A dictionary of model properties.
         normalizeEmbeddings: Whether to normalize embeddings.

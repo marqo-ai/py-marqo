@@ -166,7 +166,7 @@ class Index:
                 allFields=all_fields,
                 settingsDict=settings_dict,
                 treatUrlsAndPointersAsImages=treat_urls_and_pointers_as_images,
-                shortStringLengthThreshold=short_string_length_threshold,
+                filterStringMaxLength=filter_string_max_length,
                 tensorFields=tensor_fields,
                 model=model,
                 modelProperties=model_properties,
