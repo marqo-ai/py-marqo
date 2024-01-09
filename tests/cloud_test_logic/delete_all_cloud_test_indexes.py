@@ -13,17 +13,18 @@ def delete_all_test_indices(wait_for_readiness=False):
         "url": os.environ.get("MARQO_URL", 'http://localhost:8882'),
     }
     suffix = os.environ.get("MQ_TEST_RUN_IDENTIFIER", None)
+    prefix = "pymarqo"
     api_key = os.environ.get("MARQO_API_KEY", None)
     if api_key:
         local_marqo_settings["api_key"] = api_key
     print(f"Deleting all test indices from Marqo Cloud Account that match the following criteria:")
-    print(f"- index name starts with 'test_index'")
+    print(f"- index name starts with '{prefix}'")
     print(f"- index name contains the value of the environment variable MQ_TEST_RUN_IDENTIFIER: {suffix}\n")
     client = marqo.Client(**local_marqo_settings)
     indexes = client.get_indexes()
     indices_to_delete = []
     for index in indexes['results']:
-        if index["indexName"].startswith('test_index'):
+        if index["indexName"].startswith(prefix):
             if suffix is not None and suffix in index["indexName"].split('_'):
                 indices_to_delete.append(index["indexName"])
             elif suffix is None:
