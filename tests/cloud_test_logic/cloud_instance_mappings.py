@@ -13,10 +13,10 @@ class GetIndexesIndexResponseObject(NamedTuple):
     This class is used in the mock_instance_mappings decorator.
 
     Example Usage:
-    This will create basic index object with name "test-index", status "READY", and endpoint "endpoint"
+    This will create basic index object with name "py_marqo_test_index", status "READY", and endpoint "endpoint"
     >>> @mock_get_indexes_response([GetIndexesIndexResponseObject.get_default_index_object()])
     Response object would look:
-    {"results": [{"index_name": "test-index", "index_status": "READY", "endpoint": "endpoint"}]}
+    {"results": [{"index_name": "py_marqo_test_index", "index_status": "READY", "endpoint": "endpoint"}]}
 
     This will create index object with specified parameters
     >>> @mock_get_indexes_response([GetIndexesIndexResponseObject("other-index", "CREATING", "endpoint2")])
@@ -24,16 +24,16 @@ class GetIndexesIndexResponseObject(NamedTuple):
     {"results": [{"index_name": "other-index", "index_status": "CREATING", "endpoint": "endpoint2"}]}
 
 """
-    index_name: str
-    index_status: str
-    endpoint: str
+    indexName: str
+    indexStatus: str
+    marqoEndpoint: str
 
     @staticmethod
     def get_default_index_object():
         return GetIndexesIndexResponseObject(
-            index_name="test_index",
-            index_status="READY",
-            endpoint="endpoint"
+            indexName="py_marqo_test_index",
+            indexStatus="READY",
+            marqoEndpoint="endpoint"
         )
 
 
