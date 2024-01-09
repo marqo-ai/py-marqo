@@ -201,6 +201,14 @@ class MarqoTestCase(TestCase):
         cls.authorized_url = cls.client_settings["url"]
         cls.index_to_documents_cleanup_mapping = {}
         cls.client=marqo.Client(**cls.client_settings)
+        cls.generic_test_index_name = "py_marqo_test_index"
+        cls.unstructured_index_name = "unstructured_index"
+        cls.structured_index_name = "structured_index"
+        cls.unstructured_image_index_name = "unstructured_image_index"
+        # TODO: include structured when boolean_field bug for structured is fixed
+        cls.test_cases = [
+            (CloudTestIndex.unstructured_image, cls.unstructured_index_name),
+        ]
 
         # class property to indicate if test is being run on multi
         cls.IS_MULTI_INSTANCE = (True if os.environ.get("IS_MULTI_INSTANCE", False) in ["True", "TRUE", "true", True] else False)
@@ -211,8 +219,8 @@ class MarqoTestCase(TestCase):
         """
         if cls.client.config.is_marqo_cloud:
             for index in cls.client.get_indexes()['results']:
-                if index.index_name.endswith(cls.index_suffix):
-                    cls.cleanup_documents_from_index(cls, index.index_name)
+                if index["indexName"].endswith(cls.index_suffix):
+                    cls.cleanup_documents_from_index(cls, index["indexName"])
         else:
             if cls.open_source_indexes_list:
                 cls.delete_open_source_indexes(cls.open_source_indexes_list)
@@ -282,7 +290,7 @@ class MarqoTestCase(TestCase):
         if client.config.is_marqo_cloud:
             if cloud_test_index_to_use is None:
                 raise ValueError("cloud_test_index_to_use must be specified for cloud tests")
-            index_name_to_return = f"{cloud_test_index_to_use.value}-{self.index_suffix}"
+            index_name_to_return = f"{cloud_test_index_to_use.value}_{self.index_suffix}"
             self.prepare_cloud_index_for_test(index_name_to_return, delete_index_documents_before_test)
         else:
             index_name_to_return = open_source_test_index_name
@@ -378,7 +386,6 @@ class MarqoTestCase(TestCase):
         idx = client.index(index_to_cleanup)
         print(f"Deleting documents from index {idx.index_name}")
         try:
-            idx.refresh()
             # verifying that index is in the mapping
             client.config.instance_mapping.get_index_base_url(idx.index_name)
 
@@ -394,6 +401,7 @@ class MarqoTestCase(TestCase):
                 docs_to_delete = [i['_id'] for i in idx.search(q, limit=100)['hits']]
                 while idx.get_stats()["numberOfDocuments"] > 0 or docs_to_delete:
                     docs_to_delete = [i['_id'] for i in idx.search(q, limit=100)['hits']]
+                    print(docs_to_delete)
                     if docs_to_delete:
                         idx.delete_documents(docs_to_delete)
                     q = ''.join(choice(ascii_letters) for _ in range(8))
