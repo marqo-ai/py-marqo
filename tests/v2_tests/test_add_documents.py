@@ -426,27 +426,23 @@ class TestAddDocuments(MarqoTestCase):
             self.client.index(index_name=test_index_name).add_documents(
                 documents=[
                     {
-                        "combo_text_image": {
-                        "text_0": "A rider is riding a horse jumping over the barrier_0.",
-                        "text_1": "A rider is riding a horse jumping over the barrier_1.",
-                        "text_2": "A rider is riding a horse jumping over the barrier_2.",
-                        "text_3": "A rider is riding a horse jumping over the barrier_3.",
-                        "text_4": "A rider is riding a horse jumping over the barrier_4.",
+                        "text_0": "jumping barrier_0.",
+                        "text_1": "jumping barrier_1.",
+                        "text_2": "jumping barrier_2.",
+                        "text_3": "jumping barrier_3.",
+                        "text_4": "jumping barrier_4.",
                         "image_0": "https://marqo-assets.s3.amazonaws.com/tests/images/image0.jpg",
                         "image_1": "https://marqo-assets.s3.amazonaws.com/tests/images/image1.jpg",
                         "image_2": "https://marqo-assets.s3.amazonaws.com/tests/images/image2.jpg",
                         "image_3": "https://marqo-assets.s3.amazonaws.com/tests/images/image3.jpg",
                         "image_4": "https://marqo-assets.s3.amazonaws.com/tests/images/image4.jpg",
-                        },
-                        "space_field": {
-                            "space_child_1": "search this with space",
-                            "space_child_2": "test space",
-                        },
+                        "space_child_1": "search with space",
+                        "space_child_2": "test space",
                         "_id": "111",
                     },
 
                 ], mappings={"combo_text_image": {"type": "multimodal_combination", "weights": {
-                    "text_0 ": 0.1, "text_1": 0.1, "text_2": 0.1, "text_3": 0.1, "text_4": 0.1,
+                    "text_0": 0.1, "text_1": 0.1, "text_2": 0.1, "text_3": 0.1, "text_4": 0.1,
                     "image_0": 0.1, "image_1": 0.1, "image_2": 0.1, "image_3": 0.1, "image_4": 0.1,
                 }}, "space_field": {
                     "type": "multimodal_combination", "weights": {
@@ -456,20 +452,20 @@ class TestAddDocuments(MarqoTestCase):
 
             if self.IS_MULTI_INSTANCE:
                 self.warm_request(self.client.index(test_index_name).search,
-                                  "A rider is riding a horse jumping over the barrier_0", search_method="lexical")
+                                  "jumping barrier_0", search_method="lexical")
 
             lexical_res = self.client.index(test_index_name).search(
-                "A rider is riding a horse jumping over the barrier_0", search_method="lexical")
+                "jumping barrier_0", search_method="lexical")
             assert lexical_res["hits"][0]["_id"] == "111"
 
             # a space at the end
             if self.IS_MULTI_INSTANCE:
                 self.warm_request(self.client.index(test_index_name).search,
                                   "",
-                                  filter_string="combo_text_image.text_0\ : (A rider is riding a horse jumping over the barrier_0.)")
+                                  filter_string="text_0:(jumping barrier_0.)")
 
             filtering_res = self.client.index(test_index_name).search(
-                "", filter_string="combo_text_image.text_0\ : (A rider is riding a horse jumping over the barrier_0.)")
+                "", filter_string="text_0:(jumping barrier_0.)")
             assert filtering_res["hits"][0]["_id"] == "111"
 
             if self.IS_MULTI_INSTANCE:
@@ -480,19 +476,19 @@ class TestAddDocuments(MarqoTestCase):
 
             if self.IS_MULTI_INSTANCE:
                 self.warm_request(self.client.index(test_index_name).search,
-                                  "search this with space", search_method="lexical")
+                                  "search with space", search_method="lexical")
 
             space_lexical_res = self.client.index(test_index_name).search(
-                "search this with space", search_method="lexical")
+                "search with space", search_method="lexical")
             assert space_lexical_res["hits"][0]["_id"] == "111"
 
             # A space in the middle
             if self.IS_MULTI_INSTANCE:
                 self.warm_request(self.client.index(test_index_name).search,
-                                  "", filter_string="space\ field.space\ child\ 1:(search this with space)")
+                                  "", filter_string="space_child_1:(search this with space)")
 
             space_filtering_res = self.client.index(test_index_name).search(
-                "", filter_string="space\ field.space\ child\ 1:(search this with space)")
+                "", filter_string="space_child_1:(search with space)")
             assert space_filtering_res["hits"][0]["_id"] == "111"
 
             if self.IS_MULTI_INSTANCE:
