@@ -3,7 +3,6 @@ from tests.marqo_test import MarqoTestCase, CloudTestIndex
 from pytest import mark
 
 
-@mark.fixed
 class TestBoostSearch(MarqoTestCase):
 
     def setUp(self) -> None:
