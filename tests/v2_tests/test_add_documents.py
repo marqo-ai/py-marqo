@@ -21,12 +21,6 @@ class TestAddDocuments(MarqoTestCase):
     def setUpClass(cls) -> None:
         super().setUpClass()
 
-        cls.unstructured_index_name = "unstructured_index"
-        cls.structured_index_name = "structured_index"
-        # TODO: include structured when boolean_field bug for structured is fixed
-        cls.test_cases = [
-            (CloudTestIndex.unstructured_image, cls.unstructured_index_name),
-        ]
         if not cls.client.config.is_marqo_cloud:
             cls.create_open_source_indexes([
                 {

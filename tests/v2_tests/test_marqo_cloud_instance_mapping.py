@@ -264,46 +264,48 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
     def test_only_1_http_request_sent_for_search(self):
         if not self.client.config.is_marqo_cloud:
             self.skipTest("Test is not relevant for non-Marqo Cloud instances")
-        test_index_name = self.create_test_index(
-            cloud_test_index_to_use=CloudTestIndex.basic_index,
-            open_source_test_index_name=self.generic_test_index_name,
-        )
+        for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
+            test_index_name = self.get_test_index_name(
+                cloud_test_index_to_use=cloud_test_index_to_use,
+                open_source_test_index_name=open_source_test_index_name
+            )
 
-        # pop the index_name to force a refresh
-        self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp = time.time() - 366
-        self.client.config.instance_mapping._urls_mapping["READY"].pop(test_index_name, '')
+            # pop the index_name to force a refresh
+            self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp = time.time() - 366
+            self.client.config.instance_mapping._urls_mapping["READY"].pop(test_index_name, '')
 
-        with patch("marqo._httprequests.HttpRequests.post") as mock_post, \
-                patch("requests.get") as mock_get:
-            # 1 for the initial refresh, 1 for the search
-            self.client.index(test_index_name).search("test")
-            assert mock_post.call_count == 1
-            assert mock_get.call_count == 1
+            with patch("marqo._httprequests.HttpRequests.post") as mock_post, \
+                    patch("requests.get") as mock_get:
+                # 1 for the initial refresh, 1 for the search
+                self.client.index(test_index_name).search("test")
+                assert mock_post.call_count == 1
+                assert mock_get.call_count == 1
 
-            # increased for search, didn't change for refresh
-            self.client.index(test_index_name).search("test")
-            assert mock_post.call_count == 2
-            assert mock_get.call_count == 1
+                # increased for search, didn't change for refresh
+                self.client.index(test_index_name).search("test")
+                assert mock_post.call_count == 2
+                assert mock_get.call_count == 1
 
     def test_deleted_index_created_again(self):
         if not self.client.config.is_marqo_cloud:
             self.skipTest("Test is not relevant for non-Marqo Cloud instances")
 
-        test_index_name = self.create_test_index(
-            cloud_test_index_to_use=CloudTestIndex.basic_index,
-            open_source_test_index_name=self.generic_test_index_name,
-        )
-        bad_url = 'https://dummy-url-e0244394-4383-4869-b633-46e6fe4a3ac1.dp1.marqo.ai'
+        for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
+            test_index_name = self.get_test_index_name(
+                cloud_test_index_to_use=cloud_test_index_to_use,
+                open_source_test_index_name=open_source_test_index_name
+            )
+            bad_url = 'https://dummy-url-e0244394-4383-4869-b633-46e6fe4a3ac1.dp1.marqo.ai'
 
-        # trigger the version check, if needed, to make this fair between individual runs and
-        # running the entire test suite
-        self.client.index(test_index_name)
-        marqo_url_and_version_cache[bad_url] = '_skipped'
+            # trigger the version check, if needed, to make this fair between individual runs and
+            # running the entire test suite
+            self.client.index(test_index_name)
+            marqo_url_and_version_cache[bad_url] = '_skipped'
 
-        # set time to now to prevent the mappings from refreshing prematurely
-        mappings = self.client.config.instance_mapping
-        mappings.latest_index_mappings_refresh_timestamp = time.time()
-        mappings._urls_mapping[IndexStatus.READY][test_index_name] = bad_url
+            # set time to now to prevent the mappings from refreshing prematurely
+            mappings = self.client.config.instance_mapping
+            mappings.latest_index_mappings_refresh_timestamp = time.time()
+            mappings._urls_mapping[IndexStatus.READY][test_index_name] = bad_url
 
 
         with mock.patch('marqo.index.Index._marqo_minimum_supported_version_check'):
@@ -339,29 +341,30 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
     def test_when_needed_http_request_for_get_indexes_is_sent(self):
         if not self.client.config.is_marqo_cloud:
             self.skipTest("Test is not relevant for non-Marqo Cloud instances")
-        test_index_name = self.create_test_index(
-            cloud_test_index_to_use=CloudTestIndex.basic_index,
-            open_source_test_index_name=self.generic_test_index_name,
-        )
+        for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
+            test_index_name = self.get_test_index_name(
+                cloud_test_index_to_use=cloud_test_index_to_use,
+                open_source_test_index_name=open_source_test_index_name
+            )
 
-        from marqo._httprequests import HttpRequests as HttpReq2
-        # these assignments allow HttpRequests.post to used while also being mocked,
-        # while preventing infinite recursion:
-        h = HttpReq2(config=self.client.config)
-        v = h.post
+            from marqo._httprequests import HttpRequests as HttpReq2
+            # these assignments allow HttpRequests.post to used while also being mocked,
+            # while preventing infinite recursion:
+            h = HttpReq2(config=self.client.config)
+            v = h.post
 
-        def pass_through_post(*args, **kwargs):
-            return v(*args, **kwargs)
+            def pass_through_post(*args, **kwargs):
+                return v(*args, **kwargs)
 
-        # pop the index_name to force a refresh
-        # Ensure the mappings are ready:
-        self.client.index(test_index_name).search("test")
-        simulated_last_reset_time = time.time() - 366
-        self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp =  simulated_last_reset_time
-        # 1 for the initial refresh, 1 for the search
-        mock_post = mock.MagicMock()
-        mock_get = mock.MagicMock()
-        mock_post.side_effect = pass_through_post
+            # pop the index_name to force a refresh
+            # Ensure the mappings are ready:
+            self.client.index(test_index_name).search("test")
+            simulated_last_reset_time = time.time() - 366
+            self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp = simulated_last_reset_time
+            # 1 for the initial refresh, 1 for the search
+            mock_post = mock.MagicMock()
+            mock_get = mock.MagicMock()
+            mock_post.side_effect = pass_through_post
 
         @mock.patch("marqo._httprequests.HttpRequests.post", mock_post)
         @mock.patch("requests.get", mock_get)
@@ -495,20 +498,21 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
     def test_search_call_does_not_refresh_urls_when_not_needed(self):
         if not self.client.config.is_marqo_cloud:
             self.skipTest("Test is not relevant for non-Marqo Cloud instances")
-        test_index_name = self.create_test_index(
-            cloud_test_index_to_use=CloudTestIndex.basic_index,
-            open_source_test_index_name=self.generic_test_index_name,
-        )
+        for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
+            test_index_name = self.get_test_index_name(
+                cloud_test_index_to_use=cloud_test_index_to_use,
+                open_source_test_index_name=open_source_test_index_name
+            )
 
-        time_now = time.time()
-        self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp -= 361
-        idx = self.client.index(test_index_name)
-        self.client.config.instance_mapping.index_http_error_handler(test_index_name)
-        assert self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp > time_now
+            time_now = time.time()
+            self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp -= 361
+            idx = self.client.index(test_index_name)
+            self.client.config.instance_mapping.index_http_error_handler(test_index_name)
+            assert self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp > time_now
 
-        last_refresh = self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp
-        idx.search("test")
-        assert self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp == last_refresh
+            last_refresh = self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp
+            idx.search("test")
+            assert self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp == last_refresh
 
     @mock_get_indexes_response([GetIndexesIndexResponseObject("index2", "READY", "example.com"),
                                 GetIndexesIndexResponseObject("index3", IndexStatus.CREATING, "example.com")])
@@ -531,14 +535,15 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         if not self.client.config.is_marqo_cloud:
             self.skipTest("Test is not relevant for non-Marqo Cloud instances")
 
-        test_index_name = self.create_test_index(
-            cloud_test_index_to_use=CloudTestIndex.basic_index,
-            open_source_test_index_name=self.generic_test_index_name,
-        )
-        self.client.config.instance_mapping.get_index_base_url(test_index_name)
-        assert self.client.config.instance_mapping.is_index_usage_allowed(test_index_name)
+        for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
+            test_index_name = self.get_test_index_name(
+                cloud_test_index_to_use=cloud_test_index_to_use,
+                open_source_test_index_name=open_source_test_index_name
+            )
+            self.client.config.instance_mapping.get_index_base_url(test_index_name)
+            assert self.client.config.instance_mapping.is_index_usage_allowed(test_index_name)
 
-        assert not self.client.config.instance_mapping.is_index_usage_allowed("not-existing-index")
+            assert not self.client.config.instance_mapping.is_index_usage_allowed("not-existing-index")
 
     @mock_get_indexes_response([GetIndexesIndexResponseObject("index1", IndexStatus.CREATING, "example.com"),
                                 GetIndexesIndexResponseObject("index2", IndexStatus.MODIFYING, "example2.com"),

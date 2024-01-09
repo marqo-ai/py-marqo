@@ -202,6 +202,12 @@ class MarqoTestCase(TestCase):
         cls.index_to_documents_cleanup_mapping = {}
         cls.client=marqo.Client(**cls.client_settings)
         cls.generic_test_index_name = "py_marqo_test_index"
+        cls.unstructured_index_name = "unstructured_index"
+        cls.structured_index_name = "structured_index"
+        # TODO: include structured when boolean_field bug for structured is fixed
+        cls.test_cases = [
+            (CloudTestIndex.unstructured_image, cls.unstructured_index_name),
+        ]
 
         # class property to indicate if test is being run on multi
         cls.IS_MULTI_INSTANCE = (True if os.environ.get("IS_MULTI_INSTANCE", False) in ["True", "TRUE", "true", True] else False)
