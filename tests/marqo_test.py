@@ -204,6 +204,7 @@ class MarqoTestCase(TestCase):
         cls.generic_test_index_name = "py_marqo_test_index"
         cls.unstructured_index_name = "unstructured_index"
         cls.structured_index_name = "structured_index"
+        cls.unstructured_image_index_name = "unstructured_image_index"
         # TODO: include structured when boolean_field bug for structured is fixed
         cls.test_cases = [
             (CloudTestIndex.unstructured_image, cls.unstructured_index_name),

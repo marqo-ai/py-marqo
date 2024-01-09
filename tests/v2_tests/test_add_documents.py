@@ -34,6 +34,12 @@ class TestAddDocuments(MarqoTestCase):
                                   {"name": "text_field_2", "type": "text"},
                                   {"name": "text_field_3", "type": "text"}],
                     "tensorFields": ["text_field_1", "text_field_2", "text_field_3"]
+                },
+                {
+                    "indexName": cls.unstructured_image_index_name,
+                    "type": "unstructured",
+                    "treatUrlsAndPointersAsImages": True,
+                    "model": "ViT-B/32",
                 }
             ])
 
@@ -368,7 +374,36 @@ class TestAddDocuments(MarqoTestCase):
 
                 return True
 
-                assert run()
+            assert run()
+
+    def test_add_lists(self):
+        original_doc = {"d1": "blah", "_id": "1234", 'my_list': ['tag-1', 'tag-2']}
+        for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
+            test_index_name = self.get_test_index_name(
+                cloud_test_index_to_use=cloud_test_index_to_use,
+                open_source_test_index_name=open_source_test_index_name
+            )
+            self.client.index(test_index_name).add_documents(documents=[original_doc], tensor_fields=['d1'])
+
+            if self.IS_MULTI_INSTANCE:
+                self.warm_request(self.client.index(test_index_name).search,
+                                  q='something', filter_string='my_list:tag-1'
+                                  )
+
+            res = self.client.index(test_index_name).search(
+                q='something', filter_string='my_list:tag-1'
+            )
+            assert res['hits'][0]['_id'] == '1234'
+
+            if self.IS_MULTI_INSTANCE:
+                self.warm_request(self.client.index(test_index_name).search,
+                                  q='something', filter_string='my_list:tag-non-existent'
+                                  )
+
+            bad_res = self.client.index(test_index_name).search(
+                q='something', filter_string='my_list:tag-non-existent'
+            )
+            assert len(bad_res['hits']) == 0
 
     # TODO: Fix when use_existing_tensors bug is fixed
     # def test_use_existing_fields(self):
@@ -413,6 +448,7 @@ class TestAddDocuments(MarqoTestCase):
 
     def test_multimodal_combination_doc(self):
         for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
+            open_source_test_index_name = self.unstructured_image_index_name
             test_index_name = self.get_test_index_name(
                 cloud_test_index_to_use=cloud_test_index_to_use,
                 open_source_test_index_name=open_source_test_index_name
