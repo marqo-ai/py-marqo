@@ -69,7 +69,7 @@ class Client:
         type: Optional[marqo_index.IndexType] = None,
         settings_dict: Optional[Dict[str, Any]] = None,
         treat_urls_and_pointers_as_images: Optional[bool] = None,
-        short_string_length_threshold: Optional[int] = None,
+        filter_string_max_length: Optional[int] = None,
         all_fields: Optional[List[marqo_index.FieldRequest]] = None,
         tensor_fields: Optional[List[str]] = None,
         model: Optional[str] = None,
@@ -98,7 +98,7 @@ class Client:
                 parameters, and is passed directly as the index's
                 index_settings
             treat_urls_and_pointers_as_images: whether to treat urls and pointers as images
-            short_string_length_threshold: threshold for short string length in unstructured indexes,
+            filter_string_max_length: threshold for short string length in unstructured indexes,
                 Marqo can filter on short strings but can not filter on long strings
             all_fields: list of all the fields in the structured index
             tensor_fields: list of fields to be tensorized
@@ -130,7 +130,7 @@ class Client:
             config=self.config, index_name=index_name,
             type=type, settings_dict=settings_dict,
             treat_urls_and_pointers_as_images=treat_urls_and_pointers_as_images,
-            short_string_length_threshold=short_string_length_threshold,
+            filter_string_max_length=filter_string_max_length,
             all_fields=all_fields, tensor_fields=tensor_fields,
             model=model, model_properties=model_properties,
             normalize_embeddings=normalize_embeddings,
