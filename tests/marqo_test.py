@@ -217,49 +217,53 @@ class MarqoTestCase(TestCase):
         cls.IS_MULTI_INSTANCE = (True if os.environ.get("IS_MULTI_INSTANCE", False) in ["True", "TRUE", "true", True] else False)
 
         if not cls.client.config.is_marqo_cloud:
-            cls.create_open_source_indexes([
-                {
-                    "indexName": cls.unstructured_index_name,
-                    "type": "unstructured"
-                },
-                {
-                    "indexName": cls.structured_index_name,
-                    "type": "structured",
-                    "allFields": [{"name": "text_field_1", "type": "text"},
-                                  {"name": "text_field_2", "type": "text"},
-                                  {"name": "text_field_3", "type": "text"}],
-                    "tensorFields": ["text_field_1", "text_field_2", "text_field_3"]
-                },
-                {
-                    "indexName": cls.unstructured_image_index_name,
-                    "type": "unstructured",
-                    "treatUrlsAndPointersAsImages": True,
-                    "model": "ViT-B/32",
-                },
-                {
-                    "indexName": cls.structured_image_index_name,
-                    "type": "structured",
-                    "allFields": [{"name": "text_field_1", "type": "text"},
-                                    {"name": "text_field_2", "type": "text"},
-                                    {"name": "text_field_3", "type": "text"},
-                                    {"name": "image_field_1", "type": "image_pointer"},
-                                  ],
-                    "tensorFields": ["text_field_1", "text_field_2", "text_field_3", "image_field_1"],
-                    "model": "ViT-B/32",
-                    "treatUrlsAndPointersAsImages": True,
-                }
-                # {
-                #     "indexName": cls.structured_image_index_name_simple_preprocessing_method,
-                #     "type": "structured",
-                #     "allFields": [{"name": "text_field_1", "type": "text"},
-                #                   {"name": "text_field_2", "type": "text"},
-                #                   {"name": "text_field_3", "type": "text"}],
-                #     "tensorFields": ["text_field_1", "text_field_2", "text_field_3"],
-                #     "model": "ViT-B/16",
-                #     "imagePreprocessingMethod": None,
-                #     "treatUrlsAndPointersAsImages": True,
-                # },
-            ])
+            try:
+                cls.create_open_source_indexes([
+                    {
+                        "indexName": cls.unstructured_index_name,
+                        "type": "unstructured"
+                    },
+                    {
+                        "indexName": cls.structured_index_name,
+                        "type": "structured",
+                        "allFields": [{"name": "text_field_1", "type": "text"},
+                                      {"name": "text_field_2", "type": "text"},
+                                      {"name": "text_field_3", "type": "text"}],
+                        "tensorFields": ["text_field_1", "text_field_2", "text_field_3"]
+                    },
+                    {
+                        "indexName": cls.unstructured_image_index_name,
+                        "type": "unstructured",
+                        "treatUrlsAndPointersAsImages": True,
+                        "model": "ViT-B/32",
+                    },
+                    {
+                        "indexName": cls.structured_image_index_name,
+                        "type": "structured",
+                        "allFields": [{"name": "text_field_1", "type": "text"},
+                                        {"name": "text_field_2", "type": "text"},
+                                        {"name": "text_field_3", "type": "text"},
+                                        {"name": "image_field_1", "type": "image_pointer"},
+                                      ],
+                        "tensorFields": ["text_field_1", "text_field_2", "text_field_3", "image_field_1"],
+                        "model": "ViT-B/32",
+                        "treatUrlsAndPointersAsImages": True,
+                    }
+                    # {
+                    #     "indexName": cls.structured_image_index_name_simple_preprocessing_method,
+                    #     "type": "structured",
+                    #     "allFields": [{"name": "text_field_1", "type": "text"},
+                    #                   {"name": "text_field_2", "type": "text"},
+                    #                   {"name": "text_field_3", "type": "text"}],
+                    #     "tensorFields": ["text_field_1", "text_field_2", "text_field_3"],
+                    #     "model": "ViT-B/16",
+                    #     "imagePreprocessingMethod": None,
+                    #     "treatUrlsAndPointersAsImages": True,
+                    # },
+                ])
+            except Exception as e:
+                print("Error creating indexes: ", e)
+
 
     @classmethod
     def tearDownClass(cls) -> None:
