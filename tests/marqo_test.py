@@ -226,9 +226,9 @@ class MarqoTestCase(TestCase):
                     {
                         "indexName": cls.structured_index_name,
                         "type": "structured",
-                        "allFields": [{"name": "text_field_1", "type": "text"},
-                                      {"name": "text_field_2", "type": "text"},
-                                      {"name": "text_field_3", "type": "text"}],
+                        "allFields": [{"name": "text_field_1", "type": "text", "features": ["lexical_search"]},
+                                      {"name": "text_field_2", "type": "text", "features": ["lexical_search"]},
+                                      {"name": "text_field_3", "type": "text", "features": ["lexical_search"]}],
                         "tensorFields": ["text_field_1", "text_field_2", "text_field_3"]
                     },
                     {
@@ -240,12 +240,12 @@ class MarqoTestCase(TestCase):
                     {
                         "indexName": cls.structured_image_index_name,
                         "type": "structured",
-                        "allFields": [{"name": "text_field_1", "type": "text"},
-                                        {"name": "text_field_2", "type": "text"},
-                                        {"name": "text_field_3", "type": "text"},
+                        "allFields": [{"name": "text_field_1", "type": "text", "features": ["lexical_search"]},
+                                        {"name": "text_field_2", "type": "text", "features": ["lexical_search"]},
+                                        {"name": "text_field_3", "type": "text", "features": ["lexical_search"]},
                                         {"name": "image_field_1", "type": "image_pointer"},
                                       ],
-                        "tensorFields": ["text_field_1", "text_field_2", "text_field_3", "image_field_1"],
+                        "tensorFields": ["text_field_1", "text_field_2", "text_field_3"],
                         "model": "ViT-B/32",
                         "treatUrlsAndPointersAsImages": True,
                     }
