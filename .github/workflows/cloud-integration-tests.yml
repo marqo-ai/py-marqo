@@ -4,7 +4,7 @@
 # There is also manual trigger to the workflow in which user can specify
 # which job to run. Either delete_all_indexes or run_integration_tests.
 # Keep in mind that delete_all_indexes will delete ALL indexes in the
-# integration tests account that starts with the prefix "test-index".
+# integration tests account that starts with the prefix "test_index".
 
 name: Cloud Integration Tests
 
@@ -14,13 +14,14 @@ on:
       job_to_run:
         description: 'Job to run (Options: delete_all_indexes, run_integration_tests). Keep in mind
           that delete_all_indexes will delete ALL indexes in the integration tests account that starts 
-          with the prefix "test-index". Even those that were not created by this workflow.'
+          with the prefix "test_index". Even those that were not created by this workflow.'
         required: true
         default: 'run_integration_tests'
-  pull_request_review:
-    types:
-      - submitted
-  # allows other workflows to reuse these unit tests:
+  pull_request:
+    branches:
+      - mainline
+      - 'releases/*'
+   # allows other workflows to reuse these unit tests:
   workflow_call:
 
 permissions:
@@ -51,9 +52,10 @@ jobs:
 
       - name: Run tox
         env:
-          MARQO_URL: ${{ secrets.CLOUD_MARQO_URL }}
-          MARQO_CLOUD_URL: ${{ secrets.CLOUD_MARQO_URL }}
-          MARQO_API_KEY: ${{ secrets.CLOUD_MARQO_API_KEY }}
+          # TODO change back to PROD once marqo v2 is in prod
+          MARQO_URL: ${{ secrets.STAGING_CLOUD_MARQO_URL }}
+          MARQO_CLOUD_URL: ${{ secrets.STAGING_CLOUD_MARQO_URL }}
+          MARQO_API_KEY: ${{ secrets.STAGING_CLOUD_MARQO_API_KEY }}
         run: tox -e cloud_tests -- create-indexes=True use-unique-identifier=True delete-indexes=True
 
   cleanup_indexes:
@@ -79,7 +81,8 @@ jobs:
 
       - name: Run cleanup_indexes.py
         env:
-          MARQO_URL: ${{ secrets.CLOUD_MARQO_URL }}
-          MARQO_CLOUD_URL: ${{ secrets.CLOUD_MARQO_URL }}
-          MARQO_API_KEY: ${{ secrets.CLOUD_MARQO_API_KEY }}
+          # TODO change back to PROD once marqo v2 is in prod
+          MARQO_URL: ${{ secrets.STAGING_CLOUD_MARQO_URL }}
+          MARQO_CLOUD_URL: ${{ secrets.STAGING_CLOUD_MARQO_URL }}
+          MARQO_API_KEY: ${{ secrets.STAGING_CLOUD_MARQO_API_KEY }}
         run: python tests/cloud_test_logic/delete_all_cloud_test_indexes.py

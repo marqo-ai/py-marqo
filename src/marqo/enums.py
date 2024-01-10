@@ -1,6 +1,7 @@
 """enums to be used by consumers of the Marqo client"""
 from enum import Enum
 
+
 class SearchMethods(str, Enum):
     LEXICAL = "LEXICAL"
     TENSOR = "TENSOR"
@@ -11,8 +12,10 @@ class Devices:
     cuda = "cuda"
 
 
-class IndexStatus:
+class IndexStatus(str, Enum):
     READY = "READY"
     DELETED = "DELETED"
     MODIFYING = "MODIFYING"
     CREATING = "CREATING"
+    DELETING = "DELETING"
+    FAILED = "FAILED"

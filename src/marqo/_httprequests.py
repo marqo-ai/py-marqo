@@ -1,8 +1,10 @@
 import copy
 import json
-from typing import get_args, Any, Callable, Dict, Literal, List, Optional, Tuple, Union
-import requests
 from json.decoder import JSONDecodeError
+from typing import get_args, Any, Callable, Dict, Literal, List, Optional, Tuple, Union
+
+import requests
+
 from marqo.config import Config
 from marqo.errors import (
     MarqoWebError,
@@ -36,8 +38,10 @@ class HttpRequests:
     def _construct_path(self, path: str, index_name="") -> str:
         """Augment the URL request path based if telemetry is required."""
         base_url = self.config.instance_mapping.get_index_base_url(index_name=index_name) if index_name \
-            else self.config.instance_mapping.get_control_base_url()
+            else self.config.instance_mapping.get_control_base_url(path=path)
+
         url = f"{base_url}/{path}"
+
         if self.config.use_telemetry:
             delimeter= "?" if "?" not in f"{base_url}/{path}" else "&"
             return url + f"{delimeter}telemetry=True"

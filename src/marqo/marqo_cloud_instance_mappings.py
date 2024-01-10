@@ -11,6 +11,7 @@ from marqo.errors import (
 from marqo.instance_mappings import InstanceMappings
 from marqo.marqo_logging import mq_logger
 from marqo.enums import IndexStatus
+from marqo.models.marqo_cloud import ListIndexesResponse
 
 
 class MarqoCloudInstanceMappings(InstanceMappings):
@@ -22,8 +23,12 @@ class MarqoCloudInstanceMappings(InstanceMappings):
         self.url_cache_duration = url_cache_duration
         self._control_base_url = control_base_url
 
-    def get_control_base_url(self) -> str:
-        return f"{self._control_base_url}/api"
+    def get_control_base_url(self, path: str = "") -> str:
+        if path.startswith('indexes'):
+            # Add v2 prefix if the request is sent to controller index API
+            return f"{self._control_base_url}/api/v2"
+        else:
+            return f"{self._control_base_url}/api"
 
     def get_index_base_url(self, index_name: str) -> str:
         """Returns the index_name's base URL regardless of its status.
@@ -49,13 +54,15 @@ class MarqoCloudInstanceMappings(InstanceMappings):
 
     def _refresh_urls(self, timeout=None):
         mq_logger.debug("Refreshing Marqo Cloud index URL cache")
+        path = "indexes"
+        base_url = self.get_control_base_url(path=path)
         try:
-            response = requests.get(f'{self.get_control_base_url()}/indexes',
+            response = requests.get(f'{base_url}/{path}',
                                     headers={"x-api-key": self.api_key}, timeout=timeout)
         except Timeout:
             mq_logger.warning(
                 f"Timeout getting and caching URLs for Marqo Cloud indexes from the"
-                f" /api/indexes/ endpoint. Please contact marqo support at support@marqo.ai if this message"
+                f" /api/v2/indexes/ endpoint. Please contact marqo support at support@marqo.ai if this message"
                 f" persists."
             )
             return None
@@ -65,11 +72,12 @@ class MarqoCloudInstanceMappings(InstanceMappings):
             return None
         response_json = response.json()
         self._urls_mapping = {IndexStatus.READY: {}, IndexStatus.CREATING: {}}
-        for index in response_json['results']:
-            if index.get('index_status') in [IndexStatus.READY, IndexStatus.MODIFYING]:
-                self._urls_mapping[IndexStatus.READY][index['index_name']] = index.get('endpoint')
-            elif index.get('index_status') == IndexStatus.CREATING:
-                self._urls_mapping[IndexStatus.CREATING][index['index_name']] = index.get('endpoint')
+        for raw_response in response_json['results']:
+            index_response = ListIndexesResponse(**raw_response)
+            if index_response.indexStatus in [IndexStatus.READY, IndexStatus.MODIFYING]:
+                self._urls_mapping[IndexStatus.READY][index_response.indexName] = index_response.marqoEndpoint
+            elif index_response.indexStatus == IndexStatus.CREATING:
+                self._urls_mapping[IndexStatus.CREATING][index_response.indexName] = index_response.marqoEndpoint
         if self._urls_mapping:
             self.latest_index_mappings_refresh_timestamp = time.time()
 
