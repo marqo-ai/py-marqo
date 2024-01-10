@@ -1,10 +1,8 @@
 import base64
 import os
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from pydantic import error_wrappers
-from requests.exceptions import RequestException
-from typing_extensions import deprecated
 
 from marqo.cloud_helpers import cloud_wait_for_index_status
 from marqo.default_instance_mappings import DefaultInstanceMappings
@@ -16,12 +14,7 @@ from marqo.models.search_models import BulkSearchBody, BulkSearchQuery
 from marqo._httprequests import HttpRequests
 from marqo import utils, enums
 from marqo import errors
-from marqo.marqo_logging import mq_logger
-from marqo.errors import MarqoWebError
-# we want to avoid name conflicts with marqo.version
-from json import JSONDecodeError
-
-# A dictionary to cache the marqo url and version for compatibility check
+from marqo.models import marqo_index
 
 
 class Client:
@@ -72,69 +65,85 @@ class Client:
         self.http = HttpRequests(self.config)
 
     def create_index(
-            self, index_name: str,
-            treat_urls_and_pointers_as_images=None,
-            model=None,
-            normalize_embeddings=None,
-            sentences_per_chunk=None,
-            sentence_overlap=None,
-            image_preprocessing_method=None,
-            settings_dict=None,
-            inference_node_type=None,
-            storage_node_type=None,
-            inference_node_count=None,
-            storage_node_count=None,
-            replicas_count=None,
-            wait_for_readiness=None,
-            inference_type=None,
-            storage_class=None,
-            number_of_inferences=None,
-            number_of_shards=None,
-            number_of_replicas=None
-) -> Dict[str, Any]:
+        self, index_name: str,
+        type: Optional[marqo_index.IndexType] = None,
+        settings_dict: Optional[Dict[str, Any]] = None,
+        treat_urls_and_pointers_as_images: Optional[bool] = None,
+        filter_string_max_length: Optional[int] = None,
+        all_fields: Optional[List[marqo_index.FieldRequest]] = None,
+        tensor_fields: Optional[List[str]] = None,
+        model: Optional[str] = None,
+        model_properties: Optional[Dict[str, Any]] = None,
+        normalize_embeddings: Optional[bool] = None,
+        text_preprocessing: Optional[marqo_index.TextPreProcessing] = None,
+        image_preprocessing: Optional[marqo_index.ImagePreProcessing] = None,
+        vector_numeric_type: Optional[marqo_index.VectorNumericType] = None,
+        ann_parameters: Optional[marqo_index.AnnParameters] = None,
+        wait_for_readiness: bool = True,
+        inference_type: Optional[str] = None,
+        storage_class: Optional[str] = None,
+        number_of_shards: Optional[int] = None,
+        number_of_replicas: Optional[int] = None,
+        number_of_inferences: Optional[int] = None,
+    ) -> Dict[str, Any]:
         """Create the index. Please refer to the marqo cloud to see options for inference and storage node types.
         Calls Index.create() with the same parameters.
-        All parameters are optional, and will be set to their default values if not specified.
-        Default values can be found in models/create_index_settings.py CreateIndexSettings class.
-
-
+        All parameters are optional, and will be set to None if not specified.
+        We leave the default values to be set by Marqo.
 
         Args:
             index_name: name of the index.
-            treat_urls_and_pointers_as_images:
-            model:
-            normalize_embeddings:
-            sentences_per_chunk:
-            sentence_overlap:
-            image_preprocessing_method:
+            type: type of the index, structure or unstructured
             settings_dict: if specified, overwrites all other setting
                 parameters, and is passed directly as the index's
                 index_settings
-            inference_node_type (deprecated): inference type for the index. replaced by inference_type
-            storage_node_type (deprecated): storage type for the index. replaced by storage_class
-            inference_node_count (deprecated): number of inference nodes for the index. replaced by number_of_inferences
-            storage_node_count (deprecated): number of storage nodes for the index. replaced by number_of_shards
-            replicas_count (deprecated): number of replicas for the index. replaced by number_of_replicas
-            wait_for_readiness:
-            inference_type:
-            storage_class:
-            number_of_inferences:
-            number_of_shards:
-            number_of_replicas:
+            treat_urls_and_pointers_as_images: whether to treat urls and pointers as images
+            filter_string_max_length: threshold for short string length in unstructured indexes,
+                Marqo can filter on short strings but can not filter on long strings
+            all_fields: list of all the fields in the structured index
+            tensor_fields: list of fields to be tensorized
+            model: name of the model to be used for the index
+            model_properties: properties of the model to be used for the index
+            normalize_embeddings: whether to normalize embeddings
+            text_preprocessing: text preprocessing settings
+            image_preprocessing: image preprocessing settings
+            vector_numeric_type: vector numeric type
+            ann_parameters: approximate nearest neighbors parameters
+            wait_for_readiness: Marqo Cloud specific, whether to wait until
+                operation is completed or to proceed without waiting for status,
+                won't do anything if config.is_marqo_cloud=False
+            inference_type: inference type for the index
+            storage_class: storage class for the index
+            number_of_inferences: number of inferences for the index
+            number_of_shards: number of shards for the index
+            number_of_replicas: number of replicas for the index
+        Note:
+            wait_for_readiness, inference_type, storage_class, number_of_inferences,
+            number_of_shards, number_of_replicas are Marqo Cloud specific parameters,
+
+
+
         Returns:
             Response body, containing information about index creation result
         """
         return Index.create(
             config=self.config, index_name=index_name,
+            type=type, settings_dict=settings_dict,
             treat_urls_and_pointers_as_images=treat_urls_and_pointers_as_images,
-            model=model, normalize_embeddings=normalize_embeddings,
-            sentences_per_chunk=sentences_per_chunk, sentence_overlap=sentence_overlap,
-            image_preprocessing_method=image_preprocessing_method,
-            settings_dict=settings_dict, inference_node_type=inference_node_type, storage_node_type=storage_node_type,
-            storage_node_count=storage_node_count, replicas_count=replicas_count,
-            inference_node_count=inference_node_count, wait_for_readiness=wait_for_readiness,
-            inference_type=inference_type, storage_class=storage_class, number_of_inferences=number_of_inferences,
-            number_of_shards=number_of_shards, number_of_replicas=number_of_replicas
+            filter_string_max_length=filter_string_max_length,
+            all_fields=all_fields, tensor_fields=tensor_fields,
+            model=model, model_properties=model_properties,
+            normalize_embeddings=normalize_embeddings,
+            text_preprocessing=text_preprocessing,
+            image_preprocessing=image_preprocessing,
+            vector_numeric_type=vector_numeric_type,
+            ann_parameters=ann_parameters,
+            wait_for_readiness=wait_for_readiness,
+            inference_type=inference_type,
+            storage_class=storage_class,
+            number_of_shards=number_of_shards,
+            number_of_replicas=number_of_replicas,
+            number_of_inferences=number_of_inferences,
         )
 
     def delete_index(self, index_name: str, wait_for_readiness=True) -> Dict[str, Any]:
@@ -190,21 +199,18 @@ class Client:
             return Index(self.config, index_name=index_name)
         raise Exception('The index UID should not be None')
 
-    def get_indexes(self) -> Dict[str, List[Index]]:
+    def get_indexes(self) -> Dict[str, List[Dict[str, str]]]:
         """Get all indexes.
 
         Returns:
         Indexes, a dictionary with the name of indexes.
         """
         response = self.http.get(path='indexes')
-        response['results'] = [
-            Index(
-                config=self.config,
-                index_name=index_info["index_name"],
-            )
-            for index_info in response["results"]
-        ]
-        return response
+        return {
+            "results": [
+                {"indexName": index_info["indexName"]} for index_info in response["results"]
+            ]
+        }
 
     def bulk_search(self, queries: List[Dict[str, Any]], device: Optional[str] = None) -> Dict[str, Any]:
         try:
@@ -226,73 +232,6 @@ class Client:
             data: bytes
     ) -> str:
         return base64.urlsafe_b64encode(data).decode('utf-8').replace('=', '')
-
-    @deprecated(
-        "This method is deprecated and will be removed in Marqo 2.0.0. "
-        "Please use `mq.index(index_name).get_marqo()` instead. "
-        "Check `https://docs.marqo.ai/1.1.0/API-Reference/indexes/` for more details."
-    )
-    def get_marqo(self):
-        if self.config.is_marqo_cloud:
-            self.raise_error_for_cloud("get_marqo")
-        return self.http.get(path="")
-
-    @deprecated(
-        "This method is deprecated and will be removed in Marqo 2.0.0. "
-        "Please use `mq.index(index_name).health()` instead. "
-        "Check `https://docs.marqo.ai/1.1.0/API-Reference/indexes/` for more details."
-    )
-    def health(self):
-        if self.config.is_marqo_cloud:
-            self.raise_error_for_cloud("health")
-        try:
-            return self.http.get(path="health")
-        except (MarqoWebError, RequestException, TypeError, KeyError) as e:
-            raise errors.BadRequestError("Marqo encountered an error trying to check the health of the Marqo instance. "
-                                         "If you are trying to check the health on Marqo Cloud, please note that "
-                                         "the `client.health()` API is not supported on Marqo Cloud and will be removed in "
-                                         "Marqo 2.0.0. Please Use `client.index('your-index-name').health()` instead. "
-                                         "Check `https://docs.marqo.ai/1.1.0/API-Reference/indexes/` for more details.")
-
-    @deprecated(
-        "This method is deprecated and will be removed in Marqo 2.0.0. "
-        "Please use 'mq.index(index_name).eject_model() instead. "
-        "Check `https://docs.marqo.ai/1.1.0/API-Reference/indexes/` for more details."
-    )
-    def eject_model(self, model_name: str, model_device: str):
-        if self.config.is_marqo_cloud:
-            self.raise_error_for_cloud("eject_model")
-        return self.http.delete(path=f"models?model_name={model_name}&model_device={model_device}")
-
-    @deprecated(
-        "This method is deprecated and will be removed in Marqo 2.0.0. "
-        "Please use 'mq.index(index_name).get_loaded_models() instead. "
-        "Check `https://docs.marqo.ai/1.1.0/API-Reference/indexes/` for more details."
-    )
-    def get_loaded_models(self):
-        if self.config.is_marqo_cloud:
-            self.raise_error_for_cloud("get_loaded_models")
-        return self.http.get(path="models")
-
-    @deprecated(
-        "This method is deprecated and will be removed in Marqo 2.0.0. "
-        "Please use 'mq.index(index_name).get_cuda_info() instead. "
-        "Check `https://docs.marqo.ai/1.1.0/API-Reference/indexes/` for more details."
-    )
-    def get_cuda_info(self):
-        if self.config.is_marqo_cloud:
-            self.raise_error_for_cloud("get_cuda_info")
-        return self.http.get(path="device/cuda")
-
-    @deprecated(
-        "This method is deprecated and will be removed in Marqo 2.0.0. "
-        "Please use 'mq.index(index_name).get_cpu_info() instead. "
-        "Check `https://docs.marqo.ai/1.1.0/API-Reference/indexes/` for more details."
-    )
-    def get_cpu_info(self):
-        if self.config.is_marqo_cloud:
-            self.raise_error_for_cloud("get_cpu_info")
-        return self.http.get(path="device/cpu")
 
     @staticmethod
     def raise_error_for_cloud(function_name: str = None):
@@ -332,4 +271,3 @@ class Client:
                     " in your bulk search use the same index"
                 )
         return True
-

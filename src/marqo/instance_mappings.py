@@ -26,7 +26,7 @@ class InstanceMappings(ABC):
         pass
 
     @abstractmethod
-    def get_control_base_url(self) -> str:
+    def get_control_base_url(self, path: str = "") -> str:
         """
         Return the base URL for index control operations such as index creation and deletion.
         """

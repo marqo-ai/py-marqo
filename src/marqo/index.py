@@ -1,28 +1,23 @@
 import functools
-import inspect
-import json
-import pprint
-import time
-
-from requests import RequestException
-
-from marqo import defaults
-from marqo.models.create_index_settings import CreateIndexSettings
-from marqo.cloud_helpers import cloud_wait_for_index_status
-from marqo.enums import IndexStatus
-import typing
-from urllib import parse
 from datetime import datetime
 from timeit import default_timer as timer
-from typing import Any, Dict, Generator, List, Optional, Union
-from marqo._httprequests import HttpRequests
-from marqo.config import Config
-from marqo.enums import SearchMethods, Devices
+from typing import Any, Dict, List, Optional, Union
+
+from packaging import version as versioning_helpers
+from requests import RequestException
+
 from marqo import errors, utils
+from marqo._httprequests import HttpRequests
+from marqo.cloud_helpers import cloud_wait_for_index_status
+from marqo.config import Config
+from marqo.enums import IndexStatus
+from marqo.enums import SearchMethods
 from marqo.errors import MarqoWebError, UnsupportedOperationError, MarqoCloudIndexNotFoundError
 from marqo.marqo_logging import mq_logger
+from marqo.models import marqo_index
+from marqo.models.create_index_settings import IndexSettings
+from marqo.models.marqo_cloud import CloudIndexSettings
 from marqo.version import minimum_supported_marqo_version
-from packaging import version as versioning_helpers
 
 marqo_url_and_version_cache: Dict[str, str] = {}
 
@@ -80,25 +75,27 @@ class Index:
         return response
 
     @staticmethod
-    def create(config: Config, index_name: str,
-               treat_urls_and_pointers_as_images=None,
-               model=None,
-               normalize_embeddings=None,
-               sentences_per_chunk=None,
-               sentence_overlap=None,
-               image_preprocessing_method=None,
-               settings_dict=None,
-               inference_node_type=None,
-               storage_node_type=None,
-               inference_node_count=None,
-               storage_node_count=None,
-               replicas_count=None,
-               wait_for_readiness=None,
-               inference_type=None,
-               storage_class=None,
-               number_of_inferences=None,
-               number_of_shards=None,
-               number_of_replicas=None
+    def create(config: Config,
+               index_name: str,
+               type: Optional[marqo_index.IndexType] = None,
+               settings_dict: Optional[Dict[str, Any]] = None,
+               treat_urls_and_pointers_as_images: Optional[bool] = None,
+               filter_string_max_length: Optional[int] = None,
+               all_fields: Optional[List[marqo_index.FieldRequest]] = None,
+               tensor_fields: Optional[List[str]] = None,
+               model: Optional[str] = None,
+               model_properties: Optional[Dict[str, Any]] = None,
+               normalize_embeddings: Optional[bool] = None,
+               text_preprocessing: Optional[marqo_index.TextPreProcessing] = None,
+               image_preprocessing: Optional[marqo_index.ImagePreProcessing] = None,
+               vector_numeric_type: Optional[marqo_index.VectorNumericType] = None,
+               ann_parameters: Optional[marqo_index.AnnParameters] = None,
+               inference_type: Optional[str] = None,
+               storage_class: Optional[str] = None,
+               number_of_shards: Optional[int] = None,
+               number_of_replicas: Optional[int] = None,
+               number_of_inferences: Optional[int] = None,
+               wait_for_readiness: bool = True,
                ) -> Dict[str, Any]:
         """Create the index. Please refer to the marqo cloud to see options for inference and storage node types.
         Creates CreateIndexSettings object and then uses it to create the index.
@@ -110,20 +107,22 @@ class Index:
         Args:
             config: config instance
             index_name: name of the index.
-            treat_urls_and_pointers_as_images:
-            model:
-            normalize_embeddings:
-            sentences_per_chunk:
-            sentence_overlap:
-            image_preprocessing_method:
+            type: type of the index, structure or unstructured
             settings_dict: if specified, overwrites all other setting
                 parameters, and is passed directly as the index's
                 index_settings
-            inference_node_type (deprecated): inference type for the index. replaced by inference_type
-            storage_node_type (deprecated): storage type for the index. replaced by storage_class
-            inference_node_count (deprecated): number of inference nodes for the index. replaced by number_of_inferences
-            storage_node_count (deprecated): number of storage nodes for the index. replaced by number_of_shards
-            replicas_count (deprecated): number of replicas for the index. replaced by number_of_replicas
+            treat_urls_and_pointers_as_images: whether to treat urls and pointers as images in unstructured indexes
+            filter_string_max_length: threshold for short string length in unstructured indexes,
+                Marqo can filter on short strings but can not filter on long strings
+            all_fields: list of fields in the structured index
+            tensor_fields: list of fields to be tensorized
+            model: name of the model to be used for the index
+            model_properties: properties of the model to be used for the index
+            normalize_embeddings: whether to normalize embeddings
+            text_preprocessing: text preprocessing settings
+            image_preprocessing: image preprocessing settings
+            vector_numeric_type: vector numeric type
+            ann_parameters: approximate nearest neighbors parameters
             wait_for_readiness: Marqo Cloud specific, whether to wait until
                 operation is completed or to proceed without waiting for status,
                 won't do anything if config.is_marqo_cloud=False
@@ -132,94 +131,61 @@ class Index:
             number_of_inferences: number of inferences for the index
             number_of_shards: number of shards for the index
             number_of_replicas: number of replicas for the index
+        Note:
+            wait_for_readiness, inference_type, storage_class, number_of_inferences,
+            number_of_shards, number_of_replicas are Marqo Cloud specific parameters,
         Returns:
             Response body, containing information about index creation result
         """
         req = HttpRequests(config)
-        create_index_settings = CreateIndexSettings(
-            treat_urls_and_pointers_as_images=treat_urls_and_pointers_as_images,
-            model=model,
-            normalize_embeddings=normalize_embeddings,
-            sentences_per_chunk=sentences_per_chunk,
-            sentence_overlap=sentence_overlap,
-            image_preprocessing_method=image_preprocessing_method,
-            settings_dict=settings_dict,
-            inference_node_type=inference_node_type,
-            storage_node_type=storage_node_type,
-            inference_node_count=inference_node_count,
-            storage_node_count=storage_node_count,
-            replicas_count=replicas_count,
-            inference_type=inference_type,
-            storage_class=storage_class,
-            number_of_inferences=number_of_inferences,
-            number_of_shards=number_of_shards,
-            number_of_replicas=number_of_replicas,
-            wait_for_readiness=wait_for_readiness
-        )
 
-        if create_index_settings.settings_dict is not None and create_index_settings.settings_dict:
-            response = req.post(f"indexes/{index_name}", body=create_index_settings.settings_dict)
-            if config.is_marqo_cloud and create_index_settings.wait_for_readiness:
+        # py-marqo against local Marqo
+        if config.api_key is None:
+            local_create_index_settings: IndexSettings = IndexSettings(
+                type=type,
+                allFields=all_fields,
+                settingsDict=settings_dict,
+                treatUrlsAndPointersAsImages=treat_urls_and_pointers_as_images,
+                filterStringMaxLength=filter_string_max_length,
+                tensorFields=tensor_fields,
+                model=model,
+                modelProperties=model_properties,
+                normalizeEmbeddings=normalize_embeddings,
+                textPreprocessing=text_preprocessing,
+                imagePreprocessing=image_preprocessing,
+                vectorNumericType=vector_numeric_type,
+                annParameters=ann_parameters
+            )
+
+            return req.post(f"indexes/{index_name}", body=local_create_index_settings.generate_request_body())
+
+        # py-marqo against Marqo Cloud
+        else:
+            cloud_index_settings: CloudIndexSettings = CloudIndexSettings(
+                type=type,
+                allFields=all_fields,
+                settingsDict=settings_dict,
+                treatUrlsAndPointersAsImages=treat_urls_and_pointers_as_images,
+                filterStringMaxLength=filter_string_max_length,
+                tensorFields=tensor_fields,
+                model=model,
+                modelProperties=model_properties,
+                normalizeEmbeddings=normalize_embeddings,
+                textPreprocessing=text_preprocessing,
+                imagePreprocessing=image_preprocessing,
+                vectorNumericType=vector_numeric_type,
+                annParameters=ann_parameters,
+                numberOfInferences=number_of_inferences,
+                inferenceType=inference_type,
+                numberOfShards=number_of_shards,
+                numberOfReplicas=number_of_replicas,
+                storageClass=storage_class,
+            )
+
+            response = req.post(f"indexes/{index_name}", body=cloud_index_settings.generate_request_body())
+            if wait_for_readiness:
                 cloud_wait_for_index_status(req, index_name, IndexStatus.READY)
             return response
-
-        if config.api_key is not None:
-            # making the keyword settings params override the default cloud
-            #  settings
-            cl_settings = defaults.get_cloud_default_index_settings()
-            cl_ix_defaults = cl_settings['index_defaults']
-            cl_ix_defaults['treat_urls_and_pointers_as_images'] = \
-                create_index_settings.treat_urls_and_pointers_as_images
-            if create_index_settings.model is not None:
-                cl_ix_defaults['model'] = create_index_settings.model
-            else:
-                cl_ix_defaults.pop('model', None)
-            cl_ix_defaults['normalize_embeddings'] = create_index_settings.normalize_embeddings
-            cl_text_preprocessing = cl_ix_defaults['text_preprocessing']
-            cl_text_preprocessing['split_overlap'] = create_index_settings.sentence_overlap
-            cl_text_preprocessing['split_length'] = create_index_settings.sentences_per_chunk
-            cl_img_preprocessing = cl_ix_defaults['image_preprocessing']
-            if image_preprocessing_method is not None:
-                cl_img_preprocessing['patch_method'] = create_index_settings.image_preprocessing_method
-            else:
-                cl_img_preprocessing.pop('patch_method', None)
-            if not config.is_marqo_cloud:
-                return req.post(f"indexes/{index_name}", body=cl_settings)
-            if create_index_settings.inference_type is not None:
-                cl_settings['inference_type'] = create_index_settings.inference_type
-            else:
-                cl_settings.pop('inference_type', None)
-            if create_index_settings.storage_class is not None:
-                cl_settings['storage_class'] = create_index_settings.storage_class
-            else:
-                cl_settings.pop('storage_class', None)
-            cl_settings['number_of_inferences'] = create_index_settings.number_of_inferences
-            cl_settings['number_of_replicas'] = create_index_settings.number_of_replicas
-            cl_settings['number_of_shards'] = create_index_settings.number_of_shards
-            response = req.post(f"indexes/{index_name}", body=cl_settings)
-            if create_index_settings.wait_for_readiness:
-                cloud_wait_for_index_status(req, index_name, IndexStatus.READY)
-            return response
-
-        return req.post(f"indexes/{index_name}", body={
-            "index_defaults": {
-                "treat_urls_and_pointers_as_images": create_index_settings.treat_urls_and_pointers_as_images,
-                "model": create_index_settings.model,
-                "normalize_embeddings": create_index_settings.normalize_embeddings,
-                "text_preprocessing": {
-                    "split_overlap": create_index_settings.sentence_overlap,
-                    "split_length": create_index_settings.sentences_per_chunk,
-                    "split_method": "sentence"
-                },
-                "image_preprocessing": {
-                    "patch_method": create_index_settings.image_preprocessing_method
-                }
-            }
-        })
-
-    def refresh(self):
-        """refreshes the index"""
-        return self.http.post(path=F"indexes/{self.index_name}/refresh", index_name=self.index_name,)
 
     def get_status(self):
         """gets the status of the index"""
@@ -233,8 +199,7 @@ class Index:
                highlights=None, device: Optional[str] = None, filter_string: str = None,
                show_highlights=True, reranker=None, image_download_headers: Optional[Dict] = None,
                attributes_to_retrieve: Optional[List[str]] = None, boost: Optional[Dict[str,List[Union[float, int]]]] = None,
-               context: Optional[dict] = None, score_modifiers: Optional[dict] = None, model_auth: Optional[dict] = None,
-               text_query_prefix: Optional[str] = None
+               context: Optional[dict] = None, score_modifiers: Optional[dict] = None, model_auth: Optional[dict] = None
                ) -> Dict[str, Any]:
         """Search the index.
 
@@ -264,7 +229,6 @@ class Index:
             context: a dictionary to allow you to bring your own vectors and more into search.
             score_modifiers: a dictionary to modify the score based on field values, for tensor search only
             model_auth: authorisation that lets Marqo download a private model, if required
-            text_query_prefix: a string to prefix all text queries
         Returns:
             Dictionary with hits and other metadata
         """
@@ -302,9 +266,6 @@ class Index:
             body["scoreModifiers"] = score_modifiers
         if model_auth is not None:
             body["modelAuth"] = model_auth
-        if text_query_prefix is not None:
-            body["textQueryPrefix"] = text_query_prefix
-        
         res = self.http.post(
             path=path_with_query_str,
             body=body,
@@ -364,85 +325,53 @@ class Index:
     def add_documents(
         self,
         documents: List[Dict[str, Any]],
-        auto_refresh: bool = None,
         client_batch_size: int = None,
         device: str = None,
         tensor_fields: List[str] = None,
-        non_tensor_fields: List[str] = None,
         use_existing_tensors: bool = False,
         image_download_headers: dict = None,
         mappings: dict = None,
-        model_auth: dict = None,
-        text_chunk_prefix: str = None,
+        model_auth: dict = None
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """Add documents to this index. Does a partial update on existing documents,
         based on their ID. Adds unseen documents to the index.
 
         Args:
             documents: List of documents. Each document should be a dictionary.
-            auto_refresh: Automatically refresh the index. If you are making
-                lots of requests, it is advised to set this to False to
-                increase performance.
             client_batch_size: if it is set, documents will be indexed into batches
                 in the client, before being sent off. Otherwise documents are unbatched
                 client-side.
             device: the device used to index the data. Examples include "cpu",
                 "cuda" and "cuda:2"
             tensor_fields: fields within documents to create and store tensors against.
-            non_tensor_fields: fields within documents to not create and store tensors against. Cannot be used with
-                tensor_fields.
-                .. deprecated:: 2.0.0
-                    This parameter has been deprecated and will be removed in Marqo 2.0.0. User tensor_fields instead.
             use_existing_tensors: use vectors that already exist in the docs.
             image_download_headers: a dictionary of headers to be passed while downloading images,
                 for URLs found in documents
             mappings: a dictionary to help handle the object fields. e.g., multimodal_combination field
             model_auth: used to authorise a private model
-            text_chunk_prefix: a string to prefix all text chunks with internally
         Returns:
             Response body outlining indexing result
         """
-        if tensor_fields is not None and non_tensor_fields is not None:
-            raise errors.InvalidArgError('Cannot define `non_tensor_fields` when `tensor_fields` is defined. '
-                                         '`non_tensor_fields` has been deprecated and will be removed in Marqo 2.0.0. '
-                                         'Its use is discouraged.')
-
-        if tensor_fields is None and non_tensor_fields is None:
-            raise errors.InvalidArgError('You must include the `tensor_fields` parameter. '
-                                         'Use `tensor_fields=[]` to index for lexical-only search.')
-
-        if non_tensor_fields is not None:
-            mq_logger.warning('The `non_tensor_fields` parameter has been deprecated and will be removed in '
-                              'Marqo 2.0.0. Use `tensor_fields` instead.')
 
         if image_download_headers is None:
             image_download_headers = dict()
         return self._add_docs_organiser(
-            documents=documents, auto_refresh=auto_refresh,
-            client_batch_size=client_batch_size, device=device, tensor_fields=tensor_fields,
-            non_tensor_fields=non_tensor_fields, use_existing_tensors=use_existing_tensors,
-            image_download_headers=image_download_headers, mappings=mappings, model_auth=model_auth, text_chunk_prefix=text_chunk_prefix
+            documents=documents,
+            client_batch_size=client_batch_size, device=device, tensor_fields=tensor_fields, use_existing_tensors=use_existing_tensors,
+            image_download_headers=image_download_headers, mappings=mappings, model_auth=model_auth
         )
 
     def _add_docs_organiser(
         self,
         documents: List[Dict[str, Any]],
-        auto_refresh=None,
         client_batch_size: int = None,
         device: str = None,
         tensor_fields: List = None,
-        non_tensor_fields: List = None,
         use_existing_tensors: bool = False,
         image_download_headers: dict = None,
         mappings: dict = None,
-        model_auth: dict = None,
-        text_chunk_prefix: str = None,
+        model_auth: dict = None
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
-
-        if (tensor_fields is None and non_tensor_fields is None) \
-                or (tensor_fields is not None and non_tensor_fields is not None):
-            raise ValueError("Exactly one of tensor_fields or non_tensor_fields must be provided.")
-
         error_detected_message = ('Errors detected in add documents call. '
                                   'Please examine the returned result object for more information.')
 
@@ -464,14 +393,10 @@ class Index:
             "mappings" : mappings,
             "modelAuth": model_auth,
         }
+
         if tensor_fields is not None:
             base_body['tensorFields'] = tensor_fields
-        else:
-            base_body['nonTensorFields'] = non_tensor_fields
 
-        if text_chunk_prefix is not None:
-            base_body['textChunkPrefix'] = text_chunk_prefix
-        
         end_time_client_process = timer()
         total_client_process_time = end_time_client_process - start_time_client_process
         mq_logger.debug(f"add_documents pre-processing: took {(total_client_process_time):.3f}s for {num_docs} docs.")
@@ -480,7 +405,7 @@ class Index:
             if client_batch_size <= 0:
                 raise errors.InvalidArgError("Batch size can't be less than 1!")
             res = self._batch_request(
-                base_path=base_path, auto_refresh=auto_refresh,
+                base_path=base_path,
                 docs=documents, verbose=False,
                 query_str_params=query_str_params, batch_size=client_batch_size, base_body = base_body
             )
@@ -490,16 +415,9 @@ class Index:
 
             # Build the query string
             path_with_query_str = f"{base_path}"
-            if auto_refresh is not None:
-                # Add refresh if it has been user-specified
-                path_with_query_str += f"?refresh={str(auto_refresh).lower()}"
-                if query_str_params:
-                    # Also add device if it has been user-specified
-                    path_with_query_str += f"&{query_str_params}"
-            else:
-                if query_str_params:
-                    # Only add device if it has been user-specified
-                    path_with_query_str += f"?{query_str_params}"
+            if query_str_params:
+                # Only add device if it has been user-specified
+                path_with_query_str += f"?{query_str_params}"
 
             # ADD DOCS TIMER-LOGGER (2)
             start_time_client_request = timer()
@@ -526,20 +444,18 @@ class Index:
         mq_logger.debug(f"add_documents completed. total time taken: {(total_add_docs_time):.3f}s.")
         return res
 
-    def delete_documents(self, ids: List[str], auto_refresh: bool = None) -> Dict[str, int]:
+    def delete_documents(self, ids: List[str]) -> Dict[str, int]:
         """Delete documents from this index by a list of their ids.
 
         Args:
             ids: List of identifiers of documents.
-            auto_refresh: if true refreshes the index after deletion
 
         Returns:
             A dict with information about the delete operation.
         """
         base_path = f"indexes/{self.index_name}/documents/delete-batch"
-        path_with_refresh = base_path if auto_refresh is None else base_path + f"?refresh={str(auto_refresh).lower()}"
 
-        return self.http.post(path=path_with_refresh, body=ids, index_name=self.index_name,)
+        return self.http.post(path=base_path, body=ids, index_name=self.index_name,)
 
     def get_stats(self) -> Dict[str, Any]:
         """Get stats about the index"""
@@ -560,8 +476,7 @@ class Index:
 
     def _batch_request(
             self, docs: List[Dict],  base_path: str,
-            query_str_params: str, base_body: dict, verbose: bool = True,
-            auto_refresh: bool = None, batch_size: int = 50,
+            query_str_params: str, base_body: dict, verbose: bool = True, batch_size: int = 50,
     ) -> List[Dict[str, Any]]:
         """Batches a large chunk of documents to be sent as multiple
         add_documents invocations
@@ -573,7 +488,6 @@ class Index:
             base_path: The base path for the add_documents call
             query_str_params: The query string parameters for the add_documents call
             base_body: The base body for the add_documents call
-            auto_refresh: If true, refreshes the index AFTER all batches are added. Not included in any batch query string.
             verbose: If true, prints out info about the documents
 
         Returns:
@@ -651,8 +565,6 @@ class Index:
             return res
 
         results = [verbosely_add_docs(i, docs) for i, docs in enumerate(batched)]
-        if auto_refresh:
-            self.refresh()
         mq_logger.debug('completed batch ingestion.')
         return results
 
@@ -725,4 +637,3 @@ class Index:
             if url is not None:
                 marqo_url_and_version_cache[url] = "_skipped"
         return
-

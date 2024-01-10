@@ -8,7 +8,7 @@ setup(
     install_requires=[
         # client:
         "requests",
-        "urllib3",
+        "urllib3<2.0.0, >=1.26.0",
         "pydantic<2.0.0",
         "typing-extensions>=4.5.0",
         "packaging"
@@ -18,7 +18,7 @@ setup(
         "tox"
     ],
     name="marqo",
-    version="2.1.0",
+    version="2.0.0",
     author="marqo org",
     author_email="org@marqo.io",
     description="Tensor search for humans",
