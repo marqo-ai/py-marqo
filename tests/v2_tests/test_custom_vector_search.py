@@ -9,25 +9,30 @@ class TestCustomVectorSearch(MarqoTestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        self.test_index_name = self.create_test_index(
-            cloud_test_index_to_use=CloudTestIndex.image_index,
-            open_source_test_index_name=self.generic_test_index_name,
-            open_source_index_kwargs={"model": "ViT-B/32"}
-        )
-        self.client.index(index_name=self.test_index_name).add_documents(
-            [
-                {
-                    "Title": "A comparison of the best pets",
-                    "Description": "Animals",
-                    "_id": "d1"
-                },
-                {
-                    "Title": "The history of dogs",
-                    "Description": "A history of household pets",
-                    "_id": "d2"
-                }
-            ], tensor_fields=["Title", "Description"], auto_refresh=True
-        )
+        self.test_cases = [
+            (CloudTestIndex.unstructured_image, self.unstructured_image_index_name)
+        ]
+        for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
+            open_source_test_index_name = self.unstructured_image_index_name
+
+            self.test_index_name = self.get_test_index_name(
+                cloud_test_index_to_use=cloud_test_index_to_use,
+                open_source_test_index_name=open_source_test_index_name
+            )
+            self.client.index(index_name=self.test_index_name).add_documents(
+                [
+                    {
+                        "Title": "A comparison of the best pets",
+                        "Description": "Animals",
+                        "_id": "d1"
+                    },
+                    {
+                        "Title": "The history of dogs",
+                        "Description": "A history of household pets",
+                        "_id": "d2"
+                    }
+                ], tensor_fields=["Title", "Description"]
+            )
         self.vector_dim = 512
 
         self.query = {"What are the best pets": 1}

@@ -17,32 +17,6 @@ from unittest import mock
 
 @mark.fixed
 class TestAddDocuments(MarqoTestCase):
-    @classmethod
-    def setUpClass(cls) -> None:
-        super().setUpClass()
-
-        if not cls.client.config.is_marqo_cloud:
-            cls.create_open_source_indexes([
-                {
-                    "indexName": cls.unstructured_index_name,
-                    "type": "unstructured"
-                },
-                {
-                    "indexName": cls.structured_index_name,
-                    "type": "structured",
-                    "allFields": [{"name": "text_field_1", "type": "text"},
-                                  {"name": "text_field_2", "type": "text"},
-                                  {"name": "text_field_3", "type": "text"}],
-                    "tensorFields": ["text_field_1", "text_field_2", "text_field_3"]
-                },
-                {
-                    "indexName": cls.unstructured_image_index_name,
-                    "type": "unstructured",
-                    "treatUrlsAndPointersAsImages": True,
-                    "model": "ViT-B/32",
-                }
-            ])
-
     # Add documents tests:
     def test_add_documents_with_ids(self):
         for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
