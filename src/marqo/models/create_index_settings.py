@@ -30,7 +30,7 @@ class IndexSettings(MarqoBaseModel):
     """
 
     type: Optional[marqo_index.IndexType] = None
-    allFields: Optional[List[marqo_index.FieldRequest]] = None
+    allFields: Optional[List[marqo_index.Field]] = None
     settingsDict: Optional[Dict] = None
     tensorFields: Optional[List[str]] = None
     treatUrlsAndPointersAsImages: Optional[bool] = None

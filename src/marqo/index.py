@@ -81,7 +81,7 @@ class Index:
                settings_dict: Optional[Dict[str, Any]] = None,
                treat_urls_and_pointers_as_images: Optional[bool] = None,
                filter_string_max_length: Optional[int] = None,
-               all_fields: Optional[List[marqo_index.FieldRequest]] = None,
+               all_fields: Optional[List[marqo_index.Field]] = None,
                tensor_fields: Optional[List[str]] = None,
                model: Optional[str] = None,
                model_properties: Optional[Dict[str, Any]] = None,

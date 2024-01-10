@@ -75,7 +75,7 @@ class Model(StrictBaseModel):
     custom: Optional[bool] = None
 
 
-class FieldRequest(StrictBaseModel):
+class Field(StrictBaseModel):
     name: str
     type: FieldType
     features: List[FieldFeature] = []
