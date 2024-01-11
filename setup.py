@@ -17,7 +17,7 @@ setup(
         "pytest",
         "tox"
     ],
-    name="marqo1",
+    # Check setup.cfg for name and version
     author="marqo org",
     author_email="org@marqo.io",
     description="Tensor search for humans",
