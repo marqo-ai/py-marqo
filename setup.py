@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 
 version = {}
-with open("marqo/__init__.py") as fp:
+with open("src/marqo/__init__.py") as fp:
     exec(fp.read(), version)
 
 with open("README.md", "r", encoding="utf8") as fh:
