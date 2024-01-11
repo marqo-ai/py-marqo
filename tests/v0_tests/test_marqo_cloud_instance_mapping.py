@@ -304,7 +304,7 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         mappings._urls_mapping[IndexStatus.READY][test_index_name] = bad_url
 
 
-        with mock.patch('marqo.index.Index._marqo_minimum_supported_version_check'):
+        with mock.patch('marqo1.index.Index._marqo_minimum_supported_version_check'):
             with self.assertRaises(BackendCommunicationError):
                 # attempts to use the bad_url for searching and raises a connection error
                 # but does not refresh the cache yet, because we haven't yet hit the minimum
