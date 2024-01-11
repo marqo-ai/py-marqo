@@ -81,7 +81,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           export PYTHONPATH=$(pwd):$(pwd)/src:$PYTHONPATH
-          SUPPORTED_MQ_VERSION=$(python -c 'from marqo import version; print(version.__marqo_version__)') || exit 1
+          SUPPORTED_MQ_VERSION=$(python -c 'from marqo1 import version; print(version.__marqo_version__)') || exit 1
           
           # error out if version is empty:
           if [ -z "$SUPPORTED_MQ_VERSION" ]; then exit 1; fi
