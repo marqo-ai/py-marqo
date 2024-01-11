@@ -1,5 +1,9 @@
 from setuptools import setup, find_packages
-# from src.marqo.version import __version__
+
+
+version = {}
+with open("src/marqo/__init__.py") as fp:
+    exec(fp.read(), version)
 
 with open("README.md", "r", encoding="utf8") as fh:
     long_description = fh.read()
@@ -17,8 +21,8 @@ setup(
         "pytest",
         "tox"
     ],
-    name="marqo",
-    version="2.1.0",
+    name="marqo1",
+    version=version['__version__'],
     author="marqo org",
     author_email="org@marqo.io",
     description="Tensor search for humans",
