@@ -9,9 +9,9 @@ import time
 
 from pytest import mark
 
-from marqo.errors import MarqoError, MarqoWebError
+from marqo1.errors import MarqoError, MarqoWebError
 from tests.marqo_test import MarqoTestCase, CloudTestIndex
-from marqo import enums
+from marqo1 import enums
 from unittest import mock
 import numpy as np
 

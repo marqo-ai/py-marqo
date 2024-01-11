@@ -1,5 +1,5 @@
 import time
-import marqo.index
+import marqo1.index
 from tests.marqo_test import MarqoTestCase, CloudTestIndex
 from pytest import mark
 
@@ -48,7 +48,7 @@ class TestGetIndexes(MarqoTestCase):
             assert len(ix_1['results']) > len(ix_0['results'])
 
         for found_index in ix_2['results']:
-            assert isinstance(found_index, marqo.index.Index)
+            assert isinstance(found_index, marqo1.index.Index)
 
     def test_get_indexes_usable(self):
         """Are the indices we get back usable? """

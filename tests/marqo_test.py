@@ -81,11 +81,11 @@ from unittest import mock, TestCase
 
 from tests.cloud_test_logic.cloud_test_index import CloudTestIndex
 
-import marqo
-from marqo._httprequests import HTTP_OPERATIONS
-from marqo.client import Client
-from marqo.errors import InternalError, MarqoWebError, MarqoError
-from marqo.index import Index
+import marqo1
+from marqo1._httprequests import HTTP_OPERATIONS
+from marqo1.client import Client
+from marqo1.errors import InternalError, MarqoWebError, MarqoError
+from marqo1.index import Index
 
 
 class MockHTTPTraffic(BaseModel):
@@ -200,13 +200,13 @@ class MarqoTestCase(TestCase):
     def tearDownClass(cls) -> None:
         """Delete commonly used test indexes after all tests are run
         """
-        client = marqo.Client(**cls.client_settings)
+        client = marqo1.Client(**cls.client_settings)
         for index in client.get_indexes()['results']:
             if index.index_name.startswith(cls.generic_test_index_name):
                 if not client.config.is_marqo_cloud:
                     try:
                         index.delete()
-                    except marqo.errors.MarqoApiError as e:
+                    except marqo1.errors.MarqoApiError as e:
                         logging.debug(f'received error `{e}` from index deletion request.')
                 else:
                     if index.index_name.endswith(cls.index_suffix):
@@ -220,7 +220,7 @@ class MarqoTestCase(TestCase):
                 if index.index_name.startswith(self.generic_test_index_name):
                     try:
                         index.delete()
-                    except marqo.errors.MarqoApiError as e:
+                    except marqo1.errors.MarqoApiError as e:
                         logging.debug(f'received error `{e}` from index deletion request.')
 
     def tearDown(self) -> None:
@@ -232,7 +232,7 @@ class MarqoTestCase(TestCase):
                 if index.index_name.startswith(self.generic_test_index_name):
                     try:
                         index.delete()
-                    except marqo.errors.MarqoApiError as e:
+                    except marqo1.errors.MarqoApiError as e:
                         logging.debug(f'received error `{e}` from index deletion request.')
 
     def warm_request(self, func, *args, **kwargs):
@@ -282,7 +282,7 @@ class MarqoTestCase(TestCase):
               it may be desirable to set it to False. This allows existing documents to persist when calling
               'create_test_index' multiple times in the same test.
         """
-        client = marqo.Client(**self.client_settings)
+        client = marqo1.Client(**self.client_settings)
         if client.config.is_marqo_cloud:
             if cloud_test_index_to_use is None:
                 raise ValueError("cloud_test_index_to_use must be specified for cloud tests")
@@ -314,7 +314,7 @@ class MarqoTestCase(TestCase):
         """
         if delete_index_documents_before_test:
             self.cleanup_documents_from_index(index_name)
-        if not isinstance(marqo.index.Index.add_documents, mock.MagicMock):
+        if not isinstance(marqo1.index.Index.add_documents, mock.MagicMock):
             if hasattr(self, 'add_documents_and_mark_for_cleanup_patch'):
                 self.add_documents_and_mark_for_cleanup_patch.stop()
             self.add_documents_and_mark_for_cleanup_patch = mock.patch.object(
@@ -330,7 +330,7 @@ class MarqoTestCase(TestCase):
             If the index creation fails due to a MarqoWebError, the error message will be
             printed, but it will not raise an exception. This behavior is designed to avoid
             test failures when the index already exists."""
-        client = marqo.Client(**self.client_settings)
+        client = marqo1.Client(**self.client_settings)
         if settings_dict is not None and kwargs is not None:
             raise ValueError("Only one of settings_dict and kwargs can be specified")
         try:
@@ -363,7 +363,7 @@ class MarqoTestCase(TestCase):
         """"This is used for cloud tests only.
         Delete all documents from specified index.
         """
-        client = marqo.Client(**self.client_settings)
+        client = marqo1.Client(**self.client_settings)
         idx = client.index(index_to_cleanup)
         print(f"Deleting documents from index {idx.index_name}")
         try:

@@ -102,9 +102,9 @@ pip install marqo
 4. Start indexing and searching! Let's look at a simple example below:
 
 ```python
-import marqo
+import marqo1
 
-mq = marqo.Client(url='http://localhost:8882')
+mq = marqo1.Client(url='http://localhost:8882')
 
 mq.create_index("my-first-index")
 mq.index("my-first-index").add_documents(
@@ -118,7 +118,7 @@ mq.index("my-first-index").add_documents(
                            "mobility, life support, and communications for astronauts",
             "_id": "article_591"
         }
-    ], 
+    ],
     tensor_fields=["Title", "Description"]
 )
 
@@ -270,34 +270,34 @@ results = mq.index("my-multimodal-index").search('https://raw.githubusercontent.
 ### Searching using weights in queries
 Queries can also be provided as dictionaries where each key is a query and their corresponding values are weights. This allows for more advanced queries consisting of multiple components with weightings towards or against them, queries can have negations via negative weighting.
 
-The example below shows the application of this to a scenario where a user may want to ask a question but also negate results that match a certain semantic criterion. 
+The example below shows the application of this to a scenario where a user may want to ask a question but also negate results that match a certain semantic criterion.
 
 ```python
 
-import marqo
+import marqo1
 import pprint
 
-mq = marqo.Client(url="http://localhost:8882")
+mq = marqo1.Client(url="http://localhost:8882")
 
 mq.create_index("my-weighted-query-index")
 mq.index("my-weighted-query-index").add_documents([
-        {
-            "Title": "Smartphone",
-            "Description": "A smartphone is a portable computer device that combines mobile telephone "
-            "functions and computing functions into one unit.",
-        },
-        {
-            "Title": "Telephone",
-            "Description": "A telephone is a telecommunications device that permits two or more users to"
-            "conduct a conversation when they are too far apart to be easily heard directly.",
-        },
-        {
-            "Title": "Thylacine",
-            "Description": "The thylacine, also commonly known as the Tasmanian tiger or Tasmanian wolf, "
-            "is an extinct carnivorous marsupial."
-            "The last known of its species died in 1936.",
-        },
-    ],
+    {
+        "Title": "Smartphone",
+        "Description": "A smartphone is a portable computer device that combines mobile telephone "
+                       "functions and computing functions into one unit.",
+    },
+    {
+        "Title": "Telephone",
+        "Description": "A telephone is a telecommunications device that permits two or more users to"
+                       "conduct a conversation when they are too far apart to be easily heard directly.",
+    },
+    {
+        "Title": "Thylacine",
+        "Description": "The thylacine, also commonly known as the Tasmanian tiger or Tasmanian wolf, "
+                       "is an extinct carnivorous marsupial."
+                       "The last known of its species died in 1936.",
+    },
+],
     tensor_fields=["Title", "Description"]
 )
 
@@ -340,10 +340,10 @@ The example below demonstrates this with retrival of caption and image pairs usi
 
 ```python
 
-import marqo
+import marqo1
 import pprint
 
-mq = marqo.Client(url="http://localhost:8882")
+mq = marqo1.Client(url="http://localhost:8882")
 
 settings = {"treat_urls_and_pointers_as_images": True, "model": "ViT-L/14"}
 

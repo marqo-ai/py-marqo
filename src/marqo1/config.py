@@ -1,6 +1,6 @@
 from typing import Optional
 
-from marqo.instance_mappings import InstanceMappings
+from marqo1.instance_mappings import InstanceMappings
 
 
 class Config:

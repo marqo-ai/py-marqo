@@ -6,22 +6,22 @@ import time
 
 from requests import RequestException
 
-from marqo import defaults
-from marqo.models.create_index_settings import CreateIndexSettings
-from marqo.cloud_helpers import cloud_wait_for_index_status
-from marqo.enums import IndexStatus
+from marqo1 import defaults
+from marqo1.models.create_index_settings import CreateIndexSettings
+from marqo1.cloud_helpers import cloud_wait_for_index_status
+from marqo1.enums import IndexStatus
 import typing
 from urllib import parse
 from datetime import datetime
 from timeit import default_timer as timer
 from typing import Any, Dict, Generator, List, Optional, Union
-from marqo._httprequests import HttpRequests
-from marqo.config import Config
-from marqo.enums import SearchMethods, Devices
-from marqo import errors, utils
-from marqo.errors import MarqoWebError, UnsupportedOperationError, MarqoCloudIndexNotFoundError
-from marqo.marqo_logging import mq_logger
-from marqo.version import minimum_supported_marqo_version
+from marqo1._httprequests import HttpRequests
+from marqo1.config import Config
+from marqo1.enums import SearchMethods, Devices
+from marqo1 import errors, utils
+from marqo1.errors import MarqoWebError, UnsupportedOperationError, MarqoCloudIndexNotFoundError
+from marqo1.marqo_logging import mq_logger
+from marqo1.version import minimum_supported_marqo_version
 from packaging import version as versioning_helpers
 
 marqo_url_and_version_cache: Dict[str, str] = {}

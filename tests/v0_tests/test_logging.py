@@ -1,7 +1,7 @@
-import marqo
+import marqo1
 from tests.marqo_test import MarqoTestCase, CloudTestIndex
 
-marqo.set_log_level("INFO")
+marqo1.set_log_level("INFO")
 
 class TestLogging(MarqoTestCase):
     @staticmethod

@@ -3,10 +3,10 @@ import json
 import urllib.parse
 from functools import wraps
 
-from marqo import errors
+from marqo1 import errors
 from typing import Any, Optional, List
 
-from marqo.marqo_logging import mq_logger
+from marqo1.marqo_logging import mq_logger
 
 
 def construct_authorized_url(url_base: str, username: str, password: str) -> str:

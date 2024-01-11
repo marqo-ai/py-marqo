@@ -2,14 +2,14 @@ import copy
 
 from pytest import mark
 
-from marqo.errors import BackendCommunicationError, BackendTimeoutError, \
+from marqo1.errors import BackendCommunicationError, BackendTimeoutError, \
     UnsupportedOperationError, MarqoWebError
 
-from marqo.index import marqo_url_and_version_cache
+from marqo1.index import marqo_url_and_version_cache
 from tests.marqo_test import MarqoTestCase, CloudTestIndex
 from unittest import mock
 import requests
-from marqo.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
+from marqo1.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
 
 
 class TestIndex(MarqoTestCase):

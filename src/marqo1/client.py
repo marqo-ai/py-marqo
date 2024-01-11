@@ -6,18 +6,18 @@ from pydantic import error_wrappers
 from requests.exceptions import RequestException
 from typing_extensions import deprecated
 
-from marqo.cloud_helpers import cloud_wait_for_index_status
-from marqo.default_instance_mappings import DefaultInstanceMappings
-from marqo.index import Index
-from marqo.config import Config
-from marqo.instance_mappings import InstanceMappings
-from marqo.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
-from marqo.models.search_models import BulkSearchBody, BulkSearchQuery
-from marqo._httprequests import HttpRequests
-from marqo import utils, enums
-from marqo import errors
-from marqo.marqo_logging import mq_logger
-from marqo.errors import MarqoWebError
+from marqo1.cloud_helpers import cloud_wait_for_index_status
+from marqo1.default_instance_mappings import DefaultInstanceMappings
+from marqo1.index import Index
+from marqo1.config import Config
+from marqo1.instance_mappings import InstanceMappings
+from marqo1.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
+from marqo1.models.search_models import BulkSearchBody, BulkSearchQuery
+from marqo1._httprequests import HttpRequests
+from marqo1 import utils, enums
+from marqo1 import errors
+from marqo1.marqo_logging import mq_logger
+from marqo1.errors import MarqoWebError
 # we want to avoid name conflicts with marqo.version
 from json import JSONDecodeError
 

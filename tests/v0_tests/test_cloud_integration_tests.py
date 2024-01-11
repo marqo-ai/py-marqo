@@ -1,9 +1,9 @@
 import os
 from unittest import mock
 
-from marqo.errors import MarqoWebError
+from marqo1.errors import MarqoWebError
 from tests.marqo_test import MarqoTestCase, CloudTestIndex
-from marqo.index import Index
+from marqo1.index import Index
 
 
 class TestCloudIntegrationTests(MarqoTestCase):

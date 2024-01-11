@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 
-from marqo.models.create_index_settings import CreateIndexSettings
+from marqo1.models.create_index_settings import CreateIndexSettings
 
 
 class TestCreateIndexSettings(unittest.TestCase):

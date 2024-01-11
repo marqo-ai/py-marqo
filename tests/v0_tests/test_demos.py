@@ -1,4 +1,4 @@
-from marqo.client import Client
+from marqo1.client import Client
 import pprint
 from tests.marqo_test import MarqoTestCase, CloudTestIndex
 
@@ -50,9 +50,9 @@ class TestDemo(MarqoTestCase):
 
     def test_readme_example(self):
 
-        import marqo
+        import marqo1
 
-        mq = marqo.Client(**self.client_settings)
+        mq = marqo1.Client(**self.client_settings)
 
         test_index_name = self.create_test_index(
             cloud_test_index_to_use=CloudTestIndex.text_index_with_custom_model,
@@ -99,9 +99,9 @@ class TestDemo(MarqoTestCase):
         assert r3["numberOfDocuments"] == 2
 
         if self.IS_MULTI_INSTANCE:
-            self.warm_request(mq.index(test_index_name).search,'marco polo', search_method=marqo.SearchMethods.LEXICAL)
+            self.warm_request(mq.index(test_index_name).search,'marco polo', search_method=marqo1.SearchMethods.LEXICAL)
 
-        r4 = mq.index(test_index_name).search('marco polo', search_method=marqo.SearchMethods.LEXICAL)
+        r4 = mq.index(test_index_name).search('marco polo', search_method=marqo1.SearchMethods.LEXICAL)
         assert r4["hits"][0]["Title"] == "The Travels of Marco Polo"
 
         if self.IS_MULTI_INSTANCE:
@@ -119,8 +119,8 @@ class TestDemo(MarqoTestCase):
             assert (rneg1["acknowledged"] is True) or (rneg1["acknowledged"] == 'true')
 
     def test_readme_example_weighted_query(self):
-        import marqo
-        mq = marqo.Client(**self.client_settings)
+        import marqo1
+        mq = marqo1.Client(**self.client_settings)
         test_index_name = self.create_test_index(
             cloud_test_index_to_use=CloudTestIndex.text_index_with_custom_model,
             open_source_test_index_name=self.generic_test_index_name,
@@ -198,8 +198,8 @@ class TestDemo(MarqoTestCase):
             assert (rneg1["acknowledged"] is True) or (rneg1["acknowledged"] == 'true')
 
     def test_readme_example_multimodal_combination_query(self):
-        import marqo
-        mq = marqo.Client(**self.client_settings)
+        import marqo1
+        mq = marqo1.Client(**self.client_settings)
         settings = {"treat_urls_and_pointers_as_images": True, "model": "ViT-B/32"}
         test_index_name = self.create_test_index(
             cloud_test_index_to_use=CloudTestIndex.image_index,

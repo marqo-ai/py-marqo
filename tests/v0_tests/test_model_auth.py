@@ -1,7 +1,7 @@
 import json
 from tests.marqo_test import MarqoTestCase
 from tests.cloud_test_logic.cloud_instance_mappings import GetIndexesIndexResponseObject, mock_get_indexes_response
-from marqo.utils import convert_dict_to_url_params
+from marqo1.utils import convert_dict_to_url_params
 from unittest import mock
 
 

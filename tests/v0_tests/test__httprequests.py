@@ -3,10 +3,10 @@ from unittest.mock import patch, MagicMock
 
 import requests.exceptions
 
-from marqo._httprequests import HttpRequests
-from marqo.config import Config
-from marqo.default_instance_mappings import DefaultInstanceMappings
-from marqo.errors import MarqoWebError
+from marqo1._httprequests import HttpRequests
+from marqo1.config import Config
+from marqo1.default_instance_mappings import DefaultInstanceMappings
+from marqo1.errors import MarqoWebError
 
 
 class TestConstructPath(unittest.TestCase):

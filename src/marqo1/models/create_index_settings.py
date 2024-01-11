@@ -1,4 +1,4 @@
-from marqo.marqo_logging import mq_logger
+from marqo1.marqo_logging import mq_logger
 from pydantic import root_validator, BaseModel, validator
 
 DEPRECATED_TO_NEW_PARAMS_MAPPING = {

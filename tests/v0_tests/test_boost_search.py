@@ -1,4 +1,4 @@
-from marqo.errors import MarqoWebError
+from marqo1.errors import MarqoWebError
 from tests.marqo_test import MarqoTestCase, CloudTestIndex
 
 

@@ -1,6 +1,6 @@
 import copy
-import marqo
-from marqo import enums
+import marqo1
+from marqo1 import enums
 from unittest import mock
 import requests
 import random
@@ -153,10 +153,10 @@ class TestSearch(MarqoTestCase):
         #    can't find the above with synonym
         if self.IS_MULTI_INSTANCE:
             self.client.index(test_index_name).search(
-            "Examples of leadership", search_method=marqo.SearchMethods.LEXICAL)
+            "Examples of leadership", search_method=marqo1.SearchMethods.LEXICAL)
 
         assert len(self.client.index(test_index_name).search(
-            "Examples of leadership", search_method=marqo.SearchMethods.LEXICAL)["hits"]) == 0
+            "Examples of leadership", search_method=marqo1.SearchMethods.LEXICAL)["hits"]) == 0
         #    but can look for a word
 
         if self.IS_MULTI_INSTANCE:

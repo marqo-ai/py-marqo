@@ -1,6 +1,6 @@
-from marqo.client import Client
-from marqo.enums import SearchMethods
-from marqo.version import supported_marqo_version
+from marqo1.client import Client
+from marqo1.enums import SearchMethods
+from marqo1.version import supported_marqo_version
 import logging
 
 __version__ = "2.1.0"

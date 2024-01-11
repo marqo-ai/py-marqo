@@ -1,12 +1,12 @@
 import time
 from unittest import mock
 from unittest.mock import patch, MagicMock
-from marqo.enums import IndexStatus
-from marqo.index import marqo_url_and_version_cache
-from marqo.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
+from marqo1.enums import IndexStatus
+from marqo1.index import marqo_url_and_version_cache
+from marqo1.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
 from tests.marqo_test import MarqoTestCase, CloudTestIndex
 from tests.cloud_test_logic.cloud_instance_mappings import GetIndexesIndexResponseObject, mock_get_indexes_response
-from marqo.errors import MarqoCloudIndexNotFoundError, MarqoCloudIndexNotReadyError, MarqoWebError, \
+from marqo1.errors import MarqoCloudIndexNotFoundError, MarqoCloudIndexNotReadyError, MarqoWebError, \
     BackendCommunicationError
 
 
@@ -342,7 +342,7 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
             open_source_test_index_name=self.generic_test_index_name,
         )
 
-        from marqo._httprequests import HttpRequests as HttpReq2
+        from marqo1._httprequests import HttpRequests as HttpReq2
         # these assignments allow HttpRequests.post to used while also being mocked,
         # while preventing infinite recursion:
         h = HttpReq2(config=self.client.config)

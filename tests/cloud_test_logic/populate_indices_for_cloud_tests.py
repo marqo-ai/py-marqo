@@ -1,7 +1,7 @@
 import os
 import time
-from marqo.errors import MarqoWebError
-import marqo
+from marqo1.errors import MarqoWebError
+import marqo1
 from cloud_test_index import index_name_to_settings_mappings
 
 
@@ -16,7 +16,7 @@ def populate_indices():
     if api_key:
         marqo_settings["api_key"] = api_key
 
-    mq = marqo.Client(**marqo_settings)
+    mq = marqo1.Client(**marqo_settings)
 
     for index_name, index_settings_dicts in index_name_to_settings_mappings.items():
         print(f"Creating {index_name} with config: {index_settings_dicts}")

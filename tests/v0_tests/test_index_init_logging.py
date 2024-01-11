@@ -1,7 +1,7 @@
 from tests.marqo_test import MarqoTestCase, CloudTestIndex
 from unittest.mock import patch
-from marqo.index import marqo_url_and_version_cache
-from marqo import Client
+from marqo1.index import marqo_url_and_version_cache
+from marqo1 import Client
 
 
 class TestInitLogging(MarqoTestCase):

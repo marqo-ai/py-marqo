@@ -5,10 +5,10 @@ from unittest import mock
 from unittest.mock import patch
 from pytest import mark
 
-from marqo.client import Client
+from marqo1.client import Client
 from tests.marqo_test import MarqoTestCase, CloudTestIndex
-from marqo.errors import BadRequestError
-from marqo.errors import BackendTimeoutError, BackendCommunicationError
+from marqo1.errors import BadRequestError
+from marqo1.errors import BackendTimeoutError, BackendCommunicationError
 import warnings
 
 
