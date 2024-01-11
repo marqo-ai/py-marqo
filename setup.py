@@ -1,9 +1,6 @@
 from setuptools import setup, find_packages
+from marqo import __version__
 
-
-version = {}
-with open("/src/marqo/__init__.py") as fp:
-    exec(fp.read(), version)
 
 with open("README.md", "r", encoding="utf8") as fh:
     long_description = fh.read()
@@ -22,7 +19,7 @@ setup(
         "tox"
     ],
     name="marqo1",
-    version=version['__version__'],
+    version=__version__,
     author="marqo org",
     author_email="org@marqo.io",
     description="Tensor search for humans",
