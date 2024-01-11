@@ -346,7 +346,7 @@ class TestIndex(MarqoTestCase):
                 mock_warning.assert_not_called()
 
     @mark.fixed
-    @mock.patch("marqo1.index.mq_logger.warning")
+    @mock.patch("marqo.index.mq_logger.warning")
     def test_marqo1_recommendation_when_communicate_with_marqo_v1(self, mock_warning):
         """Ensure that we recommend using marqo1 if the version is 1.x.x"""
         test_index_name = self.get_test_index_name(
@@ -375,7 +375,7 @@ class TestIndex(MarqoTestCase):
                     marqo_url_and_version_cache.clear()
 
     @mark.fixed
-    @mock.patch("marqo1.index.mq_logger.warning")
+    @mock.patch("marqo.index.mq_logger.warning")
     def test_no_marqo1_recommendation_if_major_is_not_1(self, mock_warning):
         """Ensure that we do not recommend using marqo1 if the major version is not 1"""
         test_index_name = self.get_test_index_name(
