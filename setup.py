@@ -18,6 +18,7 @@ setup(
         "tox"
     ],
     # Check setup.cfg for name and version
+    name="marqo1",
     author="marqo org",
     author_email="org@marqo.io",
     description="Tensor search for humans",
