@@ -1,5 +1,3 @@
-__version__= "2.1.0"
-
 __marqo_version__ = "1.5.0"
 __marqo_release_page__ = f"https://github.com/marqo-ai/marqo/releases/tag/{__marqo_version__}"
 
