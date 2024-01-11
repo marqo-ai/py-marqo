@@ -602,7 +602,6 @@ class Index:
             f"If you are sure your Marqo version is compatible with this client, you can ignore this message. ")
 
         url = None
-
         # Do version check
         try:
             url = self.config.instance_mapping.get_index_base_url(self.index_name)
@@ -624,10 +623,22 @@ class Index:
                 return
 
             if versioning_helpers.parse(marqo_version) < versioning_helpers.parse(min_ver):
-                mq_logger.warning(f"Your Marqo Python client requires a minimum Marqo version of "
-                                  f"{minimum_supported_marqo_version()} to function properly, but your Marqo version is {marqo_version}. "
-                                  f"Please upgrade your Marqo instance to avoid potential errors. "
-                                  f"If you have already changed your Marqo instance but still get this warning, please restart your Marqo client Python interpreter.")
+                if versioning_helpers.parse(marqo_version).major == 1:
+                    mq_logger.warning(
+                        f"Your current Marqo Python client requires a minimum Marqo version of "
+                        f"{minimum_supported_marqo_version()} to function properly. "
+                        f"Please upgrade your Marqo instance to avoid potential errors. "
+                        f"If you intended to use Marqo versions 1.x.x, "
+                        f"please use the 'marqo1' Python client by pip install marqo1. "
+                        f"If you have already changed your Marqo instance but still get this warning, "
+                        f"please restart your Marqo client Python interpreter.")
+                else:
+                    mq_logger.warning(f"Your Marqo Python client requires a minimum Marqo version of "
+                                      f"{minimum_supported_marqo_version()} to function properly, "
+                                      f"but your Marqo version is {marqo_version}. "
+                                      f"Please upgrade your Marqo instance to avoid potential errors. "
+                                      f"If you have already changed your Marqo instance but still get this warning, "
+                                      f"please restart your Marqo client Python interpreter.")
         except (MarqoWebError, RequestException, TypeError, KeyError, MarqoCloudIndexNotFoundError,
                 versioning_helpers.InvalidVersion) as e:
             # skip the check if this is a cloud index that is still being created:
