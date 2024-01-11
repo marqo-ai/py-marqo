@@ -204,7 +204,7 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
             control_base_url="https://api.marqo.ai", api_key="your-api-key", url_cache_duration=0.1
         )
         assert mapping.get_index_base_url("index1") == "example.com"
-        with patch("marqo.marqo_cloud_instance_mappings.mq_logger.warning") as mock_warning:
+        with patch("marqo1.marqo_cloud_instance_mappings.mq_logger.warning") as mock_warning:
             # simulate that the cache has expired
             mapping.latest_index_mappings_refresh_timestamp = mapping.latest_index_mappings_refresh_timestamp - 20
 
@@ -229,7 +229,7 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         mapping = MarqoCloudInstanceMappings(
             control_base_url="https://api.marqo.ai", api_key="your-api-key", url_cache_duration=0.1
         )
-        with patch("marqo.marqo_cloud_instance_mappings.mq_logger.warning") as mock_warning:
+        with patch("marqo1.marqo_cloud_instance_mappings.mq_logger.warning") as mock_warning:
             mapping.latest_index_mappings_refresh_timestamp = time.time() - 366
             with self.assertRaises(MarqoCloudIndexNotFoundError):
                 mapping.get_index_base_url("index1")
@@ -271,7 +271,7 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp = time.time() - 366
         self.client.config.instance_mapping._urls_mapping["READY"].pop(test_index_name, '')
 
-        with patch("marqo._httprequests.HttpRequests.post") as mock_post, \
+        with patch("marqo1._httprequests.HttpRequests.post") as mock_post, \
                 patch("requests.get") as mock_get:
             # 1 for the initial refresh, 1 for the search
             self.client.index(test_index_name).search("test")

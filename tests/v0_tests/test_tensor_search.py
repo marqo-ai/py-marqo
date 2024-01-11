@@ -169,7 +169,7 @@ class TestSearch(MarqoTestCase):
     def test_search_with_device(self):
         temp_client = copy.deepcopy(self.client)
         mock__post = mock.MagicMock()
-        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        @mock.patch("marqo1._httprequests.HttpRequests.post", mock__post)
         def run():
             temp_client.index(self.generic_test_index_name).search(q="my search term", device="cuda:2")
             return True
@@ -183,7 +183,7 @@ class TestSearch(MarqoTestCase):
         temp_client = copy.deepcopy(self.client)
 
         mock__post = mock.MagicMock()
-        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        @mock.patch("marqo1._httprequests.HttpRequests.post", mock__post)
         def run():
             temp_client.index(self.generic_test_index_name).search(q="my search term")
             return True

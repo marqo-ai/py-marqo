@@ -36,8 +36,8 @@ class TestIndex(MarqoTestCase):
             mock_get = mock.MagicMock()
             mock_get.return_value = {"index_status": "READY"}
 
-            @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
-            @mock.patch("marqo._httprequests.HttpRequests.get", mock_get)
+            @mock.patch("marqo1._httprequests.HttpRequests.post", mock__post)
+            @mock.patch("marqo1._httprequests.HttpRequests.get", mock_get)
             def run():
                 test_index_name = self.client.create_index(
                     index_name=self.generic_test_index_name,
@@ -153,8 +153,8 @@ class TestIndex(MarqoTestCase):
         mock_get.return_value = {"index_status": "READY"}
         test_client = copy.deepcopy(self.client)
         test_client.config.api_key = 'some-super-secret-API-key'
-        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
-        @mock.patch("marqo._httprequests.HttpRequests.get", mock_get)
+        @mock.patch("marqo1._httprequests.HttpRequests.post", mock__post)
+        @mock.patch("marqo1._httprequests.HttpRequests.get", mock_get)
         def run():
             test_client.create_index(index_name=self.generic_test_index_name)
             args, kwargs = mock__post.call_args
@@ -171,8 +171,8 @@ class TestIndex(MarqoTestCase):
         mock_get.return_value = {"index_status": "READY"}
         test_client = copy.deepcopy(self.client)
         test_client.config.api_key = 'some-super-secret-API-key'
-        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
-        @mock.patch("marqo._httprequests.HttpRequests.get", mock_get)
+        @mock.patch("marqo1._httprequests.HttpRequests.post", mock__post)
+        @mock.patch("marqo1._httprequests.HttpRequests.get", mock_get)
         def run():
             # this is overridden by a create_index() default parameter
             test_client.create_index(
@@ -194,8 +194,8 @@ class TestIndex(MarqoTestCase):
         test_client.config.api_key = 'some-super-secret-API-key'
         test_client.config.is_marqo_cloud = True
 
-        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
-        @mock.patch("marqo._httprequests.HttpRequests.get", mock_get)
+        @mock.patch("marqo1._httprequests.HttpRequests.post", mock__post)
+        @mock.patch("marqo1._httprequests.HttpRequests.get", mock_get)
         def run():
             # this is overridden by a create_index() default parameter
             test_client.create_index(
@@ -223,8 +223,8 @@ class TestIndex(MarqoTestCase):
         index_setting = self.client.index(test_index_name).get_settings()
         assert intended_replicas == index_setting['number_of_replicas']
 
-    @mock.patch("marqo._httprequests.HttpRequests.post", return_value={"acknowledged": True})
-    @mock.patch("marqo._httprequests.HttpRequests.get", return_value={"index_status": "READY"})
+    @mock.patch("marqo1._httprequests.HttpRequests.post", return_value={"acknowledged": True})
+    @mock.patch("marqo1._httprequests.HttpRequests.get", return_value={"index_status": "READY"})
     def test_create_marqo_cloud_index(self, mock_get, mock_post):
         self.client.config.instance_mapping = MarqoCloudInstanceMappings("https://api.marqo.ai")
         self.client.config.api_key = 'some-super-secret-API-key'

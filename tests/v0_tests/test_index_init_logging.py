@@ -6,7 +6,7 @@ from marqo1 import Client
 
 class TestInitLogging(MarqoTestCase):
 
-    @patch("marqo.marqo_cloud_instance_mappings.mq_logger.warning")
+    @patch("marqo1.marqo_cloud_instance_mappings.mq_logger.warning")
     def test_index_init_logging_non_existent_index(self, mock_warning):
         """Test no logging on index instantiation when index does not exist"""
 
@@ -14,7 +14,7 @@ class TestInitLogging(MarqoTestCase):
         assert mock_warning.call_count == 0
 
     @patch("requests.get")
-    @patch("marqo.marqo_cloud_instance_mappings.mq_logger.warning")
+    @patch("marqo1.marqo_cloud_instance_mappings.mq_logger.warning")
     def test_index_init_creating(self, mock_warning, mock_get):
         """Test no logging on index instantiation when a cloud index is in a CREATING state"""
         if not self.client.config.is_marqo_cloud:
@@ -37,7 +37,7 @@ class TestInitLogging(MarqoTestCase):
         assert ix.config.instance_mapping.get_index_base_url(test_index_name) == 'example2.com'
         assert mock_warning.call_count == 0
 
-    @patch("marqo.marqo_cloud_instance_mappings.mq_logger.warning")
+    @patch("marqo1.marqo_cloud_instance_mappings.mq_logger.warning")
     def test_index_init_exists(self, mock_warning,):
         """Test no logging on index instantiation when index exists"""
 
@@ -51,7 +51,7 @@ class TestInitLogging(MarqoTestCase):
         # check that index truly exists:
         ix.get_stats()
 
-    @patch("marqo.marqo_cloud_instance_mappings.mq_logger.warning")
+    @patch("marqo1.marqo_cloud_instance_mappings.mq_logger.warning")
     def test_index_init_exists_version_mismatch(self, mock_warning):
         """This should trigger a warning """
         test_index_name = self.create_test_index(
@@ -59,7 +59,7 @@ class TestInitLogging(MarqoTestCase):
             open_source_test_index_name=self.generic_test_index_name,
         )
 
-        with patch("marqo._httprequests.HttpRequests.get") as mock_get:
+        with patch("marqo1._httprequests.HttpRequests.get") as mock_get:
             mock_get.return_value = {"message": "Welcome to Marqo", "version": "0.0.21"}
             assert mock_warning.call_count == 0
             #  creating a client shouldn't trigger a warning

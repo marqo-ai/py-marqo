@@ -27,7 +27,7 @@ class TestCreateIndexSettings(unittest.TestCase):
         assert settings.number_of_replicas == 0
 
     def test_deprecated_settings_passed_raise_warning(self):
-        with patch("marqo.marqo_cloud_instance_mappings.mq_logger.warning") as mock_warning:
+        with patch("marqo1.marqo_cloud_instance_mappings.mq_logger.warning") as mock_warning:
             settings = CreateIndexSettings(
                 inference_node_type="marqo.CPU",
                 storage_node_type="marqo.basic",
