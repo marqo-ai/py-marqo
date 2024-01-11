@@ -1,8 +1,18 @@
 from setuptools import setup, find_packages
-# from src.marqo.version import __version__
+import os
+
 
 with open("README.md", "r", encoding="utf8") as fh:
     long_description = fh.read()
+
+
+def get_version() -> str:
+    version = {}
+    setup_dir = os.path.dirname(os.path.abspath(__file__))
+    init_path = os.path.join(setup_dir, 'src', 'marqo', '__init__.py')
+    with open(init_path) as fp:
+        exec(fp.read(), version)
+    return version["__version__"]
 
 setup(
     install_requires=[
@@ -18,7 +28,7 @@ setup(
         "tox"
     ],
     name="marqo1",
-    version="2.1.0",
+    version=get_version(),
     author="marqo org",
     author_email="org@marqo.io",
     description="Tensor search for humans",
