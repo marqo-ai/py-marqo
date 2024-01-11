@@ -1,6 +1,5 @@
 from setuptools import setup, find_packages
-from marqo import __version__
-
+from src.marqo.__init__ import __version__
 
 with open("README.md", "r", encoding="utf8") as fh:
     long_description = fh.read()
