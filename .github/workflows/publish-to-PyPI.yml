@@ -11,6 +11,7 @@ on:
     branches:
       - mainline
       - 'releases/*'
+      - 2.x
 
 permissions:
   contents: read
