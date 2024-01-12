@@ -355,8 +355,11 @@ class TestIndex(MarqoTestCase):
         )
         marqo_url_and_version_cache.clear()
         test_cases = [
-            "1.2.3", "1.5.1", "1.99.123", "1.4.beta",
-            "1.5.3", "1.0.0", "1.55.0.beta"
+            "1.2.3",  # Average case
+            "1.0.0",  # Edge with 0s
+            "1.99.123",  # Edge case with large numbers
+            "1.4.beta",  # Edge case with beta
+            "1.55.0-beta",  # Edge case with dash
         ]
         for version in test_cases:
             with self.subTest(f"version = {version}"):
@@ -368,7 +371,7 @@ class TestIndex(MarqoTestCase):
                     mock_get_marqo.assert_called_once()
                     mock_warning.assert_called_once()
                     log_message = mock_warning.call_args[0][0]
-                    self.assertIn("marqo1", log_message)
+                    self.assertIn("2.x", log_message)
                     mock_warning.reset_mock()
                     mock_get_marqo.reset_mock()
 
@@ -384,7 +387,10 @@ class TestIndex(MarqoTestCase):
         )
         marqo_url_and_version_cache.clear()
         test_cases = [
-            "0.1.3", "0.1.2", "0.3.5", "0.99.123", "0.4.beta",
+            "0.0.1",  # Edge case with 0s
+            "0.3.beta",  # Edge case with beta
+            "0.16.3",  # Average case
+            "0.4.16-beta",  # Edge case with dash
         ]
         for version in test_cases:
             with self.subTest(f"version = {version}"):
@@ -396,7 +402,7 @@ class TestIndex(MarqoTestCase):
                     mock_get_marqo.assert_called_once()
                     mock_warning.assert_called_once()
                     log_message = mock_warning.call_args[0][0]
-                    self.assertNotIn("marqo1", log_message)
+                    self.assertNotIn("2.x", log_message)
                     mock_warning.reset_mock()
                     mock_get_marqo.reset_mock()
 
