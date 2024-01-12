@@ -628,17 +628,16 @@ class Index:
                         f"Your current Marqo Python client requires a minimum Marqo version of "
                         f"{minimum_supported_marqo_version()} to function properly. "
                         f"Please upgrade your Marqo instance to avoid potential errors. "
-                        f"If you intended to use Marqo versions 1.x.x, "
-                        f"please use the 'marqo1' Python client by pip install marqo1. "
+                        f"If you intended to use Marqo 1.x, please use Python client 2.x (pip install marqo==2). "
                         f"If you have already changed your Marqo instance but still get this warning, "
-                        f"please restart your Marqo client Python interpreter.")
+                        f"please restart your Python interpreter.")
                 else:
                     mq_logger.warning(f"Your Marqo Python client requires a minimum Marqo version of "
                                       f"{minimum_supported_marqo_version()} to function properly, "
                                       f"but your Marqo version is {marqo_version}. "
                                       f"Please upgrade your Marqo instance to avoid potential errors. "
                                       f"If you have already changed your Marqo instance but still get this warning, "
-                                      f"please restart your Marqo client Python interpreter.")
+                                      f"please restart your Python interpreter.")
         except (MarqoWebError, RequestException, TypeError, KeyError, MarqoCloudIndexNotFoundError,
                 versioning_helpers.InvalidVersion) as e:
             # skip the check if this is a cloud index that is still being created:
