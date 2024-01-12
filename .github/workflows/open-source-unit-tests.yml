@@ -21,8 +21,7 @@ on:
         description: 'Marqo image tag. Examples: "1.1.0", "test" "latest"'
         required: true
   pull_request:
-    branches: 
-      - mainline
+    branches:
       - 'releases/*'
       - 2.x
   # allows other workflows to reuse these unit tests:
