@@ -292,10 +292,10 @@ Images can then be added within documents as follows. You can use urls from the 
 ```python
 
 response = mq.index("my-multimodal-index").add_documents([{
-    "My Image": "https://raw.githubusercontent.com/marqo-ai/marqo-api-tests/mainline/assets/ai_hippo_realistic.png",
+    "My_Image": "https://raw.githubusercontent.com/marqo-ai/marqo-api-tests/mainline/assets/ai_hippo_realistic.png",
     "Description": "The hippopotamus, also called the common hippopotamus or river hippopotamus, is a large semiaquatic mammal native to sub-Saharan Africa",
     "_id": "hippo-facts"
-}], tensor_fields=["My Image"])
+}], tensor_fields=["My_Image"])
 
 ```
 
