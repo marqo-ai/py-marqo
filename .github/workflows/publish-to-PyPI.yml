@@ -9,8 +9,6 @@ name: Publish to PyPI
 on:
   push:
     branches:
-      - mainline
-      - 'releases/*'
       - 2.x
 
 permissions:
