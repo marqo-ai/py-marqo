@@ -9,9 +9,9 @@ import time
 
 from pytest import mark
 
-from marqo.errors import MarqoError, MarqoWebError
+from marqo1.errors import MarqoError, MarqoWebError
 from tests.marqo_test import MarqoTestCase, CloudTestIndex
-from marqo import enums
+from marqo1 import enums
 from unittest import mock
 
 
@@ -81,7 +81,7 @@ class TestAddDocuments(MarqoTestCase):
     def test_delete_index_response(self):
         mock_delete = mock.Mock()
         mock_delete.return_value = {'mock_delete_message': 'mock_delete_response'}
-        @mock.patch("marqo._httprequests.HttpRequests.delete", mock_delete)
+        @mock.patch("marqo1._httprequests.HttpRequests.delete", mock_delete)
         def run():
             test_index_name = self.create_test_index(
                 cloud_test_index_to_use=CloudTestIndex.basic_index,
@@ -232,7 +232,7 @@ class TestAddDocuments(MarqoTestCase):
 
         mock__post = mock.MagicMock()
 
-        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        @mock.patch("marqo1._httprequests.HttpRequests.post", mock__post)
         def run():
             temp_client.index(self.generic_test_index_name).add_documents(documents=[
                 {"d1": "blah"}, {"d2": "some data"}
@@ -249,7 +249,7 @@ class TestAddDocuments(MarqoTestCase):
 
         mock__post = mock.MagicMock()
 
-        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        @mock.patch("marqo1._httprequests.HttpRequests.post", mock__post)
         def run():
             temp_client.index(self.generic_test_index_name).add_documents(documents=[
                 {"d1": "blah"}, {"d2": "some data"}, {"d2331": "blah"}, {"45d2": "some data"}
@@ -267,7 +267,7 @@ class TestAddDocuments(MarqoTestCase):
         temp_client = copy.deepcopy(self.client)
         mock__post = mock.MagicMock()
 
-        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        @mock.patch("marqo1._httprequests.HttpRequests.post", mock__post)
         def run():
             temp_client.index(self.generic_test_index_name).add_documents(documents=[
                 {"d1": "blah"}, {"d2": "some data"}
@@ -292,7 +292,7 @@ class TestAddDocuments(MarqoTestCase):
         temp_client = copy.deepcopy(self.client)
         mock__post = mock.MagicMock()
 
-        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        @mock.patch("marqo1._httprequests.HttpRequests.post", mock__post)
         def run():
             # Neither device nor auto-refresh set
             temp_client.index(self.generic_test_index_name).add_documents(
@@ -342,7 +342,7 @@ class TestAddDocuments(MarqoTestCase):
 
         mock__post = mock.MagicMock()
 
-        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        @mock.patch("marqo1._httprequests.HttpRequests.post", mock__post)
         def run():
             temp_client.index(self.generic_test_index_name).add_documents(documents=[
                     {"d1": "blah"}, 
@@ -372,7 +372,7 @@ class TestAddDocuments(MarqoTestCase):
         temp_client = copy.deepcopy(self.client)
         mock__post = mock.MagicMock()
 
-        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        @mock.patch("marqo1._httprequests.HttpRequests.post", mock__post)
         def run():
             temp_client.index(self.generic_test_index_name).add_documents(
                 documents=[{"d1": "blah"}, {"d2": "some data"}], 
@@ -400,7 +400,7 @@ class TestAddDocuments(MarqoTestCase):
     def test_add_documents_with_no_processes(self):
         mock__post = mock.MagicMock()
 
-        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        @mock.patch("marqo1._httprequests.HttpRequests.post", mock__post)
         def run():
             self.client.index(self.generic_test_index_name).add_documents(documents=[
                 {"d1": "blah"}, {"d2": "some data"}
@@ -453,7 +453,7 @@ class TestAddDocuments(MarqoTestCase):
                 mock__post = mock.MagicMock()
                 mock__post.return_value = dict()
 
-                @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+                @mock.patch("marqo1._httprequests.HttpRequests.post", mock__post)
                 def run():
                     res = self.client.index(self.generic_test_index_name).add_documents(
                         auto_refresh=auto_refresh, documents=docs, client_batch_size=client_batch_size,
@@ -826,7 +826,7 @@ class TestAddDocuments(MarqoTestCase):
     def test_add_docs_image_download_headers(self):
         mock__post = mock.MagicMock()
 
-        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        @mock.patch("marqo1._httprequests.HttpRequests.post", mock__post)
         def run():
             image_download_headers = {"Authentication": "my-secret-key"}
             self.client.index(index_name=self.generic_test_index_name).add_documents(

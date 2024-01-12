@@ -21,9 +21,9 @@ on:
         description: 'Marqo image tag. Examples: "1.1.0", "test" "latest"'
         required: true
   pull_request:
-    branches: 
-      - mainline
+    branches:
       - 'releases/*'
+      - 2.x
   # allows other workflows to reuse these unit tests:
   workflow_call:
 
@@ -80,7 +80,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           export PYTHONPATH=$(pwd):$(pwd)/src:$PYTHONPATH
-          SUPPORTED_MQ_VERSION=$(python -c 'from marqo import version; print(version.__marqo_version__)') || exit 1
+          SUPPORTED_MQ_VERSION=$(python -c 'from marqo1 import version; print(version.__marqo_version__)') || exit 1
           
           # error out if version is empty:
           if [ -z "$SUPPORTED_MQ_VERSION" ]; then exit 1; fi

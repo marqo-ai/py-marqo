@@ -9,9 +9,9 @@ import time
 
 from pytest import mark
 
-from marqo.errors import MarqoError, MarqoWebError
+from marqo1.errors import MarqoError, MarqoWebError
 from tests.marqo_test import MarqoTestCase, CloudTestIndex
-from marqo import enums
+from marqo1 import enums
 from unittest import mock
 
 
@@ -54,7 +54,7 @@ class TestDeleteDocuments(MarqoTestCase):
             open_source_test_index_name=self.generic_test_index_name,
         )
 
-        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        @mock.patch("marqo1._httprequests.HttpRequests.post", mock__post)
         def run():
             temp_client.index(test_index_name).delete_documents(
                 ids=['0', '1', '2']
@@ -83,7 +83,7 @@ class TestDeleteDocuments(MarqoTestCase):
         temp_client = copy.deepcopy(self.client)
         mock__post = mock.MagicMock()
 
-        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        @mock.patch("marqo1._httprequests.HttpRequests.post", mock__post)
         def run():
             temp_client.index(test_index_name).delete_documents(
                 ids=['0', '1', '2'], auto_refresh=True

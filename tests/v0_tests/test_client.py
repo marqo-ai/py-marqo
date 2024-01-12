@@ -5,10 +5,10 @@ from unittest import mock
 from unittest.mock import patch
 from pytest import mark
 
-from marqo.client import Client
+from marqo1.client import Client
 from tests.marqo_test import MarqoTestCase, CloudTestIndex
-from marqo.errors import BadRequestError
-from marqo.errors import BackendTimeoutError, BackendCommunicationError
+from marqo1.errors import BadRequestError
+from marqo1.errors import BackendTimeoutError, BackendCommunicationError
 import warnings
 
 
@@ -32,7 +32,7 @@ class TestClient(MarqoTestCase):
                             BackendTimeoutError("test"), requests.exceptions.RequestException("test"),
                             KeyError("test"), KeyError("test"), requests.exceptions.Timeout("test")]
         for i, side_effect in enumerate(side_effect_list):
-            with mock.patch("marqo._httprequests.HttpRequests.get") as mock_get:
+            with mock.patch("marqo1._httprequests.HttpRequests.get") as mock_get:
                 mock_get.side_effect = side_effect
 
                 with self.assertRaises(BadRequestError) as cm:
@@ -55,7 +55,7 @@ class TestClient(MarqoTestCase):
             cloud_test_index_to_use=CloudTestIndex.basic_index,
             open_source_test_index_name=self.generic_test_index_name,
         )
-        with patch("marqo._httprequests.HttpRequests.get") as mock_get:
+        with patch("marqo1._httprequests.HttpRequests.get") as mock_get:
             res = self.client.index(test_index_name).health()
             args, kwargs = mock_get.call_args
             self.assertIn(f"health", kwargs["path"])

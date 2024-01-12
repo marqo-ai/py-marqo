@@ -1,4 +1,4 @@
-from marqo.client import Client
+from marqo1.client import Client
 from tests.marqo_test import MarqoTestCase, CloudTestIndex
 import math
 from pytest import mark

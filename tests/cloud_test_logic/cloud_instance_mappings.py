@@ -74,7 +74,7 @@ def mock_get_indexes_response(indexes_list: Union[List[GetIndexesIndexResponseOb
     def decorator(test_func):
         @wraps(test_func)
         def wrapper(self, *args, **kwargs):
-            with mock.patch("marqo.marqo_cloud_instance_mappings.requests.get") as mock_get:
+            with mock.patch("marqo1.marqo_cloud_instance_mappings.requests.get") as mock_get:
                 return_value_is_set = False
 
                 def side_effect(url, *args, **kwargs):

@@ -1,7 +1,7 @@
 import requests
 from PIL import Image
-from marqo.client import Client
-from marqo.errors import MarqoApiError
+from marqo1.client import Client
+from marqo1.errors import MarqoApiError
 import numpy as np
 from tests.marqo_test import MarqoTestCase, CloudTestIndex
 

@@ -1,6 +1,6 @@
 import os
 import requests
-import marqo
+import marqo1
 
 
 def delete_all_test_indices(wait_for_readiness=False):
@@ -19,7 +19,7 @@ def delete_all_test_indices(wait_for_readiness=False):
     print(f"Deleting all test indices from Marqo Cloud Account that match the following criteria:")
     print(f"- index name starts with 'test-index'")
     print(f"- index name contains the value of the environment variable MQ_TEST_RUN_IDENTIFIER: {suffix}\n")
-    client = marqo.Client(**local_marqo_settings)
+    client = marqo1.Client(**local_marqo_settings)
     indexes = client.get_indexes()
     indices_to_delete = []
     for index in indexes['results']:
@@ -37,7 +37,7 @@ def delete_all_test_indices(wait_for_readiness=False):
     print("Marqo Cloud deletion responses:")
     for index_name in indices_to_delete:
         index = client.index(index_name)
-        if index.get_status()["index_status"] == marqo.enums.IndexStatus.READY:
+        if index.get_status()["index_status"] == marqo1.enums.IndexStatus.READY:
             print(index_name, index.delete(wait_for_readiness=False))
         elif index.get_status()["index_status"] == 'DELETING':
             print(f"Index {index_name} is already being deleted")

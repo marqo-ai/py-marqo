@@ -3,10 +3,10 @@ from unittest.mock import patch, MagicMock
 
 import requests.exceptions
 
-from marqo._httprequests import HttpRequests
-from marqo.config import Config
-from marqo.default_instance_mappings import DefaultInstanceMappings
-from marqo.errors import MarqoWebError
+from marqo1._httprequests import HttpRequests
+from marqo1.config import Config
+from marqo1.default_instance_mappings import DefaultInstanceMappings
+from marqo1.errors import MarqoWebError
 
 
 class TestConstructPath(unittest.TestCase):
@@ -37,8 +37,8 @@ class TestConstructPath(unittest.TestCase):
         self.assertEqual(result, f"{self.base_url}/testpath")
 
     @patch("requests.sessions.Session.request")
-    @patch("marqo._httprequests.HttpRequests._validate")
-    @patch("marqo.default_instance_mappings.DefaultInstanceMappings.index_http_error_handler")
+    @patch("marqo1._httprequests.HttpRequests._validate")
+    @patch("marqo1.default_instance_mappings.DefaultInstanceMappings.index_http_error_handler")
     def test_send_request_calls_index_http_error_handler(self, mock_index_http_error_handler: MagicMock, mock_validate: MagicMock,
                                                   mock_requests: MagicMock, ):
         # Set up mock behavior to raise MarqoWebError

@@ -1,7 +1,7 @@
 import json
 from tests.marqo_test import MarqoTestCase
 from tests.cloud_test_logic.cloud_instance_mappings import GetIndexesIndexResponseObject, mock_get_indexes_response
-from marqo.utils import convert_dict_to_url_params
+from marqo1.utils import convert_dict_to_url_params
 from unittest import mock
 
 
@@ -9,7 +9,7 @@ class TestAddDocumentsModelAuth(MarqoTestCase):
     def test_add_docs_model_auth(self):
         mock__post = mock.MagicMock()
 
-        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        @mock.patch("marqo1._httprequests.HttpRequests.post", mock__post)
         def run():
             mock_s3_model_auth = {'s3': {'aws_access_key_id': 'some_acc_key',
                                          'aws_secret_access_key': 'some_sec_acc_key'}}
@@ -26,7 +26,7 @@ class TestAddDocumentsModelAuth(MarqoTestCase):
     def test_add_docs_model_client_batching(self):
         mock__post = mock.MagicMock()
 
-        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        @mock.patch("marqo1._httprequests.HttpRequests.post", mock__post)
         def run():
             mock_s3_model_auth = {'s3': {'aws_access_key_id': 'some_acc_key',
                                          'aws_secret_access_key': 'some_sec_acc_key'}}
@@ -49,7 +49,7 @@ class TestAddDocumentsModelAuth(MarqoTestCase):
     def test_search_model_auth(self):
         mock__post = mock.MagicMock()
 
-        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        @mock.patch("marqo1._httprequests.HttpRequests.post", mock__post)
         def run():
             mock_s3_model_auth = {'s3': {'aws_access_key_id': 'some_acc_key',
                                          'aws_secret_access_key': 'some_sec_acc_key'}}
@@ -66,7 +66,7 @@ class TestAddDocumentsModelAuth(MarqoTestCase):
     def test_bulk_search_model_auth(self):
         mock__post = mock.MagicMock()
 
-        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        @mock.patch("marqo1._httprequests.HttpRequests.post", mock__post)
         def run():
             mock_s3_model_auth = {'s3': {'aws_access_key_id': 'some_acc_key',
                                          'aws_secret_access_key': 'some_sec_acc_key'}}

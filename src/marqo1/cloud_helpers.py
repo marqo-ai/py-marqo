@@ -1,8 +1,8 @@
 import time
 
-from marqo.marqo_logging import mq_logger
-from marqo._httprequests import HttpRequests
-from marqo.enums import IndexStatus
+from marqo1.marqo_logging import mq_logger
+from marqo1._httprequests import HttpRequests
+from marqo1.enums import IndexStatus
 
 
 def cloud_wait_for_index_status(req: HttpRequests, index_name: str, status: IndexStatus):

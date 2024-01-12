@@ -2,18 +2,18 @@ import time
 import copy
 import os
 
-import marqo
-from marqo.index import marqo_url_and_version_cache
-from marqo import enums
+import marqo1
+from marqo1.index import marqo_url_and_version_cache
+from marqo1 import enums
 from typing import Any, Dict, List
 from unittest import mock
 from pytest import mark
-from marqo.errors import InvalidArgError
+from marqo1.errors import InvalidArgError
 import requests
 import random
 import math
 
-from marqo.models.search_models import BulkSearchBody
+from marqo1.models.search_models import BulkSearchBody
 from tests.marqo_test import (mock_http_traffic, with_documents, MockHTTPTraffic, MarqoTestCase, CloudTestIndex
                               )
 from tests.cloud_test_logic.cloud_instance_mappings import GetIndexesIndexResponseObject, mock_get_indexes_response
@@ -129,7 +129,7 @@ class TestBulkSearch(MarqoTestCase):
         # which would raise issue due to forbid_extra_calls=True
         cache_url = self.client.config.instance_mapping.get_index_base_url(self.generic_test_index_name)
         marqo_url_and_version_cache[cache_url] = "v0"
-        client = marqo.Client(**self.client_settings)
+        client = marqo1.Client(**self.client_settings)
         client.bulk_search([{
             "index": self.generic_test_index_name,
             "q": "title about some doc",
@@ -279,7 +279,7 @@ class TestBulkSearch(MarqoTestCase):
         # try it with lexical search:
         #    can't find the above with synonym
         assert len(self.client.index(test_index_name).search(
-            "Examples of leadership", search_method=marqo.SearchMethods.LEXICAL)["hits"]) == 0
+            "Examples of leadership", search_method=marqo1.SearchMethods.LEXICAL)["hits"]) == 0
         #    but can look for a word
         assert self.client.index(test_index_name).search(
             '"captain"')["hits"][0]["_id"] == "123456"
@@ -290,7 +290,7 @@ class TestBulkSearch(MarqoTestCase):
         temp_client = copy.deepcopy(self.client)
 
         mock__post = mock.MagicMock()
-        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        @mock.patch("marqo1._httprequests.HttpRequests.post", mock__post)
         def run():
             temp_client.bulk_search([{
                 "index": self.generic_test_index_name,
@@ -308,7 +308,7 @@ class TestBulkSearch(MarqoTestCase):
         temp_client = copy.deepcopy(self.client)
 
         mock__post = mock.MagicMock()
-        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        @mock.patch("marqo1._httprequests.HttpRequests.post", mock__post)
         def run():
             temp_client.bulk_search([{
                 "index": self.generic_test_index_name,
@@ -617,7 +617,7 @@ class TestBulkSearch(MarqoTestCase):
         cloud_client_config["url"] = "cloud.url.marqo.ai"
         marqo_cloud_url_before_test = os.environ.get("MARQO_CLOUD_URL")
         os.environ["MARQO_CLOUD_URL"] = "cloud.url.marqo.ai"
-        client = marqo.Client(**cloud_client_config)
+        client = marqo1.Client(**cloud_client_config)
         queries = [
             {
                 "index": "test-index",
@@ -638,7 +638,7 @@ class TestBulkSearch(MarqoTestCase):
         cloud_client_config["url"] = "cloud.url.marqo.ai"
         marqo_cloud_url_before_test = os.environ.get("MARQO_CLOUD_URL")
         os.environ["MARQO_CLOUD_URL"] = "cloud.url.marqo.ai"
-        client = marqo.Client(**cloud_client_config)
+        client = marqo1.Client(**cloud_client_config)
         queries = [
             {
                 "index": "test-index",
@@ -665,7 +665,7 @@ class TestBulkSearch(MarqoTestCase):
         cloud_client_config["url"] = "cloud.url.marqo.ai"
         marqo_cloud_url_before_test = os.environ.get("MARQO_CLOUD_URL")
         os.environ["MARQO_CLOUD_URL"] = "cloud.url.marqo.ai"
-        client = marqo.Client(**cloud_client_config)
+        client = marqo1.Client(**cloud_client_config)
         queries = [
             {
                 "index": "test-index",
@@ -775,7 +775,7 @@ class TestBulkSearch(MarqoTestCase):
         cloud_client_config["url"] = "cloud.url.marqo.ai"
         marqo_cloud_url_before_test = os.environ.get("MARQO_CLOUD_URL")
         os.environ["MARQO_CLOUD_URL"] = "cloud.url.marqo.ai"
-        client = marqo.Client(**cloud_client_config)
+        client = marqo1.Client(**cloud_client_config)
         queries = [
             {
                 "index": "test-index",
@@ -784,7 +784,7 @@ class TestBulkSearch(MarqoTestCase):
             },
             ]
         parsed_queries = [BulkSearchBody(**q) for q in queries]
-        with self.assertRaises(marqo.errors.MarqoCloudIndexNotFoundError):
+        with self.assertRaises(marqo1.errors.MarqoCloudIndexNotFoundError):
             client._validate_all_indexes_belong_to_the_same_cluster(parsed_queries)
 
         if marqo_cloud_url_before_test:

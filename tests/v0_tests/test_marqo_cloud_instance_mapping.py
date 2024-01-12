@@ -1,12 +1,12 @@
 import time
 from unittest import mock
 from unittest.mock import patch, MagicMock
-from marqo.enums import IndexStatus
-from marqo.index import marqo_url_and_version_cache
-from marqo.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
+from marqo1.enums import IndexStatus
+from marqo1.index import marqo_url_and_version_cache
+from marqo1.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
 from tests.marqo_test import MarqoTestCase, CloudTestIndex
 from tests.cloud_test_logic.cloud_instance_mappings import GetIndexesIndexResponseObject, mock_get_indexes_response
-from marqo.errors import MarqoCloudIndexNotFoundError, MarqoCloudIndexNotReadyError, MarqoWebError, \
+from marqo1.errors import MarqoCloudIndexNotFoundError, MarqoCloudIndexNotReadyError, MarqoWebError, \
     BackendCommunicationError
 
 
@@ -204,7 +204,7 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
             control_base_url="https://api.marqo.ai", api_key="your-api-key", url_cache_duration=0.1
         )
         assert mapping.get_index_base_url("index1") == "example.com"
-        with patch("marqo.marqo_cloud_instance_mappings.mq_logger.warning") as mock_warning:
+        with patch("marqo1.marqo_cloud_instance_mappings.mq_logger.warning") as mock_warning:
             # simulate that the cache has expired
             mapping.latest_index_mappings_refresh_timestamp = mapping.latest_index_mappings_refresh_timestamp - 20
 
@@ -229,7 +229,7 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         mapping = MarqoCloudInstanceMappings(
             control_base_url="https://api.marqo.ai", api_key="your-api-key", url_cache_duration=0.1
         )
-        with patch("marqo.marqo_cloud_instance_mappings.mq_logger.warning") as mock_warning:
+        with patch("marqo1.marqo_cloud_instance_mappings.mq_logger.warning") as mock_warning:
             mapping.latest_index_mappings_refresh_timestamp = time.time() - 366
             with self.assertRaises(MarqoCloudIndexNotFoundError):
                 mapping.get_index_base_url("index1")
@@ -271,7 +271,7 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         self.client.config.instance_mapping.latest_index_mappings_refresh_timestamp = time.time() - 366
         self.client.config.instance_mapping._urls_mapping["READY"].pop(test_index_name, '')
 
-        with patch("marqo._httprequests.HttpRequests.post") as mock_post, \
+        with patch("marqo1._httprequests.HttpRequests.post") as mock_post, \
                 patch("requests.get") as mock_get:
             # 1 for the initial refresh, 1 for the search
             self.client.index(test_index_name).search("test")
@@ -304,7 +304,7 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
         mappings._urls_mapping[IndexStatus.READY][test_index_name] = bad_url
 
 
-        with mock.patch('marqo.index.Index._marqo_minimum_supported_version_check'):
+        with mock.patch('marqo1.index.Index._marqo_minimum_supported_version_check'):
             with self.assertRaises(BackendCommunicationError):
                 # attempts to use the bad_url for searching and raises a connection error
                 # but does not refresh the cache yet, because we haven't yet hit the minimum
@@ -342,7 +342,7 @@ class TestMarqoCloudInstanceMappings(MarqoTestCase):
             open_source_test_index_name=self.generic_test_index_name,
         )
 
-        from marqo._httprequests import HttpRequests as HttpReq2
+        from marqo1._httprequests import HttpRequests as HttpReq2
         # these assignments allow HttpRequests.post to used while also being mocked,
         # while preventing infinite recursion:
         h = HttpReq2(config=self.client.config)

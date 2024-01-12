@@ -1,8 +1,8 @@
 from unittest import mock
-from marqo import config
+from marqo1 import config
 from tests.marqo_test import MarqoTestCase
-from marqo.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
-from marqo.default_instance_mappings import DefaultInstanceMappings
+from marqo1.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
+from marqo1.default_instance_mappings import DefaultInstanceMappings
 
 
 class TestConfig(MarqoTestCase):

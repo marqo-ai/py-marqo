@@ -4,13 +4,13 @@ from typing import Optional
 import requests
 from requests.exceptions import Timeout
 
-from marqo.errors import (
+from marqo1.errors import (
     MarqoCloudIndexNotFoundError,
     MarqoCloudIndexNotReadyError,
 )
-from marqo.instance_mappings import InstanceMappings
-from marqo.marqo_logging import mq_logger
-from marqo.enums import IndexStatus
+from marqo1.instance_mappings import InstanceMappings
+from marqo1.marqo_logging import mq_logger
+from marqo1.enums import IndexStatus
 
 
 class MarqoCloudInstanceMappings(InstanceMappings):

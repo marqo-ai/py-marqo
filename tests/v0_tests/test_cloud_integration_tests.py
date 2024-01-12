@@ -1,16 +1,16 @@
 import os
 from unittest import mock
 
-from marqo.errors import MarqoWebError
+from marqo1.errors import MarqoWebError
 from tests.marqo_test import MarqoTestCase, CloudTestIndex
-from marqo.index import Index
+from marqo1.index import Index
 
 
 class TestCloudIntegrationTests(MarqoTestCase):
     def test_add_documents_mock_overwrites_mock_for_cloud_tests(self):
         """Test that if mock for add_documents is specified it overwrites the mock that
         create_test_index creates for tracking added documents."""
-        with mock.patch("marqo.index.Index.add_documents") as mock_documents, \
+        with mock.patch("marqo1.index.Index.add_documents") as mock_documents, \
                 mock.patch("tests.marqo_test.MarqoTestCase.cleanup_documents_from_index") as mock_cleanup_documents:
             marqo_url_before_test = self.client_settings["url"]
             marqo_cloud_url_before_test = os.environ.get("MARQO_CLOUD_URL")
@@ -54,7 +54,7 @@ class TestCloudIntegrationTests(MarqoTestCase):
             open_source_test_index_name=None,
         )
         with mock.patch(
-                "marqo.index.Index.add_documents",
+                "marqo1.index.Index.add_documents",
                 wraps=wrap_for_add_docs(Index(self.client.config, test_index_name).add_documents)
         ):
             # this check is for isolation case

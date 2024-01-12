@@ -1,7 +1,7 @@
 from typing import Optional
 
-from marqo import utils
-from marqo.instance_mappings import InstanceMappings
+from marqo1 import utils
+from marqo1.instance_mappings import InstanceMappings
 
 
 class DefaultInstanceMappings(InstanceMappings):

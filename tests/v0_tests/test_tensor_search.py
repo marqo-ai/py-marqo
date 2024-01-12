@@ -1,6 +1,6 @@
 import copy
-import marqo
-from marqo import enums
+import marqo1
+from marqo1 import enums
 from unittest import mock
 import requests
 import random
@@ -153,10 +153,10 @@ class TestSearch(MarqoTestCase):
         #    can't find the above with synonym
         if self.IS_MULTI_INSTANCE:
             self.client.index(test_index_name).search(
-            "Examples of leadership", search_method=marqo.SearchMethods.LEXICAL)
+            "Examples of leadership", search_method=marqo1.SearchMethods.LEXICAL)
 
         assert len(self.client.index(test_index_name).search(
-            "Examples of leadership", search_method=marqo.SearchMethods.LEXICAL)["hits"]) == 0
+            "Examples of leadership", search_method=marqo1.SearchMethods.LEXICAL)["hits"]) == 0
         #    but can look for a word
 
         if self.IS_MULTI_INSTANCE:
@@ -169,7 +169,7 @@ class TestSearch(MarqoTestCase):
     def test_search_with_device(self):
         temp_client = copy.deepcopy(self.client)
         mock__post = mock.MagicMock()
-        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        @mock.patch("marqo1._httprequests.HttpRequests.post", mock__post)
         def run():
             temp_client.index(self.generic_test_index_name).search(q="my search term", device="cuda:2")
             return True
@@ -183,7 +183,7 @@ class TestSearch(MarqoTestCase):
         temp_client = copy.deepcopy(self.client)
 
         mock__post = mock.MagicMock()
-        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        @mock.patch("marqo1._httprequests.HttpRequests.post", mock__post)
         def run():
             temp_client.index(self.generic_test_index_name).search(q="my search term")
             return True

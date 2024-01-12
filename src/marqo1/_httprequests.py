@@ -3,8 +3,8 @@ import json
 from typing import get_args, Any, Callable, Dict, Literal, List, Optional, Tuple, Union
 import requests
 from json.decoder import JSONDecodeError
-from marqo.config import Config
-from marqo.errors import (
+from marqo1.config import Config
+from marqo1.errors import (
     MarqoWebError,
     BackendCommunicationError,
     BackendTimeoutError
