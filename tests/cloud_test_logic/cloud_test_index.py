@@ -37,6 +37,7 @@ class CloudTestIndex(str, Enum):
     structured_image_prepro = "str_img_prepro"
     structured_image_custom = "str_img_custom"
     structured_text = "str_txt"
+    structured_image = "str_img"
 
 
 index_name_to_settings_mappings = {
@@ -56,6 +57,24 @@ index_name_to_settings_mappings = {
 
         "inferenceType": "marqo.GPU",
         "storageClass": "marqo.performance",
+    },
+    CloudTestIndex.structured_image: {
+        "type": "structured",
+        "model": "open_clip/ViT-B-32/laion2b_s34b_b79k",
+        "infereceType": "marqo.CPU.small",
+        "storageClass": "marqo.basic",
+        "allFields": [
+            {"name": "text_field_1", "type": "text", "features": ["lexical_search", "filter"]},
+            {"name": "text_field_2", "type": "text", "features": ["lexical_search", "filter"]},
+            {"name": "text_field_3", "type": "text", "features": ["filter"]},
+            {"name": "image_field_1", "type": "image_pointer"},
+            {"name": "array_field_1", "type": "array<text>", "features": ["filter"]},
+            {"name": "float_field_1", "type": "float", "features": ["filter", "score_modifier"]},
+            {"name": "int_field_1", "type": "int", "features": ["score_modifier"]},
+            {"name": "int_filter_field_1", "type": "int", "features": ["filter", "score_modifier"]},
+            {"name": "bool_field_1", "type": "bool", "features": ["filter"]},
+        ],
+        "tensorFields": ["text_field_1", "text_field_2", "text_field_3", "image_field_1"]
     },
     # CloudTestIndex.unstructured_text_custom_prepro: {
     #     "type": "unstructured",

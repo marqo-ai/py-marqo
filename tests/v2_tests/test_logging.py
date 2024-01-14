@@ -1,8 +1,11 @@
 import marqo
 from tests.marqo_test import MarqoTestCase, CloudTestIndex
+from pytest import mark
 
 marqo.set_log_level("INFO")
 
+
+@mark.fixed
 class TestLogging(MarqoTestCase):
     @staticmethod
     def _get_docs_to_index():
@@ -33,24 +36,24 @@ class TestLogging(MarqoTestCase):
             {"_id": "113", "Title": "Wow"},
         ]
 
-    def _create_img_index(self, index_name):
-        return self.create_test_index(
-            cloud_test_index_to_use=CloudTestIndex.image_index,
-            open_source_test_index_name=index_name,
-            open_source_index_kwargs={"treat_urls_and_pointers_as_images": True, "model": "ViT-B/32"}
+    def _get_img_index(self):
+        return self.get_test_index_name(
+            cloud_test_index_to_use=CloudTestIndex.unstructured_image,
+            open_source_test_index_name=self.unstructured_image_index_name
         )
 
     def test_add_document_warnings_no_batching(self):
-        test_index_name = self._create_img_index(index_name=self.generic_test_index_name)
+        test_index_name = self._get_img_index()
         with self.assertLogs('marqo', level='INFO') as cm:
-            self.client.index(index_name=test_index_name).add_documents(self._get_docs_to_index(), device="cpu",
-                                                                          tensor_fields=["Title"], auto_refresh=True)
+            self.client.index(index_name=test_index_name).add_documents(
+                self._get_docs_to_index(), device="cpu", tensor_fields=["Title"]
+            )
             assert len(cm.output) == 1
             assert "errors detected" in cm.output[0].lower()
             assert "info" in cm.output[0].lower()
 
     def test_add_document_warnings_client_batching(self):
-        test_index_name = self._create_img_index(index_name=self.generic_test_index_name)
+        test_index_name = self._get_img_index()
         params_expected = [
             # so no client batching, that means no batch info output,  and therefore only 1 warning
             ({}, {"num_log_msgs": 1, "num_errors_msgs": 1}),
@@ -62,8 +65,8 @@ class TestLogging(MarqoTestCase):
 
             with self.assertLogs('marqo', level='INFO') as cm:
                 self.client.index(index_name=test_index_name).add_documents(
-                    documents=self._get_docs_to_index(), device="cpu", **params, tensor_fields=["Title"], auto_refresh=True)
-                print(params, expected)
+                    documents=self._get_docs_to_index(), device="cpu", **params, tensor_fields=["Title"]
+                )
                 assert len(cm.output) == expected['num_log_msgs']
                 error_messages = [msg.lower() for msg in cm.output if "errors detected" in msg.lower()]
                 assert len(error_messages) == expected['num_errors_msgs']

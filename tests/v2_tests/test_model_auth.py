@@ -3,8 +3,10 @@ from tests.marqo_test import MarqoTestCase
 from tests.cloud_test_logic.cloud_instance_mappings import GetIndexesIndexResponseObject, mock_get_indexes_response
 from marqo.utils import convert_dict_to_url_params
 from unittest import mock
+from pytest import mark
 
 
+@mark.fixed
 class TestAddDocumentsModelAuth(MarqoTestCase):
     def test_add_docs_model_auth(self):
         mock__post = mock.MagicMock()
@@ -14,7 +16,7 @@ class TestAddDocumentsModelAuth(MarqoTestCase):
             mock_s3_model_auth = {'s3': {'aws_access_key_id': 'some_acc_key',
                                          'aws_secret_access_key': 'some_sec_acc_key'}}
             self.client.index(index_name=self.generic_test_index_name).add_documents(
-                documents=[{"some": "data"}], model_auth=mock_s3_model_auth, tensor_fields=["some"], auto_refresh=True)
+                documents=[{"some": "data"}], model_auth=mock_s3_model_auth, tensor_fields=["some"])
             args, kwargs = mock__post.call_args
             assert "modelAuth" in kwargs['body']
             assert kwargs['body']['modelAuth'] == mock_s3_model_auth
@@ -57,28 +59,6 @@ class TestAddDocumentsModelAuth(MarqoTestCase):
                 q='something', model_auth=mock_s3_model_auth)
             args, kwargs = mock__post.call_args
             assert kwargs['body']['modelAuth'] == mock_s3_model_auth
-
-            return True
-
-        assert run()
-
-    @mock_get_indexes_response([GetIndexesIndexResponseObject.get_default_index_object()])
-    def test_bulk_search_model_auth(self):
-        mock__post = mock.MagicMock()
-
-        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
-        def run():
-            mock_s3_model_auth = {'s3': {'aws_access_key_id': 'some_acc_key',
-                                         'aws_secret_access_key': 'some_sec_acc_key'}}
-
-            self.client.bulk_search([{
-                "index": self.generic_test_index_name,
-                "q": "a",
-                "modelAuth": mock_s3_model_auth
-            }])
-
-            args, kwargs = mock__post.call_args
-            assert json.loads( kwargs['body'])['queries'][0]['modelAuth'] == mock_s3_model_auth
 
             return True
 

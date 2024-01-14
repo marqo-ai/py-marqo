@@ -24,7 +24,7 @@ class TestImageChunking(MarqoTestCase):
                 pass
 
         self.test_cases = [
-            (CloudTestIndex.structured_text, self.structured_image_index_name),
+            (CloudTestIndex.structured_image, self.structured_image_index_name),
         ]
         for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
             test_index_name = self.get_test_index_name(
@@ -37,7 +37,7 @@ class TestImageChunking(MarqoTestCase):
             document1 = {'_id': '1', # '_id' can be provided but is not required
                 'text_field_1': 'hello',
                 'text_field_2': 'the image chunking can (optionally) chunk the image into sub-patches (aking to segmenting text) by using either a learned model or simple box generation and cropping',
-                'text_field_3': temp_file_name,
+                'image_field_1': temp_file_name,
                          }
 
             client.index(test_index_name).add_documents([document1])
@@ -47,18 +47,16 @@ class TestImageChunking(MarqoTestCase):
                 self.warm_request(client.index(test_index_name).search,'a')
 
             results = client.index(test_index_name).search('a')
-            print(results)
-            assert results['hits'][0]['text_field_3'] == temp_file_name
+            assert results['hits'][0]['image_field_1'] == temp_file_name
 
             # search only the image location
             if self.IS_MULTI_INSTANCE:
-                self.warm_request(client.index(test_index_name).search,'a', searchable_attributes=['text_field_3'])
+                self.warm_request(client.index(test_index_name).search,'a', searchable_attributes=['image_field_1'])
 
-            results = client.index(test_index_name).search('a', searchable_attributes=['text_field_3'])
-            print(results)
-            assert results['hits'][0]['text_field_3'] == temp_file_name
+            results = client.index(test_index_name).search('a', searchable_attributes=['image_field_1'])
+            assert results['hits'][0]['image_field_1'] == temp_file_name
             # the highlight should be the location
-            assert results['hits'][0]['_highlights']['text_field_3'] == temp_file_name
+            assert results['hits'][0]['_highlights'][0]['image_field_1'] == temp_file_name
 
     def test_image_simple_chunking(self):
 

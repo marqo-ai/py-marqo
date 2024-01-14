@@ -6,9 +6,10 @@ from marqo.errors import MarqoWebError
 from tests.marqo_test import MarqoTestCase
 
 
+@mark.fixed
 @mark.ignore_during_cloud_tests
 class TestCreateIndex(MarqoTestCase):
-    index_name = "test-create_index" + str(uuid.uuid4()).replace('-', '')
+    index_name = "test_create_index" + str(uuid.uuid4()).replace('-', '')
 
     def tearDown(self):
         super().tearDown()
@@ -31,15 +32,15 @@ class TestCreateIndex(MarqoTestCase):
         expected_settings = {
             'type': 'unstructured',
             'treatUrlsAndPointersAsImages': False,
-            'shortStringLengthThreshold': 20,
             'model': 'hf/all_datasets_v4_MiniLM-L6',
             'normalizeEmbeddings': True,
-            'textPreprocessing': {'split_length': 2, 'split_overlap': 0, 'split_method': 'sentence'},
+            'textPreprocessing': {'splitLength': 2, 'splitOverlap': 0, 'splitMethod': 'sentence'},
             'imagePreprocessing': {},
             'vectorNumericType': 'float',
+            'filterStringMaxLength': 20,
             'annParameters': {
                 'spaceType': 'prenormalized-angular', 'parameters': {
-                    'ef_construction': 128, 'm': 16}
+                    'efConstruction': 512, 'm': 16}
             }
         }
         self.assertEqual(expected_settings, index_settings)
@@ -70,7 +71,7 @@ class TestCreateIndex(MarqoTestCase):
                                  model="test-model",
                                  model_properties={"name": "sentence-transformers/multi-qa-MiniLM-L6-cos-v1",
                                                    "dimensions": 384,
-                                                   "tokens": 128,
+                                                   "tokens": 512,
                                                    "type": "sbert"}
                                  )
         documents = [{"test": "test"}]
@@ -87,14 +88,14 @@ class TestCreateIndex(MarqoTestCase):
         self.assertEqual("test-model", index_settings['model'])
         self.assertEqual({"name": "sentence-transformers/multi-qa-MiniLM-L6-cos-v1",
                           "dimensions": 384,
-                          "tokens": 128,
+                          "tokens": 512,
                           "type": "sbert"}, index_settings['modelProperties'])
 
     def test_created_unstructured_image_index_with_preprocessing(self):
         self.client.create_index(index_name=self.index_name, type="unstructured",
                                  treat_urls_and_pointers_as_images=True,
                                  model="open_clip/ViT-B-16/laion400m_e31",
-                                 image_preprocessing={"patch_method": "simple"})
+                                 image_preprocessing={"patchMethod": "simple"})
         image_url = "https://raw.githubusercontent.com/marqo-ai/marqo/mainline/examples/ImageSearchGuide/data/image2.jpg"
         documents = [{"test": "test",
                       "image": image_url}]
@@ -111,7 +112,7 @@ class TestCreateIndex(MarqoTestCase):
         index_settings = self.client.index(self.index_name).get_settings()
         self.assertEqual(True, index_settings['treatUrlsAndPointersAsImages'])
         self.assertEqual("open_clip/ViT-B-16/laion400m_e31", index_settings['model'])
-        self.assertEqual("simple", index_settings['imagePreprocessing']['patch_method'])
+        self.assertEqual("simple", index_settings['imagePreprocessing']['patchMethod'])
 
     def test_create_simple_structured_index(self):
         self.client.create_index(index_name=self.index_name, type="structured",
@@ -135,10 +136,10 @@ class TestCreateIndex(MarqoTestCase):
             'tensorFields': ['test'],
             'model': 'hf/all_datasets_v4_MiniLM-L6',
             'normalizeEmbeddings': True,
-            'textPreprocessing': {'split_length': 2, 'split_overlap': 0, 'split_method': 'sentence'},
+            'textPreprocessing': {'splitLength': 2, 'splitOverlap': 0, 'splitMethod': 'sentence'},
             'imagePreprocessing': {},
             'vectorNumericType': 'float',
-            'annParameters': {'spaceType': 'prenormalized-angular', 'parameters': {'ef_construction': 128, 'm': 16}}}
+            'annParameters': {'spaceType': 'prenormalized-angular', 'parameters': {'efConstruction': 512, 'm': 16}}}
         self.assertEqual(expected_index_settings, index_settings)
 
     def test_create_structured_image_index(self):
@@ -173,7 +174,7 @@ class TestCreateIndex(MarqoTestCase):
                                  model="test-model",
                                  model_properties={"name": "sentence-transformers/multi-qa-MiniLM-L6-cos-v1",
                                                    "dimensions": 384,
-                                                   "tokens": 128,
+                                                   "tokens": 512,
                                                    "type": "sbert"},
                                  all_fields=[{"name": "test", "type": "text", "features": ["lexical_search"]}],
                                  tensor_fields=["test"])
@@ -190,14 +191,14 @@ class TestCreateIndex(MarqoTestCase):
         self.assertEqual("test-model", index_settings['model'])
         self.assertEqual({"name": "sentence-transformers/multi-qa-MiniLM-L6-cos-v1",
                           "dimensions": 384,
-                          "tokens": 128,
+                          "tokens": 512,
                           "type": "sbert"}, index_settings['modelProperties'])
 
     def test_create_structured_image_index_with_preprocessing(self):
         self.client.create_index(index_name=self.index_name,
                                  type="structured",
                                  model="open_clip/ViT-B-16/laion400m_e31",
-                                 image_preprocessing={"patch_method": "simple"},
+                                 image_preprocessing={"patchMethod": "simple"},
                                  all_fields=[{"name": "test", "type": "text", "features": ["lexical_search"]},
                                              {"name": "image", "type": "image_pointer"}],
                                  tensor_fields=["test", "image"])
@@ -219,7 +220,7 @@ class TestCreateIndex(MarqoTestCase):
 
         self.assertEqual(["test", "image"], index_settings["tensorFields"])
         self.assertEqual("open_clip/ViT-B-16/laion400m_e31", index_settings["model"])
-        self.assertEqual("simple", index_settings['imagePreprocessing']['patch_method'])
+        self.assertEqual("simple", index_settings['imagePreprocessing']['patchMethod'])
 
     def test_dash_and_underscore_in_index_name(self):
         """Test that we can create indexes with dash and underscore in the index name and
@@ -235,4 +236,5 @@ class TestCreateIndex(MarqoTestCase):
 
         res = self.client.index("test_dash_and_under_score").search(q="test", search_method="TENSOR")
         self.assertEqual(1, len(res['hits']))
-        self.open_source_indexes_list = ["test-dash-and-under-score", "test_dash_and_under_score"]
+        self.client.delete_index("test-dash-and-under-score")
+        self.client.delete_index("test_dash_and_under_score")
