@@ -130,7 +130,7 @@ class TestSearch(MarqoTestCase):
     @mark.fixed
     def test_select_lexical(self):
         self.test_cases = [
-            (CloudTestIndex.structured_text, self.unstructured_index_name)
+            (CloudTestIndex.structured_text, self.structured_index_name)
         ]
         for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
             test_index_name = self.get_test_index_name(

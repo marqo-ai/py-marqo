@@ -39,7 +39,8 @@ class TestInitLogging(MarqoTestCase):
     @patch("marqo.marqo_cloud_instance_mappings.mq_logger.warning")
     def test_index_init_exists(self, mock_warning,):
         """Test no logging on index instantiation when index exists"""
-        self.client.config.instance_mapping._refresh_urls()
+        if self.client.config.is_marqo_cloud:
+            self.client.config.instance_mapping._refresh_urls()
         for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
             test_index_name = self.get_test_index_name(
                 cloud_test_index_to_use=cloud_test_index_to_use,
