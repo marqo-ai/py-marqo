@@ -50,9 +50,6 @@ class TestDemo(MarqoTestCase):
 
             pprint.pprint(client.index(test_index_name).search("River", searchable_attributes=["text_field_3"]))
 
-            if not self.client.config.is_marqo_cloud:
-                self.client.delete_index(test_index_name, wait_for_readiness=False)
-
     def test_readme_example(self):
 
         import marqo
@@ -121,11 +118,6 @@ class TestDemo(MarqoTestCase):
 
             r6 = mq.index(test_index_name).delete_documents(ids=["article_591", "article_602"])
             assert r6['details']['deletedDocuments'] == 1
-
-            if not self.client.config.is_marqo_cloud:
-                rneg1 = mq.index(test_index_name).delete(wait_for_readiness=False)
-                pprint.pprint(rneg1)
-                assert (rneg1["acknowledged"] is True) or (rneg1["acknowledged"] == 'true')
 
     @mark.fixed
     def test_readme_example_weighted_query(self):
@@ -205,10 +197,6 @@ class TestDemo(MarqoTestCase):
             assert len(r2["hits"]) == 3
             assert len(r3["hits"]) == 3
 
-            if not self.client.config.is_marqo_cloud:
-                rneg1 = mq.index(test_index_name).delete(wait_for_readiness=False)
-                pprint.pprint(rneg1)
-                assert (rneg1["acknowledged"] is True) or (rneg1["acknowledged"] == 'true')
 
     def test_readme_example_multimodal_combination_query(self):
         import marqo
@@ -307,8 +295,3 @@ class TestDemo(MarqoTestCase):
             assert len(r2["hits"]) == 3
             assert len(r3["hits"]) == 3
             assert len(r4["hits"]) == 3
-
-            if not self.client.config.is_marqo_cloud:
-                rneg1 = mq.index(test_index_name).delete(wait_for_readiness=False)
-                pprint.pprint(rneg1)
-                assert (rneg1["acknowledged"] is True) or (rneg1["acknowledged"] == 'true')

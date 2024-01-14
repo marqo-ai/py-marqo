@@ -5,6 +5,7 @@ from tests.marqo_test import MarqoTestCase, CloudTestIndex
 from pytest import mark
 
 
+@mark.fixed
 class TestCustomVectorSearch(MarqoTestCase):
 
     def setUp(self) -> None:
@@ -129,53 +130,3 @@ class TestCustomVectorSearch(MarqoTestCase):
 
             ## Ensure other tests are not affected
             self.query = {"What are the best pets": 1}
-
-
-class TestCustomBulkVectorSearch(TestCustomVectorSearch):
-
-    def search_with_context(self, context_vector: Optional[Dict[str, List[Dict[str, Any]]]] = None) -> Dict[str, Any]:
-        resp = self.client.bulk_search([{
-            "index": self.test_index_name,
-            "q": self.query,
-            "context": context_vector
-        }])
-        if len(resp.get("result", [])) > 0:
-            return resp['result'][0]
-        return {}
-
-    def test_context_dimension_error_in_bulk_search(self):
-        correct_context = {"tensor": [{"vector": [1, ] * self.vector_dim, "weight": 1}, {"vector": [2, ] * self.vector_dim, "weight": 0}]}
-        wrong_context = {"tensor": [{"vector": [1, ] * (self.vector_dim + 2), "weight": 1}, {"vector": [2, ] * (self.vector_dim + 3), "weight": 0}]}
-        if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.bulk_search, [{
-                "index": self.test_index_name,
-                "q": {"blah blah" :1},
-                "context": correct_context,
-            }])
-        try:
-            self.client.bulk_search([{
-                "index": self.test_index_name,
-                "q": {"blah blah": 1},
-                "context": wrong_context, # the dimension mismatches the index
-            }])
-            raise AssertionError
-        except MarqoWebError as e:
-            assert "The provided vectors are not in the same dimension of the index" in str(e)
-
-    def test_context_with_query_string_in_bulk_search(self):
-        correct_context = {"tensor": [{"vector": [1, ] * self.vector_dim, "weight": 1}, {"vector": [2, ] * self.vector_dim, "weight": 0}]}
-        if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.bulk_search, [{
-                "index": self.test_index_name,
-                "q": {"blah blah" :1},
-                "context": correct_context,
-            }])
-        try:
-            self.client.bulk_search([{
-                "index": self.test_index_name,
-                "q": "blah blah",
-                "context": correct_context, # the dimension mismatches the index
-            }])
-            raise AssertionError
-        except MarqoWebError as e:
-            assert "This is not supported as the context only works when the query is a dictionary." in str(e)

@@ -1,7 +1,9 @@
 from marqo import utils
 import unittest
+from pytest import mark
 
 
+@mark.fixed
 class TestUtils(unittest.TestCase):
 
     def test_construct_authorized_url(self):
