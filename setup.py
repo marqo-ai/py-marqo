@@ -1,8 +1,16 @@
+import os
+
 from setuptools import setup, find_packages
 # from src.marqo.version import __version__
 
 with open("README.md", "r", encoding="utf8") as fh:
     long_description = fh.read()
+
+
+def get_package_name() -> str:
+    package_name = os.getenv("MARQO_PACKAGE_NAME", "marqo1")
+    return package_name
+
 
 setup(
     install_requires=[
@@ -18,6 +26,7 @@ setup(
         "tox"
     ],
     author="marqo org",
+    name=get_package_name(),
     author_email="org@marqo.io",
     description="Tensor search for humans",
     long_description=long_description,
