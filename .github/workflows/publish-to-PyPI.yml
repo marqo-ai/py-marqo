@@ -15,6 +15,10 @@ on:
 permissions:
   contents: read
 
+env:
+    # An environment variable to set the package name to marqo, or marqo1
+    MARQO_PACKAGE_NAME: marqo1
+
 jobs:
   Run-open-source-unit-tests:
     name: Run open source unit tests
