@@ -2,7 +2,8 @@
 # This workflow automates the process of testing and publishing Py-Marqo to PyPI.
 # This workflow:
 #   1. Runs unit tests using the open-source-unit-tests.yml workflow
-#   2. Publishes the package to PyPi given the unit tests passed
+#   2. Publishes the package to pypi package marqo
+#   3. Publishes the package to pypi package marqo1
 
 name: Publish to PyPI
 
