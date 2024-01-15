@@ -1,8 +1,8 @@
 # GitHub Actions Workflow: Publish to PyPI
-# This workflow automates the process of testing and publishing Py-Marqo to PyPI. 
-# This workflow: 
-#   1. Runs unit tests using the open-source-unit-tests.yml workflow 
-#   2. Publishes the package to PyPi given the unit tests passed 
+# This workflow automates the process of testing and publishing Py-Marqo to PyPI.
+# This workflow:
+#   1. Runs unit tests using the open-source-unit-tests.yml workflow
+#   2. Publishes the package to PyPi given the unit tests passed
 
 name: Publish to PyPI
 
@@ -19,8 +19,8 @@ jobs:
     name: Run open source unit tests
     uses: ./.github/workflows/open-source-unit-tests.yml
     secrets: inherit
-  
-  Publish-to-PyPi:
+
+  Publish-to-PyPi-marqo1:
     runs-on: ubuntu-latest
     environment: PyPI
     needs:
@@ -28,22 +28,34 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    
+
     - name: Set up Python
       uses: actions/setup-python@v3
       with:
         python-version: '3.8'
         cache: "pip"
-        
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install build
-        
+
     - name: Build package
       run: python -m build
-      
-    - name: Publish package
+
+    - name: Publish marqo1 package
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN }}
+
+  Publish-to-Pypi-marqo-2.x:
+    - name: Set MARQO_PACKAGE_NAME environment variable to marqo
+      run: echo "MARQO_PACKAGE_NAME=marqo" >> $GITHUB_ENV
+
+    - name: Build package
+      run: python -m build
+
+    - name: Publish marqo package
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         password: ${{ secrets.PYPI_API_TOKEN }}
