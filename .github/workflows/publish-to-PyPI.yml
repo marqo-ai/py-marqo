@@ -30,6 +30,8 @@ jobs:
     environment: PyPI
     needs:
       - Run-open-source-unit-tests
+    env:
+      MARQO_PACKAGE_NAME: marqo1
 
     steps:
     - uses: actions/checkout@v3
@@ -56,12 +58,11 @@ jobs:
   Publish-to-Pypi-marqo:
     runs-on: ubuntu-latest
     environment: PyPI
+    env:
+      MARQO_PACKAGE_NAME: marqo
 
     steps:
       - uses: actions/checkout@v3
-
-      - name: Set MARQO_PACKAGE_NAME environment variable to marqo
-        run: echo "MARQO_PACKAGE_NAME=marqo" >> $GITHUB_ENV
 
       - name: Set up Python
         uses: actions/setup-python@v3
