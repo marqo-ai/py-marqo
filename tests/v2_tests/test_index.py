@@ -345,6 +345,69 @@ class TestIndex(MarqoTestCase):
                 mock_get_marqo.assert_not_called()
                 mock_warning.assert_not_called()
 
+    @mark.fixed
+    @mock.patch("marqo.index.mq_logger.warning")
+    def test_marqo1_recommendation_when_communicate_with_marqo_v1(self, mock_warning):
+        """Ensure that we recommend using marqo1 if the version is 1.x.x"""
+        test_index_name = self.get_test_index_name(
+            cloud_test_index_to_use=CloudTestIndex.structured_text,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
+        marqo_url_and_version_cache.clear()
+        test_cases = [
+            "1.2.3",  # Average case
+            "1.0.0",  # Edge with 0s
+            "1.99.123",  # Edge case with large numbers
+            "1.4.beta",  # Edge case with beta
+            "1.55.0-beta",  # Edge case with dash
+        ]
+        for version in test_cases:
+            with self.subTest(f"version = {version}"):
+                with mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo, \
+                        mock.patch("marqo.index.Index.get_status") as mock_get_status:
+                    mock_get_status.return_value = {'index_status': 'READY'}
+                    mock_get_marqo.return_value = {'version': version}
+                    index = self.client.index(test_index_name)
+                    mock_get_marqo.assert_called_once()
+                    mock_warning.assert_called_once()
+                    log_message = mock_warning.call_args[0][0]
+                    self.assertIn("2.x", log_message)
+                    mock_warning.reset_mock()
+                    mock_get_marqo.reset_mock()
+
+                    marqo_url_and_version_cache.clear()
+
+    @mark.fixed
+    @mock.patch("marqo.index.mq_logger.warning")
+    def test_no_marqo1_recommendation_if_major_is_not_1(self, mock_warning):
+        """Ensure that we do not recommend using marqo1 if the major version is not 1"""
+        test_index_name = self.get_test_index_name(
+            cloud_test_index_to_use=CloudTestIndex.structured_text,
+            open_source_test_index_name=self.generic_test_index_name,
+        )
+        marqo_url_and_version_cache.clear()
+        test_cases = [
+            "0.0.1",  # Edge case with 0s
+            "0.3.beta",  # Edge case with beta
+            "0.16.3",  # Average case
+            "0.4.16-beta",  # Edge case with dash
+        ]
+        for version in test_cases:
+            with self.subTest(f"version = {version}"):
+                with mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo, \
+                        mock.patch("marqo.index.Index.get_status") as mock_get_status:
+                    mock_get_status.return_value = {'index_status': 'READY'}
+                    mock_get_marqo.return_value = {'version': version}
+                    index = self.client.index(test_index_name)
+                    mock_get_marqo.assert_called_once()
+                    mock_warning.assert_called_once()
+                    log_message = mock_warning.call_args[0][0]
+                    self.assertNotIn("2.x", log_message)
+                    mock_warning.reset_mock()
+                    mock_get_marqo.reset_mock()
+
+                    marqo_url_and_version_cache.clear()
+
     def test_warning_not_printed_for_ready_index(self):
         if not self.client.config.is_marqo_cloud:
             self.skipTest("Test only applicable for Marqo Cloud")
