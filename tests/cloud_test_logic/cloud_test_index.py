@@ -74,7 +74,10 @@ index_name_to_settings_mappings = {
             {"name": "int_filter_field_1", "type": "int", "features": ["filter", "score_modifier"]},
             {"name": "bool_field_1", "type": "bool", "features": ["filter"]},
         ],
-        "tensorFields": ["text_field_1", "text_field_2", "text_field_3", "image_field_1"]
+        "tensorFields": ["text_field_1", "text_field_2", "text_field_3", "image_field_1"],
+        "imagePreprocessing": {
+            "patchMethod": "simple",
+        }
     },
     # CloudTestIndex.unstructured_text_custom_prepro: {
     #     "type": "unstructured",
