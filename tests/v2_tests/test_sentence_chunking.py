@@ -1,6 +1,6 @@
 from marqo.client import Client
 from tests.marqo_test import MarqoTestCase, CloudTestIndex
-
+from pytest import mark
 
 class TestSentenceChunking(MarqoTestCase):
     """Test for sentence chunking
