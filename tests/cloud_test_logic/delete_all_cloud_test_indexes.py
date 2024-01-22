@@ -25,7 +25,7 @@ def delete_all_test_indices(wait_for_readiness=False):
     indices_to_delete = []
     for index in indexes['results']:
         if index["indexName"].startswith(prefix):
-            if suffix is not None and suffix in index["indexName"].split('_'):
+            if suffix is not None and index["indexName"].endswith(suffix):
                 indices_to_delete.append(index["indexName"])
             elif suffix is None:
                 indices_to_delete.append(index["indexName"])
