@@ -73,7 +73,7 @@ created indexes in a test class.
 - Indices will not be deleted after each test method, but will be cleared in the tearDownClass method of the test suite.
 - Documents will be deleted before every test method runs in, via the test class' setUp() method.
 """
-
+import copy
 import logging
 from collections import defaultdict
 from functools import wraps
@@ -204,7 +204,10 @@ class MarqoTestCase(TestCase):
         cls.generic_test_index_name = "py_marqo_test_index"
         cls.unstructured_index_name = "unstructured_index"
         cls.structured_index_name = "structured_index"
+        cls.structured_image_index_name = "structured_image_index"
         cls.unstructured_image_index_name = "unstructured_image_index"
+        cls.structured_image_index_name_simple_preprocessing_method = \
+            "structured_image_index_simple_preprocessing_method"
         # TODO: include structured when boolean_field bug for structured is fixed
         cls.test_cases = [
             (CloudTestIndex.unstructured_image, cls.unstructured_index_name),
@@ -212,6 +215,58 @@ class MarqoTestCase(TestCase):
 
         # class property to indicate if test is being run on multi
         cls.IS_MULTI_INSTANCE = (True if os.environ.get("IS_MULTI_INSTANCE", False) in ["True", "TRUE", "true", True] else False)
+
+        if not cls.client.config.is_marqo_cloud:
+            try:
+                cls.create_open_source_indexes([
+                    {
+                        "indexName": cls.unstructured_index_name,
+                        "type": "unstructured"
+                    },
+                    {
+                        "indexName": cls.structured_index_name,
+                        "type": "structured",
+                        "allFields": [{"name": "text_field_1", "type": "text", "features": ["lexical_search", "filter"]},
+                                      {"name": "text_field_2", "type": "text", "features": ["lexical_search", "filter"]},
+                                      {"name": "text_field_3", "type": "text", "features": ["lexical_search"]},
+                                      {"name": "int_field_1", "type": "int", "features": ["score_modifier"]},
+                                      {"name": "int_filter_field_1", "type": "int",
+                                       "features": ["filter", "score_modifier"]
+                                       }],
+                        "tensorFields": ["text_field_1", "text_field_2", "text_field_3"]
+                    },
+                    {
+                        "indexName": cls.unstructured_image_index_name,
+                        "type": "unstructured",
+                        "treatUrlsAndPointersAsImages": True,
+                        "model": "ViT-B/32",
+                    },
+                    {
+                        "indexName": cls.structured_image_index_name,
+                        "type": "structured",
+                        "allFields": [{"name": "text_field_1", "type": "text", "features": ["lexical_search"]},
+                                      {"name": "text_field_2", "type": "text", "features": ["lexical_search"]},
+                                      {"name": "text_field_3", "type": "text", "features": ["lexical_search"]},
+                                      {"name": "image_field_1", "type": "image_pointer"},
+                                      ],
+                        "tensorFields": ["text_field_1", "text_field_2", "text_field_3", "image_field_1"],
+                        "model": "ViT-B/32",
+                    }
+                    # {
+                    #     "indexName": cls.structured_image_index_name_simple_preprocessing_method,
+                    #     "type": "structured",
+                    #     "allFields": [{"name": "text_field_1", "type": "text"},
+                    #                   {"name": "text_field_2", "type": "text"},
+                    #                   {"name": "text_field_3", "type": "text"}],
+                    #     "tensorFields": ["text_field_1", "text_field_2", "text_field_3"],
+                    #     "model": "ViT-B/16",
+                    #     "imagePreprocessingMethod": None,
+                    #     "treatUrlsAndPointersAsImages": True,
+                    # },
+                ])
+            except Exception as e:
+                print("Error creating indexes: ", e)
+
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -335,22 +390,39 @@ class MarqoTestCase(TestCase):
          """
         if cls.client.config.is_marqo_cloud:
             raise MarqoError("create_open_source_indexes is not supported in cloud environments")
-
         r = requests.post(f"{cls.authorized_url}/batch/indexes/create", data=json.dumps(index_settings_with_name))
         cls.open_source_indexes_list = [index['indexName'] for index in index_settings_with_name]
         try:
             r.raise_for_status()
         except requests.exceptions.HTTPError as e:
-            raise MarqoWebError(e)
+            if e.response.status_code == 409:
+                local_indexes = cls.client.get_indexes()
+                for index_to_create in index_settings_with_name:
+                    if any([local_index['indexName'] == index_to_create['indexName']
+                            for local_index in local_indexes['results']]):
+                        continue
+                    settings = copy.deepcopy(index_to_create)
+                    settings.pop('indexName')
+                    cls.client.create_index(index_to_create['indexName'], settings_dict=settings)
+                return
+            raise e
 
     @classmethod
     def delete_open_source_indexes(cls, index_names: List[str]):
         if cls.client.config.is_marqo_cloud:
             raise MarqoError("delete_open_source_indexes is not supported in cloud environments")
         r = requests.post(f"{cls.authorized_url}/batch/indexes/delete", data=json.dumps(index_names))
+        if any([cls.generic_test_index_name == ix["indexName"] for ix in cls.client.get_indexes()['results']]):
+            cls.client.delete_index(cls.generic_test_index_name)
         try:
             r.raise_for_status()
         except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 404:
+                local_indexes = cls.client.get_indexes()
+                for index_name in index_names:
+                    if any([local_index['indexName'] == index_name for local_index in local_indexes['results']]):
+                        cls.client.delete_index(index_name)
+                return
             raise MarqoWebError(e)
 
     @classmethod
@@ -362,6 +434,8 @@ class MarqoTestCase(TestCase):
             try:
                 r.raise_for_status()
             except requests.exceptions.HTTPError as e:
+                if e.response.status_code == 404:
+                    return
                 raise MarqoWebError(e)
 
     def mark_for_cleanup_and_add_documents(self, index_name: str, documents: list, *args,   **kwargs):

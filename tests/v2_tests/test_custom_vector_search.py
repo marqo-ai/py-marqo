@@ -5,29 +5,35 @@ from tests.marqo_test import MarqoTestCase, CloudTestIndex
 from pytest import mark
 
 
+@mark.fixed
 class TestCustomVectorSearch(MarqoTestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        self.test_index_name = self.create_test_index(
-            cloud_test_index_to_use=CloudTestIndex.image_index,
-            open_source_test_index_name=self.generic_test_index_name,
-            open_source_index_kwargs={"model": "ViT-B/32"}
-        )
-        self.client.index(index_name=self.test_index_name).add_documents(
-            [
-                {
-                    "Title": "A comparison of the best pets",
-                    "Description": "Animals",
-                    "_id": "d1"
-                },
-                {
-                    "Title": "The history of dogs",
-                    "Description": "A history of household pets",
-                    "_id": "d2"
-                }
-            ], tensor_fields=["Title", "Description"], auto_refresh=True
-        )
+        self.test_cases = [
+            (CloudTestIndex.unstructured_image, self.unstructured_image_index_name)
+        ]
+        for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
+            open_source_test_index_name = self.unstructured_image_index_name
+
+            self.test_index_name = self.get_test_index_name(
+                cloud_test_index_to_use=cloud_test_index_to_use,
+                open_source_test_index_name=open_source_test_index_name
+            )
+            self.client.index(index_name=self.test_index_name).add_documents(
+                [
+                    {
+                        "Title": "A comparison of the best pets",
+                        "Description": "Animals",
+                        "_id": "d1"
+                    },
+                    {
+                        "Title": "The history of dogs",
+                        "Description": "A history of household pets",
+                        "_id": "d2"
+                    }
+                ], tensor_fields=["Title", "Description"]
+            )
         self.vector_dim = 512
 
         self.query = {"What are the best pets": 1}
@@ -124,53 +130,3 @@ class TestCustomVectorSearch(MarqoTestCase):
 
             ## Ensure other tests are not affected
             self.query = {"What are the best pets": 1}
-
-
-class TestCustomBulkVectorSearch(TestCustomVectorSearch):
-
-    def search_with_context(self, context_vector: Optional[Dict[str, List[Dict[str, Any]]]] = None) -> Dict[str, Any]:
-        resp = self.client.bulk_search([{
-            "index": self.test_index_name,
-            "q": self.query,
-            "context": context_vector
-        }])
-        if len(resp.get("result", [])) > 0:
-            return resp['result'][0]
-        return {}
-
-    def test_context_dimension_error_in_bulk_search(self):
-        correct_context = {"tensor": [{"vector": [1, ] * self.vector_dim, "weight": 1}, {"vector": [2, ] * self.vector_dim, "weight": 0}]}
-        wrong_context = {"tensor": [{"vector": [1, ] * (self.vector_dim + 2), "weight": 1}, {"vector": [2, ] * (self.vector_dim + 3), "weight": 0}]}
-        if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.bulk_search, [{
-                "index": self.test_index_name,
-                "q": {"blah blah" :1},
-                "context": correct_context,
-            }])
-        try:
-            self.client.bulk_search([{
-                "index": self.test_index_name,
-                "q": {"blah blah": 1},
-                "context": wrong_context, # the dimension mismatches the index
-            }])
-            raise AssertionError
-        except MarqoWebError as e:
-            assert "The provided vectors are not in the same dimension of the index" in str(e)
-
-    def test_context_with_query_string_in_bulk_search(self):
-        correct_context = {"tensor": [{"vector": [1, ] * self.vector_dim, "weight": 1}, {"vector": [2, ] * self.vector_dim, "weight": 0}]}
-        if self.IS_MULTI_INSTANCE:
-            self.warm_request(self.client.bulk_search, [{
-                "index": self.test_index_name,
-                "q": {"blah blah" :1},
-                "context": correct_context,
-            }])
-        try:
-            self.client.bulk_search([{
-                "index": self.test_index_name,
-                "q": "blah blah",
-                "context": correct_context, # the dimension mismatches the index
-            }])
-            raise AssertionError
-        except MarqoWebError as e:
-            assert "This is not supported as the context only works when the query is a dictionary." in str(e)

@@ -20,6 +20,15 @@ def populate_indices():
 
     mq = marqo.Client(**marqo_settings)
 
+    if any(
+        [
+            len(
+                index_name + INDEX_NAME_SEPARATOR + test_uniqueness_id
+            ) > 32 for index_name in index_name_to_settings_mappings.keys()
+        ]
+    ):
+        raise Exception("Some cloud index name exceeds 32 characters limit")
+
     for index_name, index_settings_dicts in index_name_to_settings_mappings.items():
         print(f"Creating {index_name} with config: {index_settings_dicts}")
         try:

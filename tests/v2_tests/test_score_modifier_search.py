@@ -5,36 +5,36 @@ from tests.marqo_test import MarqoTestCase, CloudTestIndex
 from pytest import mark
 
 
+@mark.fixed
 class TestScoreModifierSearch(MarqoTestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        self.test_index_name = self.create_test_index(
-            cloud_test_index_to_use=CloudTestIndex.image_index,
-            open_source_test_index_name=self.generic_test_index_name,
-            open_source_index_kwargs={"model": "ViT-B/32"}
-        )
-        self.client.index(index_name=self.test_index_name).add_documents(
-            documents=[
-                {"my_text_field": "A rider is riding a horse jumping over the barrier.",
-                 "my_image_field": "https://marqo-assets.s3.amazonaws.com/tests/images/image2.jpg",
-                 # 4 fields
-                 "multiply_1": 1,
-                 "multiply_2": 20.0,
-                 "add_1": 1.0,
-                 "add_2": 30.0,
-                 "_id": "1"
-                 },
-                {"my_text_field": "A rider is riding a horse jumping over the barrier.",
-                 "my_image_field": "https://marqo-assets.s3.amazonaws.com/tests/images/image2.jpg",
-                 "_id": "0",
-                 "filter": "original"
-                 },
-            ], non_tensor_fields=["multiply_1", "multiply_2", "add_1", "add_2",
-                                                       "filter"]
-            , auto_refresh=True
-        )
-        self.query = "what is the rider doing?"
+        for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
+            self.test_index_name = self.get_test_index_name(
+                cloud_test_index_to_use=cloud_test_index_to_use,
+                open_source_test_index_name=open_source_test_index_name
+            )
+            self.client.index(index_name=self.test_index_name).add_documents(
+                documents=[
+                    {"my_text_field": "A rider is riding a horse jumping over the barrier.",
+                     "my_image_field": "https://marqo-assets.s3.amazonaws.com/tests/images/image2.jpg",
+                     # 4 fields
+                     "multiply_1": 1,
+                     "multiply_2": 20.0,
+                     "add_1": 1.0,
+                     "add_2": 30.0,
+                     "_id": "1"
+                     },
+                    {"my_text_field": "A rider is riding a horse jumping over the barrier.",
+                     "my_image_field": "https://marqo-assets.s3.amazonaws.com/tests/images/image2.jpg",
+                     "_id": "0",
+                     "filter": "original"
+                     },
+                ],
+                tensor_fields=["my_image_field", "my_text_field"]
+            )
+            self.query = "what is the rider doing?"
     
     def search_with_score_modifier(self, score_modifiers: Optional[Dict[str, List[Dict[str, Any]]]] = None, **kwargs) -> Dict[str, Any]:
         return self.client.index(self.test_index_name).search(
@@ -101,26 +101,3 @@ class TestScoreModifierSearch(MarqoTestCase):
                      }]
             }
         self.search_with_score_modifier(score_modifiers=valid_score_modifiers)
-
-
-class TestScoreModifierBulkSearch(TestScoreModifierSearch):
-    
-    def map_search_kwargs(self, k: str) -> str:
-        """Convert kwarg keys used in search to their bulk search equivalent."""
-        mapp = {
-            "filter_string": "filter",
-        }
-        if k in mapp.keys():
-            return mapp[k]
-        return k
-
-    def search_with_score_modifier(self, score_modifiers: Optional[Dict[str, List[Dict[str, Any]]]] = None, **kwargs) -> Dict[str, Any]:
-        resp = self.client.bulk_search([{
-            "index": self.test_index_name,
-            "q": self.test_index_name,
-            "scoreModifiers": score_modifiers,
-            **{self.map_search_kwargs(k): v for k,v in kwargs.items()}
-        }])
-        if len(resp.get("result", [])) > 0:
-            return resp['result'][0]
-        return {}

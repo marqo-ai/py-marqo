@@ -3,8 +3,10 @@ from marqo import config
 from tests.marqo_test import MarqoTestCase
 from marqo.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
 from marqo.default_instance_mappings import DefaultInstanceMappings
+from pytest import mark
 
 
+@mark.fixed
 class TestConfig(MarqoTestCase):
 
     def setUp(self) -> None:
@@ -24,8 +26,8 @@ class TestConfig(MarqoTestCase):
     @mock.patch("requests.get")
     def test_get_url_when_cluster_is_marqo_and_index_name_specified(self, mock_get):
         mock_get.return_value.json.return_value = {"results": [
-            {"index_name": "index1", "endpoint": "example.com", "index_status": "READY"},
-            {"index_name": "index2", "endpoint": "example2.com", "index_status": "READY"}
+            {"indexName": "index1", "marqoEndpoint": "example.com", "indexStatus": "READY"},
+            {"indexName": "index2", "marqoEndpoint": "example2.com", "indexStatus": "READY"}
         ]}
         c = config.Config(instance_mappings=MarqoCloudInstanceMappings("https://api.marqo.ai"))
         assert c.instance_mapping.get_index_base_url(index_name="index1") == "example.com"
