@@ -30,14 +30,14 @@ class CloudTestIndex(str, Enum):
         -> 4) use structured_image_prepro
     """
 
-    unstructured_text = "unstr_txt"
-    unstructured_image = "unstr_img"
-    unstructured_text_custom_prepro = "unstr_txt_custom_prepro"
+    unstructured_text = "pymarqo_unstr_txt"
+    unstructured_image = "pymarqo_unstr_img"
+    unstructured_text_custom_prepro = "pymarqo_unstr_txt_cstm_pre"
 
-    structured_image_prepro = "str_img_prepro"
-    structured_image_custom = "str_img_custom"
-    structured_text = "str_txt"
-    structured_image = "str_img"
+    structured_image_prepro = "pymarqo_str_img_prepro"
+    structured_image_custom = "pymarqo_str_img_custom"
+    structured_text = "pymarqo_str_txt"
+    structured_image = "pymarqo_str_img"
 
 
 index_name_to_settings_mappings = {
@@ -74,7 +74,10 @@ index_name_to_settings_mappings = {
             {"name": "int_filter_field_1", "type": "int", "features": ["filter", "score_modifier"]},
             {"name": "bool_field_1", "type": "bool", "features": ["filter"]},
         ],
-        "tensorFields": ["text_field_1", "text_field_2", "text_field_3", "image_field_1"]
+        "tensorFields": ["text_field_1", "text_field_2", "text_field_3", "image_field_1"],
+        "imagePreprocessing": {
+            "patchMethod": "simple",
+        }
     },
     # CloudTestIndex.unstructured_text_custom_prepro: {
     #     "type": "unstructured",
