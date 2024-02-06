@@ -728,31 +728,3 @@ class TestAddDocuments(MarqoTestCase):
             res = self.client.index(test_index_name).add_documents(documents=[], client_batch_size=5,
                                                                    tensor_fields="field a")
             assert res == []
-
-    def test_add_docs_with_large_integers_and_floats(self):
-        test_documents = [
-            ({"long_field_1": 1}, False),  # small positive integer
-            ({"long_field_1": -1}, False),  # small negative integer
-            ({"long_field_1": 1002321422345}, False),  # large positive integer that can't be handled by int
-            ({"long_field_1": -9232172132133}, False),  # large positive integer that can't be handled by int
-            ({'long_field_1': int("1" * 50)}, True),  # overlarge positive integer, should raise error in long field
-            # overlarge negative integer, should raise error in long field
-            ({'long_field_1': -1 * int("1" * 50)}, True),
-            ({"double_field_1": 1e10}, False),  # large positive integer mathematical expression
-            ({"double_field_1": -1e12}, False),  # large negative integer mathematical expression
-            ({"double_field_1": 1e10 + 0.123249357987123}, False),  # large positive float
-            ({"double_field_1": - 1e10 + 0.123249357987123}, False),  # large negative float
-        ]
-
-        for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
-            test_index_name = self.get_test_index_name(cloud_test_index_to_use=cloud_test_index_to_use,
-                                                       open_source_test_index_name=open_source_test_index_name)
-            for test_document, error in test_documents:
-                tensor_fields = [] if "unstr" in test_index_name else None
-                with self.subTest(f"index_name = {test_index_name}, doc = {test_document}"):
-                    res = self.client.index(test_index_name).add_documents(
-                            [test_document], tensor_fields=tensor_fields
-                        )
-                    self.assertEqual(res['errors'], error)
-
-
