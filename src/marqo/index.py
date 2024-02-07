@@ -199,7 +199,8 @@ class Index:
                highlights=None, device: Optional[str] = None, filter_string: str = None,
                show_highlights=True, reranker=None, image_download_headers: Optional[Dict] = None,
                attributes_to_retrieve: Optional[List[str]] = None, boost: Optional[Dict[str,List[Union[float, int]]]] = None,
-               context: Optional[dict] = None, score_modifiers: Optional[dict] = None, model_auth: Optional[dict] = None
+               context: Optional[dict] = None, score_modifiers: Optional[dict] = None, model_auth: Optional[dict] = None,
+               ef_search: Optional[int] = None, approximate: Optional[bool] = None
                ) -> Dict[str, Any]:
         """Search the index.
 
@@ -229,6 +230,8 @@ class Index:
             context: a dictionary to allow you to bring your own vectors and more into search.
             score_modifiers: a dictionary to modify the score based on field values, for tensor search only
             model_auth: authorisation that lets Marqo download a private model, if required
+            ef_search: the size of the list of candidates during graph traversal, for tensor search only
+            approximate: whether to use approximate nearest neighbors search or not, for tensor search only
         Returns:
             Dictionary with hits and other metadata
         """
@@ -266,6 +269,10 @@ class Index:
             body["scoreModifiers"] = score_modifiers
         if model_auth is not None:
             body["modelAuth"] = model_auth
+        if ef_search is not None:
+            body["efSearch"] = ef_search
+        if approximate is not None:
+            body["approximate"] = approximate
         res = self.http.post(
             path=path_with_query_str,
             body=body,
