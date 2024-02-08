@@ -7,6 +7,7 @@ import random
 import math
 import time
 from tests.marqo_test import MarqoTestCase, CloudTestIndex
+from marqo.errors import MarqoWebError
 from pytest import mark
 
 
@@ -444,6 +445,79 @@ class TestSearch(MarqoTestCase):
                 # the poodle doc should be lower ranked than the irrelevant doc
                 for hit_position, _ in enumerate(res['hits']):
                     assert res['hits'][hit_position]['_id'] == expected_ordering[hit_position]
+
+    @mark.fixed
+    def test_search_with_ef_search(self):
+        """Tests if the ef_search parameter works"""
+        for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
+            test_index_name = self.get_test_index_name(
+                cloud_test_index_to_use=cloud_test_index_to_use,
+                open_source_test_index_name=open_source_test_index_name
+            )
+            d1 = {
+                "Title": "This is a title about some doc. ",
+                "Description": """The Guardian is a British daily newspaper. It was founded in 1821 as The Manchester Guardian, and changed its name in 1959.[5] Along with its sister papers The Observer and The Guardian Weekly, The Guardian is part of the Guardian Media Group, owned by the Scott Trust.[6] The trust was created in 1936 to "secure the financial and editorial independence of The Guardian in perpetuity and to safeguard the journalistic freedom and liberal values of The Guardian free from commercial or political interference".[7] The trust was converted into a limited company in 2008, with a constitution written so as to maintain for The Guardian the same protections as were built into the structure of the Scott Trust by its creators. Profits are reinvested in journalism rather than distributed to owners or shareholders.[7] It is considered a newspaper of record in the UK.[8][9]
+                The editor-in-chief Katharine Viner succeeded Alan Rusbridger in 2015.[10][11] Since 2018, the paper's main newsprint sections have been published in tabloid format. As of July 2021, its print edition had a daily circulation of 105,134.[4] The newspaper has an online edition, TheGuardian.com, as well as two international websites, Guardian Australia (founded in 2013) and Guardian US (founded in 2011). The paper's readership is generally on the mainstream left of British political opinion,[12][13][14][15] and the term "Guardian reader" is used to imply a stereotype of liberal, left-wing or "politically correct" views.[3] Frequent typographical errors during the age of manual typesetting led Private Eye magazine to dub the paper the "Grauniad" in the 1960s, a nickname still used occasionally by the editors for self-mockery.[16]
+                """
+            }
+            _ = self.client.index(test_index_name).add_documents([d1], tensor_fields=["Title", "Description"])
+
+            if self.IS_MULTI_INSTANCE:
+                self.warm_request(self.client.index(test_index_name).search,
+                "title about some doc")
+
+            # text basic search works
+            search_res = self.client.index(test_index_name).search("text", ef_search=200)
+            assert len(search_res["hits"]) == 1
+            assert self.strip_marqo_fields(search_res["hits"][0]) == d1
+            assert len(search_res["hits"][0]["_highlights"]) > 0
+            assert ("Title" in search_res["hits"][0]["_highlights"][0]) or ("Description" in search_res["hits"][0]["_highlights"][0])
+
+            # test error on negative ef_search
+            with self.assertRaises(MarqoWebError):
+                self.client.index(test_index_name).search("text", ef_search=-100)
+            
+            # test error on ef_search and LEXICAL
+            with self.assertRaises(MarqoWebError):
+                self.client.index(test_index_name).search("text", search_method='LEXICAL', ef_search=1000)
+
+    @mark.fixed
+    def test_search_with_approximate(self):
+        """Tests if the approximate parameter works"""
+        for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
+            test_index_name = self.get_test_index_name(
+                cloud_test_index_to_use=cloud_test_index_to_use,
+                open_source_test_index_name=open_source_test_index_name
+            )
+            d1 = {
+                "Title": "This is a title about some doc. ",
+                "Description": """The Guardian is a British daily newspaper. It was founded in 1821 as The Manchester Guardian, and changed its name in 1959.[5] Along with its sister papers The Observer and The Guardian Weekly, The Guardian is part of the Guardian Media Group, owned by the Scott Trust.[6] The trust was created in 1936 to "secure the financial and editorial independence of The Guardian in perpetuity and to safeguard the journalistic freedom and liberal values of The Guardian free from commercial or political interference".[7] The trust was converted into a limited company in 2008, with a constitution written so as to maintain for The Guardian the same protections as were built into the structure of the Scott Trust by its creators. Profits are reinvested in journalism rather than distributed to owners or shareholders.[7] It is considered a newspaper of record in the UK.[8][9]
+                The editor-in-chief Katharine Viner succeeded Alan Rusbridger in 2015.[10][11] Since 2018, the paper's main newsprint sections have been published in tabloid format. As of July 2021, its print edition had a daily circulation of 105,134.[4] The newspaper has an online edition, TheGuardian.com, as well as two international websites, Guardian Australia (founded in 2013) and Guardian US (founded in 2011). The paper's readership is generally on the mainstream left of British political opinion,[12][13][14][15] and the term "Guardian reader" is used to imply a stereotype of liberal, left-wing or "politically correct" views.[3] Frequent typographical errors during the age of manual typesetting led Private Eye magazine to dub the paper the "Grauniad" in the 1960s, a nickname still used occasionally by the editors for self-mockery.[16]
+                """
+            }
+            _ = self.client.index(test_index_name).add_documents([d1], tensor_fields=["Title", "Description"])
+
+            if self.IS_MULTI_INSTANCE:
+                self.warm_request(self.client.index(test_index_name).search,
+                "title about some doc")
+
+            # text basic search works with approximate
+            search_res_approx = self.client.index(test_index_name).search("text", approximate=True)
+            search_res_exact = self.client.index(test_index_name).search("text", approximate=False)
+
+            for search_res in [search_res_approx, search_res_exact]:
+                assert len(search_res["hits"]) == 1
+                assert self.strip_marqo_fields(search_res["hits"][0]) == d1
+                assert len(search_res["hits"][0]["_highlights"]) > 0
+                assert ("Title" in search_res["hits"][0]["_highlights"][0]) or ("Description" in search_res["hits"][0]["_highlights"][0])
+
+            # test error approximate and lexical
+            with self.assertRaises(MarqoWebError):
+                self.client.index(test_index_name).search("text", search_method='LEXICAL', approximate=True)
+            
+            # test error approximate and lexical
+            with self.assertRaises(MarqoWebError):
+                self.client.index(test_index_name).search("text", search_method='LEXICAL', approximate=False)
 
     @mark.fixed
     def test_escaped_non_tensor_field(self):
