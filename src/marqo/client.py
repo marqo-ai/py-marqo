@@ -146,6 +146,32 @@ class Client:
             number_of_inferences=number_of_inferences,
         )
 
+    def modify_index(
+        self,
+        index_name: str,
+        inference_type: Optional[str] = None,
+        number_of_inferences: Optional[int] = None,
+        wait_for_readiness=True,
+    ) -> Dict[str, Any]:
+        """Modifies an index
+
+        Args:
+            index_name: name of the index
+            inference_type: inference type for the index
+            number_of_inferences: number of inferences for the index
+            wait_for_readiness: Marqo Cloud specific, whether to wait until
+                operation is completed or to proceed without waiting for status,
+                won't do anything if config.is_marqo_cloud=False
+        Returns:
+            response body about the result of the modify request
+        """
+        if not self.config.is_marqo_cloud:
+            self.raise_error_for_not_marqo_cloud("modify_index")
+
+        ix = Index(self.config, index_name)
+        return ix.modify(inference_type, number_of_inferences, wait_for_readiness)
+
+
     def delete_index(self, index_name: str, wait_for_readiness=True) -> Dict[str, Any]:
         """Deletes an index
 
@@ -239,6 +265,13 @@ class Client:
             f"The `mq.{function_name}()` API is not supported on Marqo Cloud. "
             f"Please Use `mq.index('your-index-name').{function_name}()` instead. "
             "Check `https://docs.marqo.ai/1.1.0/API-Reference/indexes/` for more details.")
+
+    @staticmethod
+    def raise_error_for_not_marqo_cloud(function_name: str = None):
+        raise errors.BadRequestError(
+            f"The `mq.{function_name}()` API is only supported on Marqo Cloud. "
+            "Check `https://docs.marqo.ai/2.2.0/Cloud-Reference/indexes/` for more details."
+        )
 
     def _validate_all_indexes_belong_to_the_same_cluster(self, parsed_queries: List[BulkSearchBody]):
         """

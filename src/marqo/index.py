@@ -70,8 +70,48 @@ class Index:
                 won't do anything if config.is_marqo_cloud=False
         """
         response = self.http.delete(path=f"indexes/{self.index_name}")
-        if self.config.is_marqo_cloud and wait_for_readiness:
-            cloud_wait_for_index_status(self.http, self.index_name, IndexStatus.DELETED)
+        try:
+            if response.json().get("acknowledged", False):
+                if self.config.is_marqo_cloud and wait_for_readiness:
+                    cloud_wait_for_index_status(
+                        self.http, self.index_name, IndexStatus.DELETED
+                    )
+        except Exception as e:
+            mq_logger.error("Failed to schedule index deletion. Error: %s", e)
+        return response
+
+    def modify(
+        self,
+        inference_type: Optional[str] = None,
+        number_of_inferences: Optional[int] = None,
+        wait_for_readiness=True,
+    ) -> Dict[str, Any]:
+        """Modify the index.
+
+        Args:
+            inference_type: inference type for the index
+            number_of_inferences: number of inferences for the index
+            wait_for_readiness: Marqo Cloud specific, whether to wait until
+                operation is completed or to proceed without waiting for status,
+                won't do anything if config.is_marqo_cloud=False
+        """
+        if inference_type is None and number_of_inferences is None:
+            raise ValueError(
+                "At least one of inference_type or number_of_inferences must be provided"
+            )
+        body = {}
+        if inference_type is not None:
+            body["inferenceType"] = inference_type
+        if number_of_inferences is not None:
+            body["numberOfInferences"] = number_of_inferences
+
+        response = self.http.put(path=f"indexes/{self.index_name}", body=body)
+        try:
+            if response.json().get("acknowledged", False):
+                if self.config.is_marqo_cloud and wait_for_readiness:
+                    cloud_wait_for_index_status(self.http, self.index_name, IndexStatus.READY)
+        except Exception as e:
+            mq_logger.error("Failed to schedule index modification. Error: %s", e)
         return response
 
     @staticmethod
