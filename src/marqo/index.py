@@ -467,27 +467,30 @@ class Index:
         else:
             start_time_client_request = timer()
             num_docs = len(documents)
+
             base_path = f"indexes/{self.index_name}/documents/update"
+            body = {"documents": documents}
+
             res = self.http.post(
-                path=base_path, body=documents, index_name=self.index_name,
+                path=base_path, body=body, index_name=self.index_name,
             )
             end_time_client_request = timer()
             total_client_request_time = end_time_client_request - start_time_client_request
 
-            mq_logger.debug(f"add_documents roundtrip: took {(total_client_request_time):.3f}s to send {num_docs} "
+            mq_logger.debug(f"update_documents roundtrip: took {(total_client_request_time):.3f}s to send {num_docs} "
                             f"docs to Marqo (roundtrip, unbatched).")
             errors_detected = False
 
             if 'processingTimeMs' in res:  # Only outputs log if response is non-empty
                 mq_logger.debug(
-                    f"add_documents Marqo index: took {(res['processingTimeMs'] / 1000):.3f}s for Marqo to process & index {num_docs} "
+                    f"update_documents Marqo index: took {(res['processingTimeMs'] / 1000):.3f}s for Marqo to process & index {num_docs} "
                     f"docs.")
             if 'errors' in res and res['errors']:
                 mq_logger.info(error_detected_message)
             if errors_detected:
                 mq_logger.info(error_detected_message)
         total_add_docs_time = timer() - t0
-        mq_logger.debug(f"add_documents completed. total time taken: {(total_add_docs_time):.3f}s.")
+        mq_logger.debug(f"update_documents completed. total time taken: {(total_add_docs_time):.3f}s.")
         return res
 
     def _update_documents(self, documents: List[Dict]) -> Dict[str, Any]:
@@ -517,7 +520,9 @@ class Index:
             errors_detected = False
 
             t0 = timer()
-            res = self.http.post(path=base_path, body=docs, index_name=self.index_name)
+
+            body = {"documents": docs}
+            res = self.http.post(path=base_path, body=body, index_name=self.index_name)
 
             total_batch_time = timer() - t0
             num_docs = len(docs)
