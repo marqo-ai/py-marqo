@@ -501,79 +501,79 @@ class TestAddDocuments(MarqoTestCase):
             space_tensor_res = self.client.index(test_index_name).search("")
             assert space_tensor_res["hits"][0]["_id"] == "111"
 
-    # TODO: Fix test when custom_vector is fixed
-    # def test_custom_vector_doc(self):
-    #     """
-    #     Tests the custom_vector field type.
-    #     Ensures the following features work on this field:
-    #     1. lexical search
-    #     2. filter string search
-    #     3. tensor search
-    #     4. get document
-    #     """
-    #
-    #     for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
-    #         test_index_name = self.get_test_index_name(
-    #             cloud_test_index_to_use=cloud_test_index_to_use,
-    #             open_source_test_index_name=open_source_test_index_name
-    #         )
-    #         self.client.index(index_name=test_index_name).add_documents(
-    #             documents=[
-    #                 {
-    #                     "my_custom_vector": {
-    #                         "content": "custom vector text",
-    #                         "vector": [1.0 for _ in range(512)],
-    #                     },
-    #                     "my_normal_text_field": "normal text",
-    #                     "_id": "doc1",
-    #                 },
-    #                 {
-    #                     "my_normal_text_field": "second doc",
-    #                     "_id": "doc2"
-    #                 }
-    #             ], mappings={
-    #                 "my_custom_vector": {
-    #                     "type": "custom_vector",
-    #                 }
-    #             },
-    #             tensor_fields=["my_custom_vector"])
-    #
-    #         # lexical search test
-    #         if self.IS_MULTI_INSTANCE:
-    #             self.warm_request(self.client.index(test_index_name).search,
-    #                               "custom vector text", search_method="lexical")
-    #
-    #         lexical_res = self.client.index(test_index_name).search(
-    #             "custom vector text", search_method="lexical")
-    #         assert lexical_res["hits"][0]["_id"] == "doc1"
-    #
-    #         # filter string test
-    #         if self.IS_MULTI_INSTANCE:
-    #             self.warm_request(self.client.index(test_index_name).search,
-    #                               "",
-    #                               filter_string="my_custom_vector:(custom vector text)")
-    #
-    #         filtering_res = self.client.index(test_index_name).search(
-    #             "", filter_string="my_custom_vector:(custom vector text)")
-    #         assert filtering_res["hits"][0]["_id"] == "doc1"
-    #
-    #         # tensor search test
-    #         if self.IS_MULTI_INSTANCE:
-    #             self.warm_request(self.client.index(test_index_name).search, q={"dummy text": 0},
-    #                               context={"tensor": [{"vector": [1.0 for _ in range(512)], "weight": 1}]})
-    #
-    #         tensor_res = self.client.index(test_index_name).search(q={"dummy text": 0}, context={
-    #             "tensor": [{"vector": [1.0 for _ in range(512)], "weight": 1}]})
-    #         assert tensor_res["hits"][0]["_id"] == "doc1"
-    #
-    #         # get document test
-    #         doc_res = self.client.index(test_index_name).get_document(
-    #             document_id="doc1",
-    #             expose_facets=True
-    #         )
-    #         assert doc_res["my_custom_vector"] == "custom vector text"
-    #         assert doc_res['_tensor_facets'][0]["my_custom_vector"] == "custom vector text"
-    #         assert doc_res['_tensor_facets'][0]['_embedding'] == [1.0 for _ in range(512)]
+    def test_custom_vector_doc(self):
+         """
+         Tests the custom_vector field type.
+         Ensures the following features work on this field:
+         1. lexical search
+         2. filter string search
+         3. tensor search
+         4. get document
+         """
+
+         DEFAULT_DIMENSIONS = 768
+         for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
+             test_index_name = self.get_test_index_name(
+                 cloud_test_index_to_use=cloud_test_index_to_use,
+                 open_source_test_index_name=open_source_test_index_name
+             )
+             add_docs_res = self.client.index(index_name=test_index_name).add_documents(
+                 documents=[
+                     {
+                         "my_custom_vector": {
+                             "content": "custom vector text",
+                             "vector": [1.0 for _ in range(DEFAULT_DIMENSIONS)],
+                         },
+                         "my_normal_text_field": "normal text",
+                         "_id": "doc1",
+                     },
+                     {
+                         "my_normal_text_field": "second doc",
+                         "_id": "doc2"
+                     }
+                 ], mappings={
+                     "my_custom_vector": {
+                         "type": "custom_vector",
+                     }
+                 },
+                 tensor_fields=["my_custom_vector"])
+
+             # lexical search test
+             if self.IS_MULTI_INSTANCE:
+                 self.warm_request(self.client.index(test_index_name).search,
+                                   "custom vector text", search_method="lexical")
+
+             lexical_res = self.client.index(test_index_name).search(
+                 "custom vector text", search_method="lexical")
+             assert lexical_res["hits"][0]["_id"] == "doc1"
+
+             # filter string test
+             if self.IS_MULTI_INSTANCE:
+                 self.warm_request(self.client.index(test_index_name).search,
+                                   "",
+                                   filter_string="my_custom_vector:(custom vector text)")
+
+             filtering_res = self.client.index(test_index_name).search(
+                 "", filter_string="my_custom_vector:(custom vector text)")
+             assert filtering_res["hits"][0]["_id"] == "doc1"
+
+             # tensor search test
+             if self.IS_MULTI_INSTANCE:
+                 self.warm_request(self.client.index(test_index_name).search, q={"dummy text": 0},
+                                   context={"tensor": [{"vector": [1.0 for _ in range(DEFAULT_DIMENSIONS)], "weight": 1}]})
+
+             tensor_res = self.client.index(test_index_name).search(q={"dummy text": 0}, context={
+                 "tensor": [{"vector": [1.0 for _ in range(DEFAULT_DIMENSIONS)], "weight": 1}]})
+             assert tensor_res["hits"][0]["_id"] == "doc1"
+
+             # get document test
+             doc_res = self.client.index(test_index_name).get_document(
+                 document_id="doc1",
+                 expose_facets=True
+             )
+             assert doc_res["my_custom_vector"] == "custom vector text"
+             assert doc_res['_tensor_facets'][0]["my_custom_vector"] == "custom vector text"
+             assert doc_res['_tensor_facets'][0]['_embedding'] == [1.0 for _ in range(DEFAULT_DIMENSIONS)]
 
     # TODO: Fix test when custom_vector is fixed
     # @mark.ignore_during_cloud_tests
