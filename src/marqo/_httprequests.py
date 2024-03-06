@@ -12,7 +12,7 @@ from marqo.errors import (
     BackendTimeoutError
 )
 
-HTTP_OPERATIONS = Literal["delete", "get", "post", "put"]
+HTTP_OPERATIONS = Literal["delete", "get", "post", "put", "patch"]
 ALLOWED_OPERATIONS: Tuple[HTTP_OPERATIONS, ...] = get_args(HTTP_OPERATIONS)
 session = requests.Session()
 
@@ -20,7 +20,8 @@ OPERATION_MAPPING = {
     'delete': session.delete,
     'get': session.get,
     'post': session.post,
-    'put': session.put
+    'put': session.put,
+    'patch': session.patch
 }
 
 
@@ -117,6 +118,12 @@ class HttpRequests:
         index_name: str = ""
     ) -> Any:
         return self.send_request('delete', path, body, index_name=index_name)
+
+    def patch(self,
+              path: str,
+              body: Optional[Union[Dict[str, Any], List[Dict[str, Any]], List[str], str]] = None,
+              index_name: str = "") -> Any:
+        return self.send_request('patch', path, body, index_name=index_name)
 
     @staticmethod
     def __to_json(

@@ -468,10 +468,10 @@ class Index:
             start_time_client_request = timer()
             num_docs = len(documents)
 
-            base_path = f"indexes/{self.index_name}/documents/update"
+            base_path = f"indexes/{self.index_name}/documents"
             body = {"documents": documents}
 
-            res = self.http.post(
+            res = self.http.patch(
                 path=base_path, body=body, index_name=self.index_name,
             )
             end_time_client_request = timer()
@@ -502,7 +502,7 @@ class Index:
         """Update documents in this index with batched requests. Does a partial update on existing documents."""
 
         deeper = ((doc, i, client_batch_size) for i, doc in enumerate(documents))
-        base_path = f"indexes/{self.index_name}/documents/update"
+        base_path = f"indexes/{self.index_name}/documents"
 
         error_detected_message = ('Errors detected in update_documents call. '
                                   'Please examine the returned result object for more information.')
@@ -522,7 +522,7 @@ class Index:
             t0 = timer()
 
             body = {"documents": docs}
-            res = self.http.post(path=base_path, body=body, index_name=self.index_name)
+            res = self.http.patch(path=base_path, body=body, index_name=self.index_name)
 
             total_batch_time = timer() - t0
             num_docs = len(docs)
