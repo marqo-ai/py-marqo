@@ -156,7 +156,8 @@ class TestDemo(MarqoTestCase):
 
             query = {
                 "I need to buy a communications device, what should I get?": 1.1,
-                "Technology that became prevelant in the 21st century": 1.0,
+                # This will lead to 'Smartphone' being the top result
+                "The device should work like an intelligent computer.": 1.0,
             }
 
             if self.IS_MULTI_INSTANCE:
@@ -168,13 +169,14 @@ class TestDemo(MarqoTestCase):
                 q=query, searchable_attributes=["text_field_1", "text_field_2"]
             )
 
-            assert r2["hits"][0]["text_field_1"] == "Smartphone"
+            self.assertEqual("Smartphone", r2["hits"][0]["text_field_1"])
 
             print("Query 1:")
             pprint.pprint(r2)
             query = {
                 "I need to buy a communications device, what should I get?": 1.0,
-                "Technology that became prevelant in the 21st century": -1.0,
+                # This will lead to 'Telephone' being the top result
+                "The device should work like an intelligent computer.": -0.3,
             }
 
             if self.IS_MULTI_INSTANCE:
