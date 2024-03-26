@@ -511,12 +511,15 @@ class TestAddDocuments(MarqoTestCase):
          4. get document
          """
 
-         DEFAULT_DIMENSIONS = 768
+
          for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
              test_index_name = self.get_test_index_name(
                  cloud_test_index_to_use=cloud_test_index_to_use,
                  open_source_test_index_name=open_source_test_index_name
              )
+
+             DEFAULT_DIMENSIONS = 512 if "img" in test_index_name else 768
+
              add_docs_res = self.client.index(index_name=test_index_name).add_documents(
                  documents=[
                      {
