@@ -510,8 +510,6 @@ class TestAddDocuments(MarqoTestCase):
          3. tensor search
          4. get document
          """
-
-
          for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
              test_index_name = self.get_test_index_name(
                  cloud_test_index_to_use=cloud_test_index_to_use,
