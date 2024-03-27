@@ -209,6 +209,7 @@ class TestSearch(MarqoTestCase):
         args, kwargs0 = mock__post.call_args_list[0]
         assert "device" not in kwargs0["path"]
 
+    @mark.fixed
     def test_filter_string_and_searchable_attributes(self):
         self.test_cases = [
             (CloudTestIndex.structured_text, self.structured_index_name),
@@ -223,13 +224,13 @@ class TestSearch(MarqoTestCase):
                     "_id": "0",                     # content in field_a
                     "text_field_1": "random content",
                     "text_field_2": "apple",
-                    "int_field_1": 0,
+                    "int_filter_field_1": 0,
                 },
                 {
                     "_id": "1",                     # content in field_b
                     "text_field_3": "random content",
                     "text_field_2": "banana",
-                    "int_field_1": 0,
+                    "int_filter_field_1": 0,
                 },
                 {
                     "_id": "2",                     # content in both
@@ -267,6 +268,24 @@ class TestSearch(MarqoTestCase):
                     "filter_string": "text_field_2:(banana) AND int_filter_field_1:(1)",
                     "searchable_attributes": None,
                     "expected": ["3"]
+                },
+                {  # filter string only (IN with AND)
+                    "query": "random content",
+                    "filter_string": "text_field_2 in (banana, orange) AND int_filter_field_1 in (0, 1)",
+                    "searchable_attributes": None,
+                    "expected": ["1", "3"]
+                },
+                {  # filter string (IN with OR)
+                    "query": "random content",
+                    "filter_string": "text_field_2 in (banana, orange) OR int_filter_field_1 in (1)",
+                    "searchable_attributes": None,
+                    "expected": ["1", "2", "3"]
+                },
+                {   # filter string (IN with _id)
+                    "query": "random content",
+                    "filter_string": "_id in (1, 2)",
+                    "searchable_attributes": None,
+                    "expected": ["1", "2"]
                 },
                 {   # searchable attributes only (one)
                     "query": "random content",
@@ -307,7 +326,6 @@ class TestSearch(MarqoTestCase):
                     filter_string=case.get("filter_string", ""),
                     searchable_attributes=case.get("searchable_attributes", None)
                 )
-                print(search_res, case["expected"], case["query"])
                 assert len(search_res["hits"]) == len(case["expected"])
                 assert set([hit["_id"] for hit in search_res["hits"]]) == set(case["expected"])
 
