@@ -117,11 +117,10 @@ class TestCustomVectorSearch(MarqoTestCase):
                                     {"vector": [2, ] * (self.vector_dim + 1), "weight": 0}]}
         if self.IS_MULTI_INSTANCE:
             self.warm_request(lambda: self.search_with_context(correct_context))
-        try:
+        with self.assertRaises(MarqoWebError) as e:
             self.search_with_context(wrong_context)
-            raise AssertionError
-        except MarqoWebError as e:
-            assert "The provided vectors are not in the same dimension of the index" in str(e)
+        self.assertIn("The dimension of the vectors returned by the model or given by the context "
+                      "vectors does not match the expected dimension", str(e.exception))
 
     def test_context_vector_with_flat_query(self):
         self.query = "What are the best pets"
