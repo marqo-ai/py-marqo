@@ -291,6 +291,61 @@ class Index:
         mq_logger.debug(search_time_log)
         return res
 
+    def embed(self, content: Union[Union[str, Dict[str, float]], List[Union[str, Dict[str, float]]]],
+              device: Optional[str] = None, image_download_headers: Optional[Dict] = None,
+              model_auth: Optional[dict] = None):
+        """Retrieve embeddings for content or list of content.
+        Args:
+            content: string, dictionary of weighted strings, or list of either. Strings
+                to search are text or a pointer/url to an image if the index
+                has treat_urls_and_pointers_as_images set to True.
+
+                If queries are weighted, each weight act as a (possibly negative)
+                multiplier for that query, relative to the other queries.
+
+            device: the device used to index the data. Examples include "cpu",
+                "cuda" and "cuda:2".
+
+            image_download_headers: a dictionary of headers to be passed while downloading images,
+                for URLs found in documents
+            model_auth: authorisation that lets Marqo download a private model, if required
+        Returns:
+            Dictionary of content, embeddings, and processingTimeMs.
+        """
+
+        start_time_client_request = timer()
+
+        path_with_query_str = (
+            f"indexes/{self.index_name}/embed"
+            f"{f'?&device={utils.translate_device_string_for_url(device)}' if device is not None else ''}"
+        )
+        body = {
+            "content": content,
+        }
+
+        if image_download_headers is not None:
+            body["image_download_headers"] = image_download_headers
+        if model_auth is not None:
+            body["modelAuth"] = model_auth
+
+        res = self.http.post(
+            path=path_with_query_str,
+            body=body,
+            index_name=self.index_name,
+        )
+
+        num_results = len(res["embeddings"])
+        end_time_client_request = timer()
+        total_client_request_time = end_time_client_request - start_time_client_request
+
+        embed_time_log = (f"embed: took {(total_client_request_time):.3f}s to embed content"
+                           f"and received {num_results} embeddings from Marqo (roundtrip).")
+        if 'processingTimeMs' in res:
+            embed_time_log += f" Marqo itself took {(res['processingTimeMs'] * 0.001):.3f}s to execute the embed request."
+
+        mq_logger.debug(embed_time_log)
+        return res
+
     def get_document(self, document_id: str, expose_facets=None) -> Dict[str, Any]:
         """Get one document with given an ID.
 
