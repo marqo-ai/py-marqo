@@ -300,7 +300,6 @@ class Index:
                   reranker: Optional[str]=None,
                   attributes_to_retrieve: Optional[List[str]] = None,
                   score_modifiers: Optional[dict] = None,
-                  model_auth: Optional[dict] = None,
                   ef_search: Optional[int] = None,
                   approximate: Optional[bool] = None
                   ) -> Dict[str, Any]:
@@ -354,7 +353,6 @@ class Index:
             "filter": filter_string,
             "attributesToRetrieve": attributes_to_retrieve,
             "scoreModifiers": score_modifiers,
-            "modelAuth": model_auth
         }
 
         body = {k: v for k, v in body.items() if v is not None}

@@ -104,8 +104,7 @@ class TestRecommend(MarqoTestCase):
                                 "weight": 1
                             }
                         ]
-                },
-                # can't test model_auth here
+                }
             )
 
             ids = [doc["_id"] for doc in res["hits"]]
