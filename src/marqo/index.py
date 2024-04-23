@@ -294,7 +294,6 @@ class Index:
                   searchable_attributes: Optional[List[str]] = None,
                   limit: Optional[int] = None,
                   offset: Optional[int] = None,
-                  device: Optional[str] = None,
                   filter_string: Optional[str] = None,
                   show_highlights: Optional[bool] = None,
                   reranker: Optional[str]=None,
@@ -336,7 +335,6 @@ class Index:
 
         path_with_query_str = (
             f"indexes/{self.index_name}/recommend"
-            f"{f'?&device={utils.translate_device_string_for_url(device)}' if device is not None else ''}"
         )
         body = {
             "documents": documents,
