@@ -10,7 +10,7 @@ from marqo import errors, utils
 from marqo._httprequests import HttpRequests
 from marqo.cloud_helpers import cloud_wait_for_index_status
 from marqo.config import Config
-from marqo.enums import IndexStatus
+from marqo.enums import IndexStatus, InterpolationMethod
 from marqo.enums import SearchMethods
 from marqo.errors import MarqoWebError, UnsupportedOperationError, MarqoCloudIndexNotFoundError
 from marqo.marqo_logging import mq_logger
@@ -28,11 +28,11 @@ class Index:
     """
 
     def __init__(
-        self,
-        config: Config,
-        index_name: str,
-        created_at: Optional[Union[datetime, str]] = None,
-        updated_at: Optional[Union[datetime, str]] = None,
+            self,
+            config: Config,
+            index_name: str,
+            created_at: Optional[Union[datetime, str]] = None,
+            updated_at: Optional[Union[datetime, str]] = None,
     ) -> None:
         """
 
@@ -198,8 +198,10 @@ class Index:
                limit: int = 10, offset: int = 0, search_method: Union[SearchMethods.TENSOR, str] = SearchMethods.TENSOR,
                highlights=None, device: Optional[str] = None, filter_string: str = None,
                show_highlights=True, reranker=None, image_download_headers: Optional[Dict] = None,
-               attributes_to_retrieve: Optional[List[str]] = None, boost: Optional[Dict[str,List[Union[float, int]]]] = None,
-               context: Optional[dict] = None, score_modifiers: Optional[dict] = None, model_auth: Optional[dict] = None,
+               attributes_to_retrieve: Optional[List[str]] = None,
+               boost: Optional[Dict[str, List[Union[float, int]]]] = None,
+               context: Optional[dict] = None, score_modifiers: Optional[dict] = None,
+               model_auth: Optional[dict] = None,
                ef_search: Optional[int] = None, approximate: Optional[bool] = None
                ) -> Dict[str, Any]:
         """Search the index.
@@ -208,7 +210,7 @@ class Index:
             q: String to search, or a dictionary of weighted strings to search
                 (with the structure <search string>:<weight float>). Strings
                 to search are text or a pointer/url to an image if the index
-                has treat_urls_and_pointers_as_images set to True. 
+                has treat_urls_and_pointers_as_images set to True.
 
                 If queries are weighted, each weight act as a (possibly negative)
                 multiplier for that query, relative to the other queries.
@@ -247,6 +249,15 @@ class Index:
             f"{f'?&device={utils.translate_device_string_for_url(device)}' if device is not None else ''}"
         )
         body = {
+            "q": q,
+            "attributesToRetrieve": attributes_to_retrieve,
+            "filter": filter_string,
+            "image_download_headers": image_download_headers,
+            "context": context,
+            "scoreModifiers": score_modifiers,
+            "modelAuth": model_auth,
+            "efSearch": ef_search,
+            "approximate": approximate,
             "searchableAttributes": searchable_attributes,
             "limit": limit,
             "offset": offset,
@@ -255,24 +266,9 @@ class Index:
             "reRanker": reranker,
             "boost": boost,
         }
-        if q is not None:
-            body["q"] = q
-        if attributes_to_retrieve is not None:
-            body["attributesToRetrieve"] = attributes_to_retrieve
-        if filter_string is not None:
-            body["filter"] = filter_string
-        if image_download_headers is not None:
-            body["image_download_headers"] = image_download_headers
-        if context is not None:
-            body["context"] = context
-        if score_modifiers is not None:
-            body["scoreModifiers"] = score_modifiers
-        if model_auth is not None:
-            body["modelAuth"] = model_auth
-        if ef_search is not None:
-            body["efSearch"] = ef_search
-        if approximate is not None:
-            body["approximate"] = approximate
+
+        body = {k: v for k, v in body.items() if v is not None}
+
         res = self.http.post(
             path=path_with_query_str,
             body=body,
@@ -289,6 +285,93 @@ class Index:
             search_time_log += f" Marqo itself took {(res['processingTimeMs'] * 0.001):.3f}s to execute the search."
 
         mq_logger.debug(search_time_log)
+        return res
+
+    def recommend(self, documents: Union[List[str], Dict[str, float]],
+                  tensor_fields: Optional[List[str]] = None,
+                  interpolation_method: Optional[InterpolationMethod] = None,
+                  exclude_input_documents: Optional[bool] = None,
+                  searchable_attributes: Optional[List[str]] = None,
+                  limit: Optional[int] = None,
+                  offset: Optional[int] = None,
+                  filter_string: Optional[str] = None,
+                  show_highlights: Optional[bool] = None,
+                  reranker: Optional[str] = None,
+                  attributes_to_retrieve: Optional[List[str]] = None,
+                  score_modifiers: Optional[dict] = None,
+                  ef_search: Optional[int] = None,
+                  approximate: Optional[bool] = None
+                  ) -> Dict[str, Any]:
+        """Search the index.
+
+        Args:
+            documents: List of document IDs or a dictionary of document IDs with weights
+            tensor_fields: Tensor fields within documents to use to generate recommendations
+            interpolation_method: Interpolation method to use for combining document embeddings. If not specified,
+                Marqo will choose the best method for the index.
+            exclude_input_documents: Whether to exclude the input documents from the search results. By default,
+                Marqo will exclude the input documents.
+            searchable_attributes:  attributes to search
+            limit: The max number of documents to be returned
+            offset: The number of search results to skip (for pagination)
+            show_highlights: True if highlights are to be returned
+            reranker:
+            device: the device used to index the data. Examples include "cpu",
+                "cuda" and "cuda:2".
+            filter_string: a filter string, used to prefilter documents during the
+                search. For example: "car_colour:blue"
+            attributes_to_retrieve: a list of document attributes to be
+                retrieved. If left as None, then all attributes will be
+                retrieved.
+            score_modifiers: a dictionary to modify the score based on field values, for tensor search only
+            model_auth: authorisation that lets Marqo download a private model, if required
+            ef_search: the size of the list of candidates during graph traversal, for tensor search only
+            approximate: whether to use approximate nearest neighbors search or not, for tensor search only
+        Returns:
+            Dictionary with hits and other metadata
+        """
+
+        start_time_client_request = timer()
+
+        path_with_query_str = (
+            f"indexes/{self.index_name}/recommend"
+        )
+        body = {
+            "documents": documents,
+            "tensorFields": tensor_fields,
+            "interpolationMethod": interpolation_method,
+            "excludeInputDocuments": exclude_input_documents,
+            "limit": limit,
+            "offset": offset,
+            "efSearch": ef_search,
+            "approximate": approximate,
+            "searchableAttributes": searchable_attributes,
+            "showHighlights": show_highlights,
+            "reRanker": reranker,
+            "filter": filter_string,
+            "attributesToRetrieve": attributes_to_retrieve,
+            "scoreModifiers": score_modifiers,
+        }
+
+        body = {k: v for k, v in body.items() if v is not None}
+
+        res = self.http.post(
+            path=path_with_query_str,
+            body=body,
+            index_name=self.index_name,
+        )
+
+        num_results = len(res["hits"])
+        end_time_client_request = timer()
+        total_client_request_time = end_time_client_request - start_time_client_request
+
+        recommend_time_log = (f"recommend took {(total_client_request_time):.3f}s to send query "
+                              f"and received {num_results} results from Marqo (roundtrip).")
+        if 'processingTimeMs' in res:
+            recommend_time_log += f" Marqo itself took {(res['processingTimeMs'] * 0.001):.3f}s to " \
+                                  f"generate recommendations."
+
+        mq_logger.debug(recommend_time_log)
         return res
 
     def embed(self, content: Union[Union[str, Dict[str, float]], List[Union[str, Dict[str, float]]]],
@@ -339,7 +422,7 @@ class Index:
         total_client_request_time = end_time_client_request - start_time_client_request
 
         embed_time_log = (f"embed: took {(total_client_request_time):.3f}s to embed content"
-                           f"and received {num_results} embeddings from Marqo (roundtrip).")
+                          f"and received {num_results} embeddings from Marqo (roundtrip).")
         if 'processingTimeMs' in res:
             embed_time_log += f" Marqo itself took {(res['processingTimeMs'] * 0.001):.3f}s to execute the embed request."
 
@@ -361,7 +444,7 @@ class Index:
         url_string = f"indexes/{self.index_name}/documents/{document_id}"
         if expose_facets is not None:
             url_string += f"?expose_facets={expose_facets}"
-        return self.http.get(url_string, index_name=self.index_name,)
+        return self.http.get(url_string, index_name=self.index_name, )
 
     def get_documents(self, document_ids: List[str], expose_facets=None) -> Dict[str, Any]:
         """Gets a selection of documents based on their IDs.
@@ -385,15 +468,15 @@ class Index:
         )
 
     def add_documents(
-        self,
-        documents: List[Dict[str, Any]],
-        client_batch_size: int = None,
-        device: str = None,
-        tensor_fields: List[str] = None,
-        use_existing_tensors: bool = False,
-        image_download_headers: dict = None,
-        mappings: dict = None,
-        model_auth: dict = None
+            self,
+            documents: List[Dict[str, Any]],
+            client_batch_size: int = None,
+            device: str = None,
+            tensor_fields: List[str] = None,
+            use_existing_tensors: bool = False,
+            image_download_headers: dict = None,
+            mappings: dict = None,
+            model_auth: dict = None
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """Add documents to this index. Does a partial update on existing documents,
         based on their ID. Adds unseen documents to the index.
@@ -419,20 +502,21 @@ class Index:
             image_download_headers = dict()
         return self._add_docs_organiser(
             documents=documents,
-            client_batch_size=client_batch_size, device=device, tensor_fields=tensor_fields, use_existing_tensors=use_existing_tensors,
+            client_batch_size=client_batch_size, device=device, tensor_fields=tensor_fields,
+            use_existing_tensors=use_existing_tensors,
             image_download_headers=image_download_headers, mappings=mappings, model_auth=model_auth
         )
 
     def _add_docs_organiser(
-        self,
-        documents: List[Dict[str, Any]],
-        client_batch_size: int = None,
-        device: str = None,
-        tensor_fields: List = None,
-        use_existing_tensors: bool = False,
-        image_download_headers: dict = None,
-        mappings: dict = None,
-        model_auth: dict = None
+            self,
+            documents: List[Dict[str, Any]],
+            client_batch_size: int = None,
+            device: str = None,
+            tensor_fields: List = None,
+            use_existing_tensors: bool = False,
+            image_download_headers: dict = None,
+            mappings: dict = None,
+            model_auth: dict = None
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         error_detected_message = ('Errors detected in add documents call. '
                                   'Please examine the returned result object for more information.')
@@ -450,9 +534,9 @@ class Index:
         )
 
         base_body = {
-            "useExistingTensors" : use_existing_tensors,
-            "imageDownloadHeaders" : image_download_headers,
-            "mappings" : mappings,
+            "useExistingTensors": use_existing_tensors,
+            "imageDownloadHeaders": image_download_headers,
+            "mappings": mappings,
             "modelAuth": model_auth,
         }
 
@@ -469,7 +553,7 @@ class Index:
             res = self._batch_request(
                 base_path=base_path,
                 docs=documents, verbose=False,
-                query_str_params=query_str_params, batch_size=client_batch_size, base_body = base_body
+                query_str_params=query_str_params, batch_size=client_batch_size, base_body=base_body
             )
 
         else:
@@ -495,9 +579,10 @@ class Index:
                             f"docs to Marqo (roundtrip, unbatched).")
             errors_detected = False
 
-            if 'processingTimeMs' in res:       # Only outputs log if response is non-empty
-                mq_logger.debug(f"add_documents Marqo index: took {(res['processingTimeMs'] / 1000):.3f}s for Marqo to process & index {num_docs} "
-                                f"docs.")
+            if 'processingTimeMs' in res:  # Only outputs log if response is non-empty
+                mq_logger.debug(
+                    f"add_documents Marqo index: took {(res['processingTimeMs'] / 1000):.3f}s for Marqo to process & index {num_docs} "
+                    f"docs.")
             if 'errors' in res and res['errors']:
                 mq_logger.info(error_detected_message)
             if errors_detected:
@@ -506,7 +591,7 @@ class Index:
         mq_logger.debug(f"add_documents completed. total time taken: {(total_add_docs_time):.3f}s.")
         return res
 
-    def update_documents(self, documents: List[Dict], client_batch_size: Optional[int]= None) \
+    def update_documents(self, documents: List[Dict], client_batch_size: Optional[int] = None) \
             -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """Update documents in this index. Does a partial update on existing documents."""
 
@@ -551,7 +636,7 @@ class Index:
     def _update_documents(self, documents: List[Dict]) -> Dict[str, Any]:
         """Update documents in this index. Does a partial update on existing documents."""
         base_path = f"indexes/{self.index_name}/documents/update"
-        return self.http.post(path=base_path, body=documents, index_name=self.index_name,)
+        return self.http.post(path=base_path, body=documents, index_name=self.index_name, )
 
     def _batch_update_documents(self, documents, client_batch_size) -> List[Dict[str, Any]]:
         """Update documents in this index with batched requests. Does a partial update on existing documents."""
@@ -571,6 +656,7 @@ class Index:
             return gathered
 
         batched = functools.reduce(lambda x, y: batch_requests(x, y), deeper, [])
+
         def update_batch_documents(batch_number, docs):
             errors_detected = False
 
@@ -582,7 +668,7 @@ class Index:
             total_batch_time = timer() - t0
             num_docs = len(docs)
 
-            if 'processingTimeMs' in res:       # Only outputs log if response is non-empty
+            if 'processingTimeMs' in res:  # Only outputs log if response is non-empty
                 mq_logger.info(
                     f"    update_documents batch {batch_number}: took {(res['processingTimeMs'] / 1000):.3f}s "
                     f"for Marqo to process & index {num_docs} docs. Roundtrip time: {(total_batch_time):.3f}s.")
@@ -608,11 +694,11 @@ class Index:
         """
         base_path = f"indexes/{self.index_name}/documents/delete-batch"
 
-        return self.http.post(path=base_path, body=ids, index_name=self.index_name,)
+        return self.http.post(path=base_path, body=ids, index_name=self.index_name, )
 
     def get_stats(self) -> Dict[str, Any]:
         """Get stats about the index"""
-        return self.http.get(path=f"indexes/{self.index_name}/stats", index_name=self.index_name,)
+        return self.http.get(path=f"indexes/{self.index_name}/stats", index_name=self.index_name, )
 
     @staticmethod
     def _maybe_datetime(the_date: Optional[Union[datetime, str]]) -> Optional[datetime]:
@@ -628,7 +714,7 @@ class Index:
             return parsed_date
 
     def _batch_request(
-            self, docs: List[Dict],  base_path: str,
+            self, docs: List[Dict], base_path: str,
             query_str_params: str, base_body: dict, verbose: bool = True, batch_size: int = 50,
     ) -> List[Dict[str, Any]]:
         """Batches a large chunk of documents to be sent as multiple
@@ -657,6 +743,7 @@ class Index:
                                   'Please examine the returned result object for more information.')
 
         deeper = ((doc, i, batch_size) for i, doc in enumerate(docs))
+
         def batch_requests(gathered, doc_tuple):
             doc, i, the_batch_size = doc_tuple
             if i % the_batch_size == 0:
@@ -704,7 +791,7 @@ class Index:
                             errors_detected = True
             else:
                 # no Server Batching
-                if 'processingTimeMs' in res:       # Only outputs log if response is non-empty
+                if 'processingTimeMs' in res:  # Only outputs log if response is non-empty
                     mq_logger.info(
                         f"    add_documents batch {i}: took {(res['processingTimeMs'] / 1000):.3f}s for Marqo to process & index {num_docs} docs."
                         f" Roundtrip time: {(total_batch_time):.3f}s.")
@@ -723,7 +810,7 @@ class Index:
 
     def get_settings(self) -> dict:
         """Get all settings of the index"""
-        return self.http.get(path=f"indexes/{self.index_name}/settings", index_name=self.index_name,)
+        return self.http.get(path=f"indexes/{self.index_name}/settings", index_name=self.index_name, )
 
     def health(self) -> dict:
         """Check the health of an index"""
@@ -795,7 +882,7 @@ class Index:
                 versioning_helpers.InvalidVersion) as e:
             # skip the check if this is a cloud index that is still being created:
             if not (self.config.is_marqo_cloud and not
-                    self.config.instance_mapping.is_index_usage_allowed(index_name=self.index_name)):
+            self.config.instance_mapping.is_index_usage_allowed(index_name=self.index_name)):
                 mq_logger.warning(skip_warning_message)
             if url is not None:
                 marqo_url_and_version_cache[url] = "_skipped"
