@@ -19,3 +19,9 @@ class IndexStatus(str, Enum):
     CREATING = "CREATING"
     DELETING = "DELETING"
     FAILED = "FAILED"
+
+
+class InterpolationMethod(str, Enum):
+    LERP = "lerp"
+    NLERP = "nlerp"
+    SLERP = "slerp"

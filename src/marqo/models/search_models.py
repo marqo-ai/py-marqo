@@ -3,7 +3,7 @@ from marqo.models.marqo_models import StrictBaseModel
 
 
 class SearchBody(StrictBaseModel):
-    q: Optional[Union[str, Dict[str, float]]] = None
+    q: Union[str, Dict[str, float], List[str], List[Dict[str, float]]] = None
     searchableAttributes: Union[None, List[str]] = None
     searchMethod: Union[None, str] = "TENSOR"
     limit: int = 10
