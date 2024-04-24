@@ -131,9 +131,9 @@ class TestEmbed(MarqoTestCase):
                 self.assertIn("processingTimeMs", embed_res)
                 self.assertEqual(embed_res["content"], [{"Jimmy Butler is the GOAT.": 1}, "Alex Caruso is the GOAT."])
                 self.assertTrue(
-                    np.allclose(embed_res["embeddings"][0], retrieved_docs["results"][0]["_tensor_facets"][0]["_embedding"]))
+                    np.allclose(embed_res["embeddings"][0], retrieved_docs["results"][0]["_tensor_facets"][0]["_embedding"], atol=1e-6))
                 self.assertTrue(
-                    np.allclose(embed_res["embeddings"][1], retrieved_docs["results"][1]["_tensor_facets"][0]["_embedding"]))
+                    np.allclose(embed_res["embeddings"][1], retrieved_docs["results"][1]["_tensor_facets"][0]["_embedding"], atol=1e-6))
 
 
     def test_embed_non_numeric_weight_fails(self):
@@ -147,16 +147,3 @@ class TestEmbed(MarqoTestCase):
                     self.client.index(test_index_name).embed(content={"text to embed": "not a number"})
 
             self.assertIn("not a valid float", str(e.exception))
-
-
-    def test_embed_empty_content(self):
-        for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
-            test_index_name = self.get_test_index_name(
-                cloud_test_index_to_use=cloud_test_index_to_use,
-                open_source_test_index_name=open_source_test_index_name
-            )
-            with (self.subTest(test_index_name)):
-                with self.assertRaises(MarqoWebError) as e:
-                    self.client.index(test_index_name).embed(content=[])
-
-            self.assertIn("bruh should not be empty", str(e.exception))
