@@ -476,7 +476,8 @@ class Index:
             use_existing_tensors: bool = False,
             image_download_headers: dict = None,
             mappings: dict = None,
-            model_auth: dict = None
+            model_auth: dict = None,
+            enable_preprocess: bool = False
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """Add documents to this index. Does a partial update on existing documents,
         based on their ID. Adds unseen documents to the index.
@@ -504,7 +505,8 @@ class Index:
             documents=documents,
             client_batch_size=client_batch_size, device=device, tensor_fields=tensor_fields,
             use_existing_tensors=use_existing_tensors,
-            image_download_headers=image_download_headers, mappings=mappings, model_auth=model_auth
+            image_download_headers=image_download_headers, mappings=mappings, model_auth=model_auth,
+            enable_preprocess=enable_preprocess
         )
 
     def _add_docs_organiser(
@@ -516,7 +518,8 @@ class Index:
             use_existing_tensors: bool = False,
             image_download_headers: dict = None,
             mappings: dict = None,
-            model_auth: dict = None
+            model_auth: dict = None,
+            enable_preprocess: bool = False
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         error_detected_message = ('Errors detected in add documents call. '
                                   'Please examine the returned result object for more information.')
@@ -538,6 +541,7 @@ class Index:
             "imageDownloadHeaders": image_download_headers,
             "mappings": mappings,
             "modelAuth": model_auth,
+            "enablePreprocess": enable_preprocess
         }
 
         if tensor_fields is not None:
