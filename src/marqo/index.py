@@ -376,7 +376,7 @@ class Index:
 
     def embed(self, content: Union[Union[str, Dict[str, float]], List[Union[str, Dict[str, float]]]],
               device: Optional[str] = None, image_download_headers: Optional[Dict] = None,
-              model_auth: Optional[dict] = None):
+              model_auth: Optional[dict] = None, content_type: Optional[str] = None):
         """Retrieve embeddings for content or list of content.
         Args:
             content: string, dictionary of weighted strings, or list of either. Strings
@@ -404,6 +404,7 @@ class Index:
         )
         body = {
             "content": content,
+            "content_type": content_type,
         }
 
         if image_download_headers is not None:
