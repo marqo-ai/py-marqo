@@ -405,13 +405,14 @@ class Index:
         )
         body = {
             "content": content,
-            "content_type": content_type,
         }
 
         if image_download_headers is not None:
             body["image_download_headers"] = image_download_headers
         if model_auth is not None:
             body["modelAuth"] = model_auth
+        if content_type is not None:
+            body["content_type"] = content_type
 
         res = self.http.post(
             path=path_with_query_str,
