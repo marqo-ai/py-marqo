@@ -1,6 +1,7 @@
 import uuid
 
 from pytest import mark
+import numpy as np
 
 from marqo.errors import MarqoWebError
 from tests.marqo_test import MarqoTestCase
@@ -10,11 +11,15 @@ from tests.marqo_test import MarqoTestCase
 @mark.ignore_during_cloud_tests
 class TestCreateIndex(MarqoTestCase):
     index_name = "test_create_index" + str(uuid.uuid4()).replace('-', '')
+    override_index_name = "override_prefix" + str(uuid.uuid4()).replace('-', '')
+    default_index_name = "default_prefix" + str(uuid.uuid4()).replace('-', '')
 
     def tearDown(self):
         super().tearDown()
         try:
             self.client.delete_index(index_name=self.index_name)
+            self.client.delete_index(index_name=self.override_index_name)
+            self.client.delete_index(index_name=self.default_index_name)
         except MarqoWebError:
             pass
 
@@ -44,6 +49,52 @@ class TestCreateIndex(MarqoTestCase):
             }
         }
         self.assertEqual(expected_settings, index_settings)
+
+    def test_create_simple_index_creation_with_prefix(self):
+        # Create the indexes
+        self.client.create_index(
+            index_name=self.override_index_name, 
+            model="test_prefix", 
+            text_query_prefix="test: ", 
+            text_chunk_prefix="test: ", 
+        )
+        self.client.create_index(
+            index_name=self.default_index_name, 
+            model="test_prefix", 
+        )
+        
+        d1 = {
+            "_id": "doc1", 
+            "text_field_1": "hello document"
+        }
+        # Add documents to both
+        self.client.index("override_prefix").add_documents([d1], tensor_fields=["text_field_1"])
+        self.client.index("default_prefix").add_documents([d1], tensor_fields=["text_field_1"])
+
+        # Get override doc with tensor facets (for reference vector)
+        retrieved_override_doc = self.client.index("override_prefix").get_document(
+            document_id="doc1", expose_facets=True)
+        
+        # Get default doc with tensor facets (for reference vector)
+        retrieved_default_doc = self.client.index("default_prefix").get_document(
+            document_id="doc1", expose_facets=True)
+        
+        # Embed override
+        embed_res_override = self.client.index("override_prefix").embed("test: hello document", content_type=None)
+
+        # Embed default
+        embed_res_default = self.client.index("default_prefix").embed("test passage: hello document", content_type=None)
+
+        # Assert that the embeddings from override add docs and the embeddings from the embed call are the same
+        self.assertTrue(np.allclose(embed_res_override["embeddings"][0], retrieved_override_doc["_tensor_facets"][0]["_embedding"]))
+
+        # Assert that the embeddings from override add docs and the embeddings from the embed call are the same
+        self.assertTrue(np.allclose(embed_res_default["embeddings"][0], retrieved_default_doc["_tensor_facets"][0]["_embedding"]))
+
+
+
+
+
 
     def test_create_unstructured_image_index(self):
         self.client.create_index(index_name=self.index_name, type="unstructured",

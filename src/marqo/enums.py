@@ -25,3 +25,8 @@ class InterpolationMethod(str, Enum):
     LERP = "lerp"
     NLERP = "nlerp"
     SLERP = "slerp"
+
+
+class EmbedContentType(str, Enum):
+    Query = "query"
+    Document = "document"

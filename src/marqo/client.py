@@ -85,6 +85,8 @@ class Client:
         number_of_shards: Optional[int] = None,
         number_of_replicas: Optional[int] = None,
         number_of_inferences: Optional[int] = None,
+        text_query_prefix: Optional[str] = None,
+        text_chunk_prefix: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Create the index. Please refer to the marqo cloud to see options for inference and storage node types.
         Calls Index.create() with the same parameters.
@@ -144,6 +146,8 @@ class Client:
             number_of_shards=number_of_shards,
             number_of_replicas=number_of_replicas,
             number_of_inferences=number_of_inferences,
+            text_query_prefix=text_query_prefix,
+            text_chunk_prefix=text_chunk_prefix,
         )
 
     def delete_index(self, index_name: str, wait_for_readiness=True) -> Dict[str, Any]:

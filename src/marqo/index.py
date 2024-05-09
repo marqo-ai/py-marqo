@@ -10,7 +10,7 @@ from marqo import errors, utils
 from marqo._httprequests import HttpRequests
 from marqo.cloud_helpers import cloud_wait_for_index_status
 from marqo.config import Config
-from marqo.enums import IndexStatus, InterpolationMethod
+from marqo.enums import IndexStatus, InterpolationMethod, EmbedContentType
 from marqo.enums import SearchMethods
 from marqo.errors import MarqoWebError, UnsupportedOperationError, MarqoCloudIndexNotFoundError
 from marqo.marqo_logging import mq_logger
@@ -96,6 +96,8 @@ class Index:
                number_of_replicas: Optional[int] = None,
                number_of_inferences: Optional[int] = None,
                wait_for_readiness: bool = True,
+               text_chunk_prefix: Optional[str] = None,
+               text_query_prefix: Optional[str] = None,
                ) -> Dict[str, Any]:
         """Create the index. Please refer to the marqo cloud to see options for inference and storage node types.
         Creates CreateIndexSettings object and then uses it to create the index.
@@ -154,7 +156,9 @@ class Index:
                 textPreprocessing=text_preprocessing,
                 imagePreprocessing=image_preprocessing,
                 vectorNumericType=vector_numeric_type,
-                annParameters=ann_parameters
+                annParameters=ann_parameters,
+                textChunkPrefix=text_chunk_prefix,
+                textQueryPrefix=text_query_prefix,
             )
 
             return req.post(f"indexes/{index_name}", body=local_create_index_settings.generate_request_body())
@@ -180,6 +184,8 @@ class Index:
                 numberOfShards=number_of_shards,
                 numberOfReplicas=number_of_replicas,
                 storageClass=storage_class,
+                textChunkPrefix=text_chunk_prefix,
+                textQueryPrefix=text_query_prefix,
             )
 
             response = req.post(f"indexes/{index_name}", body=cloud_index_settings.generate_request_body())
@@ -202,7 +208,8 @@ class Index:
                boost: Optional[Dict[str, List[Union[float, int]]]] = None,
                context: Optional[dict] = None, score_modifiers: Optional[dict] = None,
                model_auth: Optional[dict] = None,
-               ef_search: Optional[int] = None, approximate: Optional[bool] = None
+               ef_search: Optional[int] = None, approximate: Optional[bool] = None,
+               text_query_prefix: Optional[str] = None,
                ) -> Dict[str, Any]:
         """Search the index.
 
@@ -265,6 +272,7 @@ class Index:
             "showHighlights": show_highlights,
             "reRanker": reranker,
             "boost": boost,
+            "textQueryPrefix": text_query_prefix,
         }
 
         body = {k: v for k, v in body.items() if v is not None}
@@ -376,7 +384,7 @@ class Index:
 
     def embed(self, content: Union[Union[str, Dict[str, float]], List[Union[str, Dict[str, float]]]],
               device: Optional[str] = None, image_download_headers: Optional[Dict] = None,
-              model_auth: Optional[dict] = None):
+              model_auth: Optional[dict] = None, content_type: Optional[EmbedContentType] = EmbedContentType.Query):
         """Retrieve embeddings for content or list of content.
         Args:
             content: string, dictionary of weighted strings, or list of either. Strings
@@ -392,6 +400,7 @@ class Index:
             image_download_headers: a dictionary of headers to be passed while downloading images,
                 for URLs found in documents
             model_auth: authorisation that lets Marqo download a private model, if required
+            content_type: the type of prefix the user wants. "query", "document", or None.
         Returns:
             Dictionary of content, embeddings, and processingTimeMs.
         """
@@ -404,12 +413,14 @@ class Index:
         )
         body = {
             "content": content,
+            "content_type": content_type,
         }
 
         if image_download_headers is not None:
             body["image_download_headers"] = image_download_headers
         if model_auth is not None:
             body["modelAuth"] = model_auth
+        
 
         res = self.http.post(
             path=path_with_query_str,
@@ -476,7 +487,8 @@ class Index:
             use_existing_tensors: bool = False,
             image_download_headers: dict = None,
             mappings: dict = None,
-            model_auth: dict = None
+            model_auth: dict = None,
+            text_chunk_prefix: str = None,
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """Add documents to this index. Does a partial update on existing documents,
         based on their ID. Adds unseen documents to the index.
@@ -494,6 +506,7 @@ class Index:
                 for URLs found in documents
             mappings: a dictionary to help handle the object fields. e.g., multimodal_combination field
             model_auth: used to authorise a private model
+            text_chunk_prefix: the request level prefix for adding docs
         Returns:
             Response body outlining indexing result
         """
@@ -504,7 +517,8 @@ class Index:
             documents=documents,
             client_batch_size=client_batch_size, device=device, tensor_fields=tensor_fields,
             use_existing_tensors=use_existing_tensors,
-            image_download_headers=image_download_headers, mappings=mappings, model_auth=model_auth
+            image_download_headers=image_download_headers, mappings=mappings, model_auth=model_auth,
+            text_chunk_prefix=text_chunk_prefix
         )
 
     def _add_docs_organiser(
@@ -516,7 +530,8 @@ class Index:
             use_existing_tensors: bool = False,
             image_download_headers: dict = None,
             mappings: dict = None,
-            model_auth: dict = None
+            model_auth: dict = None,
+            text_chunk_prefix: str = None,
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         error_detected_message = ('Errors detected in add documents call. '
                                   'Please examine the returned result object for more information.')
@@ -542,6 +557,9 @@ class Index:
 
         if tensor_fields is not None:
             base_body['tensorFields'] = tensor_fields
+
+        if text_chunk_prefix is not None:
+            base_body['textChunkPrefix'] = text_chunk_prefix
 
         end_time_client_process = timer()
         total_client_process_time = end_time_client_process - start_time_client_process
