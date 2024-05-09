@@ -10,7 +10,7 @@ from marqo import errors, utils
 from marqo._httprequests import HttpRequests
 from marqo.cloud_helpers import cloud_wait_for_index_status
 from marqo.config import Config
-from marqo.enums import IndexStatus, InterpolationMethod
+from marqo.enums import IndexStatus, InterpolationMethod, EmbedContentType
 from marqo.enums import SearchMethods
 from marqo.errors import MarqoWebError, UnsupportedOperationError, MarqoCloudIndexNotFoundError
 from marqo.marqo_logging import mq_logger
@@ -376,7 +376,7 @@ class Index:
 
     def embed(self, content: Union[Union[str, Dict[str, float]], List[Union[str, Dict[str, float]]]],
               device: Optional[str] = None, image_download_headers: Optional[Dict] = None,
-              model_auth: Optional[dict] = None, content_type: Optional[str] = None):
+              model_auth: Optional[dict] = None, content_type: Optional[EmbedContentType] = None):
         """Retrieve embeddings for content or list of content.
         Args:
             content: string, dictionary of weighted strings, or list of either. Strings
@@ -392,6 +392,7 @@ class Index:
             image_download_headers: a dictionary of headers to be passed while downloading images,
                 for URLs found in documents
             model_auth: authorisation that lets Marqo download a private model, if required
+            content_type: the type of prefix the user wants. "query", "document", or None.
         Returns:
             Dictionary of content, embeddings, and processingTimeMs.
         """
