@@ -42,6 +42,8 @@ class IndexSettings(MarqoBaseModel):
     imagePreprocessing: Optional[marqo_index.ImagePreProcessing] = None
     vectorNumericType: Optional[marqo_index.VectorNumericType] = None
     annParameters: Optional[marqo_index.AnnParameters] = None
+    textQueryPrefix: Optional[str] = None
+    textChunkPrefix: Optional[str] = None
 
     def generate_request_body(self) -> dict:
         """A json encoded string of the request body"""

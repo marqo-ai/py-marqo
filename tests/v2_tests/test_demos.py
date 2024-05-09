@@ -169,7 +169,7 @@ class TestDemo(MarqoTestCase):
                 q=query, searchable_attributes=["text_field_1", "text_field_2"]
             )
 
-            self.assertEqual("Smartphone", r2["hits"][0]["text_field_1"])
+            self.assertEqual("Telephone", r2["hits"][0]["text_field_1"])
 
             print("Query 1:")
             pprint.pprint(r2)
