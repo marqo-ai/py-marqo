@@ -68,22 +68,22 @@ class TestCreateIndex(MarqoTestCase):
             "text_field_1": "hello document"
         }
         # Add documents to both
-        self.client.index("override_prefix").add_documents([d1], tensor_fields=["text_field_1"])
-        self.client.index("default_prefix").add_documents([d1], tensor_fields=["text_field_1"])
+        self.client.index(self.override_index_name).add_documents([d1], tensor_fields=["text_field_1"])
+        self.client.index(self.default_index_name).add_documents([d1], tensor_fields=["text_field_1"])
 
         # Get override doc with tensor facets (for reference vector)
-        retrieved_override_doc = self.client.index("override_prefix").get_document(
+        retrieved_override_doc = self.client.index(self.override_index_name).get_document(
             document_id="doc1", expose_facets=True)
         
         # Get default doc with tensor facets (for reference vector)
-        retrieved_default_doc = self.client.index("default_prefix").get_document(
+        retrieved_default_doc = self.client.index(self.default_index_name).get_document(
             document_id="doc1", expose_facets=True)
         
         # Embed override
-        embed_res_override = self.client.index("override_prefix").embed("test: hello document", content_type=None)
+        embed_res_override = self.client.index(self.override_index_name).embed("test: hello document", content_type=None)
 
         # Embed default
-        embed_res_default = self.client.index("default_prefix").embed("test passage: hello document", content_type=None)
+        embed_res_default = self.client.index(self.default_index_name).embed("test passage: hello document", content_type=None)
 
         # Assert that the embeddings from override add docs and the embeddings from the embed call are the same
         self.assertTrue(np.allclose(embed_res_override["embeddings"][0], retrieved_override_doc["_tensor_facets"][0]["_embedding"]))
