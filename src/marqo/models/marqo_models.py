@@ -1,46 +1,22 @@
-
-from pydantic import ConfigDict, BaseModel
+from pydantic import BaseModel
 
 
 class MarqoBaseModel(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, validate_assignment=True)
+    class Config:
+        allow_population_by_field_name = True  # accept both real name and alias (if present)
+        validate_assignment = True
 
 
 class StrictBaseModel(MarqoBaseModel):
-    # TODO[pydantic]: The `Config` class inherits from another class, please create the `model_config` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
-    """class Config(MarqoBaseModel.Config):
+    class Config(MarqoBaseModel.Config):
         extra = "forbid"
-        use_enum_values = True"""
-
-    model_config = ConfigDict(
-        **MarqoBaseModel.model_config,
-        extra="forbid",
-        use_enum_values=True
-    )
 
 
 class ImmutableBaseModel(MarqoBaseModel):
-    # TODO[pydantic]: The `Config` class inherits from another class, please create the `model_config` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
-    """class Config(MarqoBaseModel.Config):
-        frozen = True"""
-    model_config = ConfigDict(
-        **MarqoBaseModel.model_config,
-        frozen=True
-    )
+    class Config(MarqoBaseModel.Config):
+        frozen = True
 
 
 class ImmutableStrictBaseModel(StrictBaseModel, ImmutableBaseModel):
-    # TODO[pydantic]: The `Config` class inherits from another class, please create the `model_config` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
-    """class Config(StrictBaseModel.Config, ImmutableBaseModel.Config):
-        pass"""
-    
-    model_config = ConfigDict(
-        populate_by_name=True,
-        validate_assignment=True,
-        extra="forbid",
-        use_enum_values=True,
-        frozen=True
-    )
+    class Config(StrictBaseModel.Config, ImmutableBaseModel.Config):
+        pass
