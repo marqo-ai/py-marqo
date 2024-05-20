@@ -209,7 +209,7 @@ class Index:
                context: Optional[dict] = None, score_modifiers: Optional[dict] = None,
                model_auth: Optional[dict] = None,
                ef_search: Optional[int] = None, approximate: Optional[bool] = None,
-               text_query_prefix: Optional[str] = None,
+               text_query_prefix: Optional[str] = None, hybrid_parameters: Optional[dict] = None
                ) -> Dict[str, Any]:
         """Search the index.
 
@@ -273,6 +273,7 @@ class Index:
             "reRanker": reranker,
             "boost": boost,
             "textQueryPrefix": text_query_prefix,
+            "hybridParameters": hybrid_parameters
         }
 
         body = {k: v for k, v in body.items() if v is not None}
