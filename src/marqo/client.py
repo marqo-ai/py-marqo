@@ -167,7 +167,10 @@ class Client:
                 cloud_wait_for_index_status(self.http, index_name, enums.IndexStatus.DELETED)
             return res
         except errors.MarqoWebError as e:
-            return e.message
+            if "index_not_found" in str(e):
+                return e.message
+            else:
+                raise e
 
     def get_index(self, index_name: str) -> Index:
         """Get the index.
