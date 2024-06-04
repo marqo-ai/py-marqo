@@ -144,7 +144,6 @@ index_name_to_settings_mappings = {
     # },
     CloudTestIndex.structured_text: {
         "type": "structured",
-        "treatUrlsAndPointersAsImages": False,
         "model": "hf/all_datasets_v4_MiniLM-L6",
         "allFields": [
             {"name": "text_field_1", "type": "text", "features": ["lexical_search", "filter"]},
