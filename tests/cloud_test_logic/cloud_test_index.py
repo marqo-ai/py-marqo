@@ -61,7 +61,7 @@ index_name_to_settings_mappings = {
     CloudTestIndex.structured_image: {
         "type": "structured",
         "model": "open_clip/ViT-B-32/laion2b_s34b_b79k",
-        "infereceType": "marqo.CPU.small",
+        "inferenceType": "marqo.CPU.small",
         "storageClass": "marqo.basic",
         "allFields": [
             {"name": "text_field_1", "type": "text", "features": ["lexical_search", "filter"]},
