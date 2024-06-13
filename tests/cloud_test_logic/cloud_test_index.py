@@ -144,18 +144,14 @@ index_name_to_settings_mappings = {
     # },
     CloudTestIndex.structured_text: {
         "type": "structured",
-        "model": "hf/all_datasets_v4_MiniLM-L6",
+        "model": "hf/e5-base-v2",
         "allFields": [
             {"name": "text_field_1", "type": "text", "features": ["lexical_search", "filter"]},
-            {"name": "text_field_2", "type": "text", "features": ["filter"]},
+            {"name": "text_field_2", "type": "text", "features": ["lexical_search", "filter"]},
             {"name": "text_field_3", "type": "text", "features": ["lexical_search"]},
-            {"name": "array_field_1", "type": "array<text>", "features": ["filter"]},
-            {"name": "float_field_1", "type": "float", "features": ["filter", "score_modifier"]},
-            {"name": "int_field_1", "type": "int", "features": ["filter", "score_modifier"]},
-            {"name": "bool_field_1", "type": "bool", "features": ["filter"]},
-        ],
+            {"name": "int_field_1", "type": "int", "features": ["score_modifier"]},
+            {"name": "int_filter_field_1", "type": "int", "features": ["filter", "score_modifier"]}],
         "tensorFields": ["text_field_1", "text_field_2", "text_field_3"],
-
         "storageClass": "marqo.balanced",
         "numberOfShards": 2,
     },
