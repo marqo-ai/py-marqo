@@ -15,13 +15,6 @@ import numpy as np
 @mark.fixed
 class TestEmbed(MarqoTestCase):
 
-    def setUp(self):
-        super().setUp()
-        # Ensure tests are using text indexes for both cloud and open source.
-        self.test_cases = [
-            (CloudTestIndex.unstructured_text, self.unstructured_index_name)
-        ]
-
     def test_embed_single_string(self):
         """Embeds a string. Use add docs and get docs with tensor facets to ensure the vector is correct.
                 Checks the basic functionality and response structure. Also checks that the request level prefix override works."""
