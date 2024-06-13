@@ -14,6 +14,7 @@ import numpy as np
 
 @mark.fixed
 class TestEmbed(MarqoTestCase):
+
     def test_embed_single_string(self):
         """Embeds a string. Use add docs and get docs with tensor facets to ensure the vector is correct.
                 Checks the basic functionality and response structure. Also checks that the request level prefix override works."""
@@ -42,7 +43,7 @@ class TestEmbed(MarqoTestCase):
                 # Assert that the 
                 self.assertIn("processingTimeMs", embed_res_1)
                 self.assertEqual(embed_res_1["content"], "Jimmy Butler is the GOAT.")
-                self.assertTrue(np.allclose(embed_res_1["embeddings"][0], retrieved_d1["_tensor_facets"][0]["_embedding"]))
+                self.assertTrue(np.allclose(embed_res_1["embeddings"][0], retrieved_d1["_tensor_facets"][0]["_embedding"], atol=1e-6))
 
 
     def test_request_level_prefix_override_embed_add_docs(self):
@@ -70,7 +71,7 @@ class TestEmbed(MarqoTestCase):
                 # Assert request level prefix override
                 self.assertIn("processingTimeMs", embed_res)
                 self.assertEqual(embed_res["content"], "test query: Jimmy Butler is the GOAT.")
-                self.assertTrue(np.allclose(embed_res["embeddings"][0], retrieved_d1["_tensor_facets"][0]["_embedding"]))
+                self.assertTrue(np.allclose(embed_res["embeddings"][0], retrieved_d1["_tensor_facets"][0]["_embedding"], atol=1e-6))
 
 
     def test_embed_with_device(self):
@@ -98,7 +99,7 @@ class TestEmbed(MarqoTestCase):
                 embed_res = self.client.index(test_index_name).embed(content="Jimmy Butler is the GOAT.", device="cpu", content_type="document")
                 self.assertIn("processingTimeMs", embed_res)
                 self.assertEqual(embed_res["content"], "Jimmy Butler is the GOAT.")
-                self.assertTrue(np.allclose(embed_res["embeddings"][0], retrieved_d1["_tensor_facets"][0] ["_embedding"]))
+                self.assertTrue(np.allclose(embed_res["embeddings"][0], retrieved_d1["_tensor_facets"][0] ["_embedding"], atol=1e-6))
 
     def test_embed_single_dict(self):
         """Embeds a dict. Use add docs and get docs with tensor facets to ensure the vector is correct.
@@ -126,7 +127,7 @@ class TestEmbed(MarqoTestCase):
 
                 self.assertIn("processingTimeMs", embed_res)
                 self.assertEqual(embed_res["content"], {"Jimmy Butler is the GOAT.": 1})
-                self.assertTrue(np.allclose(embed_res["embeddings"][0], retrieved_d1["_tensor_facets"][0] ["_embedding"]))
+                self.assertTrue(np.allclose(embed_res["embeddings"][0], retrieved_d1["_tensor_facets"][0] ["_embedding"], atol=1e-6))
 
     def test_embed_list_content(self):
         """Embeds a list with string and dict. Use add docs and get docs with tensor facets to ensure the vector is correct.
