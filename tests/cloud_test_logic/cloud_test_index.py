@@ -42,14 +42,14 @@ class CloudTestIndex(str, Enum):
 
 index_name_to_settings_mappings = {
     # TODO Due to the resources limit of the staging cluster, we only use 2 indexes for testing purpose now
-    # CloudTestIndex.unstructured_text: {
-    #     "type": "unstructured",
-    #     "treatUrlsAndPointersAsImages": False,
-    #     "model": "hf/e5-base-v2",
-    #
-    #     "inferenceType": "marqo.CPU.small",
-    #     "storageClass": "marqo.basic",
-    # },
+    CloudTestIndex.unstructured_text: {
+        "type": "unstructured",
+        "treatUrlsAndPointersAsImages": False,
+        "model": "hf/e5-base-v2",
+
+        "inferenceType": "marqo.CPU.small",
+        "storageClass": "marqo.basic",
+    },
     CloudTestIndex.unstructured_image: {
         "type": "unstructured",
         "treatUrlsAndPointersAsImages": True,

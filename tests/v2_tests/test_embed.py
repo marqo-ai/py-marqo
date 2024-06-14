@@ -1,19 +1,16 @@
-import copy
-import marqo
-from marqo import enums
-from unittest import mock
-import requests
-import random
-import math
-import time
-from tests.marqo_test import MarqoTestCase, CloudTestIndex
-from marqo.errors import MarqoWebError
-from pytest import mark
 import numpy as np
+from pytest import mark
+
+from marqo.errors import MarqoWebError
+from tests.marqo_test import MarqoTestCase, CloudTestIndex
 
 
 @mark.fixed
 class TestEmbed(MarqoTestCase):
+
+    def setUp(self):
+        self.test_cases = [(CloudTestIndex.structured_text, self.unstructured_index_name)]
+
     def test_embed_single_string(self):
         """Embeds a string. Use add docs and get docs with tensor facets to ensure the vector is correct.
                 Checks the basic functionality and response structure. Also checks that the request level prefix override works."""
@@ -29,7 +26,7 @@ class TestEmbed(MarqoTestCase):
                     "_id": "doc1",
                     "text_field_1": "Jimmy Butler is the GOAT."
                 }
-               
+
                 res_1 = self.client.index(test_index_name).add_documents([d1], tensor_fields=tensor_fields)
 
                 # Get doc with tensor facets (for reference vector)
@@ -37,14 +34,14 @@ class TestEmbed(MarqoTestCase):
                     document_id="doc1", expose_facets=True)
 
                 # Call embed
-                embed_res_1 = self.client.index(test_index_name).embed("Jimmy Butler is the GOAT.", content_type="document")
+                embed_res_1 = self.client.index(test_index_name).embed("Jimmy Butler is the GOAT.",
+                                                                       content_type="document")
 
                 # Assert that the 
                 self.assertIn("processingTimeMs", embed_res_1)
                 self.assertEqual(embed_res_1["content"], "Jimmy Butler is the GOAT.")
                 self.assertTrue(np.allclose(embed_res_1["embeddings"][0], retrieved_d1["_tensor_facets"][0]["_embedding"],
                                             atol=1e-4))
-
 
     def test_request_level_prefix_override_embed_add_docs(self):
         """Checks that the request level prefix override works."""
@@ -60,13 +57,15 @@ class TestEmbed(MarqoTestCase):
                     "_id": "doc1",
                     "text_field_1": "Jimmy Butler is the GOAT."
                 }
-                res = self.client.index(test_index_name).add_documents([d1], tensor_fields=tensor_fields, text_chunk_prefix="test query: ")
+                res = self.client.index(test_index_name).add_documents([d1], tensor_fields=tensor_fields,
+                                                                       text_chunk_prefix="test query: ")
 
                 # Get doc with tensor facets (for reference vector)
                 retrieved_d1 = self.client.index(test_index_name).get_document(
                     document_id="doc1", expose_facets=True)
 
-                embed_res = self.client.index(test_index_name).embed("test query: Jimmy Butler is the GOAT.", content_type=None)
+                embed_res = self.client.index(test_index_name).embed("test query: Jimmy Butler is the GOAT.",
+                                                                     content_type=None)
 
                 # Assert request level prefix override
                 self.assertIn("processingTimeMs", embed_res)
@@ -97,7 +96,8 @@ class TestEmbed(MarqoTestCase):
                     document_id="doc1", expose_facets=True)
 
                 # Call embed
-                embed_res = self.client.index(test_index_name).embed(content="Jimmy Butler is the GOAT.", device="cpu", content_type="document")
+                embed_res = self.client.index(test_index_name).embed(content="Jimmy Butler is the GOAT.", device="cpu",
+                                                                     content_type="document")
                 self.assertIn("processingTimeMs", embed_res)
                 self.assertEqual(embed_res["content"], "Jimmy Butler is the GOAT.")
                 self.assertTrue(np.allclose(embed_res["embeddings"][0], retrieved_d1["_tensor_facets"][0] ["_embedding"],
@@ -125,12 +125,14 @@ class TestEmbed(MarqoTestCase):
                     document_id="doc1", expose_facets=True)
 
                 # Call embed
-                embed_res = self.client.index(test_index_name).embed(content={"Jimmy Butler is the GOAT.": 1}, content_type="document")
+                embed_res = self.client.index(test_index_name).embed(content={"Jimmy Butler is the GOAT.": 1},
+                                                                     content_type="document")
 
                 self.assertIn("processingTimeMs", embed_res)
                 self.assertEqual(embed_res["content"], {"Jimmy Butler is the GOAT.": 1})
                 self.assertTrue(np.allclose(embed_res["embeddings"][0], retrieved_d1["_tensor_facets"][0]["_embedding"],
                                             atol=1e-4))
+
 
     def test_embed_list_content(self):
         """Embeds a list with string and dict. Use add docs and get docs with tensor facets to ensure the vector is correct.
