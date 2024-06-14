@@ -2,7 +2,7 @@ from pytest import mark
 
 from marqo.enums import InterpolationMethod
 from tests.marqo_test import MarqoTestCase
-
+from tests.cloud_test_logic.cloud_test_index import CloudTestIndex
 
 @mark.fixed
 class TestRecommend(MarqoTestCase):
@@ -52,8 +52,9 @@ class TestRecommend(MarqoTestCase):
         """
         Test recommend with all fields provided
         """
+
+        self.test_cases = [(CloudTestIndex.structured_text, self.structured_index_name), ]
         for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
-            open_source_test_index_name = self.structured_index_name
             test_index_name = self.get_test_index_name(
                 cloud_test_index_to_use=cloud_test_index_to_use,
                 open_source_test_index_name=open_source_test_index_name
