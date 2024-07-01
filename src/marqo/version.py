@@ -1,5 +1,3 @@
-__tests_target_marqo_version__ = "2.9.0"
-
 __minimum_supported_marqo_version__ = "2.9.0"
 
 
