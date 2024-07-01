@@ -3,6 +3,7 @@ import uuid
 from pytest import mark
 import numpy as np
 
+from marqo.models.marqo_index import FieldType
 from marqo.errors import MarqoWebError
 from tests.marqo_test import MarqoTestCase
 
@@ -244,6 +245,27 @@ class TestCreateIndex(MarqoTestCase):
                           "dimensions": 384,
                           "tokens": 512,
                           "type": "sbert"}, index_settings['modelProperties'])
+        
+    def test_create_structured_index_with_map_fields(self):
+        self.client.create_index(
+            index_name=self.index_name,
+            type="structured",
+            model="hf/all_datasets_v4_MiniLM-L6",
+            all_fields=[{"name": "test", "type": "text", "features": ["lexical_search"]},
+                        {"name": "map_score_mod_float_1", "type": FieldType.MapFloat, "features": ["score_modifier"]},
+                        {"name": "map_score_mod_double_1", "type": FieldType.MapDouble, "features": ["score_modifier"]},
+                        {"name": "map_score_mod_int_1", "type": FieldType.MapInt, "features": ["score_modifier"]},
+                        {"name": "map_score_mod_long_1", "type": FieldType.MapLong, "features": ["score_modifier"]},],
+            tensor_fields=["test"]
+        )
+        documents = [{"test": "test"}]
+        self.client.index(self.index_name).add_documents(documents)
+
+        lexical_search_res = self.client.index(self.index_name).search(q="test", search_method="LEXICAL")
+        tensor_search_res = self.client.index(self.index_name).search(q="test", search_method="TENSOR")
+
+        self.assertEqual(1, len(lexical_search_res['hits']))
+        self.assertEqual(1, len(tensor_search_res['hits']))
 
     def test_create_structured_image_index_with_preprocessing(self):
         self.client.create_index(index_name=self.index_name,

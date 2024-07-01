@@ -2,7 +2,7 @@
 # This workflow pulls a Marqo image and runs it. Py-marqo then connects to the 
 # running container for the tests. 
 # Unless otherwise specified, the Marqo version that is used for this test will be 
-# that specified by py-marqo's `marqo.version.__marqo_version__`
+# that specified by py-marqo's `marqo.version.__minimum_supported_marqo_version__`
 
 name: Open source unit tests
 
@@ -80,7 +80,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           export PYTHONPATH=$(pwd):$(pwd)/src:$PYTHONPATH
-          SUPPORTED_MQ_VERSION=$(python -c 'from marqo import version; print(version.__marqo_version__)') || exit 1
+          SUPPORTED_MQ_VERSION=$(python -c 'from marqo import version; print(version.__minimum_supported_marqo_version__)') || exit 1
           
           # error out if version is empty:
           if [ -z "$SUPPORTED_MQ_VERSION" ]; then exit 1; fi
