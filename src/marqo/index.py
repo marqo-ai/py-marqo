@@ -98,6 +98,7 @@ class Index:
                wait_for_readiness: bool = True,
                text_chunk_prefix: Optional[str] = None,
                text_query_prefix: Optional[str] = None,
+               rank_profile: Optional[str] = None,
                ) -> Dict[str, Any]:
         """Create the index. Please refer to the marqo cloud to see options for inference and storage node types.
         Creates CreateIndexSettings object and then uses it to create the index.
@@ -159,6 +160,7 @@ class Index:
                 annParameters=ann_parameters,
                 textChunkPrefix=text_chunk_prefix,
                 textQueryPrefix=text_query_prefix,
+                rankProfile=rank_profile,
             )
 
             return req.post(f"indexes/{index_name}", body=local_create_index_settings.generate_request_body())

@@ -44,6 +44,7 @@ class IndexSettings(MarqoBaseModel):
     annParameters: Optional[marqo_index.AnnParameters] = None
     textQueryPrefix: Optional[str] = None
     textChunkPrefix: Optional[str] = None
+    rankProfile: Optional[str] = None
 
     def generate_request_body(self) -> dict:
         """A json encoded string of the request body"""
