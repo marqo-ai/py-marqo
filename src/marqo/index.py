@@ -212,6 +212,7 @@ class Index:
                model_auth: Optional[dict] = None,
                ef_search: Optional[int] = None, approximate: Optional[bool] = None,
                text_query_prefix: Optional[str] = None,
+               rerank = False
                ) -> Dict[str, Any]:
         """Search the index.
 
@@ -275,6 +276,7 @@ class Index:
             "reRanker": reranker,
             "boost": boost,
             "textQueryPrefix": text_query_prefix,
+            "rerank": rerank
         }
 
         body = {k: v for k, v in body.items() if v is not None}
