@@ -15,6 +15,7 @@ from marqo.enums import SearchMethods
 from marqo.errors import MarqoWebError, UnsupportedOperationError, MarqoCloudIndexNotFoundError
 from marqo.marqo_logging import mq_logger
 from marqo.models import marqo_index
+from marqo.models.search_models import HybridParameters
 from marqo.models.create_index_settings import IndexSettings
 from marqo.models.marqo_cloud import CloudIndexSettings
 from marqo.version import minimum_supported_marqo_version
@@ -209,7 +210,7 @@ class Index:
                context: Optional[dict] = None, score_modifiers: Optional[dict] = None,
                model_auth: Optional[dict] = None,
                ef_search: Optional[int] = None, approximate: Optional[bool] = None,
-               text_query_prefix: Optional[str] = None, hybrid_parameters: Optional[dict] = None
+               text_query_prefix: Optional[str] = None, hybrid_parameters: Optional[HybridParameters] = None
                ) -> Dict[str, Any]:
         """Search the index.
 
