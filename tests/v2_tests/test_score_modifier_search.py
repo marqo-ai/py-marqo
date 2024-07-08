@@ -21,9 +21,9 @@ class TestScoreModifierSearch(MarqoTestCase):
                      "my_image_field": "https://marqo-assets.s3.amazonaws.com/tests/images/image2.jpg",
                      # 4 fields
                      "multiply_1": 1,
-                     "multiply_2": 20.0,
+                     "multiply_2": {"a": 20.0},
                      "add_1": 1.0,
-                     "add_2": 30.0,
+                     "add_2": {"a": 30.0},
                      "_id": "1"
                      },
                     {"my_text_field": "A rider is riding a horse jumping over the barrier.",
@@ -49,11 +49,11 @@ class TestScoreModifierSearch(MarqoTestCase):
                 "multiply_score_by":
                     [{"field_name": "multiply_1",
                       "weight": 1,},
-                     {"field_name": "multiply_2",}],
+                     {"field_name": "multiply_2.a",}],
                 "add_to_score": [
                     {"field_name": "add_1", "weight" : -3,
                      },
-                    {"field_name": "add_2", "weight": 1,
+                    {"field_name": "add_2.a", "weight": 1,
                      }]
             }
 
@@ -77,11 +77,11 @@ class TestScoreModifierSearch(MarqoTestCase):
                 "multiply_score_bys":
                     [{"field_name": "multiply_1",
                       "weight": 1,},
-                     {"field_name": "multiply_2",}],
+                     {"field_name": "multiply_2.a",}],
                 "add_to_score": [
                     {"field_name": "add_1", "weight" : 4,
                      },
-                    {"field_name": "add_2", "weight": 1,
+                    {"field_name": "add_2.a", "weight": 1,
                      }]
             }
 
@@ -97,7 +97,7 @@ class TestScoreModifierSearch(MarqoTestCase):
                 "add_to_score": [
                     {"field_name": "add_1", "weight" : -3,
                      },
-                    {"field_name": "add_2", "weight": 1,
+                    {"field_name": "add_2.a", "weight": 1,
                      }]
             }
         self.search_with_score_modifier(score_modifiers=valid_score_modifiers)
