@@ -33,6 +33,7 @@ class CloudTestIndex(str, Enum):
     unstructured_text = "pymarqo_unstr_txt"
     unstructured_image = "pymarqo_unstr_img"
     unstructured_text_custom_prepro = "pymarqo_unstr_txt_cstm_pre"
+    unstructured_no_model = "pymarqo_unstr_no_model"
 
     structured_image_prepro = "pymarqo_str_img_prepro"
     structured_image_custom = "pymarqo_str_img_custom"
@@ -41,7 +42,6 @@ class CloudTestIndex(str, Enum):
 
 
 index_name_to_settings_mappings = {
-    # TODO Due to the resources limit of the staging cluster, we only use 2 indexes for testing purpose now
     CloudTestIndex.unstructured_text: {
         "type": "unstructured",
         "treatUrlsAndPointersAsImages": False,
@@ -79,69 +79,6 @@ index_name_to_settings_mappings = {
             "patchMethod": "simple",
         }
     },
-    # CloudTestIndex.unstructured_text_custom_prepro: {
-    #     "type": "unstructured",
-    #     "treatUrlsAndPointersAsImages": False,
-    #     "model": "test-model",
-    #     "modelProperties": {
-    #         "name": "sentence-transformers/multi-qa-MiniLM-L6-cos-v1",
-    #         "dimensions": 384,
-    #         "tokens": 128,
-    #         "type": "sbert"
-    #     },
-    #     "normalizeEmbeddings": True,
-    #     "textPreprocessing": {
-    #         "splitLength": 2,
-    #         "splitOverlap": 1,
-    #         "splitMethod": "sentence",
-    #     },
-    #
-    #     "storageClass": "marqo.balanced",
-    #     "numberOfReplicas": 1,
-    # },
-    # Structured indexes
-    # CloudTestIndex.structured_image_prepro: {
-    #     "type": "structured",
-    #     "model": "open_clip/ViT-B-16/laion2b_s34b_b88k",
-    #     "allFields": [
-    #         {"name": "text_field_1", "type": "text", "features": ["lexical_search", "filter"]},
-    #         {"name": "text_field_2", "type": "text", "features": ["filter"]},
-    #         {"name": "image_field_1", "type": "image_pointer"},
-    #         {"name": "array_field_1", "type": "array<text>", "features": ["filter"]},
-    #         {"name": "float_field_1", "type": "float", "features": ["filter", "score_modifier"]},
-    #         {"name": "int_field_1", "type": "int", "features": ["filter", "score_modifier"]},
-    #         {"name": "bool_field_1", "type": "bool", "features": ["filter"]},
-    #     ],
-    #     "tensorFields": ["text_field_1", "image_field_1", "text_field_2"],
-    #     "imagePreprocessing": {"patchMethod": "simple"},
-    #
-    #     "inferenceType": "marqo.GPU",
-    #     "storageClass": "marqo.balanced",
-    # },
-    # CloudTestIndex.structured_image_custom: {
-    #     "type": "structured",
-    #     "treatUrlsAndPointersAsImages": True,
-    #     "model": "test-image-model",
-    #     "modelProperties": {
-    #         "name": "ViT-B-32-quickgelu",
-    #         "dimensions": 512,
-    #         "url": "https://github.com/mlfoundations/open_clip/releases/download/v0.2-weights/vit_b_32-quickgelu-laion400m_avg-8a00ab3c.pt",
-    #         "type": "open_clip",
-    #     },
-    #     "allFields": [
-    #         {"name": "text_field_1", "type": "text", "features": ["lexical_search", "filter"]},
-    #         {"name": "text_field_2", "type": "text", "features": ["filter"]},
-    #         {"name": "image_field_1", "type": "image_pointer"},
-    #         {"name": "array_field_1", "type": "array<text>", "features": ["filter"]},
-    #         {"name": "float_field_1", "type": "float", "features": ["filter", "score_modifier"]},
-    #         {"name": "int_field_1", "type": "int", "features": ["filter", "score_modifier"]},
-    #         {"name": "bool_field_1", "type": "bool", "features": ["filter"]},
-    #     ],
-    #     "tensorFields": ["text_field_1", "image_field_1", "text_field_2"],
-    #
-    #     "inferenceType": "marqo.CPU.large",
-    #     "numberOfInferences": 2,
-    # },
     CloudTestIndex.structured_text: {
         "type": "structured",
         "model": "hf/e5-base-v2",
@@ -155,4 +92,15 @@ index_name_to_settings_mappings = {
         "storageClass": "marqo.balanced",
         "numberOfShards": 2,
     },
+    CloudTestIndex.unstructured_no_model: {
+        "type": "unstructured",
+        "treatUrlsAndPointersAsImages": False,
+        "inferenceType": "marqo.CPU.small",
+        "storageClass": "marqo.basic",
+        "model": "no_model",
+        "modelProperties": {
+            "type": "no_model",
+            "dimensions": "512"
+        },
+    }
 }

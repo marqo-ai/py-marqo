@@ -46,9 +46,9 @@ class TestInitLogging(MarqoTestCase):
                 cloud_test_index_to_use=cloud_test_index_to_use,
                 open_source_test_index_name=open_source_test_index_name
             )
-            ix = self.client.index(test_index_name)
-            assert mock_warning.call_count == 0
-
+            with patch("marqo.marqo_cloud_instance_mappings.mq_logger.warning") as mock_warning:
+                ix = self.client.index(test_index_name)
+            mock_warning.assert_not_called()
             # check that index truly exists:
             ix.get_stats()
 

@@ -206,6 +206,7 @@ class MarqoTestCase(TestCase):
         cls.structured_index_name = "structured_index"
         cls.structured_image_index_name = "structured_image_index"
         cls.unstructured_image_index_name = "unstructured_image_index"
+        cls.unstructured_no_model_index_name = "unstructured_no_model_index"
         cls.structured_image_index_name_simple_preprocessing_method = \
             "structured_image_index_simple_preprocessing_method"
         # TODO: include structured when boolean_field bug for structured is fixed
@@ -251,18 +252,17 @@ class MarqoTestCase(TestCase):
                                       ],
                         "tensorFields": ["text_field_1", "text_field_2", "text_field_3", "image_field_1"],
                         "model": "ViT-B/32",
+                    },
+                    {
+                        "indexName": cls.unstructured_no_model_index_name,
+                        "type": "unstructured",
+                        "model": "no_model",
+                        "treatUrlsAndPointersAsImages": True,
+                        "modelProperties": {
+                            "type": "no_model",
+                            "dimensions": 512
+                        }
                     }
-                    # {
-                    #     "indexName": cls.structured_image_index_name_simple_preprocessing_method,
-                    #     "type": "structured",
-                    #     "allFields": [{"name": "text_field_1", "type": "text"},
-                    #                   {"name": "text_field_2", "type": "text"},
-                    #                   {"name": "text_field_3", "type": "text"}],
-                    #     "tensorFields": ["text_field_1", "text_field_2", "text_field_3"],
-                    #     "model": "ViT-B/16",
-                    #     "imagePreprocessingMethod": None,
-                    #     "treatUrlsAndPointersAsImages": True,
-                    # },
                 ])
             except Exception as e:
                 print("Error creating indexes: ", e)

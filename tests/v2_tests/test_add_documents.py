@@ -1,18 +1,16 @@
 import copy
-import functools
 import math
-import pprint
 import random
+import time
+from unittest import mock
+
+import numpy as np
 import pytest
 import requests
-import time
-
 from pytest import mark
 
 from marqo.errors import MarqoError, MarqoWebError
 from tests.marqo_test import MarqoTestCase, CloudTestIndex
-from marqo import enums
-from unittest import mock
 
 
 @mark.fixed
@@ -576,118 +574,95 @@ class TestAddDocuments(MarqoTestCase):
              assert doc_res['_tensor_facets'][0]["my_custom_vector"] == "custom vector text"
              assert doc_res['_tensor_facets'][0]['_embedding'] == [1.0 for _ in range(DEFAULT_DIMENSIONS)]
 
-    # TODO: Fix test when custom_vector is fixed
-    # @mark.ignore_during_cloud_tests
-    # def test_no_model_custom_vector_doc(self):
-    #     """
-    #     Tests the `no_model` index model and searching with no `q` parameter.
-    #     Executed on documents with custom_vector field type.
-    #
-    #     Ensures the following features work on this index:
-    #     1. lexical search
-    #     2. filter string search
-    #     3. tensor search
-    #     4. bulk search
-    #     5. get document
-    #
-    #     Note: `no_model` is not yet supported on Cloud.
-    #     """
-    #     settings = {
-    #         "index_defaults": {
-    #             "model": "no_model",
-    #             "model_properties": {
-    #                 "dimensions": 123
-    #             }
-    #         }
-    #     }
-    #
-    #     for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
-    #         test_index_name = self.get_test_index_name(
-    #             cloud_test_index_to_use=cloud_test_index_to_use,
-    #             open_source_test_index_name=open_source_test_index_name
-    #         )
-    #
-    #         custom_vector_1 = [1.0 for _ in range(123)]
-    #         custom_vector_2 = [i for i in range(123)]
-    #         custom_vector_3 = [1 / (i + 1) for i in range(123)]
-    #
-    #         self.client.index(index_name=test_index_name).add_documents(
-    #             documents=[
-    #                 {
-    #                     "my_custom_vector": {
-    #                         "content": "custom vector text",
-    #                         "vector": custom_vector_1,
-    #                     },
-    #                     "_id": "doc1",
-    #                 },
-    #                 {
-    #                     "my_custom_vector": {
-    #                         "content": "second text",
-    #                         "vector": custom_vector_2,
-    #                     },
-    #                     "_id": "doc2",
-    #                 },
-    #                 {
-    #                     "my_custom_vector": {
-    #                         "content": "third text",
-    #                         "vector": custom_vector_3,
-    #                     },
-    #                     "_id": "doc3",
-    #                 },
-    #             ], mappings={
-    #                 "my_custom_vector": {
-    #                     "type": "custom_vector"
-    #                 }
-    #             },
-    #             tensor_fields=["my_custom_vector"])
-    #
-    #         # lexical search test
-    #         if self.IS_MULTI_INSTANCE:
-    #             self.warm_request(self.client.index(test_index_name).search,
-    #                               "custom vector text", search_method="lexical")
-    #
-    #         lexical_res = self.client.index(test_index_name).search(
-    #             "custom vector text", search_method="lexical")
-    #         assert lexical_res["hits"][0]["_id"] == "doc1"
-    #
-    #         # filter string test
-    #         if self.IS_MULTI_INSTANCE:
-    #             self.warm_request(self.client.index(test_index_name).search,
-    #                               context={"tensor": [{"vector": custom_vector_2, "weight": 1}]},
-    #                               filter_string="my_custom_vector:(second text)")
-    #
-    #         filtering_res = self.client.index(test_index_name).search(
-    #             context={"tensor": [{"vector": custom_vector_2, "weight": 1}]},  # no text query
-    #             filter_string="my_custom_vector:(second text)")
-    #         assert filtering_res["hits"][0]["_id"] == "doc2"
-    #
-    #         # tensor search test
-    #         if self.IS_MULTI_INSTANCE:
-    #             self.warm_request(self.client.index(test_index_name).search,
-    #                               context={"tensor": [{"vector": custom_vector_3, "weight": 1}]})
-    #
-    #         tensor_res = self.client.index(test_index_name).search(
-    #             context={"tensor": [{"vector": custom_vector_3, "weight": 1}]}  # no text query
-    #         )
-    #         assert tensor_res["hits"][0]["_id"] == "doc3"
-    #
-    #         # bulk search test
-    #         resp = self.client.bulk_search([{
-    #             "index": test_index_name,
-    #             "context": {"tensor": [{"vector": custom_vector_1, "weight": 1}]},  # no text query
-    #         }])
-    #         assert len(resp['result']) == 1
-    #         search_res = resp['result'][0]
-    #         assert search_res["hits"][0]["_id"] == "doc1"
-    #
-    #         # get document test
-    #         doc_res = self.client.index(test_index_name).get_document(
-    #             document_id="doc1",
-    #             expose_facets=True
-    #         )
-    #         assert doc_res["my_custom_vector"] == "custom vector text"
-    #         assert doc_res['_tensor_facets'][0]["my_custom_vector"] == "custom vector text"
-    #         assert doc_res['_tensor_facets'][0]['_embedding'] == custom_vector_1
+    def test_no_model_custom_vector_doc(self):
+        """
+        Tests the `no_model` index model and searching with no `q` parameter.
+        Executed on documents with custom_vector field type.
+
+        Ensures the following features work on this index:
+        1. lexical search
+        2. filter string search
+        3. tensor search
+        4. bulk search
+        5. get document
+
+        Note: `no_model` is not yet supported on Cloud.
+        """
+        self.test_cases = [(CloudTestIndex.unstructured_no_model, self.unstructured_no_model_index_name)]
+
+        for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
+            test_index_name = self.get_test_index_name(
+                cloud_test_index_to_use=cloud_test_index_to_use,
+                open_source_test_index_name=open_source_test_index_name
+            )
+
+            DIMENSION = 512
+            custom_vector_1 = np.random.rand(DIMENSION)
+            custom_vector_1 = (custom_vector_1 / np.linalg.norm(custom_vector_1)).tolist()
+            custom_vector_2 = np.random.rand(DIMENSION)
+            custom_vector_2 = (custom_vector_2 / np.linalg.norm(custom_vector_2)).tolist()
+            custom_vector_3 = np.random.rand(DIMENSION)
+            custom_vector_3 = (custom_vector_3 / np.linalg.norm(custom_vector_3)).tolist()
+
+            self.client.index(index_name=test_index_name).add_documents(
+                documents=[
+                    {
+                        "my_custom_vector": {
+                            "content": "custom vector text",
+                            "vector": custom_vector_1,
+                        },
+                        "_id": "doc1",
+                    },
+                    {
+                        "my_custom_vector": {
+                            "content": "second text",
+                            "vector": custom_vector_2,
+                        },
+                        "_id": "doc2",
+                    },
+                    {
+                        "my_custom_vector": {
+                            "content": "third text",
+                            "vector": custom_vector_3,
+                        },
+                        "_id": "doc3",
+                    },
+                ], mappings={
+                    "my_custom_vector": {
+                        "type": "custom_vector"
+                    }
+                },
+                tensor_fields=["my_custom_vector"])
+
+            # lexical search test
+            if self.IS_MULTI_INSTANCE:
+                self.warm_request(self.client.index(test_index_name).search,
+                                  "custom vector text", search_method="lexical")
+
+            lexical_res = self.client.index(test_index_name).search(
+                "custom vector text", search_method="lexical")
+            self.assertEqual("doc1", lexical_res["hits"][0]["_id"])
+
+            # filter string test
+            if self.IS_MULTI_INSTANCE:
+                self.warm_request(self.client.index(test_index_name).search,
+                                  context={"tensor": [{"vector": custom_vector_2, "weight": 1}]},
+                                  filter_string="my_custom_vector:(second text)")
+
+            filtering_res = self.client.index(test_index_name).search(
+                context={"tensor": [{"vector": custom_vector_2, "weight": 1}]},  # no text query
+                filter_string="my_custom_vector:(second text)")
+            self.assertEqual("doc2", filtering_res["hits"][0]["_id"])
+
+            # tensor search test
+            if self.IS_MULTI_INSTANCE:
+                self.warm_request(self.client.index(test_index_name).search,
+                                  context={"tensor": [{"vector": custom_vector_3, "weight": 1}]})
+
+            tensor_res = self.client.index(test_index_name).search(
+                context={"tensor": [{"vector": custom_vector_3, "weight": 1}]}  # no text query
+            )
+            self.assertEqual("doc3", tensor_res["hits"][0]["_id"])
 
     def test_add_docs_image_download_headers(self):
         mock__post = mock.MagicMock()
