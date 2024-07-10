@@ -43,7 +43,7 @@ class TestCreateIndex(MarqoTestCase):
             'textPreprocessing': {'splitLength': 2, 'splitOverlap': 0, 'splitMethod': 'sentence'},
             'imagePreprocessing': {},
             'vectorNumericType': 'float',
-            'filterStringMaxLength': 20,
+            'filterStringMaxLength': 50,
             'annParameters': {
                 'spaceType': 'prenormalized-angular', 'parameters': {
                     'efConstruction': 512, 'm': 16}
