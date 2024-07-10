@@ -56,7 +56,7 @@ class TestHybridSearch(MarqoTestCase):
         """
 
         index_test_cases = [
-            (CloudTestIndex.structured_text, self.structured_index_name)    # TODO: unstructured
+            (CloudTestIndex.structured_text, self.structured_index_name)    # TODO: add unstructured when supported
         ]
         for cloud_test_index_to_use, open_source_test_index_name in index_test_cases:
             test_index_name = self.get_test_index_name(
@@ -125,8 +125,7 @@ class TestHybridSearch(MarqoTestCase):
         """
 
         index_test_cases = [
-            (CloudTestIndex.structured_text, self.structured_index_name)  # TODO: unstructured
-        ]
+            (CloudTestIndex.structured_text, self.structured_index_name)  # TODO: add unstructured when supported
         for cloud_test_index_to_use, open_source_test_index_name in index_test_cases:
             test_index_name = self.get_test_index_name(
                 cloud_test_index_to_use=cloud_test_index_to_use,
@@ -167,7 +166,7 @@ class TestHybridSearch(MarqoTestCase):
         """
 
         index_test_cases = [
-            (CloudTestIndex.structured_text, self.structured_index_name)  # TODO: unstructured
+            (CloudTestIndex.structured_text, self.structured_index_name)  # TODO: add unstructured when supported
         ]
         for cloud_test_index_to_use, open_source_test_index_name in index_test_cases:
             test_index_name = self.get_test_index_name(
