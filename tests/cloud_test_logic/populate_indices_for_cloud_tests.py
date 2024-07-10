@@ -8,6 +8,9 @@ INDEX_NAME_SEPARATOR = "_"
 
 
 def populate_indices():
+    """Create indices in Marqo Cloud Account with the settings specified in cloud_test_index.py.
+
+    Raise MarqoWebError if any of the index creation fails."""
     populate_indices_start_time = time.time()
     test_uniqueness_id = os.environ.get("MQ_TEST_RUN_IDENTIFIER", "")
 
@@ -40,6 +43,7 @@ def populate_indices():
             )
         except MarqoWebError as e:
             print(f"Attempting to create index {index_name} resulting in error {e}")
+            raise e
 
 
     # Around 30 min:

@@ -1,6 +1,9 @@
 import os
+
 import requests
+
 import marqo
+from marqo.enums import IndexStatus
 
 
 def delete_all_test_indices(wait_for_readiness=False):
@@ -38,10 +41,13 @@ def delete_all_test_indices(wait_for_readiness=False):
     print("Marqo Cloud deletion responses:")
     for index_name in indices_to_delete:
         index = client.index(index_name)
-        if index.get_status()["indexStatus"] == marqo.enums.IndexStatus.READY:
+        if index.get_status()["indexStatus"] == IndexStatus.READY:
             print(index_name, index.delete(wait_for_readiness=False))
-        elif index.get_status()["indexStatus"] == 'DELETING':
+        elif index.get_status()["indexStatus"] == IndexStatus.DELETED:
             print(f"Index {index_name} is already being deleted")
+        elif index.get_status()["indexStatus"] == IndexStatus.FAILED:
+            print(f"Index {index_name} has failed status, deleting anyway")
+            index.delete(wait_for_readiness=False)
         else:
             print(f"Index {index_name} is not ready for deletion, status: {index.get_status()['indexStatus']}")
     if wait_for_readiness:

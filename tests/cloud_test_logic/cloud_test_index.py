@@ -47,7 +47,7 @@ index_name_to_settings_mappings = {
         "treatUrlsAndPointersAsImages": False,
         "model": "hf/e5-base-v2",
 
-        "inferenceType": "marqo.CPU.small",
+        "inferenceType": "marqo.CPU.large",
         "storageClass": "marqo.basic",
     },
     CloudTestIndex.unstructured_image: {
@@ -61,7 +61,7 @@ index_name_to_settings_mappings = {
     CloudTestIndex.structured_image: {
         "type": "structured",
         "model": "open_clip/ViT-B-32/laion2b_s34b_b79k",
-        "inferenceType": "marqo.CPU.small",
+        "inferenceType": "marqo.CPU.large",
         "storageClass": "marqo.basic",
         "allFields": [
             {"name": "text_field_1", "type": "text", "features": ["lexical_search", "filter"]},
@@ -95,12 +95,12 @@ index_name_to_settings_mappings = {
     CloudTestIndex.unstructured_no_model: {
         "type": "unstructured",
         "treatUrlsAndPointersAsImages": False,
-        "inferenceType": "marqo.CPU.small",
+        "inferenceType": "marqo.CPU.large",
         "storageClass": "marqo.basic",
         "model": "no_model",
         "modelProperties": {
             "type": "no_model",
-            "dimensions": "512"
+            "dimensions": 512
         },
     }
 }
