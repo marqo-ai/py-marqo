@@ -36,11 +36,13 @@ class RetrievalMethod(str, Enum):
     Tensor = 'tensor'
     Lexical = 'lexical'
 
+
 class RankingMethod(str, Enum):
     RRF = 'rrf'
     NormalizeLinear = 'normalize_linear'
     Tensor = 'tensor'
     Lexical = 'lexical'
+
 
 class HybridParameters:
     retrieval_method: Optional[RetrievalMethod] = RetrievalMethod.Disjunction
