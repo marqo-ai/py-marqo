@@ -1,15 +1,16 @@
 import os
 import unittest
 from unittest.mock import patch, MagicMock
-import pytest
 
+import pytest
 import requests.exceptions
+import requests_mock
 
 from marqo._httprequests import HttpRequests
 from marqo.config import Config
 from marqo.default_instance_mappings import DefaultInstanceMappings
-from marqo.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
 from marqo.errors import MarqoWebError
+from marqo.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
 
 
 @pytest.mark.fixed
@@ -124,3 +125,11 @@ class TestConstructCloudPath(unittest.TestCase):
                 with self.subTest(f"base_url={custom_cloud_url}, path={path}"):
                     result=self.construct_path_helper(custom_cloud_url, path)
                     self.assertEqual(f"{custom_cloud_url}/api/v2/{path}", result)
+
+    def test_http_request_raiseProperErrorIfResponseNotInJsonFormat(self):
+        with requests_mock.Mocker() as m:
+            m.get('http://example.com/api/endpoint', text='Not a JSON response')
+            response = requests.get('http://example.com/api/endpoint')
+            with self.assertRaises(MarqoWebError) as cm:
+                HttpRequests._validate(response)
+            self.assertEqual(cm.exception.code, "response_not_in_json_format")

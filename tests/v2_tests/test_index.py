@@ -26,13 +26,13 @@ class TestIndex(MarqoTestCase):
     def test_create_index_settings_dict(self):
         """if settings_dict exists, it should override existing params"""
         for settings_dict, expected_treat_urls_and_pointers_as_images in [
-                    ({"treatUrlsAndPointersAsImages": True},
-                     True),
-                    (None,
-                     None),
-                    ({},
-                     None),
-                ]:
+            ({"treatUrlsAndPointersAsImages": True},
+             True),
+            (None,
+             None),
+            ({},
+             None),
+        ]:
             mock__post = mock.MagicMock()
             mock_get = mock.MagicMock()
             mock_get.return_value = {"indexStatus": "READY"}
@@ -44,6 +44,7 @@ class TestIndex(MarqoTestCase):
                     index_name=self.generic_test_index_name,
                     settings_dict=settings_dict)
                 return True
+
             assert run()
             args, kwargs = mock__post.call_args
             assert dict(kwargs['body']).get("treatUrlsAndPointersAsImages") \
@@ -161,6 +162,7 @@ class TestIndex(MarqoTestCase):
         mock_get.return_value = {"indexStatus": "READY"}
         test_client = copy.deepcopy(self.client)
         test_client.config.api_key = 'some-super-secret-API-key'
+
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
         @mock.patch("marqo._httprequests.HttpRequests.get", mock_get)
         def run():
@@ -172,6 +174,7 @@ class TestIndex(MarqoTestCase):
             assert kwargs['body']['numberOfReplicas'] == 0
             assert kwargs['body']['treatUrlsAndPointersAsImages'] is False
             return True
+
         assert run()
 
     @mark.fixed
@@ -194,6 +197,7 @@ class TestIndex(MarqoTestCase):
             args, kwargs = mock__post.call_args
             assert kwargs['body'] == {"treatUrlsAndPointersAsImages": True}
             return True
+
         assert run()
 
     @mark.ignore_during_cloud_tests
@@ -264,8 +268,7 @@ class TestIndex(MarqoTestCase):
         assert result == {"error": "storageClass is required"}
 
     @mark.fixed
-    @mock.patch("marqo.index.mq_logger.warning")
-    def test_version_check_multiple_instantiation(self, mock_warning):
+    def test_version_check_multiple_instantiation(self):
         """Ensure that duplicated instantiation of the client does not result in multiple APIs calls of get_marqo()
 
         Also ensure we only log a version check warning once.
@@ -276,16 +279,19 @@ class TestIndex(MarqoTestCase):
                 open_source_test_index_name=open_source_test_index_name
             )
             marqo_url_and_version_cache.clear()
+            # Instantiate the client first
+            index = self.client.index(test_index_name)
+
             with mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo, \
-                    mock.patch("marqo.index.Index.get_status") as mock_get_status:
+                    mock.patch("marqo.index.Index.get_status") as mock_get_status, \
+                    mock.patch("marqo.index.mq_logger.warning") as mock_warning:
                 mock_get_status.return_value = {'indexStatus': 'READY'}
                 mock_get_marqo.return_value = {'version': '0.0.0'}
                 index = self.client.index(test_index_name)
 
-                mock_get_marqo.assert_called_once()
-                mock_warning.assert_called_once()
-                mock_warning.reset_mock()
-                mock_get_marqo.reset_mock()
+            mock_get_marqo.assert_not_called()
+            mock_warning.assert_not_called()
+
 
             for _ in range(10):
                 with mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo:
@@ -295,8 +301,7 @@ class TestIndex(MarqoTestCase):
                     mock_warning.assert_not_called()
 
     @mark.fixed
-    @mock.patch("marqo.index.mq_logger.warning")
-    def test_marqo1_recommendation_when_communicate_with_marqo_v1(self, mock_warning):
+    def test_marqo1_recommendation_when_communicate_with_marqo_v1(self):
         """Ensure that we recommend using marqo1 if the version is 1.x.x"""
         test_index_name = self.get_test_index_name(
             cloud_test_index_to_use=CloudTestIndex.structured_text,
@@ -313,22 +318,20 @@ class TestIndex(MarqoTestCase):
         for version in test_cases:
             with self.subTest(f"version = {version}"):
                 with mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo, \
-                        mock.patch("marqo.index.Index.get_status") as mock_get_status:
+                        mock.patch("marqo.index.Index.get_status") as mock_get_status, \
+                        mock.patch("marqo.index.mq_logger.warning") as mock_log_warning:
                     mock_get_status.return_value = {'index_status': 'READY'}
                     mock_get_marqo.return_value = {'version': version}
                     index = self.client.index(test_index_name)
-                    mock_get_marqo.assert_called_once()
-                    mock_warning.assert_called_once()
-                    log_message = mock_warning.call_args[0][0]
-                    self.assertIn("2.x", log_message)
-                    mock_warning.reset_mock()
-                    mock_get_marqo.reset_mock()
 
-                    marqo_url_and_version_cache.clear()
+                mock_get_marqo.assert_called_once()
+                mock_log_warning.assert_called_once()
+                log_message = mock_log_warning.call_args[0][0]
+                self.assertIn("2.x", log_message)
+                marqo_url_and_version_cache.clear()
 
     @mark.fixed
-    @mock.patch("marqo.index.mq_logger.warning")
-    def test_no_marqo1_recommendation_if_major_is_not_1(self, mock_warning):
+    def test_no_marqo1_recommendation_if_major_is_not_1(self):
         """Ensure that we do not recommend using marqo1 if the major version is not 1"""
         test_index_name = self.get_test_index_name(
             cloud_test_index_to_use=CloudTestIndex.structured_text,
@@ -344,18 +347,17 @@ class TestIndex(MarqoTestCase):
         for version in test_cases:
             with self.subTest(f"version = {version}"):
                 with mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo, \
-                        mock.patch("marqo.index.Index.get_status") as mock_get_status:
+                        mock.patch("marqo.index.Index.get_status") as mock_get_status, \
+                        mock.patch("marqo.index.mq_logger.warning") as mock_log_warning:
                     mock_get_status.return_value = {'index_status': 'READY'}
                     mock_get_marqo.return_value = {'version': version}
                     index = self.client.index(test_index_name)
-                    mock_get_marqo.assert_called_once()
-                    mock_warning.assert_called_once()
-                    log_message = mock_warning.call_args[0][0]
-                    self.assertNotIn("2.x", log_message)
-                    mock_warning.reset_mock()
-                    mock_get_marqo.reset_mock()
 
-                    marqo_url_and_version_cache.clear()
+                mock_get_marqo.assert_called_once()
+                mock_log_warning.assert_called_once()
+                log_message = mock_log_warning.call_args[0][0]
+                self.assertNotIn("2.x", log_message)
+                marqo_url_and_version_cache.clear()
 
     @mark.fixed
     def test_warning_not_printed_for_ready_index(self):
@@ -368,7 +370,7 @@ class TestIndex(MarqoTestCase):
                     open_source_test_index_name=None
                 )
                 self.client.index(test_index_name)
-            mock_warning.assert_not_called()
+        mock_warning.assert_not_called()
 
     def test_warning_not_printed_for_not_ready_index(self):
         if not self.client.config.is_marqo_cloud:
@@ -421,7 +423,7 @@ class TestIndex(MarqoTestCase):
             for i, side_effect in enumerate(side_effect_list):
                 with mock.patch("marqo.index.mq_logger.warning") as mock_warning, \
                         mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo, \
-                        mock.patch("marqo.index.Index.get_status") as mock_get_status: #, \
+                        mock.patch("marqo.index.Index.get_status") as mock_get_status:  # , \
                     mock_get_marqo.side_effect = side_effect
                     mock_get_status.return_value = {'indexStatus': 'READY'}
                     marqo_url_and_version_cache.clear()
@@ -436,7 +438,8 @@ class TestIndex(MarqoTestCase):
                     warning_message = mock_warning.call_args[0][0]
 
                     # Assert the message is what you expect
-                    self.assertIn("Marqo encountered a problem trying to check the Marqo version found", warning_message)
+                    self.assertIn("Marqo encountered a problem trying to check the Marqo version found",
+                                  warning_message)
                     self.assertEqual(marqo_url_and_version_cache, dict(
                         {index.config.instance_mapping.get_index_base_url(index_name=test_index_name): "_skipped"}))
 
@@ -554,7 +557,6 @@ class TestIndex(MarqoTestCase):
                              {self.client_settings["url"]: "_skipped"}) as mock_cache, \
                 mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo, \
                 mock.patch("marqo.index.mq_logger.warning") as mock_warning:
-
             index._marqo_minimum_supported_version_check()
             mock_warning.assert_not_called()
             mock_get_marqo.assert_not_called()
@@ -566,7 +568,6 @@ class TestIndex(MarqoTestCase):
                              {self.client_settings["url"]: "garbage value"}) as mock_cache, \
                 mock.patch("marqo.index.Index.get_marqo") as mock_get_marqo, \
                 mock.patch("marqo.index.mq_logger.warning") as mock_warning:
-
             index._marqo_minimum_supported_version_check()
             mock_warning.assert_not_called()
             mock_get_marqo.assert_not_called()
@@ -593,4 +594,3 @@ class TestIndex(MarqoTestCase):
             )
             with self.assertRaises(MarqoWebError):
                 res = self.client.index(test_index_name).get_cuda_info()
-
