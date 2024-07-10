@@ -115,6 +115,40 @@ class TestHybridSearch(MarqoTestCase):
                 self.assertEqual(hybrid_res["hits"][1]["_id"], "doc11")
                 self.assertEqual(hybrid_res["hits"][2]["_id"], "doc13")
 
+    def test_hybrid_search_with_custom_vector_query(self):
+        """
+        Custom Vectory q should work similar to None q with a context vector
+        """
+
+        index_test_cases = [
+            (CloudTestIndex.structured_text, self.structured_index_name)  # TODO: add unstructured when supported
+        ]
+        for cloud_test_index_to_use, open_source_test_index_name in index_test_cases:
+            test_index_name = self.get_test_index_name(
+                cloud_test_index_to_use=cloud_test_index_to_use,
+                open_source_test_index_name=open_source_test_index_name
+            )
+            self.client.index(test_index_name).add_documents(self.docs_list)
+            sample_vector = [0.5 for _ in range(768)]
+
+            res_custom_vector = self.client.index(test_index_name).search(
+                q={"customVector": {"content": None, "vector": sample_vector}},
+                search_method="HYBRID",
+                hybrid_parameters={
+                    "retrievalMethod": "tensor",
+                    "rankingMethod": "tensor"
+                }
+            )
+
+            res_context = self.client.index(test_index_name).search(
+                q=None,
+                search_method="TENSOR",
+                context={"tensor": [{"vector": sample_vector, "weight": 1}]}
+            )
+            self.assertEqual(len(res_custom_vector["hits"]), len(res_context["hits"]))
+            for i in range(len(res_custom_vector["hits"])):
+                self.assertEqual(res_custom_vector["hits"][i]["_id"], res_context["hits"][i]["_id"])
+
     def test_hybrid_search_same_retrieval_and_ranking_matches_original_method(self):
         """
         Tests that hybrid search with:
