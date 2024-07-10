@@ -70,11 +70,11 @@ class TestHybridSearch(MarqoTestCase):
                     "puppies",
                     search_method="HYBRID",
                     hybrid_parameters={
-                        "retrieval_method": "disjunction",
-                        "ranking_method": "rrf",
+                        "retrievalMethod": "disjunction",
+                        "rankingMethod": "rrf",
                         "alpha": 0.5,
-                        "searchable_attributes_lexical": ["text_field_2"],
-                        "searchable_attributes_tensor": ["text_field_2"]
+                        "searchableAttributesLexical": ["text_field_2"],
+                        "searchableAttributesTensor": ["text_field_2"]
                     },
                     limit=10
                 )
@@ -88,9 +88,9 @@ class TestHybridSearch(MarqoTestCase):
                     "puppies",
                     search_method="HYBRID",
                     hybrid_parameters={
-                        "retrieval_method": "lexical",
-                        "ranking_method": "tensor",
-                        "searchable_attributes_lexical": ["text_field_2"]
+                        "retrievalMethod": "lexical",
+                        "rankingMethod": "tensor",
+                        "searchableAttributesLexical": ["text_field_2"]
                     },
                     limit=10
                 )
@@ -103,9 +103,9 @@ class TestHybridSearch(MarqoTestCase):
                     "puppies",
                     search_method="HYBRID",
                     hybrid_parameters={
-                        "retrieval_method": "tensor",
-                        "ranking_method": "lexical",
-                        "searchable_attributes_tensor": ["text_field_2"]
+                        "retrievalMethod": "tensor",
+                        "rankingMethod": "lexical",
+                        "searchableAttributesTensor": ["text_field_2"]
                     },
                     limit=10
                 )
@@ -118,14 +118,15 @@ class TestHybridSearch(MarqoTestCase):
     def test_hybrid_search_same_retrieval_and_ranking_matches_original_method(self):
         """
         Tests that hybrid search with:
-        retrieval_method = "lexical", ranking_method = "lexical" and
-        retrieval_method = "tensor", ranking_method = "tensor"
+        retrievalMethod = "lexical", rankingMethod = "lexical" and
+        retrievalMethod = "tensor", rankingMethod = "tensor"
 
         Results must be the same as lexical search and tensor search respectively.
         """
 
         index_test_cases = [
             (CloudTestIndex.structured_text, self.structured_index_name)  # TODO: add unstructured when supported
+        ]
         for cloud_test_index_to_use, open_source_test_index_name in index_test_cases:
             test_index_name = self.get_test_index_name(
                 cloud_test_index_to_use=cloud_test_index_to_use,
@@ -138,21 +139,21 @@ class TestHybridSearch(MarqoTestCase):
                 ("tensor", "tensor")
             ]
 
-            for retrieval_method, ranking_method in test_cases:
-                with self.subTest(retrieval=retrieval_method, ranking=ranking_method):
+            for retrievalMethod, rankingMethod in test_cases:
+                with self.subTest(retrieval=retrievalMethod, ranking=rankingMethod):
                     hybrid_res = self.client.index(test_index_name).search(
                         "dogs",
                         search_method="HYBRID",
                         hybrid_parameters={
-                            "retrieval_method": retrieval_method,
-                            "ranking_method": ranking_method
+                            "retrievalMethod": retrievalMethod,
+                            "rankingMethod": rankingMethod
                         },
                         limit=10
                     )
 
                     base_res = self.client.index(test_index_name).search(
                         "dogs",
-                        search_method=retrieval_method,     # will be either lexical or tensor
+                        search_method=retrievalMethod,     # will be either lexical or tensor
                         limit=10
                     )
 
@@ -181,15 +182,15 @@ class TestHybridSearch(MarqoTestCase):
                 ("tensor", "tensor")
             ]
 
-            for retrieval_method, ranking_method in test_cases:
-                with self.subTest(retrieval=retrieval_method, ranking=ranking_method):
+            for retrievalMethod, rankingMethod in test_cases:
+                with self.subTest(retrieval=retrievalMethod, ranking=rankingMethod):
                     hybrid_res = self.client.index(test_index_name).search(
                         "dogs",
                         search_method="HYBRID",
                         filter_string="text_field_1:(something something dogs)",
                         hybrid_parameters={
-                            "retrieval_method": retrieval_method,
-                            "ranking_method": ranking_method
+                            "retrievalMethod": retrievalMethod,
+                            "rankingMethod": rankingMethod
                         },
                         limit=10
                     )
