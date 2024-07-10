@@ -210,7 +210,7 @@ class Index:
                context: Optional[dict] = None, score_modifiers: Optional[dict] = None,
                model_auth: Optional[dict] = None,
                ef_search: Optional[int] = None, approximate: Optional[bool] = None,
-               text_query_prefix: Optional[str] = None, hybrid_parameters: Optional[HybridParameters] = None
+               text_query_prefix: Optional[str] = None, hybrid_parameters: Optional[dict] = None
                ) -> Dict[str, Any]:
         """Search the index.
 
