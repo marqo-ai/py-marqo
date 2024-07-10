@@ -131,7 +131,14 @@ class HttpRequests:
     ) -> Any:
         if request.content == b'':
             return request
-        return request.json()
+        try:
+            return request.json()
+        except requests.exceptions.JSONDecodeError as e:
+            # Handle non-JSON response here
+            raise MarqoWebError(message=request.text,
+                                code="response_not_in_json_format",
+                                error_type="response_not_in_json_format_type",
+                                status_code=500) from e
 
     @staticmethod
     def _validate(
