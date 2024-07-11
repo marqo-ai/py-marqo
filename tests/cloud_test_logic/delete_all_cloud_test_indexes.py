@@ -44,7 +44,7 @@ def delete_all_test_indices(wait_for_readiness=False):
         if index.get_status()["indexStatus"] == IndexStatus.READY:
             print(index_name, index.delete(wait_for_readiness=False))
         elif index.get_status()["indexStatus"] == IndexStatus.DELETED:
-            print(f"Index {index_name} is already being deleted")
+            print(f"Index {index_name} is already deleted")
         elif index.get_status()["indexStatus"] == IndexStatus.FAILED:
             print(f"Index {index_name} has failed status, deleting anyway")
             index.delete(wait_for_readiness=False)
