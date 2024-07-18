@@ -10,8 +10,11 @@ import os
 import signal
 import sys
 
+import pytest
+
 from create_and_set_cloud_unique_run_identifier import set_unique_run_identifier
 from delete_all_cloud_test_indexes import delete_all_test_indices
+from marqo.errors import MarqoWebError
 from populate_indices_for_cloud_tests import populate_indices
 
 tests_specific_kwargs = {
@@ -48,17 +51,20 @@ if __name__ == '__main__':
             os.environ['MQ_TEST_RUN_IDENTIFIER'] = 'cinteg'
         print(f"Using unique identifier: {os.environ['MQ_TEST_RUN_IDENTIFIER']}")
         if tests_specific_kwargs['create-indexes']:
-            populate_indices()
+            try:
+                populate_indices()
+            except MarqoWebError as e:
+                print("Detected an error while creating indices, deleting all indices and exiting the workflow.")
+                delete_all_test_indices(wait_for_readiness=True)
+                sys.exit(1)
         print(f"All indices has been created, proceeding to run tests with pytest. Arguments: {sys.argv[1:]}")
 
-        import pytest
         pytest_args = ['tests/', '-m', 'not ignore_during_cloud_tests'] + sys.argv[1:]
         print("running integration tests with args:", pytest_args)
         pytest_exit_code = pytest.main(pytest_args)
         if pytest_exit_code != 0:
             raise RuntimeError(f"Pytest failed with exit code: {pytest_exit_code}")
         print("All tests has been executed successfully")
-
         if tests_specific_kwargs['delete-indexes']:
             delete_all_test_indices(wait_for_readiness=True)
     except Exception as e:

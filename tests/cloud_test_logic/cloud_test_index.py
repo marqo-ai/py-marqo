@@ -100,7 +100,7 @@ index_name_to_settings_mappings = {
         "model": "no_model",
         "modelProperties": {
             "type": "no_model",
-            "dimensions": "512"
+            "dimensions": 512
         },
     }
 }

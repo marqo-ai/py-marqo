@@ -10,3 +10,4 @@ pytest
 dataclasses
 pydantic>=2.0.0
 requests_mock
+tenacity

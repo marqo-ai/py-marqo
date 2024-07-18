@@ -363,14 +363,14 @@ class TestIndex(MarqoTestCase):
     def test_warning_not_printed_for_ready_index(self):
         if not self.client.config.is_marqo_cloud:
             self.skipTest("Test only applicable for Marqo Cloud")
-        with mock.patch("marqo.index.mq_logger.warning") as mock_warning:
-            for cloud_test_index_to_use, _ in self.test_cases:
-                test_index_name = self.get_test_index_name(
-                    cloud_test_index_to_use=cloud_test_index_to_use,
-                    open_source_test_index_name=None
-                )
+        for cloud_test_index_to_use, _ in self.test_cases:
+            test_index_name = self.get_test_index_name(
+                cloud_test_index_to_use=cloud_test_index_to_use,
+                open_source_test_index_name=None
+            )
+            with mock.patch("marqo.index.mq_logger.warning") as mock_warning:
                 self.client.index(test_index_name)
-        mock_warning.assert_not_called()
+            mock_warning.assert_not_called()
 
     def test_warning_not_printed_for_not_ready_index(self):
         if not self.client.config.is_marqo_cloud:

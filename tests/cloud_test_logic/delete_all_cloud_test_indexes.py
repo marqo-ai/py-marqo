@@ -1,6 +1,30 @@
 import os
+
 import requests
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+
 import marqo
+from marqo.enums import IndexStatus
+from marqo.errors import MarqoWebError
+
+
+@retry(stop=stop_after_attempt(5),  # Stop after 5 attempts
+       wait=wait_exponential(multiplier=1, min=4, max=10),  # Wait exponentially between retries
+       retry=retry_if_exception_type(requests.exceptions.RequestException))  # Retry on network-related exceptions
+def fetch_marqo_indexes(client: marqo.Client):
+    """A function to fetch all Marqo indexes with retries to handle transient network errors and Marqo API errors"""
+    response = requests.get(f"{client.config.instance_mapping.get_control_base_url()}/v2/indexes",
+                            headers={"x-api-key": client.config.api_key})
+    response.raise_for_status()  # Raise an exception for HTTP errors
+    return response
+
+
+@retry(stop=stop_after_attempt(5),
+       wait=wait_exponential(multiplier=1, min=4, max=10),
+       retry=retry_if_exception_type((requests.exceptions.RequestException, MarqoWebError)))
+def fetch_marqo_index(client: marqo.Client, index_name: str):
+    """A function to fetch a Marqo index by name with retries to handle transient network errors and Marqo API errors"""
+    return client.index(index_name)
 
 
 def delete_all_test_indices(wait_for_readiness=False):
@@ -37,19 +61,21 @@ def delete_all_test_indices(wait_for_readiness=False):
     print("Indices to delete: ", indices_to_delete)
     print("Marqo Cloud deletion responses:")
     for index_name in indices_to_delete:
-        index = client.index(index_name)
-        if index.get_status()["indexStatus"] == marqo.enums.IndexStatus.READY:
+        index = fetch_marqo_index(client, index_name)
+        if index.get_status()["indexStatus"] == IndexStatus.READY:
             print(index_name, index.delete(wait_for_readiness=False))
-        elif index.get_status()["indexStatus"] == 'DELETING':
-            print(f"Index {index_name} is already being deleted")
+        elif index.get_status()["indexStatus"] == IndexStatus.DELETED:
+            print(f"Index {index_name} is already deleted")
+        elif index.get_status()["indexStatus"] == IndexStatus.FAILED:
+            print(f"Index {index_name} has failed status, deleting anyway")
+            index.delete(wait_for_readiness=False)
         else:
             print(f"Index {index_name} is not ready for deletion, status: {index.get_status()['indexStatus']}")
     if wait_for_readiness:
         max_retries = 100
         attempt = 0
         while indices_to_delete:
-            resp = requests.get(f"{client.config.instance_mapping.get_control_base_url()}/v2/indexes",
-                                headers={"x-api-key": client.config.api_key})
+            resp = fetch_marqo_indexes(client)
             resp_json = resp.json()
             all_index_names = [index["indexName"] for index in resp_json['results']]
             for index_for_deletion_name in indices_to_delete:
