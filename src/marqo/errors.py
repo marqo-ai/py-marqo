@@ -192,6 +192,7 @@ class MarqoCloudIndexNotFoundError(MarqoError):
     status_code = HTTPStatus.NOT_FOUND
 
     def __init__(self, index_name: str,) -> None:
-        self.message = f"The index name {index_name} does not exist in the Marqo cloud or client's cache" \
-                       f" has not yet been updated. Please check the index name and try again.\n" \
-                       f"- If the problem persists, please contact marqo support at support@marqo.ai"
+        self.message = (f"The index name {index_name} does not exist in Marqo cloud or the client's cache has not yet been updated. \n"
+                        f"- Please check whether the index name is correct \n" 
+                        f"- Please check whether the client's API key matches the account for this index \n"
+                        f"If the problem persists, please contact marqo support at support@marqo.ai")
