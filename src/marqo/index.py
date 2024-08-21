@@ -80,6 +80,7 @@ class Index:
                type: Optional[marqo_index.IndexType] = None,
                settings_dict: Optional[Dict[str, Any]] = None,
                treat_urls_and_pointers_as_images: Optional[bool] = None,
+               treat_urls_and_pointers_as_media: Optional[bool] = None,
                filter_string_max_length: Optional[int] = None,
                all_fields: Optional[List[marqo_index.FieldRequest]] = None,
                tensor_fields: Optional[List[str]] = None,
@@ -114,6 +115,7 @@ class Index:
                 parameters, and is passed directly as the index's
                 index_settings
             treat_urls_and_pointers_as_images: whether to treat urls and pointers as images in unstructured indexes
+            treat_urls_and_pointers_as_media: whether to treat urls and pointers as media (video/audio) in unstructured indexes
             filter_string_max_length: threshold for short string length in unstructured indexes,
                 Marqo can filter on short strings but can not filter on long strings
             all_fields: list of fields in the structured index
@@ -148,6 +150,7 @@ class Index:
                 allFields=all_fields,
                 settingsDict=settings_dict,
                 treatUrlsAndPointersAsImages=treat_urls_and_pointers_as_images,
+                treatUrlsAndPointersAsMedia=treat_urls_and_pointers_as_media,
                 filterStringMaxLength=filter_string_max_length,
                 tensorFields=tensor_fields,
                 model=model,
@@ -170,6 +173,7 @@ class Index:
                 allFields=all_fields,
                 settingsDict=settings_dict,
                 treatUrlsAndPointersAsImages=treat_urls_and_pointers_as_images,
+                treatUrlsAndPointersAsMedia=treat_urls_and_pointers_as_media,
                 filterStringMaxLength=filter_string_max_length,
                 tensorFields=tensor_fields,
                 model=model,

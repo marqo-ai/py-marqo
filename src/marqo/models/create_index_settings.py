@@ -14,7 +14,9 @@ class IndexSettings(MarqoBaseModel):
             Can not be specified with other parameters.
         tensorFields: A list of all tensor fields in the index.
         treatUrlsAndPointersAsImages: Whether to treat urls and pointers as images.
-            This unstructured index only parameter.
+            This is and unstructured index only parameter.
+        treatUrlsAndPointersAsMedia: Whether to treat urls and pointers as media (video/audio).
+            This is an unstructured index only parameter.
         filterStringMaxLength: The max length of the filter string in unstructured index
         model: The name of the model to use for the index.
         modelProperties: A dictionary of model properties.
@@ -34,6 +36,7 @@ class IndexSettings(MarqoBaseModel):
     settingsDict: Optional[Dict] = None
     tensorFields: Optional[List[str]] = None
     treatUrlsAndPointersAsImages: Optional[bool] = None
+    treatUrlsAndPointersAsMedia: Optional[bool] = None
     filterStringMaxLength: Optional[int] = None
     model: Optional[str] = None
     modelProperties: Optional[Dict[str, Any]] = None
