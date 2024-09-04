@@ -43,6 +43,8 @@ class IndexSettings(MarqoBaseModel):
     normalizeEmbeddings: Optional[bool] = None
     textPreprocessing: Optional[marqo_index.TextPreProcessing] = None
     imagePreprocessing: Optional[marqo_index.ImagePreProcessing] = None
+    audioPreprocessing: Optional[marqo_index.AudioPreProcessing] = None
+    videoPreprocessing: Optional[marqo_index.VideoPreProcessing] = None
     vectorNumericType: Optional[marqo_index.VectorNumericType] = None
     annParameters: Optional[marqo_index.AnnParameters] = None
     textQueryPrefix: Optional[str] = None

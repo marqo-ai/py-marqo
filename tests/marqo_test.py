@@ -209,6 +209,9 @@ class MarqoTestCase(TestCase):
         cls.unstructured_no_model_index_name = "unstructured_no_model_index"
         cls.structured_image_index_name_simple_preprocessing_method = \
             "structured_image_index_simple_preprocessing_method"
+        cls.unstructured_languagebind_index_name = "unstructured_languagebind_index"
+        cls.structured_languagebind_index_name = "structured_languagebind_index"
+
         # TODO: include structured when boolean_field bug for structured is fixed
         cls.test_cases = [
             (CloudTestIndex.unstructured_image, cls.unstructured_index_name),
@@ -262,6 +265,25 @@ class MarqoTestCase(TestCase):
                             "type": "no_model",
                             "dimensions": 512
                         }
+                    },
+                    {
+                        "indexName": cls.unstructured_languagebind_index_name,
+                        "type": "unstructured",
+                        "model": "LanguageBind/Video_V1.5_FT_Audio_FT_Image",
+                        "treatUrlsAndPointersAsMedia": True,
+                        "treatUrlsAndPointersAsImages": True
+                    },
+                    {
+                        "indexName": cls.structured_languagebind_index_name,
+                        "type": "structured",
+                        "model": "LanguageBind/Video_V1.5_FT_Audio_FT_Image",
+                        "allFields": [
+                            {"name": "text_field", "type": "text"},
+                            {"name": "video_field", "type": "video_pointer"},
+                            {"name": "audio_field", "type": "audio_pointer"},
+                            {"name": "image_field", "type": "image_pointer"}
+                        ],
+                        "tensorFields": ["text_field", "video_field", "audio_field", "image_field"]
                     }
                 ])
             except Exception as e:

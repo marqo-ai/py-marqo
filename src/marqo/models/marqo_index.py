@@ -23,6 +23,8 @@ class FieldType(str, Enum):
     ArrayFloat = 'array<float>'
     ArrayDouble = 'array<double>'
     ImagePointer = 'image_pointer'
+    VideoPointer = 'video_pointer'
+    AudioPointer = 'audio_pointer'
     MultimodalCombination = 'multimodal_combination'
     CustomVector = "custom_vector"
     MapInt = 'map<text, int>'
@@ -76,6 +78,14 @@ class TextPreProcessing(StrictBaseModel):
 
 class ImagePreProcessing(StrictBaseModel):
     patchMethod: Optional[PatchMethod] = Field(None, alias="patch_method")
+
+class VideoPreProcessing(StrictBaseModel):
+    splitLength: Optional[int] = Field(None, alias="split_length")
+    splitOverlap: Optional[int] = Field(None, alias="split_overlap")
+
+class AudioPreProcessing(StrictBaseModel):
+    splitLength: Optional[int] = Field(None, alias="split_length")
+    splitOverlap: Optional[int] = Field(None, alias="split_overlap")
 
 
 class Model(StrictBaseModel):
