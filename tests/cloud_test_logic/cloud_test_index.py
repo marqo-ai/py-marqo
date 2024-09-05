@@ -48,7 +48,7 @@ index_name_to_settings_mappings = {
         "model": "hf/e5-base-v2",
 
         "inferenceType": "marqo.CPU.small",
-        "storageClass": "marqo.basic",
+        "storageClass": "marqo.balanced",
         "numberOfReplicas": 3,  # For hybrid duplicates test
     },
     CloudTestIndex.unstructured_image: {
