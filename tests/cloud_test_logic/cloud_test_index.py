@@ -49,6 +49,7 @@ index_name_to_settings_mappings = {
 
         "inferenceType": "marqo.CPU.small",
         "storageClass": "marqo.basic",
+        "numberOfReplicas": 3,  # For hybrid duplicates test
     },
     CloudTestIndex.unstructured_image: {
         "type": "unstructured",
@@ -91,6 +92,7 @@ index_name_to_settings_mappings = {
         "tensorFields": ["text_field_1", "text_field_2", "text_field_3"],
         "storageClass": "marqo.balanced",
         "numberOfShards": 2,
+        "numberOfReplicas": 3,  # For hybrid duplicates test
     },
     CloudTestIndex.unstructured_no_model: {
         "type": "unstructured",

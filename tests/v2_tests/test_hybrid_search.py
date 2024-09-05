@@ -231,3 +231,38 @@ class TestHybridSearch(MarqoTestCase):
 
                     self.assertEqual(len(hybrid_res["hits"]), 1)
                     self.assertEqual(hybrid_res["hits"][0]["_id"], "doc8")
+
+    def test_hybrid_search_rrf_with_replicas_has_no_duplicates(self):
+        """
+        Tests that show that running 100 searches on indexes with 3 replicas (structured text & unstructured text)
+        will not have duplicates in results.
+        Only relevant for cloud tests.
+        """
+
+        if not self.client.config.is_marqo_cloud:
+            self.skipTest("Test is not relevant for non-Marqo Cloud instances")
+
+        index_test_cases = [CloudTestIndex.structured_text, CloudTestIndex.unstructured_text]
+        for cloud_test_index_to_use in index_test_cases:
+            test_index_name = self.get_test_index_name(
+                cloud_test_index_to_use=cloud_test_index_to_use,
+                open_source_test_index_name=None
+            )
+            self.client.index(test_index_name).add_documents(
+                self.docs_list,
+                tensor_fields=["text_field_1", "text_field_2", "text_field_3"] \
+                    if "unstr" in test_index_name else None
+            )
+
+            for _ in range(100):
+                hybrid_res = self.client.index(test_index_name).search(
+                    "dogs",
+                    search_method="HYBRID",
+                    limit=10
+                )
+
+                # check for duplicates
+                hit_ids = [hit["_id"] for hit in hybrid_res["hits"]]
+                self.assertEqual(len(hit_ids), len(set(hit_ids)))
+
+

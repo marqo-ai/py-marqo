@@ -348,6 +348,8 @@ class MarqoTestCase(TestCase):
             index_name_to_return = f"{cloud_test_index_to_use.value}_{self.index_suffix}"
             self.prepare_cloud_index_for_test(index_name_to_return, delete_index_documents_before_test)
         else:
+            if open_source_test_index_name is None:
+                raise ValueError("open_source_test_index_name must be specified for non-cloud tests")
             index_name_to_return = open_source_test_index_name
         return index_name_to_return
 
