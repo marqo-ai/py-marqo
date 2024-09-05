@@ -85,13 +85,13 @@ class TestImageChunking(MarqoTestCase):
             },
             }
 
-        test_index_name = self.get_test_index_name(
-            cloud_test_index_to_use=CloudTestIndex.structured_image,
-            open_source_test_index_name=None
-        )
         if not self.client.config.is_marqo_cloud:
             self.client.create_index(self.generic_test_index_name, settings_dict=settings)
-            test_index_name = self.generic_test_index_name
+
+        test_index_name = self.get_test_index_name(
+            cloud_test_index_to_use=CloudTestIndex.structured_image,
+            open_source_test_index_name=self.generic_test_index_name
+        )
         temp_file_name = 'https://avatars.githubusercontent.com/u/13092433?v=4'
         
         img = Image.open(requests.get(temp_file_name, stream=True).raw)
