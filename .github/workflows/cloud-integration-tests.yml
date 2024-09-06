@@ -17,6 +17,14 @@ on:
           with the prefix "test_index". Even those that were not created by this workflow.'
         required: true
         default: 'run_integration_tests'
+      number_of_shards:
+        description: 'Number of shards to use for the cloud tests. Default is 1.'
+        required: false
+        default: 1
+      number_of_replicas:
+        description: 'Number of replicas to use for the cloud tests. Default is 0.'
+        required: false
+        default: 0
   pull_request:
     branches:
       - mainline
@@ -56,6 +64,8 @@ jobs:
           MARQO_URL: ${{ secrets.STAGING_CLOUD_MARQO_URL }}
           MARQO_CLOUD_URL: ${{ secrets.STAGING_CLOUD_MARQO_URL }}
           MARQO_API_KEY: ${{ secrets.STAGING_CLOUD_MARQO_API_KEY }}
+          MARQO_NUMBER_OF_SHARDS: ${{ github.event.inputs.number_of_shards }}
+          MARQO_NUMBER_OF_REPLICAS: ${{ github.event.inputs.number_of_replicas }}
         run: tox -e cloud_tests -- create-indexes=True use-unique-identifier=True delete-indexes=True
 
   cleanup_indexes:
