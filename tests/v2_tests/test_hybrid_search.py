@@ -263,6 +263,8 @@ class TestHybridSearch(MarqoTestCase):
 
                 # check for duplicates
                 hit_ids = [hit["_id"] for hit in hybrid_res["hits"]]
-                self.assertEqual(len(hit_ids), len(set(hit_ids)))
+                self.assertEqual(len(hit_ids), len(set(hit_ids)),
+                                 f"Duplicates found in results. Only {len(set(hit_ids))} unique results out of "
+                                 f"{len(hit_ids)}")
 
 
