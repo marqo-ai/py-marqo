@@ -72,10 +72,10 @@ jobs:
           MARQO_URL: ${{ secrets.STAGING_CLOUD_MARQO_URL }}
           MARQO_CLOUD_URL: ${{ secrets.STAGING_CLOUD_MARQO_URL }}
           MARQO_API_KEY: ${{ secrets.STAGING_CLOUD_MARQO_API_KEY }}
-          MARQO_NUMBER_OF_SHARDS: ${{ github.event.inputs.number_of_shards }}
-          MARQO_NUMBER_OF_REPLICAS: ${{ github.event.inputs.number_of_replicas }}
+          MARQO_NUMBER_OF_SHARDS: ${{ inputs.number_of_shards }}
+          MARQO_NUMBER_OF_REPLICAS: ${{ inputs.number_of_replicas }}
         run: |
-          echo "Running with NUMBER_OF_SHARDS=${{ github.event.inputs.number_of_shards }} and NUMBER_OF_REPLICAS=${{ github.event.inputs.number_of_replicas }}"
+          echo "Running with NUMBER_OF_SHARDS=$MARQO_NUMBER_OF_SHARDS and NUMBER_OF_REPLICAS=$MARQO_NUMBER_OF_REPLICAS"
           tox -e cloud_tests -- create-indexes=True use-unique-identifier=True delete-indexes=True
 
   cleanup_indexes:
