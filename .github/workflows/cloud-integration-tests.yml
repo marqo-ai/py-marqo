@@ -25,6 +25,10 @@ on:
         description: 'Number of replicas to use for the cloud tests. Default is 0.'
         required: false
         default: 0
+  pull_request:
+    branches:
+      - mainline
+      - 'releases/*'
    # allows other workflows to reuse these unit tests:
   workflow_call:
 
@@ -62,9 +66,7 @@ jobs:
           MARQO_API_KEY: ${{ secrets.STAGING_CLOUD_MARQO_API_KEY }}
           MARQO_NUMBER_OF_SHARDS: ${{ github.event.inputs.number_of_shards }}
           MARQO_NUMBER_OF_REPLICAS: ${{ github.event.inputs.number_of_replicas }}
-        run: |
-          echo "Running with NUMBER_OF_SHARDS=${{ github.event.inputs.number_of_shards }} and NUMBER_OF_REPLICAS=${{ github.event.inputs.number_of_replicas }}"
-          tox -e cloud_tests -- create-indexes=True use-unique-identifier=True delete-indexes=True
+        run: tox -e cloud_tests -- create-indexes=True use-unique-identifier=True delete-indexes=True
 
   cleanup_indexes:
     name: Cleanup cloud indexes
