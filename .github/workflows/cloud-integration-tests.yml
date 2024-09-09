@@ -17,16 +17,28 @@ on:
           with the prefix "test_index". Even those that were not created by this workflow.'
         required: true
         default: 'run_integration_tests'
-      INPUT_NUMBER_OF_SHARDS:
+      number_of_shards:
         description: 'Number of shards to use for the cloud tests. Default is 1.'
-        required: false
+        required: true
         default: 1
-      INPUT_NUMBER_OF_REPLICAS:
+      number_of_replicas:
         description: 'Number of replicas to use for the cloud tests. Default is 0.'
-        required: false
+        required: true
         default: 0
-   # allows other workflows to reuse these unit tests:
+
+  # allows master workflow to reuse these cloud integration tests:
   workflow_call:
+    inputs:
+      number_of_shards:
+        description: 'Number of shards to use for the cloud tests. Default is 1.'
+        required: true
+        default: 1
+        type: number
+      number_of_replicas:
+        description: 'Number of replicas to use for the cloud tests. Default is 0.'
+        required: true
+        default: 0
+        type: number
 
 permissions:
   contents: read
