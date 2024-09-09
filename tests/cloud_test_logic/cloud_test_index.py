@@ -1,5 +1,4 @@
 from enum import Enum
-import os
 
 
 class CloudTestIndex(str, Enum):
