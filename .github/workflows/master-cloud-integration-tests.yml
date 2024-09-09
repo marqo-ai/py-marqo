@@ -26,14 +26,14 @@ jobs:
     uses: ./.github/workflows/cloud-integration-tests.yml
     secrets: inherit
     with:
-      NUMBER_OF_REPLICAS: 0
-      NUMBER_OF_SHARDS: 1
+      number_of_replicas: 0
+      number_of_shards: 1
 
   run-1-replica-2-shard-test:
     name: Cloud Integration Tests - 1 Replica, 2 Shards
     uses: ./.github/workflows/cloud-integration-tests.yml
     secrets: inherit
     with:
-      NUMBER_OF_REPLICAS: 1
-      NUMBER_OF_SHARDS: 2
+      number_of_replicas: 1
+      number_of_shards: 2
 
