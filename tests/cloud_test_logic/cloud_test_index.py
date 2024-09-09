@@ -40,17 +40,6 @@ class CloudTestIndex(str, Enum):
     structured_text = "pymarqo_str_txt"
     structured_image = "pymarqo_str_img"
 
-def get_env_var_as_int(var_name):
-    value = os.environ.get(var_name)
-    if value is None:
-        raise EnvironmentError(f"Environment variable '{var_name}' is not set.")
-    try:
-        return int(value)
-    except ValueError:
-        raise ValueError(f"Environment variable '{var_name}' must be an integer. Current value: '{value}'")
-
-NUMBER_OF_SHARDS = get_env_var_as_int("MARQO_NUMBER_OF_SHARDS")
-NUMBER_OF_REPLICAS = get_env_var_as_int("MARQO_NUMBER_OF_REPLICAS")
 
 index_name_to_settings_mappings = {
     CloudTestIndex.unstructured_text: {
@@ -59,9 +48,8 @@ index_name_to_settings_mappings = {
         "model": "hf/e5-base-v2",
 
         "inferenceType": "marqo.CPU.small",
-        "storageClass": "marqo.balanced" if NUMBER_OF_REPLICAS > 0 else "marqo.basic",
-        "numberOfReplicas": NUMBER_OF_REPLICAS,
-        "numberOfShards": NUMBER_OF_SHARDS,
+        "storageClass": "marqo.balanced",
+        "numberOfReplicas": 1,  # For hybrid duplicates test
     },
     CloudTestIndex.unstructured_image: {
         "type": "unstructured",
@@ -70,16 +58,12 @@ index_name_to_settings_mappings = {
 
         "inferenceType": "marqo.GPU",
         "storageClass": "marqo.performance",
-        "numberOfReplicas": NUMBER_OF_REPLICAS,
-        "numberOfShards": NUMBER_OF_SHARDS,
     },
     CloudTestIndex.structured_image: {
         "type": "structured",
         "model": "open_clip/ViT-B-32/laion2b_s34b_b79k",
         "inferenceType": "marqo.CPU.small",
-        "storageClass": "marqo.performance",
-        "numberOfReplicas": NUMBER_OF_REPLICAS,
-        "numberOfShards": NUMBER_OF_SHARDS,
+        "storageClass": "marqo.basic",
         "allFields": [
             {"name": "text_field_1", "type": "text", "features": ["lexical_search", "filter"]},
             {"name": "text_field_2", "type": "text", "features": ["lexical_search", "filter"]},
@@ -106,17 +90,15 @@ index_name_to_settings_mappings = {
             {"name": "int_field_1", "type": "int", "features": ["score_modifier"]},
             {"name": "int_filter_field_1", "type": "int", "features": ["filter", "score_modifier"]}],
         "tensorFields": ["text_field_1", "text_field_2", "text_field_3"],
-        "storageClass": "marqo.balanced" if NUMBER_OF_REPLICAS > 0 else "marqo.basic",
-        "numberOfReplicas": NUMBER_OF_REPLICAS,
-        "numberOfShards": NUMBER_OF_SHARDS,
+        "storageClass": "marqo.balanced",
+        "numberOfShards": 2,
+        "numberOfReplicas": 1,  # For hybrid duplicates test
     },
     CloudTestIndex.unstructured_no_model: {
         "type": "unstructured",
         "treatUrlsAndPointersAsImages": False,
         "inferenceType": "marqo.CPU.small",
-        "storageClass": "marqo.balanced" if NUMBER_OF_REPLICAS > 0 else "marqo.basic",
-        "numberOfReplicas": NUMBER_OF_REPLICAS,
-        "numberOfShards": NUMBER_OF_SHARDS,
+        "storageClass": "marqo.basic",
         "model": "no_model",
         "modelProperties": {
             "type": "no_model",
