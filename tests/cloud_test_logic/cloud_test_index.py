@@ -69,7 +69,7 @@ index_name_to_settings_mappings = {
         "treatUrlsAndPointersAsImages": True,
         "model": "open_clip/ViT-B-32/laion2b_s34b_b79k",
 
-        "inferenceType": "marqo.GPU",
+        "inferenceType": "marqo.CPU.small",
         "storageClass": "marqo.performance",
         "numberOfReplicas": NUMBER_OF_REPLICAS,
         "numberOfShards": NUMBER_OF_SHARDS,

@@ -1,0 +1,39 @@
+# This workflow kicks off cloud integration tests on pull request review
+# from a person that has write access to the repo.
+# It will then spin up indexes, run tox tests, and delete the indexes.
+# There is also manual trigger to the workflow in which user can specify
+# which job to run. Either delete_all_indexes or run_integration_tests.
+# Keep in mind that delete_all_indexes will delete ALL indexes in the
+# integration tests account that starts with the prefix "test_index".
+
+name: Cloud Integration Tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - mainline
+      - 'releases/*'
+   # allows other workflows to reuse these unit tests:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  run-0-replica-1-shard-test:
+    name: Cloud Integration Tests - 0 Replica, 1 Shard
+    uses: ./.github/workflows/cloud-integration-tests.yml
+    secrets: inherit
+    with:
+      NUMBER_OF_REPLICAS: 0
+      NUMBER_OF_SHARDS: 1
+
+  run-1-replica-2-shard-test:
+    name: Cloud Integration Tests - 1 Replica, 2 Shards
+    uses: ./.github/workflows/cloud-integration-tests.yml
+    secrets: inherit
+    with:
+      NUMBER_OF_REPLICAS: 1
+      NUMBER_OF_SHARDS: 2
+
