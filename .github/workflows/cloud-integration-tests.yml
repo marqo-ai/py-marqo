@@ -61,7 +61,7 @@ jobs:
   cleanup_indexes:
     name: Cleanup cloud indexes
     runs-on : ubuntu-latest
-    if: ${{ github.event.inputs.job_to_run == 'delete_all_indexes' }}
+    if: always()  # Run this job regardless of success or failure of the integration_tests job
     environment: cloud-tests
 
     steps:
