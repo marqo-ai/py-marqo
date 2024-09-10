@@ -33,16 +33,16 @@ def populate_indices():
         raise Exception("Some cloud index name exceeds 32 characters limit")
 
     for index_name, index_settings_dicts in index_name_to_settings_mappings.items():
-        print(f"Creating {index_name} with config: {index_settings_dicts}")
+        print(f"Creating {index_name} with config: {index_settings_dicts}", flush=True)
         try:
             print(mq.create_index(
                 index_name=index_name + INDEX_NAME_SEPARATOR + test_uniqueness_id,
                 wait_for_readiness=False,
                 settings_dict=index_settings_dicts
-                )
+                ), flush=True
             )
         except MarqoWebError as e:
-            print(f"Attempting to create index {index_name} resulting in error {e}")
+            print(f"Attempting to create index {index_name} resulting in error {e}", flush=True)
             raise e
 
 
@@ -57,8 +57,8 @@ def populate_indices():
         mq.config.instance_mapping._refresh_urls()
         time.sleep(10)
         print(f"Waiting for indexes to be created. Current Mappings: "
-              f"{mq.config.instance_mapping._urls_mapping}")
+              f"{mq.config.instance_mapping._urls_mapping}", flush=True)
         attempt += 1
         if attempt > max_retries:
             raise Exception("Timed out waiting for indexes to be created")
-    print(f"Populating indices took {time.time() - populate_indices_start_time} seconds")
+    print(f"Populating indices took {time.time() - populate_indices_start_time} seconds", flush=True)
