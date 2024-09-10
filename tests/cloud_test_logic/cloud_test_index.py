@@ -18,7 +18,7 @@ class CloudTestIndex(str, Enum):
     FOR CLOUD REPLICAS AND SHARDS:
     - Use unstructured_text, structured_text, or structured_images for 1 replica & 2 shards
     - Use all other indexes for 0 replicas & 1 shard
-    
+
     We design these indexes to maximize the coverage of different settings and features. For each test method,
     we will have to manually specify which index to use.
     """
