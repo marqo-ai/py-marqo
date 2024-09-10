@@ -14,6 +14,8 @@ class CloudTestIndex(str, Enum):
     4) structured_image_prepro: a structured index with image-compatible models with image preprocessing
     5) structured_image_custom: a structured index with custom image-compatible models using 2 inference pods
     6) structured_text: a text-only index with balanced storage class and 2 shards.
+    7) unstructured_languagebind_model: an unstructured index using the LanguageBind model for multi-modal support.
+    8) structured_languagebind_model: a structured index using the LanguageBind model for multi-modal support.
     For more information on the settings of each index, please refer to index_name_to_settings_mappings.
 
     We design these indexes to maximize the coverage of different settings and features. For each test method,
@@ -28,17 +30,21 @@ class CloudTestIndex(str, Enum):
         -> 3) use unstructured_text_custom_prepro
     4) You want to test image fields with image preprocessing
         -> 4) use structured_image_prepro
+    5) You want to test multi-modal fields (text, image, audio, video)
+        -> use 7) unstructured_languagebind_model or 8) structured_languagebind_model
     """
 
     unstructured_text = "pymarqo_unstr_txt"
     unstructured_image = "pymarqo_unstr_img"
     unstructured_text_custom_prepro = "pymarqo_unstr_txt_cstm_pre"
     unstructured_no_model = "pymarqo_unstr_no_model"
+    unstructured_languagebind_model = "pymarqo_unstr_langbind_model"
 
     structured_image_prepro = "pymarqo_str_img_prepro"
     structured_image_custom = "pymarqo_str_img_custom"
     structured_text = "pymarqo_str_txt"
     structured_image = "pymarqo_str_img"
+    structured_languagebind_model = "pymarqo_str_langbind_model"
 
 
 index_name_to_settings_mappings = {
@@ -57,6 +63,14 @@ index_name_to_settings_mappings = {
 
         "inferenceType": "marqo.GPU",
         "storageClass": "marqo.performance",
+    },
+    CloudTestIndex.unstructured_languagebind_model: {
+        "type": "unstructured",
+        "model": "LanguageBind/Video_V1.5_FT_Audio_FT_Image",
+        "inferenceType": "marqo.GPU",
+        "storageClass": "marqo.performance",
+        "treatUrlsAndPointersAsImages": True,
+        "treatUrlsAndPointersAsMedia": True,
     },
     CloudTestIndex.structured_image: {
         "type": "structured",
@@ -102,5 +116,26 @@ index_name_to_settings_mappings = {
             "type": "no_model",
             "dimensions": 512
         },
-    }
+    },
+    CloudTestIndex.structured_languagebind_model: {
+        "type": "structured",
+        "model": "LanguageBind/Video_V1.5_FT_Audio_FT_Image",
+        "inferenceType": "marqo.GPU",
+        "storageClass": "marqo.performance",
+        "allFields": [
+            {"name": "text_field_1", "type": "text"},
+            {"name": "text_field_2", "type": "text"},
+            {"name": "text_field_3", "type": "text"},
+            {"name": "video_field_1", "type": "video_pointer"},
+            {"name": "video_field_2", "type": "video_pointer"},
+            {"name": "video_field_3", "type": "video_pointer"},
+            {"name": "audio_field_1", "type": "audio_pointer"},
+            {"name": "audio_field_2", "type": "audio_pointer"},
+            {"name": "image_field_1", "type": "image_pointer"},
+            {"name": "image_field_2", "type": "image_pointer"},
+            {"name": "multimodal_field", "type": "multimodal_combination"},
+        ],
+        "tensorFields": ["multimodal_field", "text_field_3", "video_field_3", "audio_field_2", "image_field_2"],
+        "normalizeEmbeddings": True,
+    },
 }

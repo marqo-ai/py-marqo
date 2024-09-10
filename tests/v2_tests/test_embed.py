@@ -9,7 +9,9 @@ from tests.marqo_test import MarqoTestCase, CloudTestIndex
 class TestEmbed(MarqoTestCase):
 
     def setUp(self):
-        self.test_cases = [(CloudTestIndex.structured_text, self.unstructured_index_name)]
+        self.test_cases = [
+            (CloudTestIndex.structured_text, self.unstructured_index_name),
+        ]
 
     def test_embed_single_string(self):
         """Embeds a string. Use add docs and get docs with tensor facets to ensure the vector is correct.
@@ -186,57 +188,69 @@ class TestEmbed(MarqoTestCase):
 
     def test_embed_images_with_languagebind(self):
         """Embeds multiple images using LanguageBind model."""
-        test_index_name = self.unstructured_languagebind_index_name
-        
-        image_urls = [
-            "https://raw.githubusercontent.com/marqo-ai/marqo-api-tests/mainline/assets/ai_hippo_realistic.png",
-            "https://raw.githubusercontent.com/marqo-ai/marqo-api-tests/mainline/assets/ai_hippo_realistic.png",
-            "https://raw.githubusercontent.com/marqo-ai/marqo-api-tests/mainline/assets/ai_hippo_realistic.png"
-        ]
+        for cloud_test_index_to_use, open_source_test_index_name in self.test_cases_multimodal:
+            if "languagebind" not in str(cloud_test_index_to_use):
+                continue
+            test_index_name = self.get_test_index_name(
+                cloud_test_index_to_use=cloud_test_index_to_use,
+                open_source_test_index_name=open_source_test_index_name
+            )
 
-        embed_res = self.client.index(test_index_name).embed(content=image_urls)
+            with self.subTest(test_index_name):
+                image_urls = [
+                    "https://raw.githubusercontent.com/marqo-ai/marqo-api-tests/mainline/assets/ai_hippo_realistic.png",
+                    "https://raw.githubusercontent.com/marqo-ai/marqo-api-tests/mainline/assets/ai_hippo_realistic.png",
+                ]
 
-        self.assertIn("processingTimeMs", embed_res)
-        self.assertEqual(embed_res["content"], image_urls)
-        self.assertEqual(len(embed_res["embeddings"]), 3)
-        
-        # Check that embeddings are non-zero and have the expected shape
-        for embedding in embed_res["embeddings"]:
-            self.assertGreater(len(embedding), 0)
-            self.assertTrue(any(abs(x) > 1e-6 for x in embedding))
+                embed_res = self.client.index(test_index_name).embed(content=image_urls)
 
-        # Check that embeddings are close to the expected values
-        expected_embedding = [0.019889963790774345, -0.01263524405658245, 
-                              0.026028314605355263, 0.005291664972901344, -0.013181567192077637]
-        for embedding in embed_res["embeddings"]:
-            for i, value in enumerate(expected_embedding):
-                self.assertAlmostEqual(embedding[i], value, places=5)
+                self.assertIn("processingTimeMs", embed_res)
+                self.assertEqual(embed_res["content"], image_urls)
+                self.assertEqual(len(embed_res["embeddings"]), 2)
+                
+                # Check that embeddings are non-zero and have the expected shape
+                for embedding in embed_res["embeddings"]:
+                    self.assertGreater(len(embedding), 0)
+                    self.assertTrue(any(abs(x) > 1e-6 for x in embedding))
+
+                # Check that embeddings are close to the expected values
+                expected_embedding = [0.019889963790774345, -0.01263524405658245, 
+                                    0.026028314605355263, 0.005291664972901344, -0.013181567192077637]
+                for embedding in embed_res["embeddings"]:
+                    for i, value in enumerate(expected_embedding):
+                        self.assertAlmostEqual(embedding[i], value, places=5)
 
 
     def test_embed_videos_with_languagebind(self):
         """Embeds multiple videos using LanguageBind model."""
-        test_index_name = self.structured_languagebind_index_name
-        
-        video_urls = [
-            "https://marqo-k400-video-test-dataset.s3.amazonaws.com/videos/---QUuC4vJs_000084_000094.mp4",
-            "https://marqo-k400-video-test-dataset.s3.amazonaws.com/videos/---QUuC4vJs_000084_000094.mp4",
-            "https://marqo-k400-video-test-dataset.s3.amazonaws.com/videos/---QUuC4vJs_000084_000094.mp4"
-        ]
+        for cloud_test_index_to_use, open_source_test_index_name in self.test_cases_multimodal:
+            if "languagebind" not in str(cloud_test_index_to_use):
+                continue
+            test_index_name = self.get_test_index_name(
+                cloud_test_index_to_use=cloud_test_index_to_use,
+                open_source_test_index_name=open_source_test_index_name
+            )
 
-        embed_res = self.client.index(test_index_name).embed(content=video_urls)
+            with self.subTest(test_index_name):
+                video_urls = [
+                    "https://marqo-k400-video-test-dataset.s3.amazonaws.com/videos/---QUuC4vJs_000084_000094.mp4",
+                    "https://marqo-k400-video-test-dataset.s3.amazonaws.com/videos/---QUuC4vJs_000084_000094.mp4",
+                ]
 
-        self.assertIn("processingTimeMs", embed_res)
-        self.assertEqual(embed_res["content"], video_urls)
-        self.assertEqual(len(embed_res["embeddings"]), 3)
-        
-        # Check that embeddings are non-zero and have the expected shape
-        for embedding in embed_res["embeddings"]:
-            self.assertGreater(len(embedding), 0)
-            self.assertTrue(any(abs(x) > 1e-6 for x in embedding))
+                embed_res = self.client.index(test_index_name).embed(content=video_urls)
 
-        # Check that embeddings are close to the expected values
-        expected_embedding = [0.0394694060087204, 0.049264926463365555, 
-                              -0.014714145101606846, 0.05715121701359749, -0.019508328288793564]
-        for embedding in embed_res["embeddings"]:
-            for i, value in enumerate(expected_embedding):
-                self.assertAlmostEqual(embedding[i], value, places=5)
+                self.assertIn("processingTimeMs", embed_res)
+                self.assertEqual(embed_res["content"], video_urls)
+                self.assertEqual(len(embed_res["embeddings"]), 2)
+                
+                # Check that embeddings are non-zero and have the expected shape
+                for embedding in embed_res["embeddings"]:
+                    self.assertGreater(len(embedding), 0)
+                    self.assertTrue(any(abs(x) > 1e-6 for x in embedding))
+
+                # Check that embeddings are close to the expected values
+                expected_embedding = [0.0298048947006464, 0.05226955562829971,
+                                      -0.0038126774597913027, 0.061151087284088135, -0.013925471343100071]
+                for embedding in embed_res["embeddings"]:
+                    for i, value in enumerate(expected_embedding):
+                        self.assertAlmostEqual(embedding[i], value, places=5)

@@ -216,6 +216,10 @@ class MarqoTestCase(TestCase):
         cls.test_cases = [
             (CloudTestIndex.unstructured_image, cls.unstructured_index_name),
         ]
+        cls.test_cases_multimodal = [
+            (CloudTestIndex.unstructured_languagebind_model, cls.unstructured_languagebind_index_name),
+            (CloudTestIndex.structured_languagebind_model, cls.structured_languagebind_index_name)
+        ]
 
         # class property to indicate if test is being run on multi
         cls.IS_MULTI_INSTANCE = (True if os.environ.get("IS_MULTI_INSTANCE", False) in ["True", "TRUE", "true", True] else False)
@@ -278,12 +282,30 @@ class MarqoTestCase(TestCase):
                         "type": "structured",
                         "model": "LanguageBind/Video_V1.5_FT_Audio_FT_Image",
                         "allFields": [
-                            {"name": "text_field", "type": "text"},
-                            {"name": "video_field", "type": "video_pointer"},
-                            {"name": "audio_field", "type": "audio_pointer"},
-                            {"name": "image_field", "type": "image_pointer"}
+                            {"name": "text_field_1", "type": "text"},
+                            {"name": "text_field_2", "type": "text"},
+                            {"name": "text_field_3", "type": "text"},
+                            {"name": "video_field_1", "type": "video_pointer"},
+                            {"name": "video_field_2", "type": "video_pointer"},
+                            {"name": "video_field_3", "type": "video_pointer"},
+                            {"name": "audio_field_1", "type": "audio_pointer"},
+                            {"name": "audio_field_2", "type": "audio_pointer"},
+                            {"name": "image_field_1", "type": "image_pointer"},
+                            {"name": "image_field_2", "type": "image_pointer"},
+                            {
+                                "name": "multimodal_field", 
+                                "type": "multimodal_combination",
+                                "dependentFields": {
+                                    "text_field_1": 0.1,
+                                    "text_field_2": 0.1,
+                                    "image_field_1": 0.5,
+                                    "video_field_1": 0.1,
+                                    "video_field_2": 0.1,
+                                    "audio_field_1": 0.1
+                                }
+                            },
                         ],
-                        "tensorFields": ["text_field", "video_field", "audio_field", "image_field"]
+                        "tensorFields": ["multimodal_field", "text_field_3", "video_field_3", "audio_field_2", "image_field_2"]
                     }
                 ])
             except Exception as e:
