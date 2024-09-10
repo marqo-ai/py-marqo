@@ -8,26 +8,19 @@ class CloudTestIndex(str, Enum):
     Please try to keep names short to avoid hitting name-length limits
 
     We create 3 unstructured indexes and 3 structured indexes to test:
-    1) unstructured_text: a basic text-only index with default settings.
-    2) unstructured_image: an image-compatible index with GPU inference pod and performance storage class.
-    3) unstructured_text_custom_prepro: a text-only index with custom model and text preprocessing, with 1 replica.
-    4) structured_image_prepro: a structured index with image-compatible models with image preprocessing
-    5) structured_image_custom: a structured index with custom image-compatible models using 2 inference pods
-    6) structured_text: a text-only index with balanced storage class and 2 shards.
+    1) unstructured_text: Text-only index using hf/e5-base-v2, 2 shards, 1 replica, CPU, balanced storage, for hybrid duplicates testing.
+    2) unstructured_image: Image-compatible index using open_clip/ViT-B-32/laion2b_s34b_b79k, 1 shard, no replicas, CPU, basic storage.
+    3) unstructured_no_model: 512-dimension custom vectors, 1 shard, no replicas, CPU, basic storage.
+    4) structured_text: Structured text index with hf/e5-base-v2, lexical search, 2 shards, 1 replica, CPU, balanced storage.
+    5) structured_image: Structured image-text index with open_clip/ViT-B-32, 2 shards, 1 replica, CPU, balanced storage, with image preprocessing.
     For more information on the settings of each index, please refer to index_name_to_settings_mappings.
+
+    FOR CLOUD REPLICAS AND SHARDS:
+    - Use unstructured_text, structured_text, or structured_images for 1 replica & 2 shards
+    - Use all other indexes for 0 replicas & 1 shard
 
     We design these indexes to maximize the coverage of different settings and features. For each test method,
     we will have to manually specify which index to use.
-
-    For example,
-    1) You want to test text fields without text preprocessing
-        -> use 1) unstructured_text or 6) structured_text
-    2) You want to test image fields without image preprocessing
-        -> use 2) unstructured_image or 5) structured_image_custom
-    3) You want to test text fields with text preprocessing
-        -> 3) use unstructured_text_custom_prepro
-    4) You want to test image fields with image preprocessing
-        -> 4) use structured_image_prepro
     """
 
     unstructured_text = "pymarqo_unstr_txt"
@@ -48,21 +41,60 @@ index_name_to_settings_mappings = {
         "model": "hf/e5-base-v2",
 
         "inferenceType": "marqo.CPU.small",
-        "storageClass": "marqo.basic",
+        "storageClass": "marqo.balanced",
+        "numberOfShards": 2,
+        "numberOfReplicas": 1,  # For hybrid duplicates test
     },
     CloudTestIndex.unstructured_image: {
         "type": "unstructured",
         "treatUrlsAndPointersAsImages": True,
         "model": "open_clip/ViT-B-32/laion2b_s34b_b79k",
 
-        "inferenceType": "marqo.GPU",
-        "storageClass": "marqo.performance",
+        "inferenceType": "marqo.CPU.small",
+        "storageClass": "marqo.basic",
+        "numberOfShards": 1,
+        "numberOfReplicas": 0,
+    },
+    CloudTestIndex.unstructured_no_model: {
+        "type": "unstructured",
+        "treatUrlsAndPointersAsImages": False,
+
+        "inferenceType": "marqo.CPU.small",
+        "storageClass": "marqo.basic",
+        "numberOfShards": 1,
+        "numberOfReplicas": 0,
+
+        "model": "no_model",
+        "modelProperties": {
+            "type": "no_model",
+            "dimensions": 512
+        },
+    },
+    CloudTestIndex.structured_text: {
+        "type": "structured",
+        "model": "hf/e5-base-v2",
+        "allFields": [
+            {"name": "text_field_1", "type": "text", "features": ["lexical_search", "filter"]},
+            {"name": "text_field_2", "type": "text", "features": ["lexical_search", "filter"]},
+            {"name": "text_field_3", "type": "text", "features": ["lexical_search"]},
+            {"name": "int_field_1", "type": "int", "features": ["score_modifier"]},
+            {"name": "int_filter_field_1", "type": "int", "features": ["filter", "score_modifier"]}],
+        "tensorFields": ["text_field_1", "text_field_2", "text_field_3"],
+
+        "inferenceType": "marqo.CPU.small",
+        "storageClass": "marqo.balanced",
+        "numberOfShards": 2,
+        "numberOfReplicas": 1,  # For hybrid duplicates test
     },
     CloudTestIndex.structured_image: {
         "type": "structured",
         "model": "open_clip/ViT-B-32/laion2b_s34b_b79k",
+
         "inferenceType": "marqo.CPU.small",
-        "storageClass": "marqo.basic",
+        "storageClass": "marqo.balanced",
+        "numberOfShards": 2,
+        "numberOfReplicas": 1,  # For hybrid duplicates test
+
         "allFields": [
             {"name": "text_field_1", "type": "text", "features": ["lexical_search", "filter"]},
             {"name": "text_field_2", "type": "text", "features": ["lexical_search", "filter"]},
@@ -78,29 +110,5 @@ index_name_to_settings_mappings = {
         "imagePreprocessing": {
             "patchMethod": "simple",
         }
-    },
-    CloudTestIndex.structured_text: {
-        "type": "structured",
-        "model": "hf/e5-base-v2",
-        "allFields": [
-            {"name": "text_field_1", "type": "text", "features": ["lexical_search", "filter"]},
-            {"name": "text_field_2", "type": "text", "features": ["lexical_search", "filter"]},
-            {"name": "text_field_3", "type": "text", "features": ["lexical_search"]},
-            {"name": "int_field_1", "type": "int", "features": ["score_modifier"]},
-            {"name": "int_filter_field_1", "type": "int", "features": ["filter", "score_modifier"]}],
-        "tensorFields": ["text_field_1", "text_field_2", "text_field_3"],
-        "storageClass": "marqo.balanced",
-        "numberOfShards": 2,
-    },
-    CloudTestIndex.unstructured_no_model: {
-        "type": "unstructured",
-        "treatUrlsAndPointersAsImages": False,
-        "inferenceType": "marqo.CPU.small",
-        "storageClass": "marqo.basic",
-        "model": "no_model",
-        "modelProperties": {
-            "type": "no_model",
-            "dimensions": 512
-        },
     }
 }
