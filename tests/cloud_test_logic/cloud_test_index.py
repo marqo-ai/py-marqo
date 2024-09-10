@@ -84,11 +84,8 @@ index_name_to_settings_mappings = {
             {"name": "int_field_1", "type": "int", "features": ["score_modifier"]},
             {"name": "int_filter_field_1", "type": "int", "features": ["filter", "score_modifier"]}],
         "tensorFields": ["text_field_1", "text_field_2", "text_field_3"],
-
-        "inferenceType": "marqo.CPU.small",
         "storageClass": "marqo.balanced",
         "numberOfShards": 2,
-        "numberOfReplicas": 1,  # For hybrid duplicates test
     },
     CloudTestIndex.structured_image: {
         "type": "structured",
@@ -114,30 +111,6 @@ index_name_to_settings_mappings = {
         "imagePreprocessing": {
             "patchMethod": "simple",
         }
-    },
-    CloudTestIndex.structured_text: {
-        "type": "structured",
-        "model": "hf/e5-base-v2",
-        "allFields": [
-            {"name": "text_field_1", "type": "text", "features": ["lexical_search", "filter"]},
-            {"name": "text_field_2", "type": "text", "features": ["lexical_search", "filter"]},
-            {"name": "text_field_3", "type": "text", "features": ["lexical_search"]},
-            {"name": "int_field_1", "type": "int", "features": ["score_modifier"]},
-            {"name": "int_filter_field_1", "type": "int", "features": ["filter", "score_modifier"]}],
-        "tensorFields": ["text_field_1", "text_field_2", "text_field_3"],
-        "storageClass": "marqo.balanced",
-        "numberOfShards": 2,
-    },
-    CloudTestIndex.unstructured_no_model: {
-        "type": "unstructured",
-        "treatUrlsAndPointersAsImages": False,
-        "inferenceType": "marqo.CPU.small",
-        "storageClass": "marqo.basic",
-        "model": "no_model",
-        "modelProperties": {
-            "type": "no_model",
-            "dimensions": 512
-        },
     },
     CloudTestIndex.structured_languagebind_model: {
         "type": "structured",
