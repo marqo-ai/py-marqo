@@ -84,8 +84,10 @@ index_name_to_settings_mappings = {
             {"name": "int_field_1", "type": "int", "features": ["score_modifier"]},
             {"name": "int_filter_field_1", "type": "int", "features": ["filter", "score_modifier"]}],
         "tensorFields": ["text_field_1", "text_field_2", "text_field_3"],
+        "inferenceType": "marqo.CPU.small",
         "storageClass": "marqo.balanced",
         "numberOfShards": 2,
+        "numberOfReplicas": 1, # For hybrid duplicates test
     },
     CloudTestIndex.structured_image: {
         "type": "structured",
