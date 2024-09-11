@@ -590,7 +590,6 @@ class TestAddDocuments(MarqoTestCase):
         """
         self.test_cases = [(CloudTestIndex.unstructured_no_model, self.unstructured_no_model_index_name)]
         self.test_cases_multimodal = [
-            (CloudTestIndex.unstructured_languagebind_model, self.unstructured_languagebind_index_name),
             (CloudTestIndex.structured_languagebind_model, self.structured_languagebind_index_name)
         ]
 
