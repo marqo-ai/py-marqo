@@ -589,6 +589,9 @@ class TestAddDocuments(MarqoTestCase):
         Note: `no_model` is not yet supported on Cloud.
         """
         self.test_cases = [(CloudTestIndex.unstructured_no_model, self.unstructured_no_model_index_name)]
+        self.test_cases_multimodal = [
+            (CloudTestIndex.structured_languagebind_model, self.structured_languagebind_index_name)
+        ]
 
         for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
             test_index_name = self.get_test_index_name(
@@ -704,3 +707,101 @@ class TestAddDocuments(MarqoTestCase):
             res = self.client.index(test_index_name).add_documents(documents=[], client_batch_size=5,
                                                                    tensor_fields="field a")
             assert res == []
+
+    def test_add_multimodal_single_documents(self):
+        documents = [
+            {
+                "video_field_3": "https://marqo-k400-video-test-dataset.s3.amazonaws.com/videos/---QUuC4vJs_000084_000094.mp4",
+                "_id": "1"
+            },
+            {
+                "audio_field_2": "https://marqo-ecs-50-audio-test-dataset.s3.amazonaws.com/audios/marqo-audio-test.mp3",
+                "_id": "2"
+            },
+            {
+                "image_field_2": "https://raw.githubusercontent.com/marqo-ai/marqo-api-tests/mainline/assets/ai_hippo_realistic.png",
+                "_id": "3"
+            },
+            {
+                "text_field_3": "hello there padawan. Today you will begin your training to be a Jedi",
+                "_id": "4"
+            },
+        ]
+        for cloud_test_index_to_use, open_source_test_index_name in self.test_cases_multimodal:
+            if "languagebind" not in str(cloud_test_index_to_use):
+                continue
+            test_index_name = self.get_test_index_name(
+                cloud_test_index_to_use=cloud_test_index_to_use,
+                open_source_test_index_name=open_source_test_index_name
+            )
+            with self.subTest(test_index_name):
+                tensor_fields = ["text_field_3", "image_field_2", "video_field_3", "audio_field_2"] if "unstructured" in test_index_name else None
+                res = self.client.index(test_index_name).add_documents(documents, tensor_fields=tensor_fields)
+                print(res)
+                
+                for item in res['items']:
+                    self.assertEqual(200, item['status'])
+
+                get_res = self.client.index(test_index_name).get_documents(
+                    document_ids=["1", "2", "3", "4"],
+                    expose_facets=True
+                )
+                print(get_res)
+
+                for i, doc in enumerate(get_res['results']):
+                    i += 1
+                    tensor_facets = doc['_tensor_facets']
+                    self.assertIn('_embedding', tensor_facets[0])
+                    self.assertEqual(len(tensor_facets[0]['_embedding']), 768)
+
+    def test_add_multimodal_field_document(self):
+        multimodal_document = [{
+            "_id": "1_multimodal",
+            "text_field_1": "New York",
+            "text_field_2": "Los Angeles",
+            "image_field_1": "https://raw.githubusercontent.com/marqo-ai/marqo-api-tests/mainline/assets/ai_hippo_realistic.png",
+            "video_field_1": "https://marqo-k400-video-test-dataset.s3.amazonaws.com/videos/---QUuC4vJs_000084_000094.mp4",
+            "video_field_2": "https://marqo-k400-video-test-dataset.s3.amazonaws.com/videos/---QUuC4vJs_000084_000094.mp4",
+            "audio_field_1": "https://marqo-ecs-50-audio-test-dataset.s3.amazonaws.com/audios/marqo-audio-test.mp3",
+        }]
+        for cloud_test_index_to_use, open_source_test_index_name in self.test_cases_multimodal:
+            if "languagebind" not in str(cloud_test_index_to_use):
+                continue
+            test_index_name = self.get_test_index_name(
+                cloud_test_index_to_use=cloud_test_index_to_use,
+                open_source_test_index_name=open_source_test_index_name
+            )
+            with self.subTest(test_index_name):
+                mappings = {
+                    "multimodal_field": {
+                        "type": "multimodal_combination",
+                        "weights": {
+                            "text_field_1": 0.1,
+                            "text_field_2": 0.1,
+                            "image_field_1": 0.5,
+                            "video_field_1": 0.1,
+                            "video_field_2": 0.1,
+                            "audio_field_1": 0.1
+                        },
+                    }
+                } if "unstructured" in test_index_name else None
+                tensor_fields = ["multimodal_field"] if "unstructured" in test_index_name else None
+                res = self.client.index(test_index_name).add_documents(
+                    multimodal_document,
+                    tensor_fields=tensor_fields,
+                    mappings=mappings
+                )
+                print(res)
+
+                for item in res['items']:
+                    self.assertEqual(200, item['status'])
+
+                doc = self.client.index(test_index_name).get_documents(
+                    document_ids=["1_multimodal"],
+                    expose_facets=True
+                )
+                print(doc)
+
+                self.assertIn('_tensor_facets', doc['results'][0])
+                self.assertIn('_embedding', doc['results'][0]['_tensor_facets'][0])
+                self.assertEqual(len(doc['results'][0]['_tensor_facets'][0]['_embedding']), 768)
