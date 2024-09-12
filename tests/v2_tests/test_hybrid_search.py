@@ -149,6 +149,7 @@ class TestHybridSearch(MarqoTestCase):
             for i in range(len(res_custom_vector["hits"])):
                 self.assertEqual(res_custom_vector["hits"][i]["_id"], res_context["hits"][i]["_id"])
 
+    @mark.ignore_during_cloud_tests
     def test_hybrid_search_same_retrieval_and_ranking_matches_original_method(self):
         """
         Tests that hybrid search with:
