@@ -118,7 +118,7 @@ index_name_to_settings_mappings = {
         "type": "structured",
         "model": "LanguageBind/Video_V1.5_FT_Audio_FT_Image",
         "inferenceType": "marqo.GPU",
-        "storageClass": "marqo.performance",
+        "storageClass": "marqo.balanced",
         "allFields": [
             {"name": "text_field_1", "type": "text"},
             {"name": "text_field_2", "type": "text"},
