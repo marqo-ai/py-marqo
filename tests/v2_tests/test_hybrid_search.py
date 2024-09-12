@@ -50,6 +50,7 @@ class TestHybridSearch(MarqoTestCase):
             {"_id": "doc13", "text_field_2": "canines canines"},
         ]
 
+    @mark.ignore_during_cloud_tests
     def test_hybrid_search_searchable_attributes(self):
         """
         Tests that searchable attributes work as expected for all methods
@@ -243,23 +244,16 @@ class TestHybridSearch(MarqoTestCase):
         if not self.client.config.is_marqo_cloud:
             self.skipTest("Test is not relevant for non-Marqo Cloud instances")
 
-        index_test_cases = [CloudTestIndex.structured_text, CloudTestIndex.unstructured_text]
-        for cloud_test_index_to_use in index_test_cases:
+        # Split into 2 separate blocks to unblock (looping error occurring)
+        cloud_test_index_to_use = CloudTestIndex.structured_text
+        with self.subTest("structured text"):
             test_index_name = self.get_test_index_name(
                 cloud_test_index_to_use=cloud_test_index_to_use,
                 open_source_test_index_name=None
             )
             print(f"Running test for index: {test_index_name}", flush=True)
-            if "unstr" in test_index_name:
-                print(f"Obviously, the string 'unstr' is in the index name: {test_index_name}", flush=True)
-                self.client.index(test_index_name).add_documents(
-                    self.docs_list,
-                    tensor_fields=["text_field_1", "text_field_2", "text_field_3"]
-                )
-            else:
-                # If structured, do not add tensor_fields.
-                self.client.index(test_index_name).add_documents(self.docs_list)
-
+            add_docs_res = self.client.index(test_index_name).add_documents(self.docs_list)
+            print(f"Add docs result: {add_docs_res}", flush=True)
             for _ in range(100):
                 hybrid_res = self.client.index(test_index_name).search(
                     "dogs",
@@ -273,4 +267,27 @@ class TestHybridSearch(MarqoTestCase):
                                  f"Duplicates found in results. Only {len(set(hit_ids))} unique results out of "
                                  f"{len(hit_ids)}")
 
+        cloud_test_index_to_use = CloudTestIndex.unstructured_text
+        with self.subTest("unstructured text"):
+            test_index_name = self.get_test_index_name(
+                cloud_test_index_to_use=cloud_test_index_to_use,
+                open_source_test_index_name=None
+            )
+            print(f"Running test for index: {test_index_name}", flush=True)
+            add_docs_res = self.client.index(test_index_name).add_documents(
+                self.docs_list,
+                tensor_fields=["text_field_1", "text_field_2", "text_field_3"]
+            )
+            print(f"Add docs result: {add_docs_res}", flush=True)
+            for _ in range(100):
+                hybrid_res = self.client.index(test_index_name).search(
+                    "dogs",
+                    search_method="HYBRID",
+                    limit=10
+                )
 
+                # check for duplicates
+                hit_ids = [hit["_id"] for hit in hybrid_res["hits"]]
+                self.assertEqual(len(hit_ids), len(set(hit_ids)),
+                                 f"Duplicates found in results. Only {len(set(hit_ids))} unique results out of "
+                                 f"{len(hit_ids)}")
