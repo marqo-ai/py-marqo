@@ -248,11 +248,14 @@ class TestHybridSearch(MarqoTestCase):
                 cloud_test_index_to_use=cloud_test_index_to_use,
                 open_source_test_index_name=None
             )
-            self.client.index(test_index_name).add_documents(
-                self.docs_list,
-                tensor_fields=["text_field_1", "text_field_2", "text_field_3"] \
-                    if "unstr" in test_index_name else None
-            )
+            if "unstr" in test_index_name:
+                self.client.index(test_index_name).add_documents(
+                    self.docs_list,
+                    tensor_fields=["text_field_1", "text_field_2", "text_field_3"]
+                )
+            else:
+                # If structured, do not add tensor_fields.
+                self.client.index(test_index_name).add_documents(self.docs_list)
 
             for _ in range(100):
                 hybrid_res = self.client.index(test_index_name).search(
