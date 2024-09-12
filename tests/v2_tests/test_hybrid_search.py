@@ -249,7 +249,9 @@ class TestHybridSearch(MarqoTestCase):
                 cloud_test_index_to_use=cloud_test_index_to_use,
                 open_source_test_index_name=None
             )
+            print(f"Running test for index: {test_index_name}", flush=True)
             if "unstr" in test_index_name:
+                print(f"Obviously, the string 'unstr' is in the index name: {test_index_name}", flush=True)
                 self.client.index(test_index_name).add_documents(
                     self.docs_list,
                     tensor_fields=["text_field_1", "text_field_2", "text_field_3"]
