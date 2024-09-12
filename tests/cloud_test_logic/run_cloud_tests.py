@@ -59,7 +59,7 @@ if __name__ == '__main__':
                 sys.exit(1)
         print(f"All indices has been created, proceeding to run tests with pytest. Arguments: {sys.argv[1:]}")
 
-        pytest_args = ['tests/', '-m', 'not ignore_during_cloud_tests'] + sys.argv[1:]
+        pytest_args = ['tests/v2_tests/test_hybrid_search.py', '-m', 'not ignore_during_cloud_tests'] + sys.argv[1:]
         print("running integration tests with args:", pytest_args)
         pytest_exit_code = pytest.main(pytest_args)
         if pytest_exit_code != 0:

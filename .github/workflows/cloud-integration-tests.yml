@@ -37,8 +37,9 @@ jobs:
     steps:
 
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
+          ref: ${{ github.head_ref || github.ref }}  # Checkout the current branch or PR head
           fetch-depth: 0
 
       - name: Set up Python 3.8
