@@ -17,10 +17,6 @@ on:
           with the prefix "test_index". Even those that were not created by this workflow.'
         required: true
         default: 'run_integration_tests'
-  pull_request:
-    branches:
-      - mainline
-      - 'releases/*'
    # allows other workflows to reuse these unit tests:
   workflow_call:
 
