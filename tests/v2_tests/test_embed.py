@@ -9,7 +9,9 @@ from tests.marqo_test import MarqoTestCase, CloudTestIndex
 class TestEmbed(MarqoTestCase):
 
     def setUp(self):
-        self.test_cases = [(CloudTestIndex.structured_text, self.unstructured_index_name)]
+        self.test_cases = [
+            (CloudTestIndex.structured_text, self.unstructured_index_name),
+        ]
 
     def test_embed_single_string(self):
         """Embeds a string. Use add docs and get docs with tensor facets to ensure the vector is correct.

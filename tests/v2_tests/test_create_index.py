@@ -38,10 +38,13 @@ class TestCreateIndex(MarqoTestCase):
         expected_settings = {
             'type': 'unstructured',
             'treatUrlsAndPointersAsImages': False,
+            'treatUrlsAndPointersAsMedia': False,
             'model': 'hf/e5-base-v2',
             'normalizeEmbeddings': True,
             'textPreprocessing': {'splitLength': 2, 'splitOverlap': 0, 'splitMethod': 'sentence'},
             'imagePreprocessing': {},
+            'audioPreprocessing': {'splitLength': 20, 'splitOverlap': 3},
+            'videoPreprocessing': {'splitLength': 20, 'splitOverlap': 3},
             'vectorNumericType': 'float',
             'filterStringMaxLength': 50,
             'annParameters': {
@@ -190,6 +193,8 @@ class TestCreateIndex(MarqoTestCase):
             'normalizeEmbeddings': True,
             'textPreprocessing': {'splitLength': 2, 'splitOverlap': 0, 'splitMethod': 'sentence'},
             'imagePreprocessing': {},
+            'audioPreprocessing': {'splitLength': 20, 'splitOverlap': 3},
+            'videoPreprocessing': {'splitLength': 20, 'splitOverlap': 3},
             'vectorNumericType': 'float',
             'annParameters': {'spaceType': 'prenormalized-angular', 'parameters': {'efConstruction': 512, 'm': 16}}}
         self.assertEqual(expected_index_settings, index_settings)
@@ -311,3 +316,112 @@ class TestCreateIndex(MarqoTestCase):
         self.assertEqual(1, len(res['hits']))
         self.client.delete_index("test-dash-and-under-score")
         self.client.delete_index("test_dash_and_under_score")
+
+    def test_create_invalid_unstructured_languagebind_index(self):
+        with self.assertRaises(MarqoWebError) as e:
+            self.client.create_index(
+                index_name=self.index_name,
+                type="unstructured",
+                model="LanguageBind/Video_V1.5_FT_Audio_FT_Image",
+                video_preprocessing={
+                    "splitLength": 10,
+                    "splitOverlap": 3
+                },
+                treat_urls_and_pointers_as_media=True,
+                treat_urls_and_pointers_as_images=False
+            )
+
+    def test_create_unstructured_index_with_languagebind(self):
+        self.client.create_index(
+            index_name=self.index_name,
+            type="unstructured",
+            model="LanguageBind/Video_V1.5_FT_Audio_FT_Image",
+            treat_urls_and_pointers_as_media=True,
+            treat_urls_and_pointers_as_images=True
+        )
+
+        index_settings = self.client.index(self.index_name).get_settings()
+        
+        expected_settings = {
+            "type": "unstructured",
+            "model": "LanguageBind/Video_V1.5_FT_Audio_FT_Image",
+            "normalizeEmbeddings": True,
+            "treatUrlsAndPointersAsMedia": True,
+            "treatUrlsAndPointersAsImages": True,
+            "vectorNumericType": "float"
+        }
+
+        for key, value in expected_settings.items():
+            self.assertEqual(value, index_settings[key])
+
+        # Test adding and searching documents
+        ix = self.client.index(self.index_name)
+        
+        res = ix.add_documents(
+            documents = [
+                {"audio_field": "https://audio-previews.elements.envatousercontent.com/files/187680354/preview.mp3", "_id": "corporate"},
+                {"audio_field": "https://audio-previews.elements.envatousercontent.com/files/492763015/preview.mp3", "_id": "lofi"},
+            ],
+            tensor_fields=["audio_field"]
+        )
+
+        doc = ix.search(
+            q="corporate video background music",
+            limit=5
+        )
+
+        self.assertEqual(2, len(doc['hits']))
+        self.assertEqual("corporate", doc['hits'][0]['_id'])
+        self.assertEqual("lofi", doc['hits'][1]['_id'])
+
+    def test_create_structured_index_with_languagebind(self):
+        self.client.create_index(
+            index_name=self.index_name,
+            type="structured",
+            model="LanguageBind/Video_V1.5_FT_Audio_FT_Image",
+            all_fields=[
+                {"name": "text_field", "type": "text"},
+                {"name": "video_field", "type": "video_pointer"},
+                {"name": "audio_field", "type": "audio_pointer"},
+                {"name": "image_field", "type": "image_pointer"}
+            ],
+            tensor_fields=["text_field", "video_field", "audio_field", "image_field"]
+        )
+
+        index_settings = self.client.index(self.index_name).get_settings()
+        
+        expected_settings = {
+            "type": "structured",
+            "model": "LanguageBind/Video_V1.5_FT_Audio_FT_Image",
+            "normalizeEmbeddings": True,
+            "vectorNumericType": "float",
+            "tensorFields": ["text_field", "video_field", "audio_field", "image_field"],
+            "allFields": [
+                {"features": [], "name": "text_field", "type": "text"},
+                {"features": [], "name": "video_field", "type": "video_pointer"},
+                {"features": [], "name": "audio_field", "type": "audio_pointer"},
+                {"features": [], "name": "image_field", "type": "image_pointer"},
+            ]
+        }
+
+        for key, value in expected_settings.items():
+            self.assertEqual(value, index_settings[key])
+
+        # Test adding and searching documents
+        ix = self.client.index(self.index_name)
+        
+        res = ix.add_documents(
+            documents = [
+                {"audio_field": "https://audio-previews.elements.envatousercontent.com/files/187680354/preview.mp3", "_id": "corporate"},
+                {"audio_field": "https://audio-previews.elements.envatousercontent.com/files/492763015/preview.mp3", "_id": "lofi"},
+            ],
+        )
+
+        doc = ix.search(
+            q="corporate video background music",
+            limit=5
+        )
+
+        self.assertEqual(2, len(doc['hits']))
+        self.assertEqual("corporate", doc['hits'][0]['_id'])
+        self.assertEqual("lofi", doc['hits'][1]['_id'])

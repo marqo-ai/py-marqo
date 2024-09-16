@@ -69,6 +69,7 @@ class Client:
         type: Optional[marqo_index.IndexType] = None,
         settings_dict: Optional[Dict[str, Any]] = None,
         treat_urls_and_pointers_as_images: Optional[bool] = None,
+        treat_urls_and_pointers_as_media: Optional[bool] = None,
         filter_string_max_length: Optional[int] = None,
         all_fields: Optional[List[marqo_index.FieldRequest]] = None,
         tensor_fields: Optional[List[str]] = None,
@@ -77,6 +78,8 @@ class Client:
         normalize_embeddings: Optional[bool] = None,
         text_preprocessing: Optional[marqo_index.TextPreProcessing] = None,
         image_preprocessing: Optional[marqo_index.ImagePreProcessing] = None,
+        audio_preprocessing: Optional[marqo_index.AudioPreProcessing] = None,
+        video_preprocessing: Optional[marqo_index.VideoPreProcessing] = None,
         vector_numeric_type: Optional[marqo_index.VectorNumericType] = None,
         ann_parameters: Optional[marqo_index.AnnParameters] = None,
         wait_for_readiness: bool = True,
@@ -100,6 +103,7 @@ class Client:
                 parameters, and is passed directly as the index's
                 index_settings
             treat_urls_and_pointers_as_images: whether to treat urls and pointers as images
+            treat_urls_and_pointers_as_media: whether to treat urls and pointers as media (video/audio)
             filter_string_max_length: threshold for short string length in unstructured indexes,
                 Marqo can filter on short strings but can not filter on long strings
             all_fields: list of all the fields in the structured index
@@ -132,12 +136,15 @@ class Client:
             config=self.config, index_name=index_name,
             type=type, settings_dict=settings_dict,
             treat_urls_and_pointers_as_images=treat_urls_and_pointers_as_images,
+            treat_urls_and_pointers_as_media=treat_urls_and_pointers_as_media,
             filter_string_max_length=filter_string_max_length,
             all_fields=all_fields, tensor_fields=tensor_fields,
             model=model, model_properties=model_properties,
             normalize_embeddings=normalize_embeddings,
             text_preprocessing=text_preprocessing,
             image_preprocessing=image_preprocessing,
+            audio_preprocessing=audio_preprocessing,
+            video_preprocessing=video_preprocessing,
             vector_numeric_type=vector_numeric_type,
             ann_parameters=ann_parameters,
             wait_for_readiness=wait_for_readiness,
