@@ -76,6 +76,9 @@ jobs:
           python-version: "3.8"
           cache: "pip"
 
+      - name: Install py-marqo locally
+        run: pip install -e .  # Install the local py-marqo repo as an editable package
+
       - name: Install dependencies
         run: pip install -r requirements.txt
 
