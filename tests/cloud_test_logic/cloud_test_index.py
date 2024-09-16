@@ -45,31 +45,31 @@ index_name_to_settings_mappings = {
         "numberOfShards": 2,
         "numberOfReplicas": 1,  # For hybrid duplicates test
     },
-    #CloudTestIndex.unstructured_image: {
-    #    "type": "unstructured",
-    #    "treatUrlsAndPointersAsImages": True,
-    #    "model": "open_clip/ViT-B-32/laion2b_s34b_b79k",
+    CloudTestIndex.unstructured_image: {
+        "type": "unstructured",
+        "treatUrlsAndPointersAsImages": True,
+        "model": "open_clip/ViT-B-32/laion2b_s34b_b79k",
 
-    #    "inferenceType": "marqo.CPU.small",
-    #    "storageClass": "marqo.basic",
-    #    "numberOfShards": 1,
-    #    "numberOfReplicas": 0,
-    #},
-    #CloudTestIndex.unstructured_no_model: {
-    #    "type": "unstructured",
-    #    "treatUrlsAndPointersAsImages": False,
+        "inferenceType": "marqo.CPU.small",
+        "storageClass": "marqo.basic",
+        "numberOfShards": 1,
+        "numberOfReplicas": 0,
+    },
+    CloudTestIndex.unstructured_no_model: {
+        "type": "unstructured",
+        "treatUrlsAndPointersAsImages": False,
 
-    #    "inferenceType": "marqo.CPU.small",
-    #    "storageClass": "marqo.basic",
-    #    "numberOfShards": 1,
-    #    "numberOfReplicas": 0,
+        "inferenceType": "marqo.CPU.small",
+        "storageClass": "marqo.basic",
+        "numberOfShards": 1,
+        "numberOfReplicas": 0,
 
-    #    "model": "no_model",
-    #    "modelProperties": {
-    #        "type": "no_model",
-    #        "dimensions": 512
-    #    },
-    #},
+        "model": "no_model",
+        "modelProperties": {
+            "type": "no_model",
+            "dimensions": 512
+        },
+    },
     CloudTestIndex.structured_text: {
         "type": "structured",
         "model": "hf/e5-base-v2",
@@ -86,29 +86,29 @@ index_name_to_settings_mappings = {
         "numberOfShards": 2,
         "numberOfReplicas": 1,  # For hybrid duplicates test
     },
-    #CloudTestIndex.structured_image: {
-    #    "type": "structured",
-    #    "model": "open_clip/ViT-B-32/laion2b_s34b_b79k",
+    CloudTestIndex.structured_image: {
+        "type": "structured",
+        "model": "open_clip/ViT-B-32/laion2b_s34b_b79k",
 
-    #    "inferenceType": "marqo.CPU.small",
-    #    "storageClass": "marqo.balanced",
-    #    "numberOfShards": 2,
-    #    "numberOfReplicas": 1,  # For hybrid duplicates test
+        "inferenceType": "marqo.CPU.small",
+        "storageClass": "marqo.balanced",
+        "numberOfShards": 2,
+        "numberOfReplicas": 1,  # For hybrid duplicates test
 
-    #    "allFields": [
-    #        {"name": "text_field_1", "type": "text", "features": ["lexical_search", "filter"]},
-    #        {"name": "text_field_2", "type": "text", "features": ["lexical_search", "filter"]},
-    #        {"name": "text_field_3", "type": "text", "features": ["filter"]},
-    #        {"name": "image_field_1", "type": "image_pointer"},
-    #        {"name": "array_field_1", "type": "array<text>", "features": ["filter"]},
-    #        {"name": "float_field_1", "type": "float", "features": ["filter", "score_modifier"]},
-    #        {"name": "int_field_1", "type": "int", "features": ["score_modifier"]},
-    #        {"name": "int_filter_field_1", "type": "int", "features": ["filter", "score_modifier"]},
-    #        {"name": "bool_field_1", "type": "bool", "features": ["filter"]},
-    #    ],
-    #    "tensorFields": ["text_field_1", "text_field_2", "text_field_3", "image_field_1"],
-    #    "imagePreprocessing": {
-    #        "patchMethod": "simple",
-    #    }
-    #}
+        "allFields": [
+            {"name": "text_field_1", "type": "text", "features": ["lexical_search", "filter"]},
+            {"name": "text_field_2", "type": "text", "features": ["lexical_search", "filter"]},
+            {"name": "text_field_3", "type": "text", "features": ["filter"]},
+            {"name": "image_field_1", "type": "image_pointer"},
+            {"name": "array_field_1", "type": "array<text>", "features": ["filter"]},
+            {"name": "float_field_1", "type": "float", "features": ["filter", "score_modifier"]},
+            {"name": "int_field_1", "type": "int", "features": ["score_modifier"]},
+            {"name": "int_filter_field_1", "type": "int", "features": ["filter", "score_modifier"]},
+            {"name": "bool_field_1", "type": "bool", "features": ["filter"]},
+        ],
+        "tensorFields": ["text_field_1", "text_field_2", "text_field_3", "image_field_1"],
+        "imagePreprocessing": {
+            "patchMethod": "simple",
+        }
+    }
 }
