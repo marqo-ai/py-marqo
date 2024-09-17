@@ -41,8 +41,8 @@ def get_unique_run_identifier():
     github_run_id = os.environ.get("MARQO_GITHUB_RUN_ID", None)
     if github_run_id:
         print(f"Found GitHub run ID: {github_run_id}. "
-              f"Using the last 4 characters: {github_run_id[:4]} as the unique identifier.", flush=True)
-        return github_run_id[:4]
+              f"Using the last 4 characters: {github_run_id[-4:]} as the unique identifier.", flush=True)
+        return github_run_id[-4:]
 
     print("No unique identifier found. Please set the environment variable MQ_TEST_RUN_IDENTIFIER."
           "Deleting all indexes with the correct prefixes.", flush=True)

@@ -20,8 +20,8 @@ def set_unique_run_identifier():
         github_run_id = os.environ.get("MARQO_GITHUB_RUN_ID", None)
         if github_run_id:
             print(f"Found GitHub run ID: {github_run_id}. "
-                  f"Using the last 4 characters: {github_run_id[:4]} as the unique identifier.", flush=True)
-            os.environ["MQ_TEST_RUN_IDENTIFIER"] = github_run_id[:4]
+                  f"Using the last 4 characters: {github_run_id[-4:]} as the unique identifier.", flush=True)
+            os.environ["MQ_TEST_RUN_IDENTIFIER"] = github_run_id[-4:]
         else:
             random_identifier = str(uuid.uuid4())[:4]
             print(f"No unique identifier found. Generating a random one: {random_identifier}.", flush=True)
