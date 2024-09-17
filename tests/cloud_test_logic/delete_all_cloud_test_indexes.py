@@ -26,6 +26,27 @@ def fetch_marqo_index(client: marqo.Client, index_name: str):
     """A function to fetch a Marqo index by name with retries to handle transient network errors and Marqo API errors"""
     return client.index(index_name)
 
+def get_unique_run_identifier():
+    """
+    Get the unique run identifier for this test.
+    Prioritize environment variable MQ_TEST_RUN_IDENTIFIER, then use run ID from GitHub workflow.
+    """
+
+    index_suffix = os.environ.get("MQ_TEST_RUN_IDENTIFIER", None)
+    if index_suffix:
+        print(f"Using the environment variable MQ_TEST_RUN_IDENTIFIER: {index_suffix} as the unique identifier",
+              flush=True)
+        return index_suffix
+
+    github_run_id = os.environ.get("MARQO_GITHUB_RUN_ID", None)
+    if github_run_id:
+        print(f"Found GitHub run ID: {github_run_id}. "
+              f"Using the last 4 characters: {github_run_id[:4]} as the unique identifier.", flush=True)
+        return github_run_id[:4]
+
+    print("No unique identifier found. Please set the environment variable MQ_TEST_RUN_IDENTIFIER."
+          "Deleting all indexes with the correct prefixes.", flush=True)
+    return None
 
 def delete_all_test_indices(wait_for_readiness=False):
     """ Delete all test indices from Marqo Cloud Account that match the following criteria:
@@ -36,14 +57,15 @@ def delete_all_test_indices(wait_for_readiness=False):
     local_marqo_settings = {
         "url": os.environ.get("MARQO_URL", 'http://localhost:8882'),
     }
-    suffix = os.environ.get("MQ_TEST_RUN_IDENTIFIER", None)
+    suffix = self.get_unique_run_identifier()
     prefix = "pymarqo"
     api_key = os.environ.get("MARQO_API_KEY", None)
     if api_key:
         local_marqo_settings["api_key"] = api_key
     print(f"Deleting all test indices from Marqo Cloud Account that match the following criteria:")
-    print(f"- index name starts with '{prefix}'")
-    print(f"- index name contains the value of the environment variable MQ_TEST_RUN_IDENTIFIER: {suffix}\n")
+    print(f"- index name starts with '{prefix}' AND")
+    print(f"- index name ends with the suffix: {suffix}\n")
+
     client = marqo.Client(**local_marqo_settings)
     indexes = client.get_indexes()
     indices_to_delete = []
