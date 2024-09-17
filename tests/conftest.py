@@ -44,4 +44,8 @@ def pytest_collection_modifyitems(config, items):
 
 
 def pytest_configure(config):
+    # Register custom markers programmatically
+    config.addinivalue_line("markers", "local_only_tests: mark a test to run only in local mode")
+    config.addinivalue_line("markers", "cloud_only_tests: mark a test to run only in cloud mode")
     config.addinivalue_line("markers", "fixed: mark test to run as part of fixed tests")
+

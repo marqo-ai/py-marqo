@@ -4,7 +4,6 @@ from typing import Dict, List
 
 import numpy as np
 import requests
-from ipywidgets import fixed
 from pytest import mark
 
 from marqo import Client
