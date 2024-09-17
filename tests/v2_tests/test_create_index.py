@@ -509,7 +509,7 @@ class TestCreateIndex(MarqoTestCase):
         )
         self.assertEqual(expected_request_body, cloud_index_settings.generate_request_body())
 
-@fixed
+@mark.fixed
 @mark.cloud_only_tests
 class TestCloudCreateIndex(MarqoTestCase):
 
