@@ -57,7 +57,7 @@ def delete_all_test_indices(wait_for_readiness=False):
     local_marqo_settings = {
         "url": os.environ.get("MARQO_URL", 'http://localhost:8882'),
     }
-    suffix = self.get_unique_run_identifier()
+    suffix = get_unique_run_identifier()
     prefix = "pymarqo"
     api_key = os.environ.get("MARQO_API_KEY", None)
     if api_key:
