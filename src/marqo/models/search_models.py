@@ -1,9 +1,7 @@
-from typing import Dict, List, Optional, Union
-from marqo.models.marqo_models import StrictBaseModel
-from abc import ABC
 from enum import Enum
+from typing import Dict, List, Optional, Union
 
-from pydantic import validator, BaseModel, root_validator
+from marqo.models.marqo_models import StrictBaseModel
 
 
 class SearchBody(StrictBaseModel):

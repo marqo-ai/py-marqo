@@ -1,7 +1,8 @@
 from typing import Dict, Any, Optional, List
 
+from pydantic import model_validator
+
 from marqo.models import marqo_index
-from pydantic import root_validator, Field
 from marqo.models.marqo_models import MarqoBaseModel
 
 
@@ -56,11 +57,17 @@ class IndexSettings(MarqoBaseModel):
         if self.settingsDict is not None:
             return self.settingsDict
         else:
-            return self.dict(exclude_none=True, exclude={"settingsDict"})
+            return self.model_dump(exclude_none=True, exclude={"settingsDict"})
 
-    @root_validator(pre=True)
+    @model_validator(mode='before')
     def check_settings_dict_compatibility(cls, values):
-        """ Ensures that settingsDict is not specified along with other parameters."""
-        if values.get("settings_dict") is not None and any(arg_name for arg_name in values):
-            raise ValueError(f"settings_dict cannot be specified with other index creation parameters.")
+        """ Ensures that settingsDict is not specified along with other parameters.
+
+        Raises:
+            ValueError: If settingsDict is specified along with other parameters.
+        """
+        non_none_values = {k: v for k, v in values.items() if v is not None and k != "settingsDict"}
+        if values.get("settingsDict") is not None and len(non_none_values) > 0:
+            raise ValueError(f"'settings_dict' cannot be specified with other index creation parameters. You can "
+                             f"move the parameters {list(non_none_values.keys())} to settingsDict.")
         return values

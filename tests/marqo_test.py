@@ -111,7 +111,7 @@ class MockHTTPTraffic(BaseModel):
         arbitrary_types_allowed: bool = True
 
     def __str__(self):
-        return f"MockHTTPTraffic({json.dumps(self.dict(), indent=2)})"
+        return f"MockHTTPTraffic({json.dumps(self.model_dump(), indent=2)})"
 
 def raise_(ex):
     raise ex
