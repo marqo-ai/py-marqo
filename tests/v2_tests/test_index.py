@@ -200,7 +200,7 @@ class TestIndex(MarqoTestCase):
 
         assert run()
 
-    @mark.ignore_during_cloud_tests
+    @mark.local_only_tests
     def test_create_custom_number_of_replicas(self):
         intended_replicas = 1
         self.client.create_index(
@@ -544,7 +544,7 @@ class TestIndex(MarqoTestCase):
                 assert res['backend']['status'] == 'red'
 
     @mark.fixed
-    @mark.ignore_during_cloud_tests
+    @mark.local_only_tests
     def test_get_status_raises_error_on_local_index(self):
         index = self.client.index(self.generic_test_index_name)
         with self.assertRaises(UnsupportedOperationError):

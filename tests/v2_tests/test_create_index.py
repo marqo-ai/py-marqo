@@ -1,18 +1,22 @@
-import random
+import os
 import uuid
+from typing import Dict, List
 
-from pytest import mark
 import numpy as np
-from marqo import Client
+import requests
+from ipywidgets import fixed
+from pytest import mark
 
-from marqo.models.marqo_index import FieldType
+from marqo import Client
 from marqo.errors import MarqoWebError
-from tests.marqo_test import MarqoTestCase
 from marqo.models.marqo_cloud import CloudIndexSettings
+from marqo.models.marqo_index import FieldType
+from tests.cloud_test_logic.cloud_test_index import index_name_to_settings_mappings
+from tests.marqo_test import MarqoTestCase
 
 
 @mark.fixed
-@mark.ignore_during_cloud_tests
+@mark.local_only_tests
 class TestCreateIndex(MarqoTestCase):
     index_name = "test_create_index" + str(uuid.uuid4()).replace('-', '')
     override_index_name = "override_prefix" + str(uuid.uuid4()).replace('-', '')
@@ -505,3 +509,41 @@ class TestCreateIndex(MarqoTestCase):
             type="unstructured"
         )
         self.assertEqual(expected_request_body, cloud_index_settings.generate_request_body())
+
+@fixed
+@mark.cloud_only_tests
+class TestCloudCreateIndex(MarqoTestCase):
+
+    TEST_ATTRIBUTES_WITH_DEFAULTS = {
+        "inferenceType": "CPU.SMALL",
+        "numberOfShards": 1,
+        "numberOfReplicas": 0,
+        "numberOfInferences": 1,
+        "storageClass": "BASIC"
+    }
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls.get_index_response: List[Dict] = requests.get(
+            f"{cls.authorized_url}/api/v2/indexes",
+            headers={"x-api-key": os.environ.get("MARQO_API_KEY", None)}
+        ).json()["results"]
+
+    def test_cloud_index_attributes(self):
+        test_indexes = list(index_name_to_settings_mappings.keys())
+        for test_index in test_indexes:
+            index_name = test_index + "_" + os.environ.get("MQ_TEST_RUN_IDENTIFIER", "")
+            with self.subTest(f"Index name: {index_name}"):
+                index_meta_data = [d for d in self.get_index_response if d.get("indexName") == index_name][0]
+                for test_attribute in list(self.TEST_ATTRIBUTES_WITH_DEFAULTS.keys()):
+                    expected_value = index_name_to_settings_mappings[test_index].get(
+                        test_attribute,
+                        self.TEST_ATTRIBUTES_WITH_DEFAULTS[test_attribute]
+                    )
+                    if isinstance(expected_value, int):
+                        self.assertEqual(expected_value, int(index_meta_data[test_attribute]))
+                    elif isinstance(expected_value, str):
+                        self.assertIn(expected_value, index_meta_data[test_attribute].upper())
+                    else:
+                        raise ValueError(f"Unexpected type for {test_attribute}: {type(expected_value)}")

@@ -20,7 +20,7 @@ class TestGetIndexes(MarqoTestCase):
             )
             assert self._is_index_name_in_get_indexes_response(test_index_name, self.client.get_indexes())
 
-    @mark.ignore_during_cloud_tests
+    @mark.local_only_tests
     def test_get_indexes(self):
         """Asserts that the results grow after each create_index request
         If this test breaks, ensure another user isn't using the same Marqo

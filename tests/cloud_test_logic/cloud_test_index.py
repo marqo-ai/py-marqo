@@ -135,5 +135,4 @@ index_name_to_settings_mappings = {
         "tensorFields": ["multimodal_field", "text_field_3", "video_field_3", "audio_field_2", "image_field_2"],
         "normalizeEmbeddings": True,
     },
-
 }
