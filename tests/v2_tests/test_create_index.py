@@ -1,11 +1,14 @@
+import random
 import uuid
 
 from pytest import mark
 import numpy as np
+from marqo import Client
 
 from marqo.models.marqo_index import FieldType
 from marqo.errors import MarqoWebError
 from tests.marqo_test import MarqoTestCase
+from marqo.models.marqo_cloud import CloudIndexSettings
 
 
 @mark.fixed
@@ -57,18 +60,18 @@ class TestCreateIndex(MarqoTestCase):
     def test_create_simple_index_creation_with_prefix(self):
         # Create the indexes
         self.client.create_index(
-            index_name=self.override_index_name, 
-            model="test_prefix", 
-            text_query_prefix="test: ", 
-            text_chunk_prefix="test: ", 
+            index_name=self.override_index_name,
+            model="test_prefix",
+            text_query_prefix="test: ",
+            text_chunk_prefix="test: ",
         )
         self.client.create_index(
-            index_name=self.default_index_name, 
-            model="test_prefix", 
+            index_name=self.default_index_name,
+            model="test_prefix",
         )
-        
+
         d1 = {
-            "_id": "doc1", 
+            "_id": "doc1",
             "text_field_1": "hello document"
         }
         # Add documents to both
@@ -78,27 +81,26 @@ class TestCreateIndex(MarqoTestCase):
         # Get override doc with tensor facets (for reference vector)
         retrieved_override_doc = self.client.index(self.override_index_name).get_document(
             document_id="doc1", expose_facets=True)
-        
+
         # Get default doc with tensor facets (for reference vector)
         retrieved_default_doc = self.client.index(self.default_index_name).get_document(
             document_id="doc1", expose_facets=True)
-        
+
         # Embed override
-        embed_res_override = self.client.index(self.override_index_name).embed("test: hello document", content_type=None)
+        embed_res_override = self.client.index(self.override_index_name).embed("test: hello document",
+                                                                               content_type=None)
 
         # Embed default
-        embed_res_default = self.client.index(self.default_index_name).embed("test passage: hello document", content_type=None)
+        embed_res_default = self.client.index(self.default_index_name).embed("test passage: hello document",
+                                                                             content_type=None)
 
         # Assert that the embeddings from override add docs and the embeddings from the embed call are the same
-        self.assertTrue(np.allclose(embed_res_override["embeddings"][0], retrieved_override_doc["_tensor_facets"][0]["_embedding"]))
+        self.assertTrue(
+            np.allclose(embed_res_override["embeddings"][0], retrieved_override_doc["_tensor_facets"][0]["_embedding"]))
 
         # Assert that the embeddings from override add docs and the embeddings from the embed call are the same
-        self.assertTrue(np.allclose(embed_res_default["embeddings"][0], retrieved_default_doc["_tensor_facets"][0]["_embedding"]))
-
-
-
-
-
+        self.assertTrue(
+            np.allclose(embed_res_default["embeddings"][0], retrieved_default_doc["_tensor_facets"][0]["_embedding"]))
 
     def test_create_unstructured_image_index(self):
         self.client.create_index(index_name=self.index_name, type="unstructured",
@@ -250,7 +252,7 @@ class TestCreateIndex(MarqoTestCase):
                           "dimensions": 384,
                           "tokens": 512,
                           "type": "sbert"}, index_settings['modelProperties'])
-        
+
     def test_create_structured_index_with_map_fields(self):
         self.client.create_index(
             index_name=self.index_name,
@@ -260,7 +262,7 @@ class TestCreateIndex(MarqoTestCase):
                         {"name": "map_score_mod_float_1", "type": FieldType.MapFloat, "features": ["score_modifier"]},
                         {"name": "map_score_mod_double_1", "type": FieldType.MapDouble, "features": ["score_modifier"]},
                         {"name": "map_score_mod_int_1", "type": FieldType.MapInt, "features": ["score_modifier"]},
-                        {"name": "map_score_mod_long_1", "type": FieldType.MapLong, "features": ["score_modifier"]},],
+                        {"name": "map_score_mod_long_1", "type": FieldType.MapLong, "features": ["score_modifier"]}, ],
             tensor_fields=["test"]
         )
         documents = [{"test": "test"}]
@@ -341,7 +343,7 @@ class TestCreateIndex(MarqoTestCase):
         )
 
         index_settings = self.client.index(self.index_name).get_settings()
-        
+
         expected_settings = {
             "type": "unstructured",
             "model": "LanguageBind/Video_V1.5_FT_Audio_FT_Image",
@@ -356,11 +358,13 @@ class TestCreateIndex(MarqoTestCase):
 
         # Test adding and searching documents
         ix = self.client.index(self.index_name)
-        
+
         res = ix.add_documents(
-            documents = [
-                {"audio_field": "https://audio-previews.elements.envatousercontent.com/files/187680354/preview.mp3", "_id": "corporate"},
-                {"audio_field": "https://audio-previews.elements.envatousercontent.com/files/492763015/preview.mp3", "_id": "lofi"},
+            documents=[
+                {"audio_field": "https://audio-previews.elements.envatousercontent.com/files/187680354/preview.mp3",
+                 "_id": "corporate"},
+                {"audio_field": "https://audio-previews.elements.envatousercontent.com/files/492763015/preview.mp3",
+                 "_id": "lofi"},
             ],
             tensor_fields=["audio_field"]
         )
@@ -389,7 +393,7 @@ class TestCreateIndex(MarqoTestCase):
         )
 
         index_settings = self.client.index(self.index_name).get_settings()
-        
+
         expected_settings = {
             "type": "structured",
             "model": "LanguageBind/Video_V1.5_FT_Audio_FT_Image",
@@ -409,11 +413,13 @@ class TestCreateIndex(MarqoTestCase):
 
         # Test adding and searching documents
         ix = self.client.index(self.index_name)
-        
+
         res = ix.add_documents(
-            documents = [
-                {"audio_field": "https://audio-previews.elements.envatousercontent.com/files/187680354/preview.mp3", "_id": "corporate"},
-                {"audio_field": "https://audio-previews.elements.envatousercontent.com/files/492763015/preview.mp3", "_id": "lofi"},
+            documents=[
+                {"audio_field": "https://audio-previews.elements.envatousercontent.com/files/187680354/preview.mp3",
+                 "_id": "corporate"},
+                {"audio_field": "https://audio-previews.elements.envatousercontent.com/files/492763015/preview.mp3",
+                 "_id": "lofi"},
             ],
         )
 
@@ -425,3 +431,77 @@ class TestCreateIndex(MarqoTestCase):
         self.assertEqual(2, len(doc['hits']))
         self.assertEqual("corporate", doc['hits'][0]['_id'])
         self.assertEqual("lofi", doc['hits'][1]['_id'])
+
+    def test_create_index_SettingsDictCanNotBeSpecificWithOtherParametersLocal(self):
+        """Test that settings_dict cannot be specified with other index creation
+        parameters in local create_index call."""
+        parameters_pool = {
+            "type": "structured",
+            "all_fields": [{"name": "test", "type": "text", "features": ["lexical_search"]}],
+            "tensor_fields": ["test"],
+            "treat_urls_and_pointers_as_images": True,
+            "treat_urls_and_pointers_as_media": True,
+            "filter_string_max_length": 50,
+            "model": "hf/e5-base-v2",
+            "model_properties": {
+                "name": "sentence-transformers/multi-qa-MiniLM-L6-cos-v1",
+                "dimensions": 384,
+                "tokens": 512,
+                "type": "sbert"
+            },
+            "normalize_embeddings": True,
+            "text_preprocessing": "splitMethod",
+            "image_preprocessing": "patchMethod",
+            "vector_numeric_type": "float",
+            "ann_parameters": {"spaceType": "prenormalized-angular", "parameters": {"efConstruction": 512, "m": 16}},
+            "text_query_prefix": "test",
+            "text_chunk_prefix": "test",
+        }
+
+        for key in parameters_pool.keys():
+            with self.subTest(f"key={key}"):
+                with self.assertRaises(ValueError) as e:
+                    self.client.create_index(
+                        index_name=self.index_name,
+                        **{key: parameters_pool[key]},
+                        settings_dict={"type": "unstructured"}
+                    )
+                self.assertIn(
+                    f"'settings_dict' cannot be specified with other index creation parameters.",
+                    str(e.exception)
+                )
+
+    def test_create_index_SettingsDictCanNotBeSpecificWithOtherParametersCloud(self):
+        """Test that settings_dict cannot be specified with other index creation
+        parameters in cloud create_index call."""
+        parameters_pool = {
+            "inference_type": "marqo.CPU.large",
+            "storage_class": "marqo.basic",
+            "number_of_replicas": 1,
+            "number_of_shards": 1,
+            "number_of_inferences": 1
+        }
+
+        test_cloud_client = Client("https://api.marqo.ai", api_key="test")
+        for key in parameters_pool.keys():
+            with self.subTest(f"key={key}"):
+                with self.assertRaises(ValueError) as e:
+                    test_cloud_client.create_index(
+                        index_name=self.index_name,
+                        **{key: parameters_pool[key]},
+                        settings_dict={"type": "unstructured"}
+                    )
+                self.assertIn(
+                    f"'settings_dict' cannot be specified with other index creation parameters.",
+                    str(e.exception)
+                )
+
+    def test_CloudIndexSettingsGenerateRequestBody(self):
+        """Test that CloudIndexSettings generate_request_body method returns the correct request body."""
+        expected_request_body = {
+            "type": "unstructured",
+        }
+        cloud_index_settings = CloudIndexSettings(
+            type="unstructured"
+        )
+        self.assertEqual(expected_request_body, cloud_index_settings.generate_request_body())

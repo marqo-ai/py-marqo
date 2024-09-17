@@ -167,7 +167,6 @@ class Index:
                 textChunkPrefix=text_chunk_prefix,
                 textQueryPrefix=text_query_prefix,
             )
-
             return req.post(f"indexes/{index_name}", body=local_create_index_settings.generate_request_body())
 
         # py-marqo against Marqo Cloud
