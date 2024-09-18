@@ -26,14 +26,14 @@ class TestIndexManipulations(MarqoTestCase):
 
     # Create index tests
     @mark.fixed
-    @mark.ignore_during_cloud_tests
+    @mark.local_only_tests
     def test_create_index(self):
         self.client.create_index(self.generic_test_index_name)
         assert any(self.generic_test_index_name == ix["indexName"] for ix in  self.client.get_indexes()['results'])
 
     @mark.fixed
     # TODO: unmark when cloud responses are fixed
-    @mark.ignore_during_cloud_tests
+    @mark.local_only_tests
     def test_create_index_double(self):
         index_name = self.get_test_index_name(
             cloud_test_index_to_use=CloudTestIndex.unstructured_image,
@@ -48,7 +48,7 @@ class TestIndexManipulations(MarqoTestCase):
             assert e.code == "index_already_exists"
 
     @mark.fixed
-    @mark.ignore_during_cloud_tests
+    @mark.local_only_tests
     def test_create_index_hnsw(self):
         self.client.create_index(index_name=self.generic_test_index_name,
             settings_dict={
@@ -72,7 +72,7 @@ class TestIndexManipulations(MarqoTestCase):
 
     # Delete index tests:
 
-    @mark.ignore_during_cloud_tests
+    @mark.local_only_tests
     @mark.fixed
     def test_create_delete_create_index(self):
         self.client.create_index(self.generic_test_index_name)

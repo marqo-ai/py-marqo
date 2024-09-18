@@ -8,11 +8,13 @@ class CloudTestIndex(str, Enum):
     Please try to keep names short to avoid hitting name-length limits
 
     We create 3 unstructured indexes and 3 structured indexes to test:
+
     1) unstructured_text: Text-only index using hf/e5-base-v2, 2 shards, 1 replica, CPU, balanced storage, for hybrid duplicates testing.
     2) unstructured_image: Image-compatible index using open_clip/ViT-B-32/laion2b_s34b_b79k, 1 shard, no replicas, CPU, basic storage.
     3) unstructured_no_model: 512-dimension custom vectors, 1 shard, no replicas, CPU, basic storage.
     4) structured_text: Structured text index with hf/e5-base-v2, lexical search, 2 shards, 1 replica, CPU, balanced storage.
     5) structured_image: Structured image-text index with open_clip/ViT-B-32, 2 shards, 1 replica, CPU, balanced storage, with image preprocessing.
+    6) structured_languagebind_model: a structured index using the LanguageBind model for multi-modal support.
     For more information on the settings of each index, please refer to index_name_to_settings_mappings.
 
     FOR CLOUD REPLICAS AND SHARDS:
@@ -21,6 +23,7 @@ class CloudTestIndex(str, Enum):
 
     We design these indexes to maximize the coverage of different settings and features. For each test method,
     we will have to manually specify which index to use.
+
     """
 
     unstructured_text = "pymarqo_unstr_txt"
@@ -32,6 +35,7 @@ class CloudTestIndex(str, Enum):
     structured_image_custom = "pymarqo_str_img_custom"
     structured_text = "pymarqo_str_txt"
     structured_image = "pymarqo_str_img"
+    structured_languagebind_model = "pymarqo_str_langbind_model"
 
 
 index_name_to_settings_mappings = {
@@ -80,11 +84,10 @@ index_name_to_settings_mappings = {
             {"name": "int_field_1", "type": "int", "features": ["score_modifier"]},
             {"name": "int_filter_field_1", "type": "int", "features": ["filter", "score_modifier"]}],
         "tensorFields": ["text_field_1", "text_field_2", "text_field_3"],
-
         "inferenceType": "marqo.CPU.small",
         "storageClass": "marqo.balanced",
         "numberOfShards": 2,
-        "numberOfReplicas": 1,  # For hybrid duplicates test
+        "numberOfReplicas": 1, # For hybrid duplicates test
     },
     CloudTestIndex.structured_image: {
         "type": "structured",
@@ -110,5 +113,26 @@ index_name_to_settings_mappings = {
         "imagePreprocessing": {
             "patchMethod": "simple",
         }
-    }
+    },
+    CloudTestIndex.structured_languagebind_model: {
+        "type": "structured",
+        "model": "LanguageBind/Video_V1.5_FT_Audio_FT_Image",
+        "inferenceType": "marqo.GPU",
+        "storageClass": "marqo.balanced",
+        "allFields": [
+            {"name": "text_field_1", "type": "text"},
+            {"name": "text_field_2", "type": "text"},
+            {"name": "text_field_3", "type": "text"},
+            {"name": "video_field_1", "type": "video_pointer"},
+            {"name": "video_field_2", "type": "video_pointer"},
+            {"name": "video_field_3", "type": "video_pointer"},
+            {"name": "audio_field_1", "type": "audio_pointer"},
+            {"name": "audio_field_2", "type": "audio_pointer"},
+            {"name": "image_field_1", "type": "image_pointer"},
+            {"name": "image_field_2", "type": "image_pointer"},
+            {"name": "multimodal_field", "type": "multimodal_combination"},
+        ],
+        "tensorFields": ["multimodal_field", "text_field_3", "video_field_3", "audio_field_2", "image_field_2"],
+        "normalizeEmbeddings": True,
+    },
 }

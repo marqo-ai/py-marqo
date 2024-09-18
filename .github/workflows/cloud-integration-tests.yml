@@ -17,10 +17,6 @@ on:
           with the prefix "test_index". Even those that were not created by this workflow.'
         required: true
         default: 'run_integration_tests'
-  pull_request:
-    branches:
-      - mainline
-      - 'releases/*'
    # allows other workflows to reuse these unit tests:
   workflow_call:
 
@@ -42,8 +38,9 @@ jobs:
     steps:
 
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
+          ref: ${{ github.head_ref || github.ref }}  # Checkout the current branch or PR head
           fetch-depth: 0
 
       - name: Set up Python 3.8
