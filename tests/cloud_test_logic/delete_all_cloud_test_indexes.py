@@ -3,6 +3,7 @@ import os
 import requests
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
+import time
 import marqo
 from marqo.enums import IndexStatus
 from marqo.errors import MarqoWebError
@@ -126,6 +127,9 @@ def delete_all_test_indices(wait_for_readiness=False):
                         print(f"Index {index_for_deletion_name} has {index.get_status()['indexStatus']} status, "
                               f"sending a delete request.")
                         index.delete(wait_for_readiness=False)
+                    else:
+                        print(f"Index {index_for_deletion_name} still has status: {index.get_status()['indexStatus']}. "
+                              f"Waiting for it to be READY, FAILED, or disappear from list.")
 
             if attempt > max_retries:
                 raise RuntimeError("Timed out waiting for indices to be deleted, still remaining: "
