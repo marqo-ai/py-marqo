@@ -82,6 +82,13 @@ def delete_all_test_indices(wait_for_readiness=False):
 
     print("Indices to delete: ", indices_to_delete)
     print("Marqo Cloud deletion responses:")
+
+    # First pass will either
+    # 1. If the index is READY, send it into DELETING
+    # 2. If the index is DELETED, do nothing
+    # 3. If the index is FAILED, send it into DELETING
+    # 4. If the index is CREATING, MODIFYING, DELETING, do nothing
+
     for index_name in indices_to_delete:
         index = fetch_marqo_index(client, index_name)
         if index.get_status()["indexStatus"] == IndexStatus.READY:
@@ -92,22 +99,42 @@ def delete_all_test_indices(wait_for_readiness=False):
             print(f"Index {index_name} has failed status, deleting anyway")
             index.delete(wait_for_readiness=False)
         else:
+            # Either CREATING, MODIFYING, DELETING.
             print(f"Index {index_name} is not ready for deletion, status: {index.get_status()['indexStatus']}")
+
+    # All indexes now are either DELETING, CREATING, MODIFYING (might need future deletion)
     if wait_for_readiness:
         max_retries = 100
         attempt = 0
+
         while indices_to_delete:
+            print(f"Attempt #{attempt} at trying to delete indices: {indices_to_delete}", flush=True)
             resp = fetch_marqo_indexes(client)
             resp_json = resp.json()
             all_index_names = [index["indexName"] for index in resp_json['results']]
             for index_for_deletion_name in indices_to_delete:
+                # Index has successfully been DELETED
                 if index_for_deletion_name not in all_index_names:
+                    print(f"Index {index_for_deletion_name} has been successfully deleted.")
                     indices_to_delete.remove(index_for_deletion_name)
+                else:
+                    # Check if index has finally become READY or FAILED
+                    # Kick off deletion again if so
+                    index = fetch_marqo_index(client, index_for_deletion_name)
+                    if index.get_status()["indexStatus"] == IndexStatus.READY or \
+                            index.get_status()["indexStatus"] == IndexStatus.FAILED:
+                        print(f"Index {index_for_deletion_name} has {index.get_status()['indexStatus']} status, "
+                              f"sending a delete request.")
+                        index.delete(wait_for_readiness=False)
+
             if attempt > max_retries:
                 raise RuntimeError("Timed out waiting for indices to be deleted, still remaining: "
                                    f"{indices_to_delete}. Please delete manually")
-        print("All test indices deleted successfully")
+            attempt += 1
+            time.sleep(30)
+
+        print("All test indices deleted successfully", flush=True)
 
 
 if __name__ == '__main__':
-    delete_all_test_indices()
+    delete_all_test_indices(wait_for_readiness=True)
