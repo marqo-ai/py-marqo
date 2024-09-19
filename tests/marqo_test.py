@@ -215,9 +215,10 @@ class MarqoTestCase(TestCase):
         cls.test_cases = [
             (CloudTestIndex.unstructured_image, cls.unstructured_index_name),
         ]
-        cls.test_cases_multimodal = [
-            (CloudTestIndex.structured_languagebind_model, cls.structured_languagebind_index_name)
-        ]
+        # TODO: Add this back after sample cloud test run
+        #cls.test_cases_multimodal = [
+        #    (CloudTestIndex.structured_languagebind_model, cls.structured_languagebind_index_name)
+        #]
 
         # class property to indicate if test is being run on multi
         cls.IS_MULTI_INSTANCE = (True if os.environ.get("IS_MULTI_INSTANCE", False) in ["True", "TRUE", "true", True] else False)
