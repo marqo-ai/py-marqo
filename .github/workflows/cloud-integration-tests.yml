@@ -30,7 +30,7 @@ permissions:
 jobs:
   integration_tests:
     name: Cloud Integration Tests
-    timeout-minutes: 90     # Hard cap of 1 hour 30 mins for workflow
+    timeout-minutes: 75     # Hard cap of 1 hour 15 mins for workflow
     runs-on: ubuntu-latest
     if: ${{ github.event.inputs.job_to_run == 'run_integration_tests' || github.event_name != 'workflow_dispatch' }}
     environment: cloud-tests
