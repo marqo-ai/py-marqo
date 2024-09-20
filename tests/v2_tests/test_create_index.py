@@ -547,6 +547,6 @@ class TestCloudCreateIndex(MarqoTestCase):
                     if isinstance(expected_value, int):
                         self.assertEqual(int(index_meta_data[test_attribute]), expected_value)
                     elif isinstance(expected_value, str):
-                        self.assertIn(index_meta_data[test_attribute].upper(), expected_value)
+                        self.assertIn(index_meta_data[test_attribute].upper(), expected_value.upper())
                     else:
                         raise ValueError(f"Unexpected type for {test_attribute}: {type(expected_value)}")
