@@ -589,6 +589,9 @@ class TestAddDocuments(MarqoTestCase):
         Note: `no_model` is not yet supported on Cloud.
         """
         self.test_cases = [(CloudTestIndex.unstructured_no_model, self.unstructured_no_model_index_name)]
+        self.test_cases_multimodal = [
+            (CloudTestIndex.structured_languagebind_model, self.structured_languagebind_index_name)
+        ]
 
         for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
             test_index_name = self.get_test_index_name(
@@ -705,8 +708,6 @@ class TestAddDocuments(MarqoTestCase):
                                                                    tensor_fields="field a")
             assert res == []
 
-    # TODO: Add back
-    """
     def test_add_multimodal_single_documents(self):
         documents = [
             {
@@ -804,4 +805,3 @@ class TestAddDocuments(MarqoTestCase):
                 self.assertIn('_tensor_facets', doc['results'][0])
                 self.assertIn('_embedding', doc['results'][0]['_tensor_facets'][0])
                 self.assertEqual(len(doc['results'][0]['_tensor_facets'][0]['_embedding']), 768)
-    """

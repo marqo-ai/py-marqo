@@ -35,9 +35,7 @@ class CloudTestIndex(str, Enum):
     structured_image_custom = "pymarqo_str_img_custom"
     structured_text = "pymarqo_str_txt"
     structured_image = "pymarqo_str_img"
-
-    # TODO: add this back after sample cloud test run
-    # structured_languagebind_model = "pymarqo_str_langbind_model"
+    structured_languagebind_model = "pymarqo_str_langbind_model"
 
 
 index_name_to_settings_mappings = {
@@ -116,26 +114,25 @@ index_name_to_settings_mappings = {
             "patchMethod": "simple",
         }
     },
-    # TODO: add this back after sample cloud test run
-    #CloudTestIndex.structured_languagebind_model: {
-    #    "type": "structured",
-    #    "model": "LanguageBind/Video_V1.5_FT_Audio_FT_Image",
-    #    "inferenceType": "marqo.GPU",
-    #    "storageClass": "marqo.balanced",
-    #    "allFields": [
-    #        {"name": "text_field_1", "type": "text"},
-    #        {"name": "text_field_2", "type": "text"},
-    #        {"name": "text_field_3", "type": "text"},
-    #        {"name": "video_field_1", "type": "video_pointer"},
-    #        {"name": "video_field_2", "type": "video_pointer"},
-    #        {"name": "video_field_3", "type": "video_pointer"},
-    #        {"name": "audio_field_1", "type": "audio_pointer"},
-    #        {"name": "audio_field_2", "type": "audio_pointer"},
-    #        {"name": "image_field_1", "type": "image_pointer"},
-    #        {"name": "image_field_2", "type": "image_pointer"},
-    #        {"name": "multimodal_field", "type": "multimodal_combination"},
-    #    ],
-    #    "tensorFields": ["multimodal_field", "text_field_3", "video_field_3", "audio_field_2", "image_field_2"],
-    #    "normalizeEmbeddings": True,
-    #},
+    CloudTestIndex.structured_languagebind_model: {
+        "type": "structured",
+        "model": "LanguageBind/Video_V1.5_FT_Audio_FT_Image",
+        "inferenceType": "marqo.GPU",
+        "storageClass": "marqo.balanced",
+        "allFields": [
+            {"name": "text_field_1", "type": "text"},
+            {"name": "text_field_2", "type": "text"},
+            {"name": "text_field_3", "type": "text"},
+            {"name": "video_field_1", "type": "video_pointer"},
+            {"name": "video_field_2", "type": "video_pointer"},
+            {"name": "video_field_3", "type": "video_pointer"},
+            {"name": "audio_field_1", "type": "audio_pointer"},
+            {"name": "audio_field_2", "type": "audio_pointer"},
+            {"name": "image_field_1", "type": "image_pointer"},
+            {"name": "image_field_2", "type": "image_pointer"},
+            {"name": "multimodal_field", "type": "multimodal_combination"},
+        ],
+        "tensorFields": ["multimodal_field", "text_field_3", "video_field_3", "audio_field_2", "image_field_2"],
+        "normalizeEmbeddings": True,
+    },
 }
