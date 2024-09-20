@@ -44,7 +44,7 @@ def run_pytest(pytest_args):
     return pytest.main(pytest_args)
 
 def run_pytest_with_timeout():
-    TIMEOUT_SECONDS = 45 * 60  # 45 minute timeout
+    TIMEOUT_SECONDS = 45 * 60  # 45 minute timeout (Full suite takes ~10 mins now 9/20/24)
     pytest_args = ['tests/', '--cloud'] + sys.argv[1:]
 
     # Use ThreadPoolExecutor to run pytest in a separate thread
