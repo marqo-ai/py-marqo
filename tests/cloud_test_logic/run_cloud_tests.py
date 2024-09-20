@@ -45,7 +45,7 @@ def run_pytest(pytest_args):
 
 def run_pytest_with_timeout():
     TIMEOUT_SECONDS = 45 * 60  # 45 minute timeout
-    pytest_args = ['tests/', '-m', 'not ignore_during_cloud_tests'] + sys.argv[1:]
+    pytest_args = ['tests/', '--cloud'] + sys.argv[1:]
 
     # Use ThreadPoolExecutor to run pytest in a separate thread
     with concurrent.futures.ThreadPoolExecutor() as executor:
