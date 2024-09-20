@@ -80,7 +80,7 @@ if __name__ == '__main__':
                 populate_indices()
             except MarqoWebError as e:
                 print("Detected an error while creating indices, deleting all indices and exiting the workflow.")
-                delete_all_test_indices(wait_for_readiness=True)
+                delete_all_test_indices(wait_for_readiness=False)
                 sys.exit(1)
         print(f"All indices have been created, proceeding to run tests with pytest. Arguments: {sys.argv[1:]}")
 
@@ -90,9 +90,9 @@ if __name__ == '__main__':
             raise RuntimeError(f"Pytest failed with exit code: {pytest_exit_code}")
         print("All tests have been executed successfully")
         if tests_specific_kwargs['delete-indexes']:
-            delete_all_test_indices(wait_for_readiness=True)
+            delete_all_test_indices(wait_for_readiness=False)
     except Exception as e:
         print(f"Error: {e}")
         if tests_specific_kwargs['delete-indexes']:
-            delete_all_test_indices(wait_for_readiness=True)
+            delete_all_test_indices(wait_for_readiness=False)
         sys.exit(1)
