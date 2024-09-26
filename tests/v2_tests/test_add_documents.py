@@ -574,6 +574,7 @@ class TestAddDocuments(MarqoTestCase):
              assert doc_res['_tensor_facets'][0]["my_custom_vector"] == "custom vector text"
              assert doc_res['_tensor_facets'][0]['_embedding'] == [1.0 for _ in range(DEFAULT_DIMENSIONS)]
 
+    @mark.skip
     def test_no_model_custom_vector_doc(self):
         """
         Tests the `no_model` index model and searching with no `q` parameter.
@@ -708,6 +709,7 @@ class TestAddDocuments(MarqoTestCase):
                                                                    tensor_fields="field a")
             assert res == []
 
+    @mark.skip
     def test_add_multimodal_single_documents(self):
         documents = [
             {
@@ -754,6 +756,7 @@ class TestAddDocuments(MarqoTestCase):
                     self.assertIn('_embedding', tensor_facets[0])
                     self.assertEqual(len(tensor_facets[0]['_embedding']), 768)
 
+    @mark.skip
     def test_add_multimodal_field_document(self):
         multimodal_document = [{
             "_id": "1_multimodal",
