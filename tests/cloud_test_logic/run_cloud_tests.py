@@ -10,6 +10,10 @@ import os
 import signal
 import sys
 
+import concurrent.futures
+import threading
+import time
+
 import pytest
 
 from create_and_set_cloud_unique_run_identifier import set_unique_run_identifier
@@ -34,6 +38,27 @@ def convert_string_to_boolean(string_value):
     if string_value.lower() in valid_representations_of_true:
         return True
 
+def run_pytest(pytest_args):
+    """Function to run pytest suite"""
+    print("running pytest integration tests with args:", pytest_args)
+    return pytest.main(pytest_args)
+
+def run_pytest_with_timeout():
+    TIMEOUT_SECONDS = 45 * 60  # 45 minute timeout (Full suite takes ~10 mins now 9/20/24)
+    pytest_args = ['tests/', '--cloud'] + sys.argv[1:]
+
+    # Use ThreadPoolExecutor to run pytest in a separate thread
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future = executor.submit(run_pytest, pytest_args)
+
+        try:
+            # Wait for the pytest to complete or timeout
+            pytest_exit_code = future.result(timeout=TIMEOUT_SECONDS)
+        except concurrent.futures.TimeoutError:
+            print(f"Tests exceeded the {TIMEOUT_SECONDS // 60} minute timeout and were terminated.")
+            pytest_exit_code = 1  # Set an exit code indicating failure due to timeout
+
+    return pytest_exit_code
 
 if __name__ == '__main__':
     # Set up the signal handler for KeyboardInterrupt (Cmd+C)
@@ -55,20 +80,19 @@ if __name__ == '__main__':
                 populate_indices()
             except MarqoWebError as e:
                 print("Detected an error while creating indices, deleting all indices and exiting the workflow.")
-                delete_all_test_indices(wait_for_readiness=True)
+                delete_all_test_indices(wait_for_readiness=False)
                 sys.exit(1)
-        print(f"All indices has been created, proceeding to run tests with pytest. Arguments: {sys.argv[1:]}")
+        print(f"All indices have been created, proceeding to run tests with pytest. Arguments: {sys.argv[1:]}")
 
-        pytest_args = ['tests/', '--cloud'] + sys.argv[1:]
-        print("running integration tests with args:", pytest_args)
-        pytest_exit_code = pytest.main(pytest_args)
+        pytest_exit_code = run_pytest_with_timeout()
+
         if pytest_exit_code != 0:
             raise RuntimeError(f"Pytest failed with exit code: {pytest_exit_code}")
-        print("All tests has been executed successfully")
+        print("All tests have been executed successfully")
         if tests_specific_kwargs['delete-indexes']:
-            delete_all_test_indices(wait_for_readiness=True)
+            delete_all_test_indices(wait_for_readiness=False)
     except Exception as e:
         print(f"Error: {e}")
         if tests_specific_kwargs['delete-indexes']:
-            delete_all_test_indices(wait_for_readiness=True)
+            delete_all_test_indices(wait_for_readiness=False)
         sys.exit(1)
