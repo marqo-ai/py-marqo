@@ -5,6 +5,7 @@
 # that specified by py-marqo's `marqo.version.__minimum_supported_marqo_version__`
 
 name: Open source unit tests
+run-name: Open source unit tests on Marqo tag ${{ inputs.image_tag }} with Python version ${{ inputs.python_version }}
 
 on:
   workflow_dispatch:
@@ -20,6 +21,10 @@ on:
       image_tag:
         description: 'Marqo image tag. Examples: "1.1.0", "test" "latest"'
         required: true
+      python_version:
+        description: 'Python version to use for tests. Example: "3.8", "3.10", "3.12"'
+        required: true
+        default: '3.12'
   pull_request:
     branches: 
       - mainline
@@ -68,10 +73,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Python 3.8
+      - name: Set up Python
         uses: actions/setup-python@v3
         with:
-          python-version: "3.8"
+          python-version: ${{ github.event.inputs.python_version }}
           cache: "pip"
 
       - name: "Determine py-marqo's supported Marqo version"
