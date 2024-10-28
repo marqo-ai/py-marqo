@@ -128,9 +128,8 @@ jobs:
           # wait for marqo to start with timeout of 10 minutes
           timeout 10m bash -c 'until [[ $(curl -v --silent --insecure http://localhost:8882 2>&1 | grep Marqo) ]]; do sleep 0.1; done;' || (echo "Marqo did not start in time" && exit 1)
           
-          python -m pip install --upgrade pip
-          pip install tox==3.26
-          tox
+          # Run tests
+          pytest
 
   Stop-Runner:
     name: Stop self-hosted EC2 runner
