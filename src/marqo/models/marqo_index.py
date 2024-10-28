@@ -42,7 +42,6 @@ class FieldFeature(str, Enum):
     LexicalSearch = 'lexical_search'
     ScoreModifier = 'score_modifier'
     Filter = 'filter'
-    Colbert = 'colbert'
 
 
 class DistanceMetric(str, Enum):

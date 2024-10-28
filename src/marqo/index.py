@@ -289,7 +289,6 @@ class Index:
             "boost": boost,
             "textQueryPrefix": text_query_prefix,
             "hybridParameters": hybrid_parameters,
-            "colbertFields": colbert_fields
         }
 
         body = {k: v for k, v in body.items() if v is not None}
