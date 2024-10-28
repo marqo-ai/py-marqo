@@ -20,12 +20,17 @@ on:
    # allows other workflows to reuse these unit tests:
   workflow_call:
 
+concurrency:
+  group: cloud-integration-tests
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
 jobs:
   integration_tests:
     name: Cloud Integration Tests
+    timeout-minutes: 80     # Hard cap of 1 hour 20 mins for workflow
     runs-on: ubuntu-latest
     if: ${{ github.event.inputs.job_to_run == 'run_integration_tests' || github.event_name != 'workflow_dispatch' }}
     environment: cloud-tests
@@ -53,12 +58,15 @@ jobs:
           MARQO_URL: ${{ secrets.STAGING_CLOUD_MARQO_URL }}
           MARQO_CLOUD_URL: ${{ secrets.STAGING_CLOUD_MARQO_URL }}
           MARQO_API_KEY: ${{ secrets.STAGING_CLOUD_MARQO_API_KEY }}
+          MARQO_GITHUB_RUN_ID: ${{ github.run_id }}
         run: tox -e cloud_tests -- create-indexes=True use-unique-identifier=True delete-indexes=True
 
   cleanup_indexes:
     name: Cleanup cloud indexes
     runs-on : ubuntu-latest
-    if: ${{ github.event.inputs.job_to_run == 'delete_all_indexes' }}
+    needs: integration_tests
+    if: always()  # Run this job regardless of success or failure of the integration_tests job
+    continue-on-error: true # Do not fail the workflow if this job fails
     environment: cloud-tests
 
     steps:
@@ -73,6 +81,9 @@ jobs:
           python-version: "3.8"
           cache: "pip"
 
+      - name: Install py-marqo locally
+        run: pip install -e .  # Install the local py-marqo repo as an editable package
+
       - name: Install dependencies
         run: pip install -r requirements.txt
 
@@ -82,4 +93,5 @@ jobs:
           MARQO_URL: ${{ secrets.STAGING_CLOUD_MARQO_URL }}
           MARQO_CLOUD_URL: ${{ secrets.STAGING_CLOUD_MARQO_URL }}
           MARQO_API_KEY: ${{ secrets.STAGING_CLOUD_MARQO_API_KEY }}
+          MARQO_GITHUB_RUN_ID: ${{ github.run_id }}
         run: python tests/cloud_test_logic/delete_all_cloud_test_indexes.py
