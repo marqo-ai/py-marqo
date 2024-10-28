@@ -275,7 +275,7 @@ class Index:
             "attributesToRetrieve": attributes_to_retrieve,
             "filter": filter_string,
             "image_download_headers": image_download_headers,
-            "media_download_headers": media_download_headers,
+            "mediaDownloadHeaders": media_download_headers,
             "context": context,
             "scoreModifiers": score_modifiers,
             "modelAuth": model_auth,
