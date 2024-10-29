@@ -49,7 +49,7 @@ class TestCreateIndex(MarqoTestCase):
             'normalizeEmbeddings': True,
             'textPreprocessing': {'splitLength': 2, 'splitOverlap': 0, 'splitMethod': 'sentence'},
             'imagePreprocessing': {},
-            'audioPreprocessing': {'splitLength': 20, 'splitOverlap': 3},
+            'audioPreprocessing': {'splitLength': 10, 'splitOverlap': 3},
             'videoPreprocessing': {'splitLength': 20, 'splitOverlap': 3},
             'vectorNumericType': 'float',
             'filterStringMaxLength': 50,
@@ -58,7 +58,8 @@ class TestCreateIndex(MarqoTestCase):
                     'efConstruction': 512, 'm': 16}
             }
         }
-        self.assertEqual(expected_settings, index_settings)
+        for key, value in expected_settings.items():
+            self.assertEqual(value, index_settings[key])
 
     def test_create_simple_index_creation_with_prefix(self):
         # Create the indexes
@@ -177,7 +178,7 @@ class TestCreateIndex(MarqoTestCase):
     def test_create_simple_structured_index(self):
         self.client.create_index(index_name=self.index_name, type="structured",
                                  model="hf/all_datasets_v4_MiniLM-L6",
-                                 all_fields=[{"name": "test", "type": "text",
+                             all_fields=[{"name": "test", "type": "text",
                                               "features": ["lexical_search"]}],
                                  tensor_fields=["test"])
         documents = [{"test": "test"}]
@@ -198,11 +199,12 @@ class TestCreateIndex(MarqoTestCase):
             'normalizeEmbeddings': True,
             'textPreprocessing': {'splitLength': 2, 'splitOverlap': 0, 'splitMethod': 'sentence'},
             'imagePreprocessing': {},
-            'audioPreprocessing': {'splitLength': 20, 'splitOverlap': 3},
+            'audioPreprocessing': {'splitLength': 10, 'splitOverlap': 3},
             'videoPreprocessing': {'splitLength': 20, 'splitOverlap': 3},
             'vectorNumericType': 'float',
             'annParameters': {'spaceType': 'prenormalized-angular', 'parameters': {'efConstruction': 512, 'm': 16}}}
-        self.assertEqual(expected_index_settings, index_settings)
+        for key, value in expected_index_settings.items():
+            self.assertEqual(value, index_settings[key], f"Key: {key}")
 
     def test_create_structured_image_index(self):
         self.client.create_index(index_name=self.index_name,

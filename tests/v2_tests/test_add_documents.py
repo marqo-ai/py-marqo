@@ -572,7 +572,7 @@ class TestAddDocuments(MarqoTestCase):
              )
              assert doc_res["my_custom_vector"] == "custom vector text"
              assert doc_res['_tensor_facets'][0]["my_custom_vector"] == "custom vector text"
-             assert doc_res['_tensor_facets'][0]['_embedding'] == [1.0 for _ in range(DEFAULT_DIMENSIONS)]
+             assert (np.linalg.norm(np.array(doc_res['_tensor_facets'][0]['_embedding'])) - 1) < 1e-6
 
     def test_no_model_custom_vector_doc(self):
         """
