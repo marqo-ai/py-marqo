@@ -212,13 +212,15 @@ class Index:
     def search(self, q: Optional[Union[str, dict]] = None, searchable_attributes: Optional[List[str]] = None,
                limit: int = 10, offset: int = 0, search_method: Union[SearchMethods.TENSOR, str] = SearchMethods.TENSOR,
                highlights=None, device: Optional[str] = None, filter_string: str = None,
-               show_highlights=True, reranker=None, image_download_headers: Optional[Dict] = None,
+               show_highlights=True, reranker=None,
+               image_download_headers: Optional[Dict] = None,
+               media_download_headers: Optional[Dict] = None,
                attributes_to_retrieve: Optional[List[str]] = None,
                boost: Optional[Dict[str, List[Union[float, int]]]] = None,
                context: Optional[dict] = None, score_modifiers: Optional[dict] = None,
                model_auth: Optional[dict] = None,
                ef_search: Optional[int] = None, approximate: Optional[bool] = None,
-               text_query_prefix: Optional[str] = None, hybrid_parameters: Optional[dict] = None
+               text_query_prefix: Optional[str] = None, hybrid_parameters: Optional[dict] = None,
                ) -> Dict[str, Any]:
         """Search the index.
 
@@ -250,6 +252,9 @@ class Index:
             model_auth: authorisation that lets Marqo download a private model, if required
             ef_search: the size of the list of candidates during graph traversal, for tensor search only
             approximate: whether to use approximate nearest neighbors search or not, for tensor search only
+            image_download_headers(deprecated): a dictionary of headers to be passed while downloading images.
+            media_download_headers: a dictionary of headers to be passed while downloading media,
+                for URLs found in documents
         Returns:
             Dictionary with hits and other metadata
         """
@@ -269,6 +274,7 @@ class Index:
             "attributesToRetrieve": attributes_to_retrieve,
             "filter": filter_string,
             "image_download_headers": image_download_headers,
+            "mediaDownloadHeaders": media_download_headers,
             "context": context,
             "scoreModifiers": score_modifiers,
             "modelAuth": model_auth,
@@ -282,7 +288,7 @@ class Index:
             "reRanker": reranker,
             "boost": boost,
             "textQueryPrefix": text_query_prefix,
-            "hybridParameters": hybrid_parameters
+            "hybridParameters": hybrid_parameters,
         }
 
         body = {k: v for k, v in body.items() if v is not None}
@@ -394,6 +400,7 @@ class Index:
 
     def embed(self, content: Union[Union[str, Dict[str, float]], List[Union[str, Dict[str, float]]]],
               device: Optional[str] = None, image_download_headers: Optional[Dict] = None,
+              media_download_headers: Optional[Dict] = None,
               model_auth: Optional[dict] = None, content_type: Optional[EmbedContentType] = EmbedContentType.Query):
         """Retrieve embeddings for content or list of content.
         Args:
@@ -409,6 +416,7 @@ class Index:
 
             image_download_headers: a dictionary of headers to be passed while downloading images,
                 for URLs found in documents
+            media_download_headers: a dictionary of headers to be passed while downloading media,
             model_auth: authorisation that lets Marqo download a private model, if required
             content_type: the type of prefix the user wants. "query", "document", or None.
         Returns:
@@ -424,6 +432,7 @@ class Index:
         body = {
             "content": content,
             "content_type": content_type,
+            "mediaDownloadHeaders": media_download_headers,
         }
 
         if image_download_headers is not None:
@@ -495,7 +504,8 @@ class Index:
             device: str = None,
             tensor_fields: List[str] = None,
             use_existing_tensors: bool = False,
-            image_download_headers: dict = None,
+            image_download_headers: Optional[dict] = None,
+            media_download_headers: Optional[dict] = None,
             mappings: dict = None,
             model_auth: dict = None,
             text_chunk_prefix: str = None,
@@ -512,7 +522,9 @@ class Index:
                 "cuda" and "cuda:2"
             tensor_fields: fields within documents to create and store tensors against.
             use_existing_tensors: use vectors that already exist in the docs.
-            image_download_headers: a dictionary of headers to be passed while downloading images,
+            image_download_headers(deprecated): a dictionary of headers to be passed while downloading images,
+                for URLs found in documents
+            media_download_headers: a dictionary of headers to be passed while downloading media,
                 for URLs found in documents
             mappings: a dictionary to help handle the object fields. e.g., multimodal_combination field
             model_auth: used to authorise a private model
@@ -523,11 +535,17 @@ class Index:
 
         if image_download_headers is None:
             image_download_headers = dict()
+
+        if media_download_headers is None:
+            media_download_headers = dict()
+
         return self._add_docs_organiser(
             documents=documents,
             client_batch_size=client_batch_size, device=device, tensor_fields=tensor_fields,
             use_existing_tensors=use_existing_tensors,
-            image_download_headers=image_download_headers, mappings=mappings, model_auth=model_auth,
+            image_download_headers=image_download_headers,
+            media_download_headers=media_download_headers,
+            mappings=mappings, model_auth=model_auth,
             text_chunk_prefix=text_chunk_prefix
         )
 
@@ -538,7 +556,8 @@ class Index:
             device: str = None,
             tensor_fields: List = None,
             use_existing_tensors: bool = False,
-            image_download_headers: dict = None,
+            image_download_headers: dict = Optional[None],
+            media_download_headers: dict = Optional[None],
             mappings: dict = None,
             model_auth: dict = None,
             text_chunk_prefix: str = None,
@@ -561,6 +580,7 @@ class Index:
         base_body = {
             "useExistingTensors": use_existing_tensors,
             "imageDownloadHeaders": image_download_headers,
+            "mediaDownloadHeaders": media_download_headers,
             "mappings": mappings,
             "modelAuth": model_auth,
         }
