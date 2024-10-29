@@ -101,7 +101,7 @@ jobs:
   Test-Py-Marqo:
     name: Run open source unit tests
     needs: [Start-Runner, Start-Docker-Container]
-    runs-on: ${{ needs.start-runner.outputs.label }}s
+    runs-on: ${{ needs.start-runner.outputs.label }}
     environment: py-marqo-test-suite
     strategy:
       matrix:
