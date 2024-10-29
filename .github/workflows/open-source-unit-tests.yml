@@ -5,7 +5,7 @@
 # that specified by py-marqo's `marqo.version.__minimum_supported_marqo_version__`
 
 name: Open source unit tests
-run-name: Open source unit tests on Marqo tag ${{ inputs.image_tag }} with Python version ${{ inputs.python_version }}
+run-name: Open source unit tests on Marqo tag ${{ inputs.image_tag }}
 
 on:
   workflow_dispatch:
@@ -21,10 +21,6 @@ on:
       image_tag:
         description: 'Marqo image tag. Examples: "1.1.0", "test" "latest"'
         required: true
-      python_version:
-        description: 'Python version to use for tests. Example: "3.8", "3.10", "3.12"'
-        required: true
-        default: '3.12'
   pull_request:
     branches: 
       - mainline
@@ -64,8 +60,11 @@ jobs:
     name: Run open source unit tests
     needs: Start-Runner
     runs-on: ${{ needs.start-runner.outputs.label }}
-    
     environment: py-marqo-test-suite
+    strategy:
+      matrix:
+        python-version: [ '3.8', '3.9', '3.10', '3.11', '3.12', '3.13' ]
+      max-parallel: 1  # Adjust as needed based on runner capacity
 
     steps:
       - name: Checkout py-marqo repo
@@ -73,11 +72,17 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v3
         with:
-          python-version: ${{ github.event.inputs.python_version }}
+          python-version: ${{ matrix.python-version }}
           cache: "pip"
+
+      - name: Initialize pyenv
+        run: |
+          export PYENV_ROOT="$HOME/.pyenv"
+          export PATH="$PYENV_ROOT/bin:$PATH"
+          eval "$(pyenv init -)"
 
       - name: "Determine py-marqo's supported Marqo version"
         id: get_default_marqo_version
@@ -116,7 +121,7 @@ jobs:
             echo "::set-output name=image_tag::${{ steps.get_default_marqo_version.outputs.version }}"
           fi
 
-      - name: Run Py-Marqo Tests
+      - name: Start Marqo Container
         run: |
           docker pull ${{ steps.prepare.outputs.registry }}/${{ steps.prepare.outputs.image_repo }}:${{ steps.prepare.outputs.image_tag }}
           docker run --name marqo -d --privileged -p 8882:8882 --add-host host.docker.internal:host-gateway \
@@ -124,13 +129,16 @@ jobs:
             -e MARQO_MAX_CUDA_MODEL_MEMORY=15 \
             -e MARQO_MAX_CPU_MODEL_MEMORY=15 \
             ${{ steps.prepare.outputs.registry }}/${{ steps.prepare.outputs.image_repo }}:${{ steps.prepare.outputs.image_tag }}
-                    
+
           # wait for marqo to start with timeout of 10 minutes
           timeout 10m bash -c 'until [[ $(curl -v --silent --insecure http://localhost:8882 2>&1 | grep Marqo) ]]; do sleep 0.1; done;' || (echo "Marqo did not start in time" && exit 1)
+
+      - name: Run Py-Marqo Tests
+        run: |
+          python -m pip install --upgrade pip
+          pip install tox==3.26
+          tox
           
-          # Run tests
-          export PYTHONPATH=$(pwd):$(pwd)/src:$PYTHONPATH
-          pytest
 
   Stop-Runner:
     name: Stop self-hosted EC2 runner
