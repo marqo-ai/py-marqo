@@ -56,46 +56,11 @@ jobs:
           subnet-id: ${{ secrets.AMD_SUBNET_ID }}
           security-group-id: ${{ secrets.AMD_SECURITY_GROUP_ID }}
 
-  Test-Py-Marqo:
-    name: Run open source unit tests
+  Start-Docker-Container:
+    name: Start Docker Container
     needs: Start-Runner
     runs-on: ${{ needs.start-runner.outputs.label }}
-    environment: py-marqo-test-suite
-    strategy:
-      matrix:
-        python-version: [ '3.8', '3.9', '3.10', '3.11', '3.12', '3.13' ]
-      max-parallel: 1  # Adjust as needed based on runner capacity
-
     steps:
-      - name: Checkout py-marqo repo
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: "pip"
-
-      - name: Initialize pyenv
-        run: |
-          export PYENV_ROOT="$HOME/.pyenv"
-          export PATH="$PYENV_ROOT/bin:$PATH"
-          eval "$(pyenv init -)"
-
-      - name: "Determine py-marqo's supported Marqo version"
-        id: get_default_marqo_version
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          export PYTHONPATH=$(pwd):$(pwd)/src:$PYTHONPATH
-          SUPPORTED_MQ_VERSION=$(python -c 'from marqo import version; print(version.__minimum_supported_marqo_version__)') || exit 1
-          
-          # error out if version is empty:
-          if [ -z "$SUPPORTED_MQ_VERSION" ]; then exit 1; fi
-          echo "::set-output name=version::$SUPPORTED_MQ_VERSION"
-
       - name: Log into ECR
         uses: docker/login-action@v1
         if: github.event.inputs.image_registry_location == 'ECR'
@@ -120,8 +85,7 @@ jobs:
             echo "::set-output name=image_repo::marqo"
             echo "::set-output name=image_tag::${{ steps.get_default_marqo_version.outputs.version }}"
           fi
-
-      - name: Start Marqo Container
+      - name: Pull and Run Marqo Docker Container
         run: |
           docker pull ${{ steps.prepare.outputs.registry }}/${{ steps.prepare.outputs.image_repo }}:${{ steps.prepare.outputs.image_tag }}
           docker run --name marqo -d --privileged -p 8882:8882 --add-host host.docker.internal:host-gateway \
@@ -133,12 +97,45 @@ jobs:
           # wait for marqo to start with timeout of 10 minutes
           timeout 10m bash -c 'until [[ $(curl -v --silent --insecure http://localhost:8882 2>&1 | grep Marqo) ]]; do sleep 0.1; done;' || (echo "Marqo did not start in time" && exit 1)
 
+  Test-Py-Marqo:
+    name: Run open source unit tests
+    needs: Start-Docker-Container
+    runs-on: ${{ needs.start-runner.outputs.label }}
+    environment: py-marqo-test-suite
+    strategy:
+      matrix:
+        python-version: [ '3.8', '3.9', '3.10', '3.11', '3.12', '3.13' ]
+      max-parallel: 1  # Adjust as needed based on runner capacity
+
+    steps:
+      - name: Checkout py-marqo repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: "Determine py-marqo's supported Marqo version"
+        id: get_default_marqo_version
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          export PYTHONPATH=$(pwd):$(pwd)/src:$PYTHONPATH
+          SUPPORTED_MQ_VERSION=$(python -c 'from marqo import version; print(version.__minimum_supported_marqo_version__)') || exit 1
+          
+          # error out if version is empty:
+          if [ -z "$SUPPORTED_MQ_VERSION" ]; then exit 1; fi
+          echo "::set-output name=version::$SUPPORTED_MQ_VERSION"
+
       - name: Run Py-Marqo Tests
         run: |
           python -m pip install --upgrade pip
           pip install tox==3.26
           tox
-          
 
   Stop-Runner:
     name: Stop self-hosted EC2 runner
