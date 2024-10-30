@@ -76,8 +76,8 @@ jobs:
           subnet-id: ${{ secrets.AMD_SUBNET_ID }}
           security-group-id: ${{ secrets.AMD_SECURITY_GROUP_ID }}
 
-  Prepare-Testing-Environment:
-    name: Prepare Testing Environment - Python & Docker
+  Run-Py-Marqo-Tests:
+    name: Run Py-marqo Test Suite with Python ${{ inputs.python_version }}
     needs: Start-Runner
     runs-on: ${{ needs.start-runner.outputs.label }}
     steps:
@@ -128,6 +128,7 @@ jobs:
             echo "image_repo=marqo" >> $GITHUB_OUTPUT
             echo "image_tag=${{ steps.get_default_marqo_version.outputs.version }}" >> $GITHUB_OUTPUT
           fi
+
       - name: Pull and Run Marqo Docker Container
         run: |
           docker pull ${{ steps.prepare.outputs.registry }}/${{ steps.prepare.outputs.image_repo }}:${{ steps.prepare.outputs.image_tag }}
@@ -139,19 +140,6 @@ jobs:
 
           # wait for marqo to start with timeout of 10 minutes
           timeout 10m bash -c 'until [[ $(curl -v --silent --insecure http://localhost:8882 2>&1 | grep Marqo) ]]; do sleep 0.1; done;' || (echo "Marqo did not start in time" && exit 1)
-
-  Run-Tests:
-    name: Run open source unit tests with Python ${{ inputs.python_version }}
-    needs: [Start-Runner, Prepare-Testing-Environment]
-    runs-on: ${{ needs.start-runner.outputs.label }}
-    environment: py-marqo-test-suite
-    timeout-minutes: 70
-
-    steps:
-      - name: Checkout py-marqo repo
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
       - name: Run Py-Marqo Tests
         run: |
