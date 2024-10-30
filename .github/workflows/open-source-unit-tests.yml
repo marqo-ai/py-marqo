@@ -104,6 +104,7 @@ jobs:
     runs-on: ${{ needs.start-runner.outputs.label }}
     environment: py-marqo-test-suite
     strategy:
+      fail-fast: false
       matrix:
         python-version: [ '3.8', '3.9', '3.10', '3.11', '3.12', '3.13' ]
       max-parallel: 1  # Adjust as needed based on runner capacity
