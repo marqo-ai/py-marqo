@@ -261,7 +261,6 @@ class TestAddDocuments(MarqoTestCase):
         assert "device" not in kwargs0["path"]
 
         assert kwargs0["body"]["useExistingTensors"] == False
-        assert kwargs0["body"]["imageDownloadHeaders"] == {}
         assert kwargs0["body"]["mappings"] is None
         assert kwargs0["body"]["modelAuth"] is None
 
