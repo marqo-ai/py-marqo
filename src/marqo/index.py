@@ -437,7 +437,7 @@ class Index:
         if media_download_headers is not None:
             body["mediaDownloadHeaders"] = media_download_headers
         if image_download_headers is not None:
-            body["image_download_headers"] = image_download_headers
+            body["imageDownloadHeaders"] = image_download_headers
         if model_auth is not None:
             body["modelAuth"] = model_auth
         
