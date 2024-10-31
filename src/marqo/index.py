@@ -432,9 +432,10 @@ class Index:
         body = {
             "content": content,
             "content_type": content_type,
-            "mediaDownloadHeaders": media_download_headers,
         }
 
+        if media_download_headers is not None:
+            body["mediaDownloadHeaders"] = media_download_headers
         if image_download_headers is not None:
             body["image_download_headers"] = image_download_headers
         if model_auth is not None:
@@ -536,9 +537,6 @@ class Index:
         if image_download_headers is None:
             image_download_headers = dict()
 
-        if media_download_headers is None:
-            media_download_headers = dict()
-
         return self._add_docs_organiser(
             documents=documents,
             client_batch_size=client_batch_size, device=device, tensor_fields=tensor_fields,
@@ -580,10 +578,12 @@ class Index:
         base_body = {
             "useExistingTensors": use_existing_tensors,
             "imageDownloadHeaders": image_download_headers,
-            "mediaDownloadHeaders": media_download_headers,
             "mappings": mappings,
             "modelAuth": model_auth,
         }
+
+        if media_download_headers is not None:
+            base_body["mediaDownloadHeaders"] = media_download_headers
 
         if tensor_fields is not None:
             base_body['tensorFields'] = tensor_fields
