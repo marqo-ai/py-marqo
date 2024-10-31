@@ -816,6 +816,7 @@ class TestAddDocuments(MarqoTestCase):
                 documents=["something"], tensor_fields=None)
             args, kwargs = mock__post.call_args
             self.assertNotIn("mediaDownloadHeaders", kwargs["body"])
+            self.assertNotIn("imageDownloadHeaders", kwargs["body"])
             return True
         run()
 
@@ -826,9 +827,13 @@ class TestAddDocuments(MarqoTestCase):
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
         def run():
             self.client.index(index_name=self.generic_test_index_name).add_documents(
-                documents=["something"], tensor_fields=None, media_download_headers={"Authorization": "123"})
+                documents=["something"], tensor_fields=None,
+                media_download_headers={"key": "value-1"},
+                image_download_headers={"key": "value-2"}
+            )
             args, kwargs = mock__post.call_args
             self.assertIn("imageDownloadHeaders", kwargs["body"])
-            self.assertEqual({"Authorization": "123"}, kwargs["body"]["imageDownloadHeaders"])
+            self.assertEqual({"key": "value-2"}, kwargs["body"]["imageDownloadHeaders"])
+            self.assertEqual({"key": "value-1"}, kwargs["body"]["mediaDownloadHeaders"])
             return True
         run()

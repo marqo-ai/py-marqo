@@ -198,6 +198,7 @@ class TestEmbed(MarqoTestCase):
                 content=["something"])
             args, kwargs = mock__post.call_args
             self.assertNotIn("mediaDownloadHeaders", kwargs["body"])
+            self.assertNotIn("imageDownloadHeaders", kwargs["body"])
             return True
         run()
 
@@ -208,9 +209,13 @@ class TestEmbed(MarqoTestCase):
         @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
         def run():
             self.client.index(index_name=self.generic_test_index_name).embed(
-                content=["something"], mediaDownloadHeaders={"key": "value"})
+                content=["something"], media_download_headers={"key": "value-1"},
+                image_download_headers={"key": "value-2"}
+            )
             args, kwargs = mock__post.call_args
             self.assertIn("mediaDownloadHeaders", kwargs["body"])
-            self.assertEqual(kwargs["body"]["mediaDownloadHeaders"], {"key": "value"})
+            self.assertEqual({"key": "value-2"}, kwargs["body"]["imageDownloadHeaders"])
+            self.assertEqual({"key": "value-1"}, kwargs["body"]["mediaDownloadHeaders"])
             return True
+
         run()
