@@ -261,7 +261,6 @@ class TestAddDocuments(MarqoTestCase):
         assert "device" not in kwargs0["path"]
 
         assert kwargs0["body"]["useExistingTensors"] == False
-        assert kwargs0["body"]["imageDownloadHeaders"] == {}
         assert kwargs0["body"]["mappings"] is None
         assert kwargs0["body"]["modelAuth"] is None
 
@@ -805,3 +804,35 @@ class TestAddDocuments(MarqoTestCase):
                 self.assertIn('_tensor_facets', doc['results'][0])
                 self.assertIn('_embedding', doc['results'][0]['_tensor_facets'][0])
                 self.assertEqual(len(doc['results'][0]['_tensor_facets'][0]['_embedding']), 768)
+
+    def test_media_download_headers_is_not_included(self):
+        """Ensure newly added attributes mediaDownloadHeaders is not included in the request body."""
+        mock__post = mock.MagicMock()
+
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        def run():
+            self.client.index(index_name=self.generic_test_index_name).add_documents(
+                documents=["something"], tensor_fields=None)
+            args, kwargs = mock__post.call_args
+            self.assertNotIn("mediaDownloadHeaders", kwargs["body"])
+            self.assertNotIn("imageDownloadHeaders", kwargs["body"])
+            return True
+        run()
+
+    def test_media_download_headers_is_included_if_explicitly_set(self):
+        """Ensure newly added attributes mediaDownloadHeaders is included if explicitly set."""
+        mock__post = mock.MagicMock()
+
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        def run():
+            self.client.index(index_name=self.generic_test_index_name).add_documents(
+                documents=["something"], tensor_fields=None,
+                media_download_headers={"key": "value-1"},
+                image_download_headers={"key": "value-2"}
+            )
+            args, kwargs = mock__post.call_args
+            self.assertIn("imageDownloadHeaders", kwargs["body"])
+            self.assertEqual({"key": "value-2"}, kwargs["body"]["imageDownloadHeaders"])
+            self.assertEqual({"key": "value-1"}, kwargs["body"]["mediaDownloadHeaders"])
+            return True
+        run()

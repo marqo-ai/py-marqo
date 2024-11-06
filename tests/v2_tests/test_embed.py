@@ -1,3 +1,5 @@
+from unittest import mock
+
 import numpy as np
 from pytest import mark
 
@@ -185,3 +187,35 @@ class TestEmbed(MarqoTestCase):
                     self.client.index(test_index_name).embed(content={"text to embed": "not a number"})
 
             self.assertIn("not a valid float", str(e.exception))
+
+    def test_media_download_headers_is_not_included(self):
+        """Ensure newly added attributes mediaDownloadHeaders is not included in the request body."""
+        mock__post = mock.MagicMock()
+
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        def run():
+            self.client.index(index_name=self.generic_test_index_name).embed(
+                content=["something"])
+            args, kwargs = mock__post.call_args
+            self.assertNotIn("mediaDownloadHeaders", kwargs["body"])
+            self.assertNotIn("imageDownloadHeaders", kwargs["body"])
+            return True
+        run()
+
+    def test_media_download_headers_is_included_if_explicitly_set(self):
+        """Ensure newly added attributes mediaDownloadHeaders is included if explicitly set."""
+        mock__post = mock.MagicMock()
+
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        def run():
+            self.client.index(index_name=self.generic_test_index_name).embed(
+                content=["something"], media_download_headers={"key": "value-1"},
+                image_download_headers={"key": "value-2"}
+            )
+            args, kwargs = mock__post.call_args
+            self.assertIn("mediaDownloadHeaders", kwargs["body"])
+            self.assertEqual({"key": "value-2"}, kwargs["body"]["imageDownloadHeaders"])
+            self.assertEqual({"key": "value-1"}, kwargs["body"]["mediaDownloadHeaders"])
+            return True
+
+        run()

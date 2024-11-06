@@ -608,3 +608,35 @@ class TestSearch(MarqoTestCase):
                 assert list(search1_res['hits'][0]['_highlights'][0].keys()) == [field_to_search, ]
                 assert set(k for k in search1_res['hits'][0].keys() if not k.startswith('_')) == {field_to_not_search}
 
+    def test_media_download_headers_is_not_included(self):
+        """Ensure newly added attributes mediaDownloadHeaders is not included in the request body."""
+        mock__post = mock.MagicMock()
+
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        def run():
+            self.client.index(index_name=self.generic_test_index_name).search(
+                q="test")
+            args, kwargs = mock__post.call_args
+            self.assertNotIn("mediaDownloadHeaders", kwargs["body"])
+            self.assertNotIn("imageDownloadHeaders", kwargs["body"])
+            return True
+
+        run()
+
+    def test_media_download_headers_is_included_if_explicitly_set(self):
+        """Ensure newly added attributes mediaDownloadHeaders is included if explicitly set."""
+        mock__post = mock.MagicMock()
+
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        def run():
+            self.client.index(index_name=self.generic_test_index_name).search(
+                q="test", media_download_headers={"key": "value-1"},
+                image_download_headers={"key": "value-2"}
+            )
+            args, kwargs = mock__post.call_args
+            self.assertIn("mediaDownloadHeaders", kwargs["body"])
+            self.assertEqual({"key": "value-2"}, kwargs["body"]["imageDownloadHeaders"])
+            self.assertEqual({"key": "value-1"}, kwargs["body"]["mediaDownloadHeaders"])
+            return True
+
+        run()
