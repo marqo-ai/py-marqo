@@ -39,7 +39,7 @@ permissions:
 
 jobs:
   Test-Python-3-8:
-    uses: ./.github/workflows/open-source-unit-tests-specific-python-version.yml
+    uses: ./.github/workflows/open-source-unit-tests.yml
     secrets: inherit
     with:
         python_version: '3.8'
@@ -48,7 +48,7 @@ jobs:
         image_tag: ${{ inputs.image_tag }}
 
   Test-Python-3-13:
-    uses: ./.github/workflows/open-source-unit-tests-specific-python-version.yml
+    uses: ./.github/workflows/open-source-unit-tests.yml
     secrets: inherit
     with:
         python_version: '3.13'
