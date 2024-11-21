@@ -1,10 +1,13 @@
 # This workflow will run the py-marqo unit tests using the `tox` command.
 # This workflow pulls a Marqo image and runs it. Py-marqo then connects to the 
-# running container for the tests. 
+# running container for the tests.
 # Unless otherwise specified, the Marqo version that is used for this test will be 
 # that specified by py-marqo's `marqo.version.__minimum_supported_marqo_version__`
 
+# Uses a specific Python Version
+
 name: Open source unit tests
+run-name: Open source unit tests with Python Version ${{ inputs.python_version }} on Marqo tag ${{ inputs.image_tag }}
 
 on:
   workflow_dispatch:
@@ -20,12 +23,31 @@ on:
       image_tag:
         description: 'Marqo image tag. Examples: "1.1.0", "test" "latest"'
         required: true
-  pull_request:
-    branches: 
-      - mainline
-      - 'releases/*'
+        default: 'latest'
+      python_version:
+        description: 'Python version to run the tests with. Examples: "3.8", "3.10", "3.13"'
+        required: true
+        default: '3.13'
+
   # allows other workflows to reuse these unit tests:
   workflow_call:
+    inputs:
+      image_registry_location:
+        description: 'Marqo docker image registry location. Options: "ECR" or "DockerHub"'
+        required: true
+        type: string
+      image_repo:
+        description: 'Marqo docker image repo name'
+        required: true
+        type: string
+      image_tag:
+        description: 'Marqo image tag. Examples: "1.1.0", "test" "latest"'
+        required: true
+        type: string
+      python_version:
+        description: 'Python version to run the tests with. Examples: "3.8", "3.10", "3.13"'
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -55,36 +77,33 @@ jobs:
           subnet-id: ${{ secrets.AMD_SUBNET_ID }}
           security-group-id: ${{ secrets.AMD_SECURITY_GROUP_ID }}
 
-  Test-Py-Marqo:
-    name: Run open source unit tests
+  Run-Py-Marqo-Tests:
+    name: Run Py-marqo Test Suite with Python ${{ inputs.python_version }}
     needs: Start-Runner
     runs-on: ${{ needs.start-runner.outputs.label }}
-    
-    environment: py-marqo-test-suite
-
     steps:
       - name: Checkout py-marqo repo
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: Set up Python 3.8
+      - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v3
         with:
-          python-version: "3.8"
+          python-version: ${{ inputs.python_version }}
           cache: "pip"
 
-      - name: "Determine py-marqo's supported Marqo version"
+      - name: Determine py-marqo's supported Marqo version
         id: get_default_marqo_version
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           export PYTHONPATH=$(pwd):$(pwd)/src:$PYTHONPATH
           SUPPORTED_MQ_VERSION=$(python -c 'from marqo import version; print(version.__minimum_supported_marqo_version__)') || exit 1
-          
+
           # error out if version is empty:
           if [ -z "$SUPPORTED_MQ_VERSION" ]; then exit 1; fi
-          echo "::set-output name=version::$SUPPORTED_MQ_VERSION"
+          echo "version=$SUPPORTED_MQ_VERSION" >> $GITHUB_OUTPUT
 
       - name: Log into ECR
         uses: docker/login-action@v1
@@ -99,19 +118,19 @@ jobs:
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             if [[ "${{ github.event.inputs.image_registry_location }}" == "ECR" ]]; then
-              echo "::set-output name=registry::${{ secrets.AWS_ACCOUNT_NUMBER }}.dkr.ecr.us-east-1.amazonaws.com"
+              echo "registry=${{ secrets.AWS_ACCOUNT_NUMBER }}.dkr.ecr.us-east-1.amazonaws.com" >> $GITHUB_OUTPUT
             else
-              echo "::set-output name=registry::marqoai"
+              echo "registry=marqoai" >> $GITHUB_OUTPUT
             fi
-            echo "::set-output name=image_repo::${{ github.event.inputs.image_repo }}"
-            echo "::set-output name=image_tag::${{ github.event.inputs.image_tag }}"
+            echo "image_repo=${{ github.event.inputs.image_repo }}" >> $GITHUB_OUTPUT
+            echo "image_tag=${{ github.event.inputs.image_tag }}" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=registry::marqoai"
-            echo "::set-output name=image_repo::marqo"
-            echo "::set-output name=image_tag::${{ steps.get_default_marqo_version.outputs.version }}"
+            echo "registry=marqoai" >> $GITHUB_OUTPUT
+            echo "image_repo=marqo" >> $GITHUB_OUTPUT
+            echo "image_tag=${{ steps.get_default_marqo_version.outputs.version }}" >> $GITHUB_OUTPUT
           fi
 
-      - name: Run Py-Marqo Tests
+      - name: Pull and Run Marqo Docker Container
         run: |
           docker pull ${{ steps.prepare.outputs.registry }}/${{ steps.prepare.outputs.image_repo }}:${{ steps.prepare.outputs.image_tag }}
           docker run --name marqo -d --privileged -p 8882:8882 --add-host host.docker.internal:host-gateway \
@@ -119,11 +138,15 @@ jobs:
             -e MARQO_MAX_CUDA_MODEL_MEMORY=15 \
             -e MARQO_MAX_CPU_MODEL_MEMORY=15 \
             ${{ steps.prepare.outputs.registry }}/${{ steps.prepare.outputs.image_repo }}:${{ steps.prepare.outputs.image_tag }}
-                    
+
           # wait for marqo to start with timeout of 10 minutes
           timeout 10m bash -c 'until [[ $(curl -v --silent --insecure http://localhost:8882 2>&1 | grep Marqo) ]]; do sleep 0.1; done;' || (echo "Marqo did not start in time" && exit 1)
-          
+
+      - name: Run Py-Marqo Tests
+        run: |
           python -m pip install --upgrade pip
+          # Required for Python 3.12 and above
+          pip install setuptools
           pip install tox==3.26
           tox
 
@@ -131,7 +154,7 @@ jobs:
     name: Stop self-hosted EC2 runner
     needs:
       - Start-Runner
-      - Test-Py-Marqo
+      - Run-Py-Marqo-Tests
     runs-on: ubuntu-latest
     if: ${{ always() }}
     steps:
