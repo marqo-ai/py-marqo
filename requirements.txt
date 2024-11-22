@@ -1,13 +1,4 @@
-# marqo client:
-urllib3<2.0.0, >=1.26.0
+urllib3>=1.26.0
 requests
-packaging
-
-# testing
-pillow
-numpy
-pytest
-dataclasses
 pydantic>=2.0.0
-requests_mock
-tenacity
+packaging
