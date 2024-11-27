@@ -1,0 +1,100 @@
+# This workflow will run the py-marqo unit tests using the `tox` command.
+# This workflow pulls a Marqo image and runs it. Py-marqo then connects to the 
+# running container for the tests. 
+# Unless otherwise specified, the Marqo version that is used for this test will be 
+# that specified by py-marqo's `marqo.version.__minimum_supported_marqo_version__`
+
+# Tests all supported Python versions
+# Runs only once on PR approval
+
+name: Open source unit tests - All Python Versions
+run-name: Open source unit tests with all Python Versions for Marqo tag ${{ inputs.image_tag }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_registry_location:
+        description: 'Marqo docker image registry location. Options: "ECR" or "DockerHub"'
+        required: true
+        default: 'DockerHub'
+      image_repo:
+        description: 'Marqo docker image repo name'
+        required: true
+        default: 'marqo'
+      image_tag:
+        description: 'Marqo image tag. Examples: "1.1.0", "test" "latest"'
+        required: true
+        default: 'latest'
+  pull_request_review:
+    types: [submitted]
+    branches: 
+      - mainline
+      - 'releases/*'
+
+concurrency:
+  group: unit-tests-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  Test-Python-3-8:
+    uses: ./.github/workflows/open-source-unit-tests.yml
+    secrets: inherit
+    if: github.event.review.state == 'approved'
+    with:
+        python_version: '3.8'
+        image_registry_location: ${{ inputs.image_registry_location }}
+        image_repo: ${{ inputs.image_repo }}
+        image_tag: ${{ inputs.image_tag }}
+
+  Test-Python-3-9:
+    uses: ./.github/workflows/open-source-unit-tests.yml
+    secrets: inherit
+    if: github.event.review.state == 'approved'
+    with:
+        python_version: '3.9'
+        image_registry_location: ${{ inputs.image_registry_location }}
+        image_repo: ${{ inputs.image_repo }}
+        image_tag: ${{ inputs.image_tag }}
+
+  Test-Python-3-10:
+    uses: ./.github/workflows/open-source-unit-tests.yml
+    secrets: inherit
+    if: github.event.review.state == 'approved'
+    with:
+        python_version: '3.10'
+        image_registry_location: ${{ inputs.image_registry_location }}
+        image_repo: ${{ inputs.image_repo }}
+        image_tag: ${{ inputs.image_tag }}
+
+  Test-Python-3-11:
+    uses: ./.github/workflows/open-source-unit-tests.yml
+    secrets: inherit
+    if: github.event.review.state == 'approved'
+    with:
+        python_version: '3.11'
+        image_registry_location: ${{ inputs.image_registry_location }}
+        image_repo: ${{ inputs.image_repo }}
+        image_tag: ${{ inputs.image_tag }}
+
+  Test-Python-3-12:
+    uses: ./.github/workflows/open-source-unit-tests.yml
+    secrets: inherit
+    if: github.event.review.state == 'approved'
+    with:
+        python_version: '3.12'
+        image_registry_location: ${{ inputs.image_registry_location }}
+        image_repo: ${{ inputs.image_repo }}
+        image_tag: ${{ inputs.image_tag }}
+
+  Test-Python-3-13:
+    uses: ./.github/workflows/open-source-unit-tests.yml
+    secrets: inherit
+    if: github.event.review.state == 'approved'
+    with:
+        python_version: '3.13'
+        image_registry_location: ${{ inputs.image_registry_location }}
+        image_repo: ${{ inputs.image_repo }}
+        image_tag: ${{ inputs.image_tag }}
