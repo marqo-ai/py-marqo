@@ -20,17 +20,17 @@ class TestRecommend(MarqoTestCase):
             docs = [
                 {
                     "_id": "1",
-                    "title": "Red orchid",
+                    "Title": "Red orchid",
                     "tags": ["flower", "orchid"],
                 },
                 {
                     "_id": "2",
-                    "title": "Red rose",
+                    "Title": "Red rose",
                     "tags": ["flower"],
                 },
                 {
                     "_id": "3",
-                    "title": "Europe",
+                    "Title": "Europe",
                     "tags": ["continent"],
                 },
             ]
