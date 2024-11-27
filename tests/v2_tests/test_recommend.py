@@ -20,22 +20,22 @@ class TestRecommend(MarqoTestCase):
             docs = [
                 {
                     "_id": "1",
-                    "title": "Red orchid",
+                    "Title": "Red orchid",
                     "tags": ["flower", "orchid"],
                 },
                 {
                     "_id": "2",
-                    "title": "Red rose",
+                    "Title": "Red rose",
                     "tags": ["flower"],
                 },
                 {
                     "_id": "3",
-                    "title": "Europe",
+                    "Title": "Europe",
                     "tags": ["continent"],
                 },
             ]
 
-            add_docs_results = self.client.index(test_index_name).add_documents(docs, tensor_fields=["title"])
+            add_docs_results = self.client.index(test_index_name).add_documents(docs, tensor_fields=["Title"])
 
             if add_docs_results["errors"]:
                 raise Exception(f"Failed to add documents to index {test_index_name}")

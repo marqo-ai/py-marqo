@@ -139,7 +139,18 @@ index_name_to_settings_mappings = {
             {"name": "audio_field_2", "type": "audio_pointer"},
             {"name": "image_field_1", "type": "image_pointer"},
             {"name": "image_field_2", "type": "image_pointer"},
-            {"name": "multimodal_field", "type": "multimodal_combination"},
+            {
+                "name": "multimodal_field",
+                "type": "multimodal_combination",
+                "dependentFields": {
+                    "text_field_1": 0.1,
+                    "text_field_2": 0.1,
+                    "image_field_1": 0.5,
+                    "video_field_1": 0.1,
+                    "video_field_2": 0.1,
+                    "audio_field_1": 0.1
+                }
+            },
             {"name": "map_int_score_modifier_field", "type": "map<text, int>", "features": ["score_modifier"]},
             {"name": "map_double_score_modifier_field", "type": "map<text, double>", "features": ["score_modifier"]},
             {"name": "map_float_score_modifier_field", "type": "map<text, float>", "features": ["score_modifier"]},
