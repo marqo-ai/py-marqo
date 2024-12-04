@@ -1,0 +1,7 @@
+-r requirements.txt
+pillow
+numpy
+pytest
+dataclasses
+requests_mock
+tenacity

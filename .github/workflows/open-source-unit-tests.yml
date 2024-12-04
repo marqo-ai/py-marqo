@@ -144,6 +144,9 @@ jobs:
 
       - name: Run Py-Marqo Tests
         run: |
+          # show all warnings to capture deprecation warnings when running tests 
+          export PYTHONWARNINGS="default"
+          
           python -m pip install --upgrade pip
           # Required for Python 3.12 and above
           pip install setuptools
