@@ -43,7 +43,7 @@ jobs:
   Test-Python-3-8:
     uses: ./.github/workflows/open-source-unit-tests.yml
     secrets: inherit
-    if: github.event.review.state == 'approved'
+    if: ${{ github.event_name == 'workflow_dispatch' }} || ${{ github.event.review.state == 'approved' }}
     with:
         python_version: '3.8'
         image_registry_location: ${{ inputs.image_registry_location }}
