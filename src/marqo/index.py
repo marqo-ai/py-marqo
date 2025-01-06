@@ -210,7 +210,8 @@ class Index:
             raise UnsupportedOperationError("This operation is only supported for Marqo Cloud")
 
     def search(self, q: Optional[Union[str, dict]] = None, searchable_attributes: Optional[List[str]] = None,
-               limit: int = 10, offset: int = 0, search_method: Union[SearchMethods.TENSOR, str] = SearchMethods.TENSOR,
+               limit: int = 10, offset: int = 0, rerank_count: Optional[int] = None,
+               search_method: Union[SearchMethods.TENSOR, str] = SearchMethods.TENSOR,
                highlights=None, device: Optional[str] = None, filter_string: str = None,
                show_highlights=True, reranker=None,
                image_download_headers: Optional[Dict] = None,
@@ -237,6 +238,7 @@ class Index:
             searchable_attributes:  attributes to search
             limit: The max number of documents to be returned
             offset: The number of search results to skip (for pagination)
+            rerank_count: The number of documents to rerank with score modifiers
             search_method: Indicates TENSOR or LEXICAL (keyword) search
             show_highlights: True if highlights are to be returned
             reranker:
@@ -255,6 +257,9 @@ class Index:
             image_download_headers(deprecated): a dictionary of headers to be passed while downloading images.
             media_download_headers: a dictionary of headers to be passed while downloading media,
                 for URLs found in documents
+            text_query_prefix: a string to prefix the text query with before vectorizing.
+                overrides index setting & model default prefix
+            hybrid_parameters: a dictionary of parameters to be used for hybrid search
         Returns:
             Dictionary with hits and other metadata
         """
@@ -283,6 +288,7 @@ class Index:
             "searchableAttributes": searchable_attributes,
             "limit": limit,
             "offset": offset,
+            "rerankCount": rerank_count,
             "searchMethod": search_method,
             "showHighlights": show_highlights,
             "reRanker": reranker,
