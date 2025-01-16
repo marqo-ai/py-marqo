@@ -210,7 +210,8 @@ class Index:
             raise UnsupportedOperationError("This operation is only supported for Marqo Cloud")
 
     def search(self, q: Optional[Union[str, dict]] = None, searchable_attributes: Optional[List[str]] = None,
-               limit: int = 10, offset: int = 0, search_method: Union[SearchMethods.TENSOR, str] = SearchMethods.TENSOR,
+               limit: int = 10, offset: int = 0,
+               search_method: Union[SearchMethods.TENSOR, str] = SearchMethods.TENSOR,
                highlights=None, device: Optional[str] = None, filter_string: str = None,
                show_highlights=True, reranker=None,
                image_download_headers: Optional[Dict] = None,
@@ -221,6 +222,7 @@ class Index:
                model_auth: Optional[dict] = None,
                ef_search: Optional[int] = None, approximate: Optional[bool] = None,
                text_query_prefix: Optional[str] = None, hybrid_parameters: Optional[dict] = None,
+               rerank_count: Optional[int] = None
                ) -> Dict[str, Any]:
         """Search the index.
 
@@ -255,6 +257,10 @@ class Index:
             image_download_headers(deprecated): a dictionary of headers to be passed while downloading images.
             media_download_headers: a dictionary of headers to be passed while downloading media,
                 for URLs found in documents
+            text_query_prefix: a string to prefix the text query with before vectorizing.
+                overrides index setting & model default prefix
+            hybrid_parameters: a dictionary of parameters to be used for hybrid search
+            rerank_count: The number of documents to rerank with score modifiers
         Returns:
             Dictionary with hits and other metadata
         """
@@ -283,6 +289,7 @@ class Index:
             "searchableAttributes": searchable_attributes,
             "limit": limit,
             "offset": offset,
+            "rerankCount": rerank_count,
             "searchMethod": search_method,
             "showHighlights": show_highlights,
             "reRanker": reranker,
