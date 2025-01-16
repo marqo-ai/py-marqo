@@ -222,7 +222,7 @@ class Index:
                model_auth: Optional[dict] = None,
                ef_search: Optional[int] = None, approximate: Optional[bool] = None,
                text_query_prefix: Optional[str] = None, hybrid_parameters: Optional[dict] = None,
-               rerank_count: Optional[int] = None
+               rerank_depth: Optional[int] = None
                ) -> Dict[str, Any]:
         """Search the index.
 
@@ -260,7 +260,7 @@ class Index:
             text_query_prefix: a string to prefix the text query with before vectorizing.
                 overrides index setting & model default prefix
             hybrid_parameters: a dictionary of parameters to be used for hybrid search
-            rerank_count: The number of documents to rerank with score modifiers
+            rerank_depth: The number of documents to rerank with score modifiers
         Returns:
             Dictionary with hits and other metadata
         """
@@ -289,7 +289,7 @@ class Index:
             "searchableAttributes": searchable_attributes,
             "limit": limit,
             "offset": offset,
-            "rerankCount": rerank_count,
+            "rerankDepth": rerank_depth,
             "searchMethod": search_method,
             "showHighlights": show_highlights,
             "reRanker": reranker,
