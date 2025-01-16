@@ -105,9 +105,9 @@ class TestScoreModifierSearch(MarqoTestCase):
 
 @mark.fixed
 class TestScoreModifierWithRerankCountSearch(MarqoTestCase):
-    def test_hybrid_search_rrf_score_modifiers_with_rerank_count(self):
+    def test_hybrid_search_rrf_score_modifiers_with_rerank_depth(self):
         """
-        Test that hybrid search with RRF can use root level score_modifiers and rerank_count
+        Test that hybrid search with RRF can use root level score_modifiers and rerank_depth
         """
         test_cases = [
             (CloudTestIndex.unstructured_text, self.unstructured_index_name),
@@ -150,7 +150,7 @@ class TestScoreModifierWithRerankCountSearch(MarqoTestCase):
                 }
                 modified_results = self.client.index(test_index_name).search(
                     q="dogs", search_method="HYBRID",
-                    limit=3, rerank_count=3, score_modifiers=score_modifiers
+                    limit=3, rerank_depth=3, score_modifiers=score_modifiers
                 )
                 self.assertEqual(["tensor2", "tensor1", "both1"], [hit["_id"] for hit in modified_results["hits"]])
                 self.assertAlmostEqual(modified_results["hits"][0]["_score"], 3*unmodified_scores["tensor2"] + 3)
@@ -161,7 +161,7 @@ class TestScoreModifierWithRerankCountSearch(MarqoTestCase):
                 # Modified result order should be: tensor1, tensor2, both1
                 modified_results = self.client.index(test_index_name).search(
                     q="dogs", search_method="HYBRID",
-                    limit=3, rerank_count=1, score_modifiers=score_modifiers
+                    limit=3, rerank_depth=1, score_modifiers=score_modifiers
                 )
                 self.assertEqual(["tensor1", "tensor2", "both1"], [hit["_id"] for hit in modified_results["hits"]])
                 self.assertAlmostEqual(modified_results["hits"][0]["_score"], unmodified_scores["tensor1"])     # unmodified
