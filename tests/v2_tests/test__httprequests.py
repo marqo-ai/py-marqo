@@ -133,3 +133,62 @@ class TestConstructCloudPath(unittest.TestCase):
             with self.assertRaises(MarqoWebError) as cm:
                 HttpRequests._validate(response)
             self.assertEqual(cm.exception.code, "response_not_in_json_format")
+
+@pytest.mark.fixed
+class TestHttpRequests(unittest.TestCase):
+    """
+    Tests basic functionality of HttpRequests class. Should work with both local and cloud endpoints.
+    """
+
+    local_urls = ["http://localhost:8882"]
+    cloud_urls = ["https://api.marqo.ai"]
+    urls_to_test = local_urls + cloud_urls
+    def test_send_request_uses_correct_headers(self):
+        """
+        Every request should have the index name as header.
+        Every request should have api key if included in config.
+        Test all urls and all operations.
+        """
+        operations_to_test = ['get', 'post', 'put', 'patch', 'delete']
+        for url in self.urls_to_test:
+            with self.subTest(url=url):
+                for operation in operations_to_test:
+                    with self.subTest(operation=operation):
+                        with requests_mock.Mocker() as m:
+                            # set up mock response
+                            m.request(operation, f'{url}/test', text='{"status": "ok"}')
+
+                            for has_api_key in [True, False]:
+                                with self.subTest(has_api_key=has_api_key):
+                                    if has_api_key:
+                                        config = Config(instance_mappings=DefaultInstanceMappings(url),
+                                                        api_key="test-api-key")
+                                    else:
+                                        config = Config(instance_mappings=DefaultInstanceMappings(url))
+
+                                    http_requests = HttpRequests(config=config)
+
+                                    # Index name should always be in header.
+                                    # If not provided in request, it should be ""
+                                    for has_index_name in [True, False]:
+                                        with self.subTest(has_index_name=has_index_name):
+                                            if has_index_name:
+                                                http_requests.send_request(operation,
+                                                                           'test',
+                                                                           index_name="my-test-index")
+                                                self.assertEqual(m.last_request.headers['x-marqo-index-name'],
+                                                                 "my-test-index")
+
+                                            else:
+                                                http_requests.send_request(operation, 'test')
+                                                self.assertEqual(m.last_request.headers['x-marqo-index-name'],
+                                                                 "")
+
+                                    # If config has api key, it should be in request header. Otherwise, key should not
+                                    # exist in header.
+                                    if has_api_key:
+                                        self.assertEqual(m.last_request.headers['x-api-key'], config.api_key)
+                                    else:
+                                        self.assertNotIn('x-api-key', m.last_request.headers)
+
+
