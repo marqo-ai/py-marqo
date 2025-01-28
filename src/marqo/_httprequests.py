@@ -2,9 +2,7 @@ import copy
 import json
 from json.decoder import JSONDecodeError
 from typing import get_args, Any, Callable, Dict, Literal, List, Optional, Tuple, Union
-
 import requests
-
 from marqo.config import Config
 from marqo.errors import (
     MarqoWebError,
@@ -12,6 +10,7 @@ from marqo.errors import (
     BackendTimeoutError
 )
 
+CLOUD_INDEX_NAME_HTTP_HEADER = "x-marqo-index-name"
 HTTP_OPERATIONS = Literal["delete", "get", "post", "put", "patch"]
 ALLOWED_OPERATIONS: Tuple[HTTP_OPERATIONS, ...] = get_args(HTTP_OPERATIONS)
 session = requests.Session()
@@ -57,6 +56,7 @@ class HttpRequests:
         index_name: str = ""
     ) -> Any:
         req_headers = copy.deepcopy(self.headers)
+        req_headers[CLOUD_INDEX_NAME_HTTP_HEADER] = index_name
 
         if content_type is not None and content_type:
             req_headers['Content-Type'] = content_type
