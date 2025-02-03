@@ -65,7 +65,8 @@ class Client:
         )
         self.http = HttpRequests(self.config)
 
-    def _is_cloud_api_endpoint(self, url: str) -> bool:
+    @classmethod
+    def _is_cloud_api_endpoint(cls, url: str) -> bool:
         # Check if user set the cloud endpoint manually.
         user_set_cloud_endpoint = os.environ.get("MARQO_CLOUD_URL", None)
         if user_set_cloud_endpoint is not None:
@@ -77,7 +78,6 @@ class Client:
                 return True
 
         return False
-
 
     def create_index(
         self, index_name: str,

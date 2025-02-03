@@ -64,3 +64,25 @@ class TestClient(MarqoTestCase):
         self.assertFalse(client.config.is_marqo_cloud)
         self.assertIsInstance(client.config.instance_mapping, DefaultInstanceMappings)
         self.assertEqual(client.config.instance_mapping.get_control_base_url(), "https://arandomsite.ai")
+
+
+@mark.fixed
+class TestClientMethods(MarqoTestCase):
+    def tearDown(self) -> None:
+        os.environ["MARQO_CLOUD_URL"] = constants.CLOUD_AWS_API_ENDPOINT
+    def test_is_cloud_api_endpoint(self):
+        # Custom Marqo Cloud URL
+        os.environ["MARQO_CLOUD_URL"] = "https://arandomsite.ai"
+        with self.subTest("Env var set, matches."):
+            self.assertTrue(Client._is_cloud_api_endpoint("https://arandomsite.ai"))
+        with self.subTest("Env var set, does not match."):
+            self.assertFalse(Client._is_cloud_api_endpoint(constants.CLOUD_AWS_API_ENDPOINT))
+
+        # Default Marqo Cloud URL
+        del os.environ["MARQO_CLOUD_URL"]
+        with self.subTest("Env var not set, matches AWS."):
+            self.assertTrue(Client._is_cloud_api_endpoint(constants.CLOUD_AWS_API_ENDPOINT))
+        with self.subTest("Env var not set, matches GCP."):
+            self.assertTrue(Client._is_cloud_api_endpoint(constants.CLOUD_GCP_API_ENDPOINT))
+        with self.subTest("Env var not set, does not match."):
+            self.assertFalse(Client._is_cloud_api_endpoint("https://arandomsite.ai"))
