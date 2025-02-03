@@ -15,6 +15,7 @@ from marqo._httprequests import HttpRequests
 from marqo import utils, enums
 from marqo import errors
 from marqo.models import marqo_index
+import marqo.constants as constants
 
 
 class Client:
@@ -50,7 +51,7 @@ class Client:
 
         is_marqo_cloud = False
         if url is not None:
-            if url.lower().startswith(os.environ.get("MARQO_CLOUD_URL", "https://api.marqo.ai")):
+            if self._is_cloud_api_endpoint(url):
                 instance_mappings = MarqoCloudInstanceMappings(control_base_url=url, api_key=api_key)
                 is_marqo_cloud = True
             else:
@@ -63,6 +64,20 @@ class Client:
             api_key=api_key
         )
         self.http = HttpRequests(self.config)
+
+    def _is_cloud_api_endpoint(self, url: str) -> bool:
+        # Check if user set the cloud endpoint manually.
+        user_set_cloud_endpoint = os.environ.get("MARQO_CLOUD_URL", None)
+        if user_set_cloud_endpoint is not None:
+            return url.lower().startswith(user_set_cloud_endpoint.lower())
+
+        # If not set, check if the url matches any default cloud endpoint.
+        for default_endpoint in constants.CLOUD_API_ENDPOINTS:
+            if url.lower().startswith(default_endpoint):
+                return True
+
+        return False
+
 
     def create_index(
         self, index_name: str,
