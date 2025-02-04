@@ -11,6 +11,7 @@ from marqo.config import Config
 from marqo.default_instance_mappings import DefaultInstanceMappings
 from marqo.errors import MarqoWebError
 from marqo.marqo_cloud_instance_mappings import MarqoCloudInstanceMappings
+import marqo.constants as constants
 
 
 @pytest.mark.fixed
@@ -67,8 +68,6 @@ class TestConstructCloudPath(unittest.TestCase):
     POST https://api.marqo.ai/api/v2/indexes/{index_name}
     """
 
-    cloud_url = "https://api.marqo.ai"
-
     def construct_path_helper(self, base_path: str, path: str, use_telemetry=None, index_name: str = "") -> str:
         r = HttpRequests(
             config=Config(use_telemetry=use_telemetry, instance_mappings=MarqoCloudInstanceMappings(base_path))
@@ -82,9 +81,10 @@ class TestConstructCloudPath(unittest.TestCase):
             "indexes/my_index_name/health"
         ]
         for path in test_cases:
-            with self.subTest(f"self.cloud_url={self.cloud_url}, path={path}"):
-                result = self.construct_path_helper(self.cloud_url, path)
-                self.assertEqual(f"{self.cloud_url}/api/v2/{path}", result)
+            for cloud_url in constants.CLOUD_API_ENDPOINTS:
+                with self.subTest(f"self.cloud_url={cloud_url}, path={path}"):
+                    result = self.construct_path_helper(cloud_url, path)
+                    self.assertEqual(f"{cloud_url}/api/v2/{path}", result)
 
     def test_path_not_start_with_indexes(self):
         test_cases = [
@@ -93,9 +93,10 @@ class TestConstructCloudPath(unittest.TestCase):
             "not_indexes/my_index_name/health"
         ]
         for path in test_cases:
-            with self.subTest(f"self.cloud_url={self.cloud_url}, path={path}"):
-                result = self.construct_path_helper(self.cloud_url, path)
-                self.assertEqual(f"{self.cloud_url}/api/{path}", result)
+            for cloud_url in constants.CLOUD_API_ENDPOINTS:
+                with self.subTest(f"cloud_url={cloud_url}, path={path}"):
+                    result = self.construct_path_helper(cloud_url, path)
+                    self.assertEqual(f"{cloud_url}/api/{path}", result)
 
     def test_path_start_with_indexes_but_sent_to_dataplane_endpoints(self):
         """Test to ensure dataplane endpoints are not affected by the v2/ prefix for construct path"""
@@ -105,12 +106,13 @@ class TestConstructCloudPath(unittest.TestCase):
 
         mock_dataplane_endpoint = "https://my-indx-abcdef-hijklm.marqo.ai"
         for path in test_cases:
-            with self.subTest(f"self.cloud_url={self.cloud_url}, path={path}"):
-                with patch("marqo.marqo_cloud_instance_mappings.MarqoCloudInstanceMappings.get_index_base_url",
-                   return_value=mock_dataplane_endpoint) as mock_get_index_base_url:
-                    result = self.construct_path_helper(self.cloud_url, path, index_name="my_index")
-                    self.assertEqual(f"{mock_dataplane_endpoint}/{path}", result)
-                mock_get_index_base_url.assert_called_once_with(index_name="my_index")
+            for cloud_url in constants.CLOUD_API_ENDPOINTS:
+                with self.subTest(f"cloud_url={cloud_url}, path={path}"):
+                    with patch("marqo.marqo_cloud_instance_mappings.MarqoCloudInstanceMappings.get_index_base_url",
+                       return_value=mock_dataplane_endpoint) as mock_get_index_base_url:
+                        result = self.construct_path_helper(cloud_url, path, index_name="my_index")
+                        self.assertEqual(f"{mock_dataplane_endpoint}/{path}", result)
+                    mock_get_index_base_url.assert_called_once_with(index_name="my_index")
 
     def test_environment_variable_can_affect_construct_path(self):
         """Test to ensure environment variable MARQO_CLOUD_URL enable v2/ prefix for construct path"""
@@ -141,8 +143,7 @@ class TestHttpRequests(unittest.TestCase):
     """
 
     local_urls = ["http://localhost:8882"]
-    cloud_urls = ["https://api.marqo.ai"]
-    urls_to_test = local_urls + cloud_urls
+    urls_to_test = local_urls + constants.CLOUD_API_ENDPOINTS
     def test_send_request_uses_correct_headers(self):
         """
         Every request should have the index name as header.
