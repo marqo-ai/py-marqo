@@ -68,8 +68,12 @@ class TestClient(MarqoTestCase):
 
 @mark.fixed
 class TestClientMethods(MarqoTestCase):
+    def setUp(self) -> None:
+        self.initial_marqo_cloud_url = os.environ.get("MARQO_CLOUD_URL", constants.CLOUD_AWS_API_ENDPOINT)
+
     def tearDown(self) -> None:
-        os.environ["MARQO_CLOUD_URL"] = constants.CLOUD_AWS_API_ENDPOINT
+        os.environ["MARQO_CLOUD_URL"] = self.initial_marqo_cloud_url
+
     def test_is_cloud_api_endpoint(self):
         # Custom Marqo Cloud URL
         os.environ["MARQO_CLOUD_URL"] = "https://arandomsite.ai"
