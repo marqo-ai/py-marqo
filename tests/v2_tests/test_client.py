@@ -18,9 +18,11 @@ from marqo.default_instance_mappings import DefaultInstanceMappings
 @mark.fixed
 class TestClient(MarqoTestCase):
     def setUp(self) -> None:
+        super().setUp()
         self.initial_marqo_cloud_url = os.environ.get("MARQO_CLOUD_URL", constants.CLOUD_AWS_API_ENDPOINT)
 
     def tearDown(self) -> None:
+        super().tearDown()
         os.environ["MARQO_CLOUD_URL"] = self.initial_marqo_cloud_url
 
     def test_check_index_health_response(self):
@@ -76,9 +78,11 @@ class TestClient(MarqoTestCase):
 @mark.fixed
 class TestClientMethods(MarqoTestCase):
     def setUp(self) -> None:
+        super().setUp()
         self.initial_marqo_cloud_url = os.environ.get("MARQO_CLOUD_URL", constants.CLOUD_AWS_API_ENDPOINT)
 
     def tearDown(self) -> None:
+        super().tearDown()
         os.environ["MARQO_CLOUD_URL"] = self.initial_marqo_cloud_url
 
     def test_is_cloud_api_endpoint(self):
