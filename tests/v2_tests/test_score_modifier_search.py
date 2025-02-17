@@ -105,65 +105,112 @@ class TestScoreModifierSearch(MarqoTestCase):
 
 @mark.fixed
 class TestScoreModifierWithRerankCountSearch(MarqoTestCase):
-    def test_hybrid_search_rrf_score_modifiers_with_rerank_depth(self):
+    def setUp(self) -> None:
+        super().setUp()
+        self.docs_list = [
+            {"_id": "both1", "text_field_1": "dogs", "int_field_1": -1},  # HIGH tensor, LOW lexical
+            {"_id": "tensor1", "text_field_1": "puppies", "int_field_1": 2},  # MID tensor
+            {"_id": "tensor2", "text_field_1": "random words", "int_field_1": 3},  # LOW tensor
+        ]
+
+    def test_hybrid_search_structured_rrf_score_modifiers_with_rerank_depth(self):
         """
         Test that hybrid search with RRF can use root level score_modifiers and rerank_depth
+        For structured indexes
         """
-        test_cases = [
-            (CloudTestIndex.unstructured_text, self.unstructured_index_name),
-            (CloudTestIndex.structured_text, self.structured_index_name)
-        ]
 
-        docs_list = [
-            {"_id": "both1", "text_field_1": "dogs", "int_field_1": -1},           # HIGH tensor, LOW lexical
-            {"_id": "tensor1", "text_field_1": "puppies", "int_field_1": 2},         # MID tensor
-            {"_id": "tensor2", "text_field_1": "random words", "int_field_1": 3},    # LOW tensor
-        ]
+        cloud_test_index_to_use = CloudTestIndex.structured_text
+        open_source_test_index_name = self.structured_index_name
 
-        for cloud_test_index_to_use, open_source_test_index_name in test_cases:
-            with self.subTest(cloud_test_index_to_use=cloud_test_index_to_use,
-                              open_source_test_index_name=open_source_test_index_name):
-                test_index_name = self.get_test_index_name(
-                    cloud_test_index_to_use=cloud_test_index_to_use,
-                    open_source_test_index_name=open_source_test_index_name
-                )
-                self.client.index(test_index_name).add_documents(
-                    docs_list,
-                    tensor_fields=["text_field_1"] if "unstr" in cloud_test_index_to_use or
-                                                      "unstr" in open_source_test_index_name else None)
+        test_index_name = self.get_test_index_name(
+            cloud_test_index_to_use=cloud_test_index_to_use,
+            open_source_test_index_name=open_source_test_index_name
+        )
+        self.client.index(test_index_name).add_documents(self.docs_list)
 
-                # Get unmodified scores
-                # Unmodified result order should be: both1, tensor1, tensor2
-                unmodified_results = self.client.index(test_index_name).search(q="dogs", search_method="HYBRID",limit=3)
-                unmodified_scores = {hit["_id"]: hit["_score"] for hit in unmodified_results["hits"]}
-                self.assertEqual(["both1", "tensor1", "tensor2"], [hit["_id"] for hit in unmodified_results["hits"]])
+        # Get unmodified scores
+        # Unmodified result order should be: both1, tensor1, tensor2
+        unmodified_results = self.client.index(test_index_name).search(q="dogs", search_method="HYBRID",limit=3)
+        unmodified_scores = {hit["_id"]: hit["_score"] for hit in unmodified_results["hits"]}
+        self.assertEqual(["both1", "tensor1", "tensor2"], [hit["_id"] for hit in unmodified_results["hits"]])
 
-                # Get modified scores (rank all 3)
-                # Modified result order should be: tensor2, tensor1, both1
-                score_modifiers = {
-                    "multiply_score_by": [
-                        {"field_name": "int_field_1", "weight": 1}
-                    ],
-                    "add_to_score": [
-                        {"field_name": "int_field_1", "weight": 1}
-                    ]
-                }
-                modified_results = self.client.index(test_index_name).search(
-                    q="dogs", search_method="HYBRID",
-                    limit=3, rerank_depth=3, score_modifiers=score_modifiers
-                )
-                self.assertEqual(["tensor2", "tensor1", "both1"], [hit["_id"] for hit in modified_results["hits"]])
-                self.assertAlmostEqual(modified_results["hits"][0]["_score"], 3*unmodified_scores["tensor2"] + 3)
-                self.assertAlmostEqual(modified_results["hits"][1]["_score"], 2*unmodified_scores["tensor1"] + 2)
-                self.assertAlmostEqual(modified_results["hits"][2]["_score"], -1*unmodified_scores["both1"] - 1)
+        # Get modified scores (rank all 3)
+        # Modified result order should be: tensor2, tensor1, both1
+        score_modifiers = {
+            "multiply_score_by": [
+                {"field_name": "int_field_1", "weight": 1}
+            ],
+            "add_to_score": [
+                {"field_name": "int_field_1", "weight": 1}
+            ]
+        }
+        modified_results = self.client.index(test_index_name).search(
+            q="dogs", search_method="HYBRID",
+            limit=3, rerank_depth=3, score_modifiers=score_modifiers
+        )
+        self.assertEqual(["tensor2", "tensor1", "both1"], [hit["_id"] for hit in modified_results["hits"]])
+        self.assertAlmostEqual(modified_results["hits"][0]["_score"], 3*unmodified_scores["tensor2"] + 3)
+        self.assertAlmostEqual(modified_results["hits"][1]["_score"], 2*unmodified_scores["tensor1"] + 2)
+        self.assertAlmostEqual(modified_results["hits"][2]["_score"], -1*unmodified_scores["both1"] - 1)
 
-                # Get modified scores (rank only 1). Only both1 should be rescored (goes to the bottom)
-                # Modified result order should be: tensor1, tensor2, both1
-                modified_results = self.client.index(test_index_name).search(
-                    q="dogs", search_method="HYBRID",
-                    limit=3, rerank_depth=1, score_modifiers=score_modifiers
-                )
-                self.assertEqual(["tensor1", "tensor2", "both1"], [hit["_id"] for hit in modified_results["hits"]])
-                self.assertAlmostEqual(modified_results["hits"][0]["_score"], unmodified_scores["tensor1"])     # unmodified
-                self.assertAlmostEqual(modified_results["hits"][1]["_score"], unmodified_scores["tensor2"])     # unmodified
-                self.assertAlmostEqual(modified_results["hits"][2]["_score"], -1*unmodified_scores["both1"] - 1)    # modified
+        # Get modified scores (rank only 1). Only both1 should be rescored (goes to the bottom)
+        # Modified result order should be: tensor1, tensor2, both1
+        modified_results = self.client.index(test_index_name).search(
+            q="dogs", search_method="HYBRID",
+            limit=3, rerank_depth=1, score_modifiers=score_modifiers
+        )
+        self.assertEqual(["tensor1", "tensor2", "both1"], [hit["_id"] for hit in modified_results["hits"]])
+        self.assertAlmostEqual(modified_results["hits"][0]["_score"], unmodified_scores["tensor1"])     # unmodified
+        self.assertAlmostEqual(modified_results["hits"][1]["_score"], unmodified_scores["tensor2"])     # unmodified
+        self.assertAlmostEqual(modified_results["hits"][2]["_score"], -1*unmodified_scores["both1"] - 1)    # modified
+
+    def test_hybrid_search_unstructured_rrf_score_modifiers_with_rerank_depth(self):
+        """
+        Test that hybrid search with RRF can use root level score_modifiers and rerank_depth
+        For unstructured indexes
+        """
+
+        cloud_test_index_to_use = CloudTestIndex.unstructured_text
+        open_source_test_index_name = self.unstructured_index_name
+
+        test_index_name = self.get_test_index_name(
+            cloud_test_index_to_use=cloud_test_index_to_use,
+            open_source_test_index_name=open_source_test_index_name
+        )
+        self.client.index(test_index_name).add_documents(self.docs_list, tensor_fields=["text_field_1"])
+
+        # Get unmodified scores
+        # Unmodified result order should be: both1, tensor1, tensor2
+        unmodified_results = self.client.index(test_index_name).search(q="dogs", search_method="HYBRID", limit=3)
+        unmodified_scores = {hit["_id"]: hit["_score"] for hit in unmodified_results["hits"]}
+        self.assertEqual(["both1", "tensor1", "tensor2"], [hit["_id"] for hit in unmodified_results["hits"]])
+
+        # Get modified scores (rank all 3)
+        # Modified result order should be: tensor2, tensor1, both1
+        score_modifiers = {
+            "multiply_score_by": [
+                {"field_name": "int_field_1", "weight": 1}
+            ],
+            "add_to_score": [
+                {"field_name": "int_field_1", "weight": 1}
+            ]
+        }
+        modified_results = self.client.index(test_index_name).search(
+            q="dogs", search_method="HYBRID",
+            limit=3, rerank_depth=3, score_modifiers=score_modifiers
+        )
+        self.assertEqual(["tensor2", "tensor1", "both1"], [hit["_id"] for hit in modified_results["hits"]])
+        self.assertAlmostEqual(modified_results["hits"][0]["_score"], 3 * unmodified_scores["tensor2"] + 3)
+        self.assertAlmostEqual(modified_results["hits"][1]["_score"], 2 * unmodified_scores["tensor1"] + 2)
+        self.assertAlmostEqual(modified_results["hits"][2]["_score"], -1 * unmodified_scores["both1"] - 1)
+
+        # Get modified scores (rank only 1). Only both1 should be rescored (goes to the bottom)
+        # Modified result order should be: tensor1, tensor2, both1
+        modified_results = self.client.index(test_index_name).search(
+            q="dogs", search_method="HYBRID",
+            limit=3, rerank_depth=1, score_modifiers=score_modifiers
+        )
+        self.assertEqual(["tensor1", "tensor2", "both1"], [hit["_id"] for hit in modified_results["hits"]])
+        self.assertAlmostEqual(modified_results["hits"][0]["_score"], unmodified_scores["tensor1"])  # unmodified
+        self.assertAlmostEqual(modified_results["hits"][1]["_score"], unmodified_scores["tensor2"])  # unmodified
+        self.assertAlmostEqual(modified_results["hits"][2]["_score"], -1 * unmodified_scores["both1"] - 1)  # modified
