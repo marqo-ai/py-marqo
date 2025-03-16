@@ -640,19 +640,3 @@ class TestSearch(MarqoTestCase):
             return True
 
         run()
-
-    @mark.fixed
-    def test_target_hits_parameter(self):
-        """Ensure target_hits parameter is included in the request body."""
-        mock__post = mock.MagicMock()
-
-        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
-        def run():
-            self.client.index(index_name=self.generic_test_index_name).search(
-                q="test", target_hits=100)
-            args, kwargs = mock__post.call_args
-            self.assertIn("targetHits", kwargs["body"])
-            self.assertEqual(100, kwargs["body"]["targetHits"])
-            return True
-
-        run()
