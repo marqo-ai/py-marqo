@@ -222,7 +222,7 @@ class Index:
                model_auth: Optional[dict] = None,
                ef_search: Optional[int] = None, approximate: Optional[bool] = None,
                text_query_prefix: Optional[str] = None, hybrid_parameters: Optional[dict] = None,
-               rerank_depth: Optional[int] = None
+               rerank_depth: Optional[int] = None,
                ) -> Dict[str, Any]:
         """Search the index.
 
@@ -260,7 +260,8 @@ class Index:
             text_query_prefix: a string to prefix the text query with before vectorizing.
                 overrides index setting & model default prefix
             hybrid_parameters: a dictionary of parameters to be used for hybrid search
-            rerank_depth: The number of documents to rerank with score modifiers
+            rerank_depth: The number of documents to rerank with score modifiers if used with hybrid search.
+                Number of hits to get from each shard if used with tensor search.
         Returns:
             Dictionary with hits and other metadata
         """
@@ -295,7 +296,7 @@ class Index:
             "reRanker": reranker,
             "boost": boost,
             "textQueryPrefix": text_query_prefix,
-            "hybridParameters": hybrid_parameters,
+            "hybridParameters": hybrid_parameters
         }
 
         body = {k: v for k, v in body.items() if v is not None}
@@ -331,7 +332,8 @@ class Index:
                   attributes_to_retrieve: Optional[List[str]] = None,
                   score_modifiers: Optional[dict] = None,
                   ef_search: Optional[int] = None,
-                  approximate: Optional[bool] = None
+                  approximate: Optional[bool] = None,
+                  rerank_depth: Optional[int] = None,
                   ) -> Dict[str, Any]:
         """Search the index.
 
@@ -358,6 +360,7 @@ class Index:
             model_auth: authorisation that lets Marqo download a private model, if required
             ef_search: the size of the list of candidates during graph traversal, for tensor search only
             approximate: whether to use approximate nearest neighbors search or not, for tensor search only
+            rerank_depth: The number of hits per shard to retrieve before reranking
         Returns:
             Dictionary with hits and other metadata
         """
@@ -382,6 +385,7 @@ class Index:
             "filter": filter_string,
             "attributesToRetrieve": attributes_to_retrieve,
             "scoreModifiers": score_modifiers,
+            "rerankDepth": rerank_depth
         }
 
         body = {k: v for k, v in body.items() if v is not None}
