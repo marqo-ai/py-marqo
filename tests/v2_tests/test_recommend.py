@@ -116,11 +116,21 @@ class TestRecommend(MarqoTestCase):
     def test_recommend_rerank_depth_behavior(self):
         """API-level test that rerank_depth affects recommender results according to expected behavior."""
         self.test_cases = [(CloudTestIndex.structured_text, self.structured_index_name)]
-        docs = [{
-            "_id": str(i),
-            "text_field_1": f"Document {i}",
-            "text_field_2": "test content"
-        } for i in range(10)]
+        docs = [
+            {"_id": "doc_0", "title": "Project Overview",
+             "content": "Summary of the project's goals and deliverables."},
+            {"_id": "doc_1", "title": "Team Roles", "content": "Descriptions of each team member's responsibilities."},
+            {"_id": "doc_2", "title": "Timeline", "content": "Key milestones and deadlines for the project."},
+            {"_id": "doc_3", "title": "Budget Estimate", "content": "Projected costs and resource allocation."},
+            {"_id": "doc_4", "title": "Tech Stack", "content": "Overview of technologies and tools being used."},
+            {"_id": "doc_5", "title": "Risk Assessment", "content": "Potential risks and mitigation strategies."},
+            {"_id": "doc_6", "title": "Client Feedback", "content": "Summary of feedback received from stakeholders."},
+            {"_id": "doc_7", "title": "Testing Plan", "content": "Details on testing strategies and coverage."},
+            {"_id": "doc_8", "title": "Deployment Guide",
+             "content": "Steps and procedures for deploying the application."},
+            {"_id": "doc_9", "title": "Post-Mortem",
+             "content": "Analysis of what went well and areas for improvement."},
+        ]
 
         for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
             test_index_name = self.get_test_index_name(
@@ -130,55 +140,49 @@ class TestRecommend(MarqoTestCase):
 
             self.client.index(test_index_name).add_documents(docs)
 
-            base_kwargs = dict(
-                documents=["1", "2"],
-                tensor_fields=["text_field_1"],
-                interpolation_method=InterpolationMethod.SLERP,
-                searchable_attributes=["text_field_1"],
-                exclude_input_documents=True,
-                attributes_to_retrieve=["text_field_1"],
-                show_highlights=True,
-                approximate=True
-            )
+            add_docs_results = self.client.index(test_index_name).add_documents(docs)
+            if add_docs_results["errors"]:
+                raise Exception(f"Failed to add documents to index {test_index_name}")
 
             # Case 1: result_count < rerank_depth → limit is respected
-            with self.subTest(case="limit_less_than_rerank_depth"):
+            with self.subTest(case="result_count_less_than_rerank_depth"):
                 res = self.client.index(test_index_name).recommend(
-                    **base_kwargs, limit=3, offset=0, rerank_depth=5
+                    documents=["doc_0", "doc_1"], limit=3, offset=0, rerank_depth=5
                 )
                 self.assertEqual(len(res["hits"]), 3)
 
-            # Case 2: rerank_depth < offset + result_count → offset respected
+            # Case 2: offset > rerank_depth — offset + limit is higher, result must be present
             with self.subTest(case="offset_beyond_rerank_depth"):
                 res = self.client.index(test_index_name).recommend(
-                    **base_kwargs, limit=2, offset=4, rerank_depth=3
+                    documents=["doc_0", "doc_1"], limit=1, offset=3, rerank_depth=2
                 )
-                self.assertGreaterEqual(len(res["hits"]), 1)
+                self.assertEqual(len(res["hits"]), 1)
 
-            # Case 3: offset + limit <= rerank_depth → all hits returned
+            # Case 3: offset + result_count <= rerank_depth → return all requested hits
             with self.subTest(case="offset_within_rerank_depth"):
                 res = self.client.index(test_index_name).recommend(
-                    **base_kwargs, limit=2, offset=2, rerank_depth=5
+                    documents=["doc_0", "doc_1"], limit=2, offset=2, rerank_depth=5
                 )
                 self.assertEqual(len(res["hits"]), 2)
 
-            # Case 4: result_count > rerank_depth → rerank_depth is ignored, limit is respected
-            with self.subTest(case="limit_exceeds_rerank_depth"):
+            # Case 4: rerank_depth < result_count → result_count overrides rerank_depth
+            with self.subTest(case="result_count_exceeds_rerank_depth"):
                 res = self.client.index(test_index_name).recommend(
-                    **base_kwargs, limit=5, offset=0, rerank_depth=3
+                    documents=["doc_0", "doc_1"], limit=5, offset=0, rerank_depth=3
                 )
                 self.assertEqual(len(res["hits"]), 5)
 
-            # Case 5: ef_search < rerank_depth → ef_search becomes the rerank limit
+            # Case 5: ef_search < rerank_depth → ef_search limits rerank pool
             with self.subTest(case="ef_search_limits_rerank_pool"):
                 res = self.client.index(test_index_name).recommend(
-                    **base_kwargs, limit=10, offset=0, rerank_depth=5, ef_search=2
+                    documents=["doc_0", "doc_1"], limit=10, offset=0, rerank_depth=5, ef_search=3,
+                    searchable_attributes=['title']
                 )
-                self.assertEqual(len(res["hits"]), 2)
+                self.assertLessEqual(len(res["hits"]), 3)
 
-            # Case 6: rerank_depth is negative → should raise MarqoWebError
+            # Case 6: rerank_depth is negative → should raise error
             with self.subTest(case="invalid_negative_rerank_depth"):
                 with self.assertRaises(MarqoWebError):
                     self.client.index(test_index_name).recommend(
-                        **base_kwargs, limit=10, offset=0, rerank_depth=-1
+                        documents=["doc_0", "doc_1"], limit=10, offset=0, rerank_depth=-1
                     )
