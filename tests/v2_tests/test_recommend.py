@@ -117,19 +117,19 @@ class TestRecommend(MarqoTestCase):
         """API-level test that rerank_depth affects recommender results according to expected behavior."""
         self.test_cases = [(CloudTestIndex.structured_text, self.structured_index_name)]
         docs = [
-            {"_id": "doc_0", "title": "Project Overview",
-             "content": "Summary of the project's goals and deliverables."},
-            {"_id": "doc_1", "title": "Team Roles", "content": "Descriptions of each team member's responsibilities."},
-            {"_id": "doc_2", "title": "Timeline", "content": "Key milestones and deadlines for the project."},
-            {"_id": "doc_3", "title": "Budget Estimate", "content": "Projected costs and resource allocation."},
-            {"_id": "doc_4", "title": "Tech Stack", "content": "Overview of technologies and tools being used."},
-            {"_id": "doc_5", "title": "Risk Assessment", "content": "Potential risks and mitigation strategies."},
-            {"_id": "doc_6", "title": "Client Feedback", "content": "Summary of feedback received from stakeholders."},
-            {"_id": "doc_7", "title": "Testing Plan", "content": "Details on testing strategies and coverage."},
-            {"_id": "doc_8", "title": "Deployment Guide",
-             "content": "Steps and procedures for deploying the application."},
-            {"_id": "doc_9", "title": "Post-Mortem",
-             "content": "Analysis of what went well and areas for improvement."},
+            {"_id": "doc_0", "text_field_1": "Project Overview",
+             "text_field_2": "Summary of the project's goals and deliverables."},
+            {"_id": "doc_1", "text_field_1": "Team Roles", "text_field_2": "Descriptions of each team member's responsibilities."},
+            {"_id": "doc_2", "text_field_1": "Timeline", "text_field_2": "Key milestones and deadlines for the project."},
+            {"_id": "doc_3", "text_field_1": "Budget Estimate", "text_field_2": "Projected costs and resource allocation."},
+            {"_id": "doc_4", "text_field_1": "Tech Stack", "text_field_2": "Overview of technologies and tools being used."},
+            {"_id": "doc_5", "text_field_1": "Risk Assessment", "text_field_2": "Potential risks and mitigation strategies."},
+            {"_id": "doc_6", "text_field_1": "Client Feedback", "text_field_2": "Summary of feedback received from stakeholders."},
+            {"_id": "doc_7", "text_field_1": "Testing Plan", "text_field_2": "Details on testing strategies and coverage."},
+            {"_id": "doc_8", "text_field_1": "Deployment Guide",
+             "text_field_2": "Steps and procedures for deploying the application."},
+            {"_id": "doc_9", "text_field_1": "Post-Mortem",
+             "text_field_2": "Analysis of what went well and areas for improvement."},
         ]
 
         for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
@@ -176,7 +176,7 @@ class TestRecommend(MarqoTestCase):
             with self.subTest(case="ef_search_limits_rerank_pool"):
                 res = self.client.index(test_index_name).recommend(
                     documents=["doc_0", "doc_1"], limit=10, offset=0, rerank_depth=5, ef_search=3,
-                    searchable_attributes=['title']
+                    searchable_attributes=['text_field_1']
                 )
                 self.assertLessEqual(len(res["hits"]), 3)
 
