@@ -241,7 +241,7 @@ class MarqoTestCase(TestCase):
                         "indexName": cls.unstructured_image_index_name,
                         "type": "unstructured",
                         "treatUrlsAndPointersAsImages": True,
-                        "model": "open_clip/ViT-B-32/laion400m_e31",
+                        "model": "open_clip/ViT-B-32/laion400m_e32",
                     },
                     {
                         "indexName": cls.structured_image_index_name,
@@ -252,7 +252,7 @@ class MarqoTestCase(TestCase):
                                       {"name": "image_field_1", "type": "image_pointer"},
                                       ],
                         "tensorFields": ["text_field_1", "text_field_2", "text_field_3", "image_field_1"],
-                        "model": "open_clip/ViT-B-32/laion400m_e31",
+                        "model": "open_clip/ViT-B-32/laion400m_e32",
                     },
                     {
                         "indexName": cls.unstructured_no_model_index_name,

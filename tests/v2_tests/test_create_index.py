@@ -66,12 +66,30 @@ class TestCreateIndex(MarqoTestCase):
         self.client.create_index(
             index_name=self.override_index_name,
             model="test_prefix",
+            model_properties={
+                "name": "sentence-transformers/all-MiniLM-L6-v2",
+                "dimensions": 384,
+                "tokens": 256,
+                "type": "hf",
+                "text_query_prefix": "test query: ",
+                "text_chunk_prefix": "test passage: ",
+                "notes": ""
+            },
             text_query_prefix="test: ",
             text_chunk_prefix="test: ",
         )
         self.client.create_index(
             index_name=self.default_index_name,
             model="test_prefix",
+            model_properties={
+                "name": "sentence-transformers/all-MiniLM-L6-v2",
+                "dimensions": 384,
+                "tokens": 256,
+                "type": "hf",
+                "text_query_prefix": "test query: ",
+                "text_chunk_prefix": "test passage: ",
+                "notes": ""
+            }
         )
 
         d1 = {
@@ -133,7 +151,7 @@ class TestCreateIndex(MarqoTestCase):
                                  model_properties={"name": "sentence-transformers/multi-qa-MiniLM-L6-cos-v1",
                                                    "dimensions": 384,
                                                    "tokens": 512,
-                                                   "type": "sbert"}
+                                                   "type": "hf"}
                                  )
         documents = [{"test": "test"}]
         self.client.index(self.index_name).add_documents(documents, tensor_fields=["test"])
@@ -150,7 +168,7 @@ class TestCreateIndex(MarqoTestCase):
         self.assertEqual({"name": "sentence-transformers/multi-qa-MiniLM-L6-cos-v1",
                           "dimensions": 384,
                           "tokens": 512,
-                          "type": "sbert"}, index_settings['modelProperties'])
+                          "type": "hf"}, index_settings['modelProperties'])
 
     def test_created_unstructured_image_index_with_preprocessing(self):
         self.client.create_index(index_name=self.index_name, type="unstructured",
@@ -239,7 +257,7 @@ class TestCreateIndex(MarqoTestCase):
                                  model_properties={"name": "sentence-transformers/multi-qa-MiniLM-L6-cos-v1",
                                                    "dimensions": 384,
                                                    "tokens": 512,
-                                                   "type": "sbert"},
+                                                   "type": "hf"},
                                  all_fields=[{"name": "test", "type": "text", "features": ["lexical_search"]}],
                                  tensor_fields=["test"])
         documents = [{"test": "test"}]
@@ -256,7 +274,7 @@ class TestCreateIndex(MarqoTestCase):
         self.assertEqual({"name": "sentence-transformers/multi-qa-MiniLM-L6-cos-v1",
                           "dimensions": 384,
                           "tokens": 512,
-                          "type": "sbert"}, index_settings['modelProperties'])
+                          "type": "hf"}, index_settings['modelProperties'])
 
     def test_create_structured_index_with_map_fields(self):
         self.client.create_index(
