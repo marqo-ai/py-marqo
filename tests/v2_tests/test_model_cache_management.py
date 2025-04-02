@@ -7,7 +7,7 @@ from pytest import mark
 
 @mark.fixed
 class TestModelCacheManagement(MarqoTestCase):
-    MODEL = "ViT-B/32"
+    MODEL = "open_clip/ViT-B-32/laion400m_e31"
 
     # NOTE: The cuda should already have model loaded in the startup
     def test_get_cuda_info(self) -> None:
