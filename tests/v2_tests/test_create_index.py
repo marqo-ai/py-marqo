@@ -66,12 +66,30 @@ class TestCreateIndex(MarqoTestCase):
         self.client.create_index(
             index_name=self.override_index_name,
             model="test_prefix",
+            model_properties={
+                "name": "sentence-transformers/all-MiniLM-L6-v2",
+                "dimensions": 384,
+                "tokens": 256,
+                "type": "hf",
+                "text_query_prefix": "test query: ",
+                "text_chunk_prefix": "test passage: ",
+                "notes": ""
+            },
             text_query_prefix="test: ",
             text_chunk_prefix="test: ",
         )
         self.client.create_index(
             index_name=self.default_index_name,
             model="test_prefix",
+            model_properties={
+                "name": "sentence-transformers/all-MiniLM-L6-v2",
+                "dimensions": 384,
+                "tokens": 256,
+                "type": "hf",
+                "text_query_prefix": "test query: ",
+                "text_chunk_prefix": "test passage: ",
+                "notes": ""
+            }
         )
 
         d1 = {
@@ -133,7 +151,7 @@ class TestCreateIndex(MarqoTestCase):
                                  model_properties={"name": "sentence-transformers/multi-qa-MiniLM-L6-cos-v1",
                                                    "dimensions": 384,
                                                    "tokens": 512,
-                                                   "type": "sbert"}
+                                                   "type": "hf"}
                                  )
         documents = [{"test": "test"}]
         self.client.index(self.index_name).add_documents(documents, tensor_fields=["test"])
@@ -150,7 +168,7 @@ class TestCreateIndex(MarqoTestCase):
         self.assertEqual({"name": "sentence-transformers/multi-qa-MiniLM-L6-cos-v1",
                           "dimensions": 384,
                           "tokens": 512,
-                          "type": "sbert"}, index_settings['modelProperties'])
+                          "type": "hf"}, index_settings['modelProperties'])
 
     def test_created_unstructured_image_index_with_preprocessing(self):
         self.client.create_index(index_name=self.index_name, type="unstructured",
@@ -239,7 +257,7 @@ class TestCreateIndex(MarqoTestCase):
                                  model_properties={"name": "sentence-transformers/multi-qa-MiniLM-L6-cos-v1",
                                                    "dimensions": 384,
                                                    "tokens": 512,
-                                                   "type": "sbert"},
+                                                   "type": "hf"},
                                  all_fields=[{"name": "test", "type": "text", "features": ["lexical_search"]}],
                                  tensor_fields=["test"])
         documents = [{"test": "test"}]
@@ -256,7 +274,7 @@ class TestCreateIndex(MarqoTestCase):
         self.assertEqual({"name": "sentence-transformers/multi-qa-MiniLM-L6-cos-v1",
                           "dimensions": 384,
                           "tokens": 512,
-                          "type": "sbert"}, index_settings['modelProperties'])
+                          "type": "hf"}, index_settings['modelProperties'])
 
     def test_create_structured_index_with_map_fields(self):
         self.client.create_index(
@@ -323,119 +341,6 @@ class TestCreateIndex(MarqoTestCase):
         self.assertEqual(1, len(res['hits']))
         self.client.delete_index("test-dash-and-under-score")
         self.client.delete_index("test_dash_and_under_score")
-
-    def test_create_invalid_unstructured_languagebind_index(self):
-        with self.assertRaises(MarqoWebError) as e:
-            self.client.create_index(
-                index_name=self.index_name,
-                type="unstructured",
-                model="LanguageBind/Video_V1.5_FT_Audio_FT_Image",
-                video_preprocessing={
-                    "splitLength": 10,
-                    "splitOverlap": 3
-                },
-                treat_urls_and_pointers_as_media=True,
-                treat_urls_and_pointers_as_images=False
-            )
-
-    def test_create_unstructured_index_with_languagebind(self):
-        self.client.create_index(
-            index_name=self.index_name,
-            type="unstructured",
-            model="LanguageBind/Video_V1.5_FT_Audio_FT_Image",
-            treat_urls_and_pointers_as_media=True,
-            treat_urls_and_pointers_as_images=True
-        )
-
-        index_settings = self.client.index(self.index_name).get_settings()
-
-        expected_settings = {
-            "type": "unstructured",
-            "model": "LanguageBind/Video_V1.5_FT_Audio_FT_Image",
-            "normalizeEmbeddings": True,
-            "treatUrlsAndPointersAsMedia": True,
-            "treatUrlsAndPointersAsImages": True,
-            "vectorNumericType": "float"
-        }
-
-        for key, value in expected_settings.items():
-            self.assertEqual(value, index_settings[key])
-
-        # Test adding and searching documents
-        ix = self.client.index(self.index_name)
-
-        res = ix.add_documents(
-            documents=[
-                {"audio_field": "https://audio-previews.elements.envatousercontent.com/files/187680354/preview.mp3",
-                 "_id": "corporate"},
-                {"audio_field": "https://audio-previews.elements.envatousercontent.com/files/492763015/preview.mp3",
-                 "_id": "lofi"},
-            ],
-            tensor_fields=["audio_field"]
-        )
-
-        doc = ix.search(
-            q="corporate video background music",
-            limit=5
-        )
-
-        self.assertEqual(2, len(doc['hits']))
-        self.assertEqual("corporate", doc['hits'][0]['_id'])
-        self.assertEqual("lofi", doc['hits'][1]['_id'])
-
-    def test_create_structured_index_with_languagebind(self):
-        self.client.create_index(
-            index_name=self.index_name,
-            type="structured",
-            model="LanguageBind/Video_V1.5_FT_Audio_FT_Image",
-            all_fields=[
-                {"name": "text_field", "type": "text"},
-                {"name": "video_field", "type": "video_pointer"},
-                {"name": "audio_field", "type": "audio_pointer"},
-                {"name": "image_field", "type": "image_pointer"}
-            ],
-            tensor_fields=["text_field", "video_field", "audio_field", "image_field"]
-        )
-
-        index_settings = self.client.index(self.index_name).get_settings()
-
-        expected_settings = {
-            "type": "structured",
-            "model": "LanguageBind/Video_V1.5_FT_Audio_FT_Image",
-            "normalizeEmbeddings": True,
-            "vectorNumericType": "float",
-            "tensorFields": ["text_field", "video_field", "audio_field", "image_field"],
-            "allFields": [
-                {"features": [], "name": "text_field", "type": "text"},
-                {"features": [], "name": "video_field", "type": "video_pointer"},
-                {"features": [], "name": "audio_field", "type": "audio_pointer"},
-                {"features": [], "name": "image_field", "type": "image_pointer"},
-            ]
-        }
-
-        for key, value in expected_settings.items():
-            self.assertEqual(value, index_settings[key])
-
-        # Test adding and searching documents
-        ix = self.client.index(self.index_name)
-
-        res = ix.add_documents(
-            documents=[
-                {"audio_field": "https://audio-previews.elements.envatousercontent.com/files/187680354/preview.mp3",
-                 "_id": "corporate"},
-                {"audio_field": "https://audio-previews.elements.envatousercontent.com/files/492763015/preview.mp3",
-                 "_id": "lofi"},
-            ],
-        )
-
-        doc = ix.search(
-            q="corporate video background music",
-            limit=5
-        )
-
-        self.assertEqual(2, len(doc['hits']))
-        self.assertEqual("corporate", doc['hits'][0]['_id'])
-        self.assertEqual("lofi", doc['hits'][1]['_id'])
 
     def test_create_index_SettingsDictCanNotBeSpecificWithOtherParametersLocal(self):
         """Test that settings_dict cannot be specified with other index creation

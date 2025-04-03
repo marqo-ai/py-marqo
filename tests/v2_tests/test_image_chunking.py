@@ -1,4 +1,5 @@
 import json
+import unittest
 
 import requests
 from PIL import Image
@@ -9,6 +10,7 @@ from tests.marqo_test import MarqoTestCase, CloudTestIndex
 from pytest import mark
 
 
+@unittest.skip(reason="Image chunking are not supported since 2.17")
 class TestImageChunking(MarqoTestCase):
     """Test for image chunking as a preprocessing step
     """

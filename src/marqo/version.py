@@ -1,4 +1,4 @@
-__minimum_supported_marqo_version__ = "2.15.0"
+__minimum_supported_marqo_version__ = "2.17.1"
 
 # NOTE: This isn't used anywhere
 def supported_marqo_version() -> str:
