@@ -223,6 +223,7 @@ class Index:
                ef_search: Optional[int] = None, approximate: Optional[bool] = None,
                text_query_prefix: Optional[str] = None, hybrid_parameters: Optional[dict] = None,
                rerank_depth: Optional[int] = None, facets: Optional[dict] = None,
+               track_total_hits: Optional[bool] = None,
                ) -> Dict[str, Any]:
         """Search the index.
 
@@ -299,6 +300,7 @@ class Index:
             "textQueryPrefix": text_query_prefix,
             "hybridParameters": hybrid_parameters,
             "facets": facets,
+            "trackTotalHits": track_total_hits
         }
 
         body = {k: v for k, v in body.items() if v is not None}
