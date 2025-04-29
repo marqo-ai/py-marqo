@@ -1,19 +1,12 @@
-import time
-from unittest import mock
-
-import numpy as np
-import pytest
 import requests
 from pytest import mark
 
-from marqo.errors import MarqoError, MarqoWebError
-from tests.marqo_test import MarqoTestCase, CloudTestIndex
-import requests
+from tests.marqo_test import MarqoTestCase
 
 
 @mark.fixed
 class TestGetDocumentsByIds(MarqoTestCase):
-    def get_documents_by_ids_via_get(self, index_name, document_ids, expose_facets=False):
+    def get_documents_by_ids_via_via(self, index_name, document_ids, expose_facets=False):
         body = {
             "documentIds": document_ids,
         }
