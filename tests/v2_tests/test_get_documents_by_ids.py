@@ -46,6 +46,7 @@ class TestGetDocumentsByIds(MarqoTestCase):
                     "text_field_2": "this is a solid doc",
                     "_id": "123456"
                 }
+
                 res = self.client.index(test_index_name).add_documents(
                     [
                         d1, d2
@@ -56,7 +57,7 @@ class TestGetDocumentsByIds(MarqoTestCase):
                     document_ids=["e197e580-0393-4f4e-90e9-8cdf4b17e339", "123456", "not_exist"], expose_facets=True
                 )
 
-                post_response = self.get_documents_by_ids_via_get(
+                post_response = self.get_documents_by_ids_via_post(
                     index_name=test_index_name,
                     document_ids=["e197e580-0393-4f4e-90e9-8cdf4b17e339", "123456", "not_exist"], expose_facets=True
                 ).json()
