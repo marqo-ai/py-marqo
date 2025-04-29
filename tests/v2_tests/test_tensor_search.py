@@ -224,27 +224,27 @@ class TestSearch(MarqoTestCase):
                     "_id": "0",                     # content in field_a
                     "text_field_1": "random content",
                     "text_field_2": "apple",
-                    "int_filter_field_1": 0,
+                    "int_field_1": 0,
                 },
                 {
                     "_id": "1",                     # content in field_b
                     "text_field_3": "random content",
                     "text_field_2": "banana",
-                    "int_filter_field_1": 0,
+                    "int_field_1": 0,
                 },
                 {
                     "_id": "2",                     # content in both
                     "text_field_1": "random content",
                     "text_field_3": "random content",
                     "text_field_2": "apple",
-                    "int_filter_field_1": 1,
+                    "int_field_1": 1,
                 },
                 {
                     "_id": "3",                     # content in both
                     "text_field_1": "random content",
                     "text_field_3": "random content",
                     "text_field_2": "banana",
-                    "int_filter_field_1": 1,
+                    "int_field_1": 1,
                 }
             ]
             res = self.client.index(test_index_name).add_documents(docs)
@@ -259,25 +259,25 @@ class TestSearch(MarqoTestCase):
                 },
                 {   # filter string only (int)
                     "query": "random content",
-                    "filter_string": "int_filter_field_1:(0)",
+                    "filter_string": "int_field_1:(0)",
                     "searchable_attributes": None,
                     "expected": ["0", "1"]
                 },
                 {   # filter string only (str and int)
                     "query": "random content",
-                    "filter_string": "text_field_2:(banana) AND int_filter_field_1:(1)",
+                    "filter_string": "text_field_2:(banana) AND int_field_1:(1)",
                     "searchable_attributes": None,
                     "expected": ["3"]
                 },
                 {  # filter string only (IN with AND)
                     "query": "random content",
-                    "filter_string": "text_field_2 in (banana, orange) AND int_filter_field_1 in (0, 1)",
+                    "filter_string": "text_field_2 in (banana, orange) AND int_field_1 in (0, 1)",
                     "searchable_attributes": None,
                     "expected": ["1", "3"]
                 },
                 {  # filter string (IN with OR)
                     "query": "random content",
-                    "filter_string": "text_field_2 in (banana, orange) OR int_filter_field_1 in (1)",
+                    "filter_string": "text_field_2 in (banana, orange) OR int_field_1 in (1)",
                     "searchable_attributes": None,
                     "expected": ["1", "2", "3"]
                 },
@@ -307,7 +307,7 @@ class TestSearch(MarqoTestCase):
                 },
                 {   # filter string and searchable attributes (both)
                     "query": "random content",
-                    "filter_string": "text_field_2:(banana) AND int_filter_field_1:(0)",
+                    "filter_string": "text_field_2:(banana) AND int_field_1:(0)",
                     "searchable_attributes": ["text_field_1"],
                     "expected": []
                 }

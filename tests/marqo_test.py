@@ -231,10 +231,7 @@ class MarqoTestCase(TestCase):
                         "allFields": [{"name": "text_field_1", "type": "text", "features": ["lexical_search", "filter"]},
                                       {"name": "text_field_2", "type": "text", "features": ["lexical_search", "filter"]},
                                       {"name": "text_field_3", "type": "text", "features": ["lexical_search"]},
-                                      {"name": "int_field_1", "type": "int", "features": ["score_modifier"]},
-                                      {"name": "int_filter_field_1", "type": "int",
-                                       "features": ["filter", "score_modifier"]
-                                       }],
+                                      {"name": "int_field_1", "type": "int", "features": ["score_modifier", "filter"]}],
                         "tensorFields": ["text_field_1", "text_field_2", "text_field_3"]
                     },
                     {
