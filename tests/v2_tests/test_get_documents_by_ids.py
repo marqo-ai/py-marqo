@@ -53,7 +53,7 @@ class TestGetDocumentsByIds(MarqoTestCase):
                     ], tensor_fields=tensor_fields
                 )
 
-                get_response = self.client.index(test_index_name).get_documents_by_ids(
+                get_response = self.client.index(test_index_name).get_documents(
                     document_ids=["e197e580-0393-4f4e-90e9-8cdf4b17e339", "123456", "not_exist"], expose_facets=True
                 )
 
