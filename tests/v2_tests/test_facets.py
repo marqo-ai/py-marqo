@@ -112,25 +112,19 @@ EXAMPLE_FASHION_DOCUMENTS = [
 
 @mark.fixed
 class TestFacets(MarqoTestCase):
-    @classmethod
-    def setUpClass(cls):
-        """ Overwrite setUpClass to add fashion documents to test indexes that will be used across all tests"""
-        super().setUpClass()
-        for cloud_test_index_to_use, open_source_test_index_name in cls.test_cases:
-            test_index_name = cls.get_test_index_name(
-                cls,
+    def setUp(self):
+        """ Overwrite setUp to add documents after deletion between tests"""
+        super().setUp()
+        for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
+            test_index_name = self.get_test_index_name(
                 cloud_test_index_to_use=cloud_test_index_to_use,
                 open_source_test_index_name=open_source_test_index_name
             )
-            cls.client.index(test_index_name).add_documents(
+            self.client.index(test_index_name).add_documents(
                 EXAMPLE_FASHION_DOCUMENTS,
                 tensor_fields=["title", "description"]
             )
             print("Added documents to index:", test_index_name)
-
-    def setUp(self):
-        """ Overwrite setUp to not delete documents between tests"""
-        pass
 
     def test_facets_structured_index_fails(self):
         """Verify facets fail on structured indexes"""
