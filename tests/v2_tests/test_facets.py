@@ -112,19 +112,6 @@ EXAMPLE_FASHION_DOCUMENTS = [
 
 @mark.fixed
 class TestFacets(MarqoTestCase):
-    def setUp(self):
-        """ Overwrite setUp to add documents after deletion between tests"""
-        super().setUp()
-        for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
-            test_index_name = self.get_test_index_name(
-                cloud_test_index_to_use=cloud_test_index_to_use,
-                open_source_test_index_name=open_source_test_index_name
-            )
-            self.client.index(test_index_name).add_documents(
-                EXAMPLE_FASHION_DOCUMENTS,
-                tensor_fields=["title", "description"]
-            )
-            print("Added documents to index:", test_index_name)
 
     def test_facets_structured_index_fails(self):
         """Verify facets fail on structured indexes"""
@@ -134,6 +121,10 @@ class TestFacets(MarqoTestCase):
             test_index_name = self.get_test_index_name(
                 cloud_test_index_to_use=cloud_test_index_to_use,
                 open_source_test_index_name=open_source_test_index_name
+            )
+            self.client.index(test_index_name).add_documents(
+                EXAMPLE_FASHION_DOCUMENTS,
+                tensor_fields=["title", "description"]
             )
             with self.subTest(test_index_name=test_index_name):
                 with self.assertRaises(MarqoWebError) as e:
@@ -150,6 +141,10 @@ class TestFacets(MarqoTestCase):
             test_index_name = self.get_test_index_name(
                 cloud_test_index_to_use=cloud_test_index_to_use,
                 open_source_test_index_name=open_source_test_index_name
+            )
+            self.client.index(test_index_name).add_documents(
+                EXAMPLE_FASHION_DOCUMENTS,
+                tensor_fields=["title", "description"]
             )
             with self.subTest(test_index_name=test_index_name):
                 for search_method in ["lexical", "tensor"]:
@@ -168,6 +163,10 @@ class TestFacets(MarqoTestCase):
                 cloud_test_index_to_use=cloud_test_index_to_use,
                 open_source_test_index_name=open_source_test_index_name
             )
+            self.client.index(test_index_name).add_documents(
+                EXAMPLE_FASHION_DOCUMENTS,
+                tensor_fields=["title", "description"]
+            )
             with self.subTest(test_index_name=test_index_name):
                 res = self.client.index(test_index_name).search(
                     "shirt",
@@ -184,6 +183,10 @@ class TestFacets(MarqoTestCase):
             test_index_name = self.get_test_index_name(
                 cloud_test_index_to_use=cloud_test_index_to_use,
                 open_source_test_index_name=open_source_test_index_name
+            )
+            self.client.index(test_index_name).add_documents(
+                EXAMPLE_FASHION_DOCUMENTS,
+                tensor_fields=["title", "description"]
             )
             with self.subTest(test_index_name=test_index_name):
                 res = self.client.index(test_index_name).search(
@@ -207,6 +210,10 @@ class TestFacets(MarqoTestCase):
                 cloud_test_index_to_use=cloud_test_index_to_use,
                 open_source_test_index_name=open_source_test_index_name
             )
+            self.client.index(test_index_name).add_documents(
+                EXAMPLE_FASHION_DOCUMENTS,
+                tensor_fields=["title", "description"]
+            )
             with self.subTest(test_index_name=test_index_name):
                 res = self.client.index(test_index_name).search(
                     "shirt",
@@ -224,6 +231,10 @@ class TestFacets(MarqoTestCase):
             test_index_name = self.get_test_index_name(
                 cloud_test_index_to_use=cloud_test_index_to_use,
                 open_source_test_index_name=open_source_test_index_name
+            )
+            self.client.index(test_index_name).add_documents(
+                EXAMPLE_FASHION_DOCUMENTS,
+                tensor_fields=["title", "description"]
             )
             with self.subTest(test_index_name=test_index_name):
                 res = self.client.index(test_index_name).search(
@@ -252,6 +263,10 @@ class TestFacets(MarqoTestCase):
                 cloud_test_index_to_use=cloud_test_index_to_use,
                 open_source_test_index_name=open_source_test_index_name
             )
+            self.client.index(test_index_name).add_documents(
+                EXAMPLE_FASHION_DOCUMENTS,
+                tensor_fields=["title", "description"]
+            )
             with self.subTest(test_index_name=test_index_name):
                 with self.assertRaises(MarqoWebError) as e:
                     self.client.index(test_index_name).search(
@@ -277,6 +292,10 @@ class TestFacets(MarqoTestCase):
             test_index_name = self.get_test_index_name(
                 cloud_test_index_to_use=cloud_test_index_to_use,
                 open_source_test_index_name=open_source_test_index_name
+            )
+            self.client.index(test_index_name).add_documents(
+                EXAMPLE_FASHION_DOCUMENTS,
+                tensor_fields=["title", "description"]
             )
             with self.subTest(test_index_name=test_index_name):
                 for facet_type in ["string", "array"]:
@@ -304,6 +323,10 @@ class TestFacets(MarqoTestCase):
                 cloud_test_index_to_use=cloud_test_index_to_use,
                 open_source_test_index_name=open_source_test_index_name
             )
+            self.client.index(test_index_name).add_documents(
+                EXAMPLE_FASHION_DOCUMENTS,
+                tensor_fields=["title", "description"]
+            )
             with self.subTest(test_index_name=test_index_name):
                 res = self.client.index(test_index_name).search(
                     "shirt",
@@ -328,6 +351,10 @@ class TestFacets(MarqoTestCase):
                 cloud_test_index_to_use=cloud_test_index_to_use,
                 open_source_test_index_name=open_source_test_index_name
             )
+            self.client.index(test_index_name).add_documents(
+                EXAMPLE_FASHION_DOCUMENTS,
+                tensor_fields=["title", "description"]
+            )
             with self.subTest(test_index_name=test_index_name):
                 with self.assertRaises(MarqoWebError) as e:
                     self.client.index(test_index_name).search(
@@ -350,6 +377,10 @@ class TestFacets(MarqoTestCase):
             test_index_name = self.get_test_index_name(
                 cloud_test_index_to_use=cloud_test_index_to_use,
                 open_source_test_index_name=open_source_test_index_name
+            )
+            self.client.index(test_index_name).add_documents(
+                EXAMPLE_FASHION_DOCUMENTS,
+                tensor_fields=["title", "description"]
             )
             with self.subTest(test_index_name=test_index_name):
                 with self.assertRaises(MarqoWebError) as e:
@@ -375,6 +406,10 @@ class TestFacets(MarqoTestCase):
                 cloud_test_index_to_use=cloud_test_index_to_use,
                 open_source_test_index_name=open_source_test_index_name
             )
+            self.client.index(test_index_name).add_documents(
+                EXAMPLE_FASHION_DOCUMENTS,
+                tensor_fields=["title", "description"]
+            )
             with self.subTest(test_index_name=test_index_name):
                 invalid_params = ["fields.to_", "fields.from_", "max_results", "max_depth", "fields.max_results"]
                 for param in invalid_params:
@@ -398,6 +433,10 @@ class TestFacets(MarqoTestCase):
                 cloud_test_index_to_use=cloud_test_index_to_use,
                 open_source_test_index_name=open_source_test_index_name
             )
+            self.client.index(test_index_name).add_documents(
+                EXAMPLE_FASHION_DOCUMENTS,
+                tensor_fields=["title", "description"]
+            )
             with self.subTest(test_index_name=test_index_name):
                 res = self.client.index(test_index_name).search(
                     "shirt",
@@ -411,6 +450,10 @@ class TestFacets(MarqoTestCase):
             test_index_name = self.get_test_index_name(
                 cloud_test_index_to_use=cloud_test_index_to_use,
                 open_source_test_index_name=open_source_test_index_name
+            )
+            self.client.index(test_index_name).add_documents(
+                EXAMPLE_FASHION_DOCUMENTS,
+                tensor_fields=["title", "description"]
             )
             with self.subTest(test_index_name=test_index_name):
                 res = self.client.index(test_index_name).search(
@@ -428,6 +471,10 @@ class TestFacets(MarqoTestCase):
             test_index_name = self.get_test_index_name(
                 cloud_test_index_to_use=cloud_test_index_to_use,
                 open_source_test_index_name=open_source_test_index_name
+            )
+            self.client.index(test_index_name).add_documents(
+                EXAMPLE_FASHION_DOCUMENTS,
+                tensor_fields=["title", "description"]
             )
             with self.subTest(test_index_name=test_index_name):
                 res = self.client.index(test_index_name).search(
@@ -451,6 +498,10 @@ class TestFacets(MarqoTestCase):
                 cloud_test_index_to_use=cloud_test_index_to_use,
                 open_source_test_index_name=open_source_test_index_name
             )
+            self.client.index(test_index_name).add_documents(
+                EXAMPLE_FASHION_DOCUMENTS,
+                tensor_fields=["title", "description"]
+            )
             with self.subTest(test_index_name=test_index_name):
                 res = self.client.index(test_index_name).search(
                     "nonexistentquery123456",
@@ -471,6 +522,10 @@ class TestFacets(MarqoTestCase):
             test_index_name = self.get_test_index_name(
                 cloud_test_index_to_use=cloud_test_index_to_use,
                 open_source_test_index_name=open_source_test_index_name
+            )
+            self.client.index(test_index_name).add_documents(
+                EXAMPLE_FASHION_DOCUMENTS,
+                tensor_fields=["title", "description"]
             )
             with self.subTest(test_index_name=test_index_name):
                 test_cases = [
@@ -515,6 +570,10 @@ class TestFacets(MarqoTestCase):
             test_index_name = self.get_test_index_name(
                 cloud_test_index_to_use=cloud_test_index_to_use,
                 open_source_test_index_name=open_source_test_index_name
+            )
+            self.client.index(test_index_name).add_documents(
+                EXAMPLE_FASHION_DOCUMENTS,
+                tensor_fields=["title", "description"]
             )
             with self.subTest(test_index_name=test_index_name):
                 res = self.client.index(test_index_name).search(
