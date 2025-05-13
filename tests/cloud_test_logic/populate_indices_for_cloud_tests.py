@@ -42,8 +42,11 @@ def populate_indices():
                 ), flush=True
             )
         except MarqoWebError as e:
-            print(f"Attempting to create index {index_name} resulting in error {e}", flush=True)
-            raise e
+            if "Index name already exists" in str(e):
+                print(f"Index {index_name} already exists. Continuing to next index.", flush=True)
+            else:
+                print(f"Attempting to create index {index_name} resulting in error {e}", flush=True)
+                raise e
 
 
     # Around 30 min:

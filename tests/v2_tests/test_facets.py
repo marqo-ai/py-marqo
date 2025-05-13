@@ -112,6 +112,12 @@ EXAMPLE_FASHION_DOCUMENTS = [
 
 @mark.fixed
 class TestFacets(MarqoTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.test_cases = [
+            (CloudTestIndex.unstructured_text, cls.unstructured_index_name),
+        ]
 
     def test_facets_structured_index_fails(self):
         """Verify facets fail on structured indexes"""
@@ -121,10 +127,6 @@ class TestFacets(MarqoTestCase):
             test_index_name = self.get_test_index_name(
                 cloud_test_index_to_use=cloud_test_index_to_use,
                 open_source_test_index_name=open_source_test_index_name
-            )
-            self.client.index(test_index_name).add_documents(
-                EXAMPLE_FASHION_DOCUMENTS,
-                tensor_fields=["title", "description"]
             )
             with self.subTest(test_index_name=test_index_name):
                 with self.assertRaises(MarqoWebError) as e:

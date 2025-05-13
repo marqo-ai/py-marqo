@@ -22,7 +22,9 @@ from marqo.errors import MarqoWebError
 from populate_indices_for_cloud_tests import populate_indices
 
 tests_specific_kwargs = {
-    'create-indexes': False, 'delete-indexes': False, 'use-unique-identifier': False,
+    'create-indexes': False, # True if you want to create the indexes for the tests. If any index exists, it will be skipped.
+    'delete-indexes': False, # True if you want to delete the indexes after the tests.
+    'use-unique-identifier': False, # True if you want to create indexes with unique suffix identifier.
 }
 
 

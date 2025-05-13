@@ -247,87 +247,74 @@ class TestSearch(MarqoTestCase):
                     "int_filter_field_1": 1,
                 }
             ]
-            res = self.client.index(test_index_name).add_documents(docs)
-            print(res)
+            self.client.index(test_index_name).add_documents(docs)
 
-            test_cases = (
-                {   # filter string only (str)
-                    "query": "random content",
-                    "filter_string": "text_field_2:(apple)",
-                    "searchable_attributes": None,
-                    "expected": ["0", "2"]
-                },
-                {   # filter string only (int)
-                    "query": "random content",
-                    "filter_string": "int_filter_field_1:(0)",
-                    "searchable_attributes": None,
-                    "expected": ["0", "1"]
-                },
-                {   # filter string only (str and int)
-                    "query": "random content",
-                    "filter_string": "text_field_2:(banana) AND int_filter_field_1:(1)",
-                    "searchable_attributes": None,
-                    "expected": ["3"]
-                },
-                {  # filter string only (IN with AND)
-                    "query": "random content",
-                    "filter_string": "text_field_2 in (banana, orange) AND int_filter_field_1 in (0, 1)",
-                    "searchable_attributes": None,
-                    "expected": ["1", "3"]
-                },
-                {  # filter string (IN with OR)
-                    "query": "random content",
-                    "filter_string": "text_field_2 in (banana, orange) OR int_filter_field_1 in (1)",
-                    "searchable_attributes": None,
-                    "expected": ["1", "2", "3"]
-                },
-                {   # filter string (IN with _id)
-                    "query": "random content",
-                    "filter_string": "_id in (1, 2)",
-                    "searchable_attributes": None,
-                    "expected": ["1", "2"]
-                },
-                {   # searchable attributes only (one)
-                    "query": "random content",
-                    "filter_string": None,
-                    "searchable_attributes": ["text_field_3"],
-                    "expected": ["1", "2", "3"]
-                },
-                {   # searchable attributes only (both)
-                    "query": "random content",
-                    "filter_string": None,
-                    "searchable_attributes": ["text_field_1", "text_field_3"],
-                    "expected": ["0", "1", "2", "3"]
-                },
-                {   # filter string and searchable attributes (one)
-                    "query": "random content",
-                    "filter_string": "text_field_2:(apple)",
-                    "searchable_attributes": ["text_field_3"],
-                    "expected": ["2"]
-                },
-                {   # filter string and searchable attributes (both)
-                    "query": "random content",
-                    "filter_string": "text_field_2:(banana) AND int_filter_field_1:(0)",
-                    "searchable_attributes": ["text_field_1"],
-                    "expected": []
-                }
+            def run_test(title, query, filter_string, searchable_attributes, expected):
+                with self.subTest(msg=title):
+                    if self.IS_MULTI_INSTANCE:
+                        self.warm_request(self.client.index(test_index_name).search,
+                            query,
+                            filter_string=filter_string,
+                            searchable_attributes=searchable_attributes
+                        )
+
+                    search_res = self.client.index(test_index_name).search(
+                        query,
+                        filter_string=filter_string,
+                        searchable_attributes=searchable_attributes,
+                    )
+                    assert len(search_res["hits"]) == len(expected)
+                    assert set([hit["_id"] for hit in search_res["hits"]]) == set(expected)
+
+            run_test(
+                "Should return only apple documents when filtered by string",
+                "random content", "text_field_2:(apple)", None, ["0", "2"]
             )
 
-            for case in test_cases:
-                if self.IS_MULTI_INSTANCE:
-                    self.warm_request(self.client.index(test_index_name).search,
-                        case["query"],
-                        filter_string=case.get("filter_string", ""),
-                        searchable_attributes=case.get("searchable_attributes", None)
-                    )
+            run_test(
+                "Should return only documents with filter field zero",
+                "random content", "int_filter_field_1:(0)", None, ["0", "1"]
+            )
 
-                search_res = self.client.index(test_index_name).search(
-                    case["query"],
-                    filter_string=case.get("filter_string", ""),
-                    searchable_attributes=case.get("searchable_attributes", None)
-                )
-                assert len(search_res["hits"]) == len(case["expected"])
-                assert set([hit["_id"] for hit in search_res["hits"]]) == set(case["expected"])
+            run_test(
+                "Should return only documents with banana and filter field one",
+                "random content", "text_field_2:(banana) AND int_filter_field_1:(1)", None, ["3"]
+            )
+
+            run_test(
+                "Should return documents matching multiple values with AND operator",
+                "random content", "text_field_2 in (banana, orange) AND int_filter_field_1 in (0, 1)", None, ["1", "3"]
+            )
+
+            run_test(
+                "Should return documents matching multiple values with OR operator",
+                "random content", "text_field_2 in (banana, orange) OR int_filter_field_1 in (1)", None, ["1", "2", "3"]
+            )
+
+            run_test(
+                "Should return documents matching specific IDs",
+                "random content", "_id in (1, 2)", None, ["1", "2"]
+            )
+
+            run_test(
+                "Should search only in text field 3",
+                "random content", None, ["text_field_3"], ["1", "2", "3"]
+            )
+
+            run_test(
+                "Should search in both text fields",
+                "random content", None, ["text_field_1", "text_field_3"], ["0", "1", "2", "3"]
+            )
+
+            run_test(
+                "Should filter by apple and search only in text field 3",
+                "random content", "text_field_2:(apple)", ["text_field_3"], ["2"]
+            )
+
+            run_test(
+                "Should return no results when filter and search field mismatch",
+                "random content", "text_field_2:(banana) AND int_filter_field_1:(0)", ["text_field_1"], []
+            )
 
     @mark.fixed
     def test_attributes_to_retrieve(self):
