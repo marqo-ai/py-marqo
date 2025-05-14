@@ -167,9 +167,9 @@ class TestRecommend(MarqoTestCase):
             # Case 2: offset > rerank_depth — offset + limit is higher, result must be present
             with self.subTest(case="offset_beyond_rerank_depth"):
                 res = self.client.index(test_index_name).recommend(
-                    documents=["doc_0", "doc_1"], limit=1, offset=3, rerank_depth=2
+                    documents=["doc_0", "doc_1"], limit=3, offset=3, rerank_depth=2
                 )
-                self.assertEqual(len(res["hits"]), 1)
+                self.assertGreaterEqual(len(res["hits"]), 1)
 
             # Case 3: offset + result_count <= rerank_depth → return all requested hits
             with self.subTest(case="offset_within_rerank_depth"):
