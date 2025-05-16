@@ -11,15 +11,14 @@ class TestGetDocumentsByIds(MarqoTestCase):
             "documentIds": document_ids,
         }
 
-        url = self.authorized_url
         api_key = self.client_settings.get("api_key", None)
+        headers = {"content-type": "application/json"}
 
         if api_key:
-            headers = {"x-api-key": self.client_settings["api_key"]}
-        else:
-            headers = {}
+            headers.update({"x-api-key": api_key})
 
-        url = f"{url}/indexes/{index_name}/documents/get-batch"
+        url = (f"{self.client.index(index_name).config.instance_mapping.get_index_base_url(index_name)}"
+                          f"/indexes/{index_name}/documents/get-batch")
 
         if expose_facets:
             url += f"?expose_facets={expose_facets}"
