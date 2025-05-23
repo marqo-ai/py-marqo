@@ -221,6 +221,7 @@ class Index:
                context: Optional[dict] = None, score_modifiers: Optional[dict] = None,
                model_auth: Optional[dict] = None,
                ef_search: Optional[int] = None, approximate: Optional[bool] = None,
+               approximate_threshold: Optional[float] = None,
                text_query_prefix: Optional[str] = None, hybrid_parameters: Optional[dict] = None,
                rerank_depth: Optional[int] = None, facets: Optional[dict] = None,
                track_total_hits: Optional[bool] = None,
@@ -289,6 +290,7 @@ class Index:
             "modelAuth": model_auth,
             "efSearch": ef_search,
             "approximate": approximate,
+            "approximateThreshold": approximate_threshold,
             "searchableAttributes": searchable_attributes,
             "limit": limit,
             "offset": offset,
@@ -455,7 +457,6 @@ class Index:
             body["imageDownloadHeaders"] = image_download_headers
         if model_auth is not None:
             body["modelAuth"] = model_auth
-        
 
         res = self.http.post(
             path=path_with_query_str,
