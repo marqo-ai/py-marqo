@@ -43,10 +43,12 @@ class TestSearchWithContext(MarqoTestCase):
 
         self.query = {"What are the best pets": 1}
 
-    def search_with_context(self, context_object: Optional[Dict[str, List[Dict[str, Any]]]] = None) -> Dict[str, Any]:
+    def search_with_context(self, context_object: Optional[Dict[str, List[Dict[str, Any]]]] = None,
+                            interpolation_method: str = None) -> Dict[str, Any]:
         return self.client.index(self.test_index_name).search(
             q=self.query,
-            context=context_object
+            context=context_object,
+            interpolation_method=interpolation_method
         )
 
     def test_custom_vector_search_format(self):
@@ -262,9 +264,10 @@ class TestSearchWithContext(MarqoTestCase):
                             }
                         }
                         if self.IS_MULTI_INSTANCE:
-                            self.warm_request(lambda: self.search_with_context(context))
+                            self.warm_request(lambda: self.search_with_context(context,
+                                                                               interpolation_method=interpolation_type))
 
-                        custom_res = self.search_with_context(context)
+                        custom_res = self.search_with_context(context, interpolation_method=interpolation_type)
 
                         # Result should be d3 (about dogs), then d1. d2 should be excluded.
                         if exclude_input_document:
