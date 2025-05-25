@@ -226,7 +226,7 @@ class TestSearchWithContext(MarqoTestCase):
 
         with self.assertRaises(MarqoWebError) as e:
             self.search_with_context(context)
-        self.assertIn("must be present and a non-empty list", str(e.exception))
+        self.assertIn("must be present and a non-empty dict", str(e.exception))
 
     def test_context_documents_tensors_and_queries_succeeds(self):
         """
