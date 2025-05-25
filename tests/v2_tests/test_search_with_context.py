@@ -6,7 +6,7 @@ from pytest import mark
 
 
 @mark.fixed
-class TestCustomVectorSearch(MarqoTestCase):
+class TestSearchWithContext(MarqoTestCase):
 
     def setUp(self) -> None:
         super().setUp()
@@ -31,6 +31,11 @@ class TestCustomVectorSearch(MarqoTestCase):
                         "Title": "The history of dogs",
                         "Description": "A history of household pets",
                         "_id": "d2"
+                    },
+                    {
+                        "Title": "Another history of dogs",
+                        "Description": "Second history of household pets",
+                        "_id": "d3"
                     }
                 ], tensor_fields=["Title", "Description"]
             )
@@ -38,10 +43,10 @@ class TestCustomVectorSearch(MarqoTestCase):
 
         self.query = {"What are the best pets": 1}
 
-    def search_with_context(self, context_vector: Optional[Dict[str, List[Dict[str, Any]]]] = None) -> Dict[str, Any]:
+    def search_with_context(self, context_object: Optional[Dict[str, List[Dict[str, Any]]]] = None) -> Dict[str, Any]:
         return self.client.index(self.test_index_name).search(
             q=self.query,
-            context=context_vector
+            context=context_object
         )
 
     def test_custom_vector_search_format(self):
@@ -135,3 +140,143 @@ class TestCustomVectorSearch(MarqoTestCase):
 
             ## Ensure other tests are not affected
             self.query = {"What are the best pets": 1}
+
+    def test_context_documents_alone_full_parameters_succeeds(self):
+        """
+        Test that the context documents alone are sufficient to return results
+        """
+        context = {
+            "documents": {
+                "ids": {
+                    "d2": 1
+                },
+                "parameters": {
+                    "tensorFields": ["Title", "Description"],
+                    "excludeInputDocuments": True
+                }
+            }
+        }
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(lambda: self.search_with_context(context))
+
+        custom_res = self.search_with_context(context)
+
+        # Result should be d3 (about dogs), then d1. d2 should be excluded.
+        self.assertEqual(
+            [h["_id"] for h in custom_res["hits"]],
+            ["d3", "d1"]
+        )
+
+    def test_context_documents_alone_empty_parameters_succeeds(self):
+        """
+        Test that the context documents alone are sufficient to return results
+        """
+        context = {
+            "documents": {
+                "ids": {
+                    "d2": 1
+                },
+                "parameters": {}
+            }
+        }
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(lambda: self.search_with_context(context))
+
+        custom_res = self.search_with_context(context)
+
+        # Result should be d3 (about dogs), then d1. d2 should be excluded.
+        self.assertEqual(
+            [h["_id"] for h in custom_res["hits"]],
+            ["d3", "d1"]
+        )
+
+    def test_context_documents_alone_no_parameters_succeeds(self):
+        context = {
+            "documents": {
+                "ids": {
+                    "d2": 1
+                }
+            }
+        }
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(lambda: self.search_with_context(context))
+
+        custom_res = self.search_with_context(context)
+
+        # Result should be d3 (about dogs), then d1. d2 should be excluded.
+        self.assertEqual(
+            [h["_id"] for h in custom_res["hits"]],
+            ["d3", "d1"]
+        )
+
+    def test_context_documents_alone_no_ids_fails(self):
+        """
+        Test that the context documents alone without any ids fails
+        """
+        context = {
+            "documents": {
+                "parameters": {
+                    "tensorFields": ["Title", "Description"],
+                    "excludeInputDocuments": True
+                }
+            }
+        }
+        if self.IS_MULTI_INSTANCE:
+            self.warm_request(lambda: self.search_with_context(context))
+
+        with self.assertRaises(MarqoWebError) as e:
+            self.search_with_context(context)
+        self.assertIn("must be present and a non-empty list", str(e.exception))
+
+    def test_context_documents_tensors_and_queries_succeeds(self):
+        """
+        Test that the context documents with tensors and queries are sufficient to return results
+        Use all 3 interpolation methods (LERP, NLERP, SLERP)
+        Use context.documents.parameters.excludeInputDocuments (True and False)
+        Use context.documents.parameters.tensorFields (with or without)
+        """
+        interpolation_types = ["LERP", "NLERP", "SLERP"]
+        exclude_input_documents = [True, False]
+        tensor_fields = [["Title", "Description"], None]
+
+        for interpolation_type in interpolation_types:
+            for exclude_input_document in exclude_input_documents:
+                for tensor_field in tensor_fields:
+                    with self.subTest(interpolation_type=interpolation_type,
+                                      exclude_input_document=exclude_input_document,
+                                      tensor_field=tensor_field):
+
+                        context = {
+                            "tensor": [
+                                {"vector": [1, ] * self.vector_dim, "weight": 0},
+                                {"vector": [2, ] * self.vector_dim, "weight": 1}
+                            ],
+                            "documents": {
+                                "ids": {
+                                    "d2": 1
+                                },
+                                "parameters": {
+                                    "excludeInputDocuments": exclude_input_document,
+                                    "tensorFields": tensor_field
+                                }
+                            }
+                        }
+                        if self.IS_MULTI_INSTANCE:
+                            self.warm_request(lambda: self.search_with_context(context))
+
+                        custom_res = self.search_with_context(context)
+
+                        # Result should be d3 (about dogs), then d1. d2 should be excluded.
+                        if exclude_input_document:
+                            self.assertEqual(
+                                set(["d3", "d1"]),
+                                set([h["_id"] for h in custom_res["hits"]])
+                            )
+                        else:
+                            # If excludeInputDocuments is False, d2 should be included
+                            self.assertEqual(
+                                set(["d2", "d3", "d1"]),
+                                set([h["_id"] for h in custom_res["hits"]])
+                            )
+
+
