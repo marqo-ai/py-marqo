@@ -221,10 +221,10 @@ class Index:
                context: Optional[dict] = None, score_modifiers: Optional[dict] = None,
                model_auth: Optional[dict] = None,
                ef_search: Optional[int] = None, approximate: Optional[bool] = None,
-               approximate_threshold: Optional[float] = None,
                text_query_prefix: Optional[str] = None, hybrid_parameters: Optional[dict] = None,
                rerank_depth: Optional[int] = None, facets: Optional[dict] = None,
                track_total_hits: Optional[bool] = None,
+               approximate_threshold: Optional[float] = None,
                ) -> Dict[str, Any]:
         """Search the index.
 
@@ -265,6 +265,10 @@ class Index:
             rerank_depth: The number of documents to rerank with score modifiers if used with hybrid search.
                 Number of hits to get from each shard if used with tensor search.
             facets: a dictionary of facets to be used for facet search.
+            track_total_hits: return total number of lexical matches
+            approximate_threshold: hit ratio threshold for deciding if a nearest neighbor search should be performed as
+                an exact search, rather than an approximate search
+
         Returns:
             Dictionary with hits and other metadata
         """
