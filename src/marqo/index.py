@@ -224,6 +224,7 @@ class Index:
                text_query_prefix: Optional[str] = None, hybrid_parameters: Optional[dict] = None,
                rerank_depth: Optional[int] = None, facets: Optional[dict] = None,
                track_total_hits: Optional[bool] = None,
+               approximate_threshold: Optional[float] = None,
                ) -> Dict[str, Any]:
         """Search the index.
 
@@ -264,6 +265,10 @@ class Index:
             rerank_depth: The number of documents to rerank with score modifiers if used with hybrid search.
                 Number of hits to get from each shard if used with tensor search.
             facets: a dictionary of facets to be used for facet search.
+            track_total_hits: return total number of lexical matches
+            approximate_threshold: hit ratio threshold for deciding if a nearest neighbor search should be performed as
+                an exact search, rather than an approximate search
+
         Returns:
             Dictionary with hits and other metadata
         """
@@ -289,6 +294,7 @@ class Index:
             "modelAuth": model_auth,
             "efSearch": ef_search,
             "approximate": approximate,
+            "approximateThreshold": approximate_threshold,
             "searchableAttributes": searchable_attributes,
             "limit": limit,
             "offset": offset,
@@ -455,7 +461,6 @@ class Index:
             body["imageDownloadHeaders"] = image_download_headers
         if model_auth is not None:
             body["modelAuth"] = model_auth
-        
 
         res = self.http.post(
             path=path_with_query_str,
