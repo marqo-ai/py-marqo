@@ -225,6 +225,7 @@ class Index:
                rerank_depth: Optional[int] = None, facets: Optional[dict] = None,
                track_total_hits: Optional[bool] = None,
                approximate_threshold: Optional[float] = None,
+               language: Optional[str] = None,
                ) -> Dict[str, Any]:
         """Search the index.
 
@@ -306,7 +307,8 @@ class Index:
             "textQueryPrefix": text_query_prefix,
             "hybridParameters": hybrid_parameters,
             "facets": facets,
-            "trackTotalHits": track_total_hits
+            "trackTotalHits": track_total_hits,
+            "language": language
         }
 
         body = {k: v for k, v in body.items() if v is not None}
