@@ -16,7 +16,7 @@ setup(
         "tox"
     ],
     name="marqo",
-    version="3.13.0",
+    version="3.14.0",
     author="marqo org",
     author_email="org@marqo.io",
     description="Tensor search for humans",
