@@ -226,6 +226,7 @@ class Index:
                track_total_hits: Optional[bool] = None,
                interpolation_method: Optional[str] = None,
                approximate_threshold: Optional[float] = None,
+               language: Optional[str] = None,
                ) -> Dict[str, Any]:
         """Search the index.
 
@@ -309,7 +310,8 @@ class Index:
             "hybridParameters": hybrid_parameters,
             "facets": facets,
             "trackTotalHits": track_total_hits,
-            "interpolationMethod": interpolation_method
+            "interpolationMethod": interpolation_method,
+            "language": language
         }
 
         body = {k: v for k, v in body.items() if v is not None}
