@@ -224,7 +224,6 @@ class Index:
                text_query_prefix: Optional[str] = None, hybrid_parameters: Optional[dict] = None,
                rerank_depth: Optional[int] = None, facets: Optional[dict] = None,
                track_total_hits: Optional[bool] = None,
-               interpolation_method: Optional[str] = None,
                approximate_threshold: Optional[float] = None,
                language: Optional[str] = None,
                ) -> Dict[str, Any]:
@@ -267,8 +266,7 @@ class Index:
             rerank_depth: The number of documents to rerank with score modifiers if used with hybrid search.
                 Number of hits to get from each shard if used with tensor search.
             facets: a dictionary of facets to be used for facet search.
-            track_total_hits: whether to track total hits or not (total number of lexical or tensor matches, if disjunction, return nubmer of unique results of both)
-            interpolation_method: the interpolation method to use for combining query & context embeddings.
+            track_total_hits: return total number of lexical matches
             approximate_threshold: hit ratio threshold for deciding if a nearest neighbor search should be performed as
                 an exact search, rather than an approximate search
 
@@ -310,7 +308,6 @@ class Index:
             "hybridParameters": hybrid_parameters,
             "facets": facets,
             "trackTotalHits": track_total_hits,
-            "interpolationMethod": interpolation_method,
             "language": language
         }
 
