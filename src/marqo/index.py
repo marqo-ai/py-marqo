@@ -225,6 +225,7 @@ class Index:
                rerank_depth: Optional[int] = None, facets: Optional[dict] = None,
                track_total_hits: Optional[bool] = None,
                approximate_threshold: Optional[float] = None,
+               language: Optional[str] = None,
                sort_by: Optional[dict] = None,
                relevance_cutoff: Optional[dict] = None
                ) -> Dict[str, Any]:
@@ -311,6 +312,7 @@ class Index:
             "hybridParameters": hybrid_parameters,
             "facets": facets,
             "trackTotalHits": track_total_hits,
+            "language": language,
             "sortBy": sort_by,
             "relevanceCutoff": relevance_cutoff
         }
