@@ -32,11 +32,9 @@ jobs:
           python-version: 3.9
 
       - name: Install dependencies
-        working-directory: py-marqo
-        run: pip install -r requirements.dev.txt
+        run: pip install -r requirements-dev.txt
 
       - name: Run UnitTests
-        working-directory: py-marqo
         run: |
           export PYTHONPATH="${PYTHONPATH}:$(pwd)/src"
           pytest tests/unit_tests
