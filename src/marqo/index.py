@@ -226,7 +226,9 @@ class Index:
                track_total_hits: Optional[bool] = None,
                approximate_threshold: Optional[float] = None,
                language: Optional[str] = None,
-               interpolation_method: Optional[str] = None,
+               sort_by: Optional[dict] = None,
+               relevance_cutoff: Optional[dict] = None,
+               interpolation_method: Optional[str] = None
                ) -> Dict[str, Any]:
         """Search the index.
 
@@ -270,6 +272,8 @@ class Index:
             track_total_hits: Set to True to return total number of lexical or tensor matches
             approximate_threshold: hit ratio threshold for deciding if a nearest neighbor search should be performed as
                 an exact search, rather than an approximate search
+            sort_by: a dictionary of the sort_by parameters to be used for sorting the results
+            relevance_cutoff: a dictionary of the relevance cutoff parameters
             interpolation_method: the interpolation method to use for combining query & context embeddings.
 
         Returns:
@@ -311,6 +315,8 @@ class Index:
             "facets": facets,
             "trackTotalHits": track_total_hits,
             "language": language,
+            "sortBy": sort_by,
+            "relevanceCutoff": relevance_cutoff,
             "interpolationMethod": interpolation_method
         }
 

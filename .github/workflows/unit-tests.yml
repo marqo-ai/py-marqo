@@ -1,0 +1,40 @@
+
+
+name: Py-marqo Unit Tests
+run-name: Py-marqo unit tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - mainline
+      - releases/*
+  push:
+    branches:
+      - mainline
+      - releases/*
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Run Pytest
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run UnitTests
+        run: |
+          export PYTHONPATH="${PYTHONPATH}:$(pwd)/src"
+          pytest unit_tests
