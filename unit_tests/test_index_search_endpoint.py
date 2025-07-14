@@ -130,3 +130,52 @@ class TestIndexSearchEndpointRelevanceCutoff(MarqoUnitTests):
         self.assertEqual(1, mock_send_request.call_count)
         body = mock_send_request.call_args[0][2]
         self.assertNotIn("relevanceCutoff", body)
+
+class TestIndexSearchEndpointInterpolationMethod(MarqoUnitTests):
+    """
+    Test class for the Index search endpoint interpolation_method parameter.
+    """
+    @classmethod
+    def setUpClass(cls):
+        """
+        Set up the class by creating a test index.
+        """
+        config = Config(
+            instance_mappings=DefaultInstanceMappings(url="http://unit-tests-url:8882"),
+        )
+        cls.index = Index(config=config, index_name="test_index")
+
+    @patch('marqo._httprequests.HttpRequests.send_request')
+    def test_interpolation_method_parameter(self, mock_send_request):
+        mock_response = MagicMock()
+        mock_send_request.return_value = mock_response
+
+        interpolation_method = "SLERP"
+
+        self.index.search(q= "test", interpolation_method=interpolation_method)
+
+        self.assertEqual(1, mock_send_request.call_count)
+        body = mock_send_request.call_args[0][2]
+        self.assertEqual(interpolation_method, body["interpolationMethod"])
+
+    @patch('marqo._httprequests.HttpRequests.send_request')
+    def test_interpolation_method_parameter_none(self, mock_send_request):
+        mock_response = MagicMock()
+        mock_send_request.return_value = mock_response
+
+        interpolation_method = None
+
+        self.index.search(q= "test", interpolation_method=interpolation_method)
+        body = mock_send_request.call_args[0][2]
+        self.assertNotIn("interpolationMethod", body)
+
+    @patch('marqo._httprequests.HttpRequests.send_request')
+    def test_interpolation_method_parameter_not_exists(self, mock_send_request):
+        mock_response = MagicMock()
+        mock_send_request.return_value = mock_response
+
+        self.index.search(q= "test")
+
+        self.assertEqual(1, mock_send_request.call_count)
+        body = mock_send_request.call_args[0][2]
+        self.assertNotIn("interpolationMethod", body)
