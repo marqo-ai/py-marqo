@@ -104,3 +104,8 @@ class FieldRequest(StrictBaseModel):
 class AnnParameters(StrictBaseModel):
     spaceType: Optional[DistanceMetric] = Field(None, alias="space_type")
     parameters: Optional[HnswConfig] = None
+
+
+class CollapseField(StrictBaseModel):
+    name: str
+    minGroups: int = 500
