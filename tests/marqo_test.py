@@ -209,6 +209,7 @@ class MarqoTestCase(TestCase):
         cls.unstructured_no_model_index_name = "unstructured_no_model_index"
         cls.structured_image_index_name_simple_preprocessing_method = \
             "structured_image_index_simple_preprocessing_method"
+        cls.unstructured_collapse_fields_index_name = "unstructured_collapse_fields_index"
 
         # TODO: include structured when boolean_field bug for structured is fixed
         cls.test_cases = [
@@ -242,6 +243,11 @@ class MarqoTestCase(TestCase):
                         "type": "unstructured",
                         "treatUrlsAndPointersAsImages": True,
                         "model": "open_clip/ViT-B-32/laion400m_e32",
+                    },
+                    {
+                        "indexName": cls.unstructured_collapse_fields_index_name,
+                        "type": "unstructured",
+                        "collapseFields": [{"name": "parentProductId", "minGroups": 20}]
                     },
                     {
                         "indexName": cls.structured_image_index_name,

@@ -29,6 +29,7 @@ class CloudTestIndex(str, Enum):
     unstructured_image = "pymarqo_unstr_img"
     unstructured_text_custom_prepro = "pymarqo_unstr_txt_cstm_pre"
     unstructured_no_model = "pymarqo_unstr_no_model"
+    unstructured_collapse_fields = "pymarqo_unstr_collapse_fields"
 
     structured_image_prepro = "pymarqo_str_img_prepro"
     structured_image_custom = "pymarqo_str_img_custom"
@@ -71,6 +72,17 @@ index_name_to_settings_mappings = {
             "type": "no_model",
             "dimensions": 512
         },
+    },
+    CloudTestIndex.unstructured_collapse_fields: {
+        "type": "unstructured",
+        "treatUrlsAndPointersAsImages": False,
+        "model": "hf/e5-base-v2",
+        "collapseFields": [{"name": "parentProductId", "minGroups": 20}],
+
+        "inferenceType": "marqo.CPU.small",
+        "storageClass": "marqo.balanced",
+        "numberOfShards": 2,
+        "numberOfReplicas": 1,  # For hybrid duplicates test
     },
     CloudTestIndex.structured_text: {
         "type": "structured",
