@@ -362,6 +362,8 @@ class Index:
                   ef_search: Optional[int] = None,
                   approximate: Optional[bool] = None,
                   rerank_depth: Optional[int] = None,
+                  allow_missing_documents: Optional[bool] = None,
+                  allow_missing_embeddings: Optional[bool] = None,
                   ) -> Dict[str, Any]:
         """Search the index.
 
@@ -413,7 +415,9 @@ class Index:
             "filter": filter_string,
             "attributesToRetrieve": attributes_to_retrieve,
             "scoreModifiers": score_modifiers,
-            "rerankDepth": rerank_depth
+            "rerankDepth": rerank_depth,
+            "allowMissingDocuments": allow_missing_documents,
+            "allowMissingEmbeddings": allow_missing_embeddings,
         }
 
         body = {k: v for k, v in body.items() if v is not None}
