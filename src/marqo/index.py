@@ -101,6 +101,7 @@ class Index:
                wait_for_readiness: bool = True,
                text_chunk_prefix: Optional[str] = None,
                text_query_prefix: Optional[str] = None,
+               collapse_fields: Optional[List[marqo_index.CollapseField]] = None,
                ) -> Dict[str, Any]:
         """Create the index. Please refer to the marqo cloud to see options for inference and storage node types.
         Creates CreateIndexSettings object and then uses it to create the index.
@@ -137,6 +138,7 @@ class Index:
             number_of_inferences: number of inferences for the index
             number_of_shards: number of shards for the index
             number_of_replicas: number of replicas for the index
+            collapse_fields: list of fields that can be collapsed on at query time
         Note:
             wait_for_readiness, inference_type, storage_class, number_of_inferences,
             number_of_shards, number_of_replicas are Marqo Cloud specific parameters,
@@ -166,6 +168,7 @@ class Index:
                 annParameters=ann_parameters,
                 textChunkPrefix=text_chunk_prefix,
                 textQueryPrefix=text_query_prefix,
+                collapseFields=collapse_fields,
             )
             return req.post(f"indexes/{index_name}", body=local_create_index_settings.generate_request_body())
 
@@ -195,6 +198,7 @@ class Index:
                 storageClass=storage_class,
                 textChunkPrefix=text_chunk_prefix,
                 textQueryPrefix=text_query_prefix,
+                collapseFields=collapse_fields,
             )
 
             response = req.post(f"indexes/{index_name}", body=cloud_index_settings.generate_request_body())
@@ -228,7 +232,8 @@ class Index:
                language: Optional[str] = None,
                sort_by: Optional[dict] = None,
                relevance_cutoff: Optional[dict] = None,
-               interpolation_method: Optional[str] = None
+               interpolation_method: Optional[str] = None,
+               collapse_fields: Optional[List[dict]] = None,
                ) -> Dict[str, Any]:
         """Search the index.
 
@@ -275,6 +280,7 @@ class Index:
             sort_by: a dictionary of the sort_by parameters to be used for sorting the results
             relevance_cutoff: a dictionary of the relevance cutoff parameters
             interpolation_method: the interpolation method to use for combining query & context embeddings.
+            collapse_fields: a list of fields to collapse/group on
 
         Returns:
             Dictionary with hits and other metadata
@@ -317,7 +323,8 @@ class Index:
             "language": language,
             "sortBy": sort_by,
             "relevanceCutoff": relevance_cutoff,
-            "interpolationMethod": interpolation_method
+            "interpolationMethod": interpolation_method,
+            "collapseFields": collapse_fields,
         }
 
         body = {k: v for k, v in body.items() if v is not None}

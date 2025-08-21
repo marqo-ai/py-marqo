@@ -26,6 +26,7 @@ class IndexSettings(MarqoBaseModel):
         imagePreprocessing: The image preprocessing method to use.
         vectorNumericType: The numeric type of the vector.
         annParameters: The ANN parameters to use.
+        collapseFields: list of fields that can be collapsed on at query time
 
     Please note, we don't note set default values in the py-marqo side. All the
     values are set to be None and will not be sent to Marqo in the HttpRequest.
@@ -50,6 +51,7 @@ class IndexSettings(MarqoBaseModel):
     annParameters: Optional[marqo_index.AnnParameters] = None
     textQueryPrefix: Optional[str] = None
     textChunkPrefix: Optional[str] = None
+    collapseFields: Optional[List[marqo_index.CollapseField]] = None
 
     def generate_request_body(self) -> dict:
         """A json encoded string of the request body"""

@@ -179,3 +179,30 @@ class TestIndexSearchEndpointInterpolationMethod(MarqoUnitTests):
         self.assertEqual(1, mock_send_request.call_count)
         body = mock_send_request.call_args[0][2]
         self.assertNotIn("interpolationMethod", body)
+
+
+class TestIndexSearchEndpointCollapseFields(MarqoUnitTests):
+    """
+    Test class for the Index search endpoint collapse_fields parameter.
+    """
+    @classmethod
+    def setUpClass(cls):
+        """
+        Set up the class by creating a test index.
+        """
+        config = Config(
+            instance_mappings=DefaultInstanceMappings(url="http://unit-tests-url:8882"),
+        )
+        cls.index = Index(config=config, index_name="test_index")
+
+    @patch('marqo._httprequests.HttpRequests.send_request')
+    def test_collapse_field_parameter(self, mock_send_request):
+        mock_response = MagicMock()
+        mock_send_request.return_value = mock_response
+
+        collapse_fields = [{"name": "parent_id"}]
+        self.index.search(q="test", collapse_fields=collapse_fields)
+
+        self.assertEqual(1, mock_send_request.call_count)
+        body = mock_send_request.call_args[0][2]
+        self.assertEqual(collapse_fields, body["collapseFields"])
