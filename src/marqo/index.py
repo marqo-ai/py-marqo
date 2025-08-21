@@ -355,6 +355,8 @@ class Index:
                   ef_search: Optional[int] = None,
                   approximate: Optional[bool] = None,
                   rerank_depth: Optional[int] = None,
+                  allow_missing_documents: Optional[bool] = None,
+                  allow_missing_embeddings: Optional[bool] = None,
                   ) -> Dict[str, Any]:
         """Search the index.
 
@@ -381,7 +383,9 @@ class Index:
             model_auth: authorisation that lets Marqo download a private model, if required
             ef_search: the size of the list of candidates during graph traversal, for tensor search only
             approximate: whether to use approximate nearest neighbors search or not, for tensor search only
-            rerank_depth: The number of hits per shard to retrieve before reranking
+            rerank_depth: The number of hits per shard to retrieve before reranking,
+            allow_missing_documents: Whether to allow missing documents,
+            allow_missing_embeddings: Whether to allow missing embeddings in the given documents
         Returns:
             Dictionary with hits and other metadata
         """
@@ -406,7 +410,9 @@ class Index:
             "filter": filter_string,
             "attributesToRetrieve": attributes_to_retrieve,
             "scoreModifiers": score_modifiers,
-            "rerankDepth": rerank_depth
+            "rerankDepth": rerank_depth,
+            "allowMissingDocuments": allow_missing_documents,
+            "allowMissingEmbeddings": allow_missing_embeddings,
         }
 
         body = {k: v for k, v in body.items() if v is not None}
