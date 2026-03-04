@@ -57,21 +57,6 @@ index_name_to_settings_mappings = {
         "numberOfShards": 1,
         "numberOfReplicas": 0,
     },
-    CloudTestIndex.unstructured_no_model: {
-        "type": "unstructured",
-        "treatUrlsAndPointersAsImages": False,
-
-        "inferenceType": "marqo.CPU.small",
-        "storageClass": "marqo.basic",
-        "numberOfShards": 1,
-        "numberOfReplicas": 0,
-
-        "model": "no_model",
-        "modelProperties": {
-            "type": "no_model",
-            "dimensions": 512
-        },
-    },
     CloudTestIndex.structured_text: {
         "type": "structured",
         "model": "hf/e5-base-v2",
