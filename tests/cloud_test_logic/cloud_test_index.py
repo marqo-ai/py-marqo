@@ -28,7 +28,6 @@ class CloudTestIndex(str, Enum):
     unstructured_text = "pymarqo_unstr_txt"
     unstructured_image = "pymarqo_unstr_img"
     unstructured_text_custom_prepro = "pymarqo_unstr_txt_cstm_pre"
-    unstructured_no_model = "pymarqo_unstr_no_model"
 
     structured_image_prepro = "pymarqo_str_img_prepro"
     structured_image_custom = "pymarqo_str_img_custom"
