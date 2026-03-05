@@ -11,9 +11,8 @@ class CloudTestIndex(str, Enum):
 
     1) unstructured_text: Text-only index using hf/e5-base-v2, 2 shards, 1 replica, CPU, balanced storage, for hybrid duplicates testing.
     2) unstructured_image: Image-compatible index using open_clip/ViT-B-32/laion2b_s34b_b79k, 1 shard, no replicas, CPU, basic storage.
-    3) unstructured_no_model: 512-dimension custom vectors, 1 shard, no replicas, CPU, basic storage.
-    4) structured_text: Structured text index with hf/e5-base-v2, lexical search, 2 shards, 1 replica, CPU, balanced storage.
-    5) structured_image: Structured image-text index with open_clip/ViT-B-32, 2 shards, 1 replica, CPU, balanced storage, with image preprocessing.
+    3) structured_text: Structured text index with hf/e5-base-v2, lexical search, 2 shards, 1 replica, CPU, balanced storage.
+    4) structured_image: Structured image-text index with open_clip/ViT-B-32, 2 shards, 1 replica, CPU, balanced storage, with image preprocessing.
     For more information on the settings of each index, please refer to index_name_to_settings_mappings.
 
     FOR CLOUD REPLICAS AND SHARDS:
@@ -28,7 +27,6 @@ class CloudTestIndex(str, Enum):
     unstructured_text = "pymarqo_unstr_txt"
     unstructured_image = "pymarqo_unstr_img"
     unstructured_text_custom_prepro = "pymarqo_unstr_txt_cstm_pre"
-    unstructured_no_model = "pymarqo_unstr_no_model"
 
     structured_image_prepro = "pymarqo_str_img_prepro"
     structured_image_custom = "pymarqo_str_img_custom"
@@ -56,21 +54,6 @@ index_name_to_settings_mappings = {
         "storageClass": "marqo.basic",
         "numberOfShards": 1,
         "numberOfReplicas": 0,
-    },
-    CloudTestIndex.unstructured_no_model: {
-        "type": "unstructured",
-        "treatUrlsAndPointersAsImages": False,
-
-        "inferenceType": "marqo.CPU.small",
-        "storageClass": "marqo.basic",
-        "numberOfShards": 1,
-        "numberOfReplicas": 0,
-
-        "model": "no_model",
-        "modelProperties": {
-            "type": "no_model",
-            "dimensions": 512
-        },
     },
     CloudTestIndex.structured_text: {
         "type": "structured",
