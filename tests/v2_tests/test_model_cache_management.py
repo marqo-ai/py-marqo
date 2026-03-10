@@ -49,8 +49,8 @@ class TestModelCacheManagement(MarqoTestCase):
             )
             res = self.client.index(test_index_name).get_loaded_models()
 
-            if "models" not in res:
-                raise AssertionError
+            self.assertIn("models", res)
+            self.assertGreaterEqual(len(res["models"]), 1)
 
     def test_eject_all_models(self) -> None:
         for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
@@ -60,21 +60,19 @@ class TestModelCacheManagement(MarqoTestCase):
             )
             res = self.client.index(test_index_name).get_loaded_models()
             for model in res["models"]:
-                self.client.index(test_index_name).eject_model(model["model_name"], model["model_device"])
+                self.client.index(test_index_name).eject_model(model["modelName"])
             res = self.client.index(test_index_name).get_loaded_models()
-            assert len(res["models"]) == 0
-            assert res["models"] == []
+            self.assertEqual(0, len(res["models"]))
 
     def test_eject_no_cached_model(self) -> None:
         # test a model that is not cached
         try:
-            settings = {"model": self.MODEL}
             for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
                 test_index_name = self.get_test_index_name(
                     cloud_test_index_to_use=cloud_test_index_to_use,
                     open_source_test_index_name=open_source_test_index_name
                 )
-                res = self.client.index(test_index_name).eject_model("void_model", "void_device")
+                res = self.client.index(test_index_name).eject_model("void_model")
                 raise AssertionError
         except MarqoWebError:
             pass
@@ -100,10 +98,11 @@ class TestModelCacheManagement(MarqoTestCase):
         }
         self.client.index(test_index_name).add_documents([d1], device="cpu", tensor_fields=["doc_title", "field_1"])
         res = self.client.index(test_index_name).eject_model(
-            self.MODEL if not self.client.config.is_marqo_cloud else MODEL, "cpu"
+            self.MODEL if not self.client.config.is_marqo_cloud else MODEL
         )
-        assert res["result"] == "success"
-        assert res["message"].startswith("successfully eject")
+
+        self.assertEqual("success", res["result"])
+        self.assertIn("successfully ejected model", res["message"].lower())
 
         if not self.client.config.is_marqo_cloud:
             self.client.delete_index(test_index_name)
