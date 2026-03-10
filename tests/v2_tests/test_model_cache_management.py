@@ -7,7 +7,7 @@ from pytest import mark
 
 @mark.fixed
 class TestModelCacheManagement(MarqoTestCase):
-    MODEL = "open_clip/ViT-B-32/laion400m_e31"
+    MODEL = "open_clip/ViT-B-32/laion2b_s34b_b79k"
 
     # NOTE: The cuda should already have model loaded in the startup
     def test_get_cuda_info(self) -> None:
@@ -65,17 +65,14 @@ class TestModelCacheManagement(MarqoTestCase):
             self.assertEqual(0, len(res["models"]))
 
     def test_eject_no_cached_model(self) -> None:
-        # test a model that is not cached
-        try:
-            for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
-                test_index_name = self.get_test_index_name(
-                    cloud_test_index_to_use=cloud_test_index_to_use,
-                    open_source_test_index_name=open_source_test_index_name
-                )
-                res = self.client.index(test_index_name).eject_model("void_model")
-                raise AssertionError
-        except MarqoWebError:
-            pass
+        for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
+            test_index_name = self.get_test_index_name(
+                cloud_test_index_to_use=cloud_test_index_to_use,
+                open_source_test_index_name=open_source_test_index_name
+            )
+            res = self.client.index(test_index_name).eject_model("void_model")
+            self.assertEqual("success", res["result"])
+            self.assertIn("ejected successfully", res["message"].lower())
 
     def test_eject_model(self) -> None:
         if self.IS_MULTI_INSTANCE:
@@ -102,10 +99,7 @@ class TestModelCacheManagement(MarqoTestCase):
         )
 
         self.assertEqual("success", res["result"])
-        self.assertIn("successfully ejected model", res["message"].lower())
+        self.assertIn("ejected successfully", res["message"].lower())
 
         if not self.client.config.is_marqo_cloud:
             self.client.delete_index(test_index_name)
-
-
-
