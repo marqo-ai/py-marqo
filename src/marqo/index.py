@@ -919,7 +919,7 @@ class Index:
 
     def eject_model(self, model_name: str, model_device: str):
         return self.http.delete(
-            path=f"models?model_name={model_name}&model_device={model_device}", index_name=self.index_name
+            path=f"models?model_name={model_name}", index_name=self.index_name
         )
 
     def _marqo_minimum_supported_version_check(self):
