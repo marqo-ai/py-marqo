@@ -917,7 +917,7 @@ class Index:
     def get_marqo(self):
         return self.http.get(path="", index_name=self.index_name)
 
-    def eject_model(self, model_name: str, model_device: str):
+    def eject_model(self, model_name: str):
         return self.http.delete(
             path=f"models?model_name={model_name}", index_name=self.index_name
         )

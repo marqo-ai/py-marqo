@@ -98,7 +98,7 @@ class TestModelCacheManagement(MarqoTestCase):
         }
         self.client.index(test_index_name).add_documents([d1], device="cpu", tensor_fields=["doc_title", "field_1"])
         res = self.client.index(test_index_name).eject_model(
-            self.MODEL if not self.client.config.is_marqo_cloud else MODEL, "cpu"
+            self.MODEL if not self.client.config.is_marqo_cloud else MODEL
         )
 
         self.assertEqual("success", res["result"])
