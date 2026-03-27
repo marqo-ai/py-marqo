@@ -1,4 +1,6 @@
+import copy
 from typing import Any, Dict, List, Optional
+from unittest import mock
 
 from marqo.errors import MarqoWebError
 from tests.marqo_test import MarqoTestCase, CloudTestIndex
@@ -214,3 +216,72 @@ class TestScoreModifierWithRerankCountSearch(MarqoTestCase):
         self.assertAlmostEqual(modified_results["hits"][0]["_score"], unmodified_scores["tensor1"])  # unmodified
         self.assertAlmostEqual(modified_results["hits"][1]["_score"], unmodified_scores["tensor2"])  # unmodified
         self.assertAlmostEqual(modified_results["hits"][2]["_score"], -1 * unmodified_scores["both1"] - 1)  # modified
+
+
+@mark.fixed
+class TestRerankDepthStartSerialization(MarqoTestCase):
+    """Unit tests verifying rerank_depth_start serialization in the py-marqo client."""
+
+    def test_rerank_depth_start_serialized_as_camel_case(self):
+        """rerank_depth_start must appear as rerankDepthStart in the request body."""
+        temp_client = copy.deepcopy(self.client)
+        mock__post = mock.MagicMock()
+
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        def run():
+            temp_client.index("any_index").search(
+                q="test query",
+                search_method="HYBRID",
+                rerank_depth=50,
+                rerank_depth_start=5,
+            )
+            return True
+
+        run()
+        _, kwargs = mock__post.call_args_list[0]
+        body = kwargs["body"]
+        self.assertIn("rerankDepthStart", body)
+        self.assertEqual(body["rerankDepthStart"], 5)
+        self.assertIn("rerankDepth", body)
+        self.assertEqual(body["rerankDepth"], 50)
+
+    def test_rerank_depth_start_none_omitted_from_body(self):
+        """When rerank_depth_start is None, it must not appear in the request body."""
+        temp_client = copy.deepcopy(self.client)
+        mock__post = mock.MagicMock()
+
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        def run():
+            temp_client.index("any_index").search(
+                q="test query",
+                search_method="HYBRID",
+                rerank_depth=50,
+                rerank_depth_start=None,
+            )
+            return True
+
+        run()
+        _, kwargs = mock__post.call_args_list[0]
+        body = kwargs["body"]
+        self.assertNotIn("rerankDepthStart", body)
+
+    def test_rerank_depth_start_zero_included_in_body(self):
+        """rerank_depth_start=0 must appear in the request body (0 is falsy but valid)."""
+        temp_client = copy.deepcopy(self.client)
+        mock__post = mock.MagicMock()
+
+        @mock.patch("marqo._httprequests.HttpRequests.post", mock__post)
+        def run():
+            temp_client.index("any_index").search(
+                q="test query",
+                search_method="HYBRID",
+                rerank_depth=50,
+                rerank_depth_start=0,
+            )
+            return True
+
+        run()
+        _, kwargs = mock__post.call_args_list[0]
+        body = kwargs["body"]
+        self.assertIn("rerankDepthStart", body)
+        self.assertEqual(body["rerankDepthStart"], 0)
