@@ -39,8 +39,6 @@ index_name_to_settings_mappings = {
         "type": "unstructured",
         "treatUrlsAndPointersAsImages": False,
         "model": "hf/e5-base-v2",
-
-        "inferenceType": "marqo.CPU.small",
         "storageClass": "marqo.balanced",
         "numberOfShards": 2,
         "numberOfReplicas": 1,  # For hybrid duplicates test
@@ -49,8 +47,6 @@ index_name_to_settings_mappings = {
         "type": "unstructured",
         "treatUrlsAndPointersAsImages": True,
         "model": "open_clip/ViT-B-32/laion2b_s34b_b79k",
-
-        "inferenceType": "marqo.CPU.small",
         "storageClass": "marqo.basic",
         "numberOfShards": 1,
         "numberOfReplicas": 0,
@@ -70,7 +66,6 @@ index_name_to_settings_mappings = {
             {"name": "map_long_score_modifier_field", "type": "map<text, long>", "features": ["score_modifier"]},
         ],
         "tensorFields": ["text_field_1", "text_field_2", "text_field_3"],
-        "inferenceType": "marqo.CPU.small",
         "storageClass": "marqo.balanced",
         "numberOfShards": 2,
         "numberOfReplicas": 1, # For hybrid duplicates test
@@ -78,8 +73,6 @@ index_name_to_settings_mappings = {
     CloudTestIndex.structured_image: {
         "type": "structured",
         "model": "open_clip/ViT-B-32/laion2b_s34b_b79k",
-
-        "inferenceType": "marqo.CPU.small",
         "storageClass": "marqo.balanced",
         "numberOfShards": 2,
         "numberOfReplicas": 1,  # For hybrid duplicates test

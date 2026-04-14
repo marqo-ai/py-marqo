@@ -224,35 +224,14 @@ class TestIndex(MarqoTestCase):
                 client.config.is_marqo_cloud = True
 
                 result = client.create_index(
-                    index_name=self.generic_test_index_name, inference_type="marqo.CPU.large", number_of_inferences=1,
+                    index_name=self.generic_test_index_name,
                     storage_class="marqo.basic"
                 )
 
                 mock_post.assert_called_with(f'indexes/{self.generic_test_index_name}', body={
-                    'inferenceType': "marqo.CPU.large", 'storageClass': "marqo.basic", 'numberOfInferences': 1})
+                    'storageClass': "marqo.basic"})
                 mock_get.assert_called_with(f"indexes/{self.generic_test_index_name}/status")
                 assert result == {"acknowledged": True}
-
-    @mark.fixed
-    @mock.patch("marqo._httprequests.HttpRequests.post", return_value={"error": "inferenceType is required"})
-    @mock.patch("marqo._httprequests.HttpRequests.get", return_value={"indexStatus": "READY"})
-    def test_create_marqo_cloud_index_wrong_inference_settings(self, mock_get, mock_post):
-        client = copy.deepcopy(self.client)
-        for cloud_api_endpoint in constants.CLOUD_API_ENDPOINTS:
-            with self.subTest(cloud_api_endpoint=cloud_api_endpoint):
-                client.config.instance_mapping = MarqoCloudInstanceMappings(cloud_api_endpoint)
-                client.config.api_key = 'some-super-secret-API-key'
-                client.config.is_marqo_cloud = True
-
-                result = client.create_index(
-                    index_name=self.generic_test_index_name, inference_type=None, number_of_inferences=1,
-                    storage_class="marqo.basic"
-                )
-
-                mock_post.assert_called_with(f'indexes/{self.generic_test_index_name}', body={
-                    "storageClass": "marqo.basic", "numberOfInferences": 1})
-                mock_get.assert_called_with(f"indexes/{self.generic_test_index_name}/status")
-                assert result == {"error": "inferenceType is required"}
 
     @mark.fixed
     @mock.patch("marqo._httprequests.HttpRequests.post", return_value={"error": "storageClass is required"})
@@ -266,12 +245,11 @@ class TestIndex(MarqoTestCase):
                 client.config.is_marqo_cloud = True
 
                 result = client.create_index(
-                    index_name=self.generic_test_index_name, inference_type="CPU.small", number_of_inferences=1,
+                    index_name=self.generic_test_index_name,
                     storage_class=None
                 )
 
-                mock_post.assert_called_with(f'indexes/{self.generic_test_index_name}', body={
-                    "inferenceType": "CPU.small", "numberOfInferences": 1})
+                mock_post.assert_called_with(f'indexes/{self.generic_test_index_name}', body={})
                 mock_get.assert_called_with(f"indexes/{self.generic_test_index_name}/status")
                 assert result == {"error": "storageClass is required"}
 
