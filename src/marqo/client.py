@@ -1,5 +1,6 @@
 import base64
 import os
+import warnings
 from typing import Any, Dict, List, Optional
 
 from pydantic import error_wrappers
@@ -133,13 +134,11 @@ class Client:
             wait_for_readiness: Marqo Cloud specific, whether to wait until
                 operation is completed or to proceed without waiting for status,
                 won't do anything if config.is_marqo_cloud=False
-            inference_type: inference type for the index
             storage_class: storage class for the index
-            number_of_inferences: number of inferences for the index
             number_of_shards: number of shards for the index
             number_of_replicas: number of replicas for the index
         Note:
-            wait_for_readiness, inference_type, storage_class, number_of_inferences,
+            wait_for_readiness, storage_class,
             number_of_shards, number_of_replicas are Marqo Cloud specific parameters,
 
 
@@ -147,6 +146,20 @@ class Client:
         Returns:
             Response body, containing information about index creation result
         """
+        if inference_type is not None:
+            warnings.warn(
+                "inference_type is deprecated and will be removed in a future version. "
+                "This parameter is no longer used and will be ignored.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        if number_of_inferences is not None:
+            warnings.warn(
+                "number_of_inferences is deprecated and will be removed in a future version. "
+                "This parameter is no longer used and will be ignored.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         return Index.create(
             config=self.config, index_name=index_name,
             type=type, settings_dict=settings_dict,
@@ -163,11 +176,9 @@ class Client:
             vector_numeric_type=vector_numeric_type,
             ann_parameters=ann_parameters,
             wait_for_readiness=wait_for_readiness,
-            inference_type=inference_type,
             storage_class=storage_class,
             number_of_shards=number_of_shards,
             number_of_replicas=number_of_replicas,
-            number_of_inferences=number_of_inferences,
             text_query_prefix=text_query_prefix,
             text_chunk_prefix=text_chunk_prefix,
         )

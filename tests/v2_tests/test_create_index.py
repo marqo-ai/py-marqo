@@ -385,11 +385,9 @@ class TestCreateIndex(MarqoTestCase):
         """Test that settings_dict cannot be specified with other index creation
         parameters in cloud create_index call."""
         parameters_pool = {
-            "inference_type": "marqo.CPU.large",
             "storage_class": "marqo.basic",
             "number_of_replicas": 1,
             "number_of_shards": 1,
-            "number_of_inferences": 1
         }
 
         test_cloud_client = Client("https://api.marqo.ai", api_key="test")
@@ -421,10 +419,8 @@ class TestCreateIndex(MarqoTestCase):
 class TestCloudCreateIndex(MarqoTestCase):
 
     TEST_ATTRIBUTES_WITH_DEFAULTS = {
-        "inferenceType": "CPU.SMALL",
         "numberOfShards": 1,
         "numberOfReplicas": 0,
-        "numberOfInferences": 1,
         "storageClass": "BASIC"
     }
 

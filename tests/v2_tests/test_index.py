@@ -1,4 +1,5 @@
 import copy
+import warnings
 
 from pytest import mark
 
@@ -224,35 +225,14 @@ class TestIndex(MarqoTestCase):
                 client.config.is_marqo_cloud = True
 
                 result = client.create_index(
-                    index_name=self.generic_test_index_name, inference_type="marqo.CPU.large", number_of_inferences=1,
+                    index_name=self.generic_test_index_name,
                     storage_class="marqo.basic"
                 )
 
                 mock_post.assert_called_with(f'indexes/{self.generic_test_index_name}', body={
-                    'inferenceType': "marqo.CPU.large", 'storageClass': "marqo.basic", 'numberOfInferences': 1})
+                    'storageClass': "marqo.basic"})
                 mock_get.assert_called_with(f"indexes/{self.generic_test_index_name}/status")
                 assert result == {"acknowledged": True}
-
-    @mark.fixed
-    @mock.patch("marqo._httprequests.HttpRequests.post", return_value={"error": "inferenceType is required"})
-    @mock.patch("marqo._httprequests.HttpRequests.get", return_value={"indexStatus": "READY"})
-    def test_create_marqo_cloud_index_wrong_inference_settings(self, mock_get, mock_post):
-        client = copy.deepcopy(self.client)
-        for cloud_api_endpoint in constants.CLOUD_API_ENDPOINTS:
-            with self.subTest(cloud_api_endpoint=cloud_api_endpoint):
-                client.config.instance_mapping = MarqoCloudInstanceMappings(cloud_api_endpoint)
-                client.config.api_key = 'some-super-secret-API-key'
-                client.config.is_marqo_cloud = True
-
-                result = client.create_index(
-                    index_name=self.generic_test_index_name, inference_type=None, number_of_inferences=1,
-                    storage_class="marqo.basic"
-                )
-
-                mock_post.assert_called_with(f'indexes/{self.generic_test_index_name}', body={
-                    "storageClass": "marqo.basic", "numberOfInferences": 1})
-                mock_get.assert_called_with(f"indexes/{self.generic_test_index_name}/status")
-                assert result == {"error": "inferenceType is required"}
 
     @mark.fixed
     @mock.patch("marqo._httprequests.HttpRequests.post", return_value={"error": "storageClass is required"})
@@ -266,14 +246,104 @@ class TestIndex(MarqoTestCase):
                 client.config.is_marqo_cloud = True
 
                 result = client.create_index(
-                    index_name=self.generic_test_index_name, inference_type="CPU.small", number_of_inferences=1,
+                    index_name=self.generic_test_index_name,
                     storage_class=None
                 )
 
-                mock_post.assert_called_with(f'indexes/{self.generic_test_index_name}', body={
-                    "inferenceType": "CPU.small", "numberOfInferences": 1})
+                mock_post.assert_called_with(f'indexes/{self.generic_test_index_name}', body={})
                 mock_get.assert_called_with(f"indexes/{self.generic_test_index_name}/status")
                 assert result == {"error": "storageClass is required"}
+
+    @mark.fixed
+    @mock.patch("marqo._httprequests.HttpRequests.post", return_value={"acknowledged": True})
+    @mock.patch("marqo._httprequests.HttpRequests.get", return_value={"indexStatus": "READY"})
+    def test_create_index_inference_type_emits_deprecation_warning(self, mock_get, mock_post):
+        """Test that passing inference_type emits a DeprecationWarning and the parameter is ignored."""
+        client = copy.deepcopy(self.client)
+        client.config.instance_mapping = MarqoCloudInstanceMappings(constants.CLOUD_API_ENDPOINTS[0])
+        client.config.api_key = 'some-super-secret-API-key'
+        client.config.is_marqo_cloud = True
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            client.create_index(
+                index_name=self.generic_test_index_name,
+                inference_type="marqo.CPU.large",
+                storage_class="marqo.basic"
+            )
+            deprecation_warnings = [x for x in w if issubclass(x.category, DeprecationWarning)]
+            self.assertEqual(len(deprecation_warnings), 1)
+            self.assertIn("inference_type is deprecated", str(deprecation_warnings[0].message))
+
+        mock_post.assert_called_with(f'indexes/{self.generic_test_index_name}', body={
+            'storageClass': "marqo.basic"})
+
+    @mark.fixed
+    @mock.patch("marqo._httprequests.HttpRequests.post", return_value={"acknowledged": True})
+    @mock.patch("marqo._httprequests.HttpRequests.get", return_value={"indexStatus": "READY"})
+    def test_create_index_number_of_inferences_emits_deprecation_warning(self, mock_get, mock_post):
+        """Test that passing number_of_inferences emits a DeprecationWarning and the parameter is ignored."""
+        client = copy.deepcopy(self.client)
+        client.config.instance_mapping = MarqoCloudInstanceMappings(constants.CLOUD_API_ENDPOINTS[0])
+        client.config.api_key = 'some-super-secret-API-key'
+        client.config.is_marqo_cloud = True
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            client.create_index(
+                index_name=self.generic_test_index_name,
+                number_of_inferences=2,
+                storage_class="marqo.basic"
+            )
+            deprecation_warnings = [x for x in w if issubclass(x.category, DeprecationWarning)]
+            self.assertEqual(len(deprecation_warnings), 1)
+            self.assertIn("number_of_inferences is deprecated", str(deprecation_warnings[0].message))
+
+        mock_post.assert_called_with(f'indexes/{self.generic_test_index_name}', body={
+            'storageClass': "marqo.basic"})
+
+    @mark.fixed
+    @mock.patch("marqo._httprequests.HttpRequests.post", return_value={"acknowledged": True})
+    @mock.patch("marqo._httprequests.HttpRequests.get", return_value={"indexStatus": "READY"})
+    def test_create_index_both_deprecated_params_emit_warnings(self, mock_get, mock_post):
+        """Test that passing both deprecated params emits two DeprecationWarnings."""
+        client = copy.deepcopy(self.client)
+        client.config.instance_mapping = MarqoCloudInstanceMappings(constants.CLOUD_API_ENDPOINTS[0])
+        client.config.api_key = 'some-super-secret-API-key'
+        client.config.is_marqo_cloud = True
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            client.create_index(
+                index_name=self.generic_test_index_name,
+                inference_type="marqo.CPU.large",
+                number_of_inferences=2,
+                storage_class="marqo.basic"
+            )
+            deprecation_warnings = [x for x in w if issubclass(x.category, DeprecationWarning)]
+            self.assertEqual(len(deprecation_warnings), 2)
+
+        mock_post.assert_called_with(f'indexes/{self.generic_test_index_name}', body={
+            'storageClass': "marqo.basic"})
+
+    @mark.fixed
+    @mock.patch("marqo._httprequests.HttpRequests.post", return_value={"acknowledged": True})
+    @mock.patch("marqo._httprequests.HttpRequests.get", return_value={"indexStatus": "READY"})
+    def test_create_index_no_deprecated_params_no_warning(self, mock_get, mock_post):
+        """Test that not passing deprecated params emits no DeprecationWarning."""
+        client = copy.deepcopy(self.client)
+        client.config.instance_mapping = MarqoCloudInstanceMappings(constants.CLOUD_API_ENDPOINTS[0])
+        client.config.api_key = 'some-super-secret-API-key'
+        client.config.is_marqo_cloud = True
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            client.create_index(
+                index_name=self.generic_test_index_name,
+                storage_class="marqo.basic"
+            )
+            deprecation_warnings = [x for x in w if issubclass(x.category, DeprecationWarning)]
+            self.assertEqual(len(deprecation_warnings), 0)
 
     @mark.fixed
     def test_version_check_multiple_instantiation(self):
