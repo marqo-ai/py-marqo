@@ -15,7 +15,7 @@ setup(
         "tox"
     ],
     name="marqo",
-    version="3.18.0",
+    version="3.18.1",
     author="marqo org",
     author_email="org@marqo.io",
     description="AI-native ecommerce search platform with semantic search and personalization for fashion, beauty, electronics, and home goods.",
