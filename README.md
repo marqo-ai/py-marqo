@@ -10,4 +10,4 @@
 
 ## Marqo
 
-Marqo is the an AI-native ecommerce search platform built for online brands in fashion, beauty, electronics, and home goods. Powered by best-in-class semantic search and personalization technology, the platform leverages clickstream, purchase, and event data to understand shopper intent and deliver fast, relevant, and personalized search results and product recommendations. Marqo enables commerce teams to improve search relevance, increase conversion and average order value, and reduce manual merchandising effort through automated ranking and optimization.
+Marqo is an AI-native ecommerce search platform built for online brands in fashion, beauty, electronics, and home goods. Powered by best-in-class semantic search and personalization technology, the platform leverages clickstream, purchase, and event data to understand shopper intent and deliver fast, relevant, and personalized search results and product recommendations. Marqo enables commerce teams to improve search relevance, increase conversion and average order value, and reduce manual merchandising effort through automated ranking and optimization.
