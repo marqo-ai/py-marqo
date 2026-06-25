@@ -1,4 +1,5 @@
 import functools
+import warnings
 from datetime import datetime
 from timeit import default_timer as timer
 from typing import Any, Dict, List, Optional, Union
@@ -133,18 +134,30 @@ class Index:
             wait_for_readiness: Marqo Cloud specific, whether to wait until
                 operation is completed or to proceed without waiting for status,
                 won't do anything if config.is_marqo_cloud=False
-            inference_type: inference type for the index
             storage_class: storage class for the index
-            number_of_inferences: number of inferences for the index
             number_of_shards: number of shards for the index
             number_of_replicas: number of replicas for the index
             collapse_fields: list of fields that can be collapsed on at query time
         Note:
-            wait_for_readiness, inference_type, storage_class, number_of_inferences,
+            wait_for_readiness, storage_class,
             number_of_shards, number_of_replicas are Marqo Cloud specific parameters,
         Returns:
             Response body, containing information about index creation result
         """
+        if inference_type is not None:
+            warnings.warn(
+                "inference_type is deprecated and will be removed in a future version. "
+                "This parameter is no longer used and will be ignored.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        if number_of_inferences is not None:
+            warnings.warn(
+                "number_of_inferences is deprecated and will be removed in a future version. "
+                "This parameter is no longer used and will be ignored.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         req = HttpRequests(config)
 
         # py-marqo against local Marqo
@@ -191,8 +204,6 @@ class Index:
                 videoPreprocessing=video_preprocessing,
                 vectorNumericType=vector_numeric_type,
                 annParameters=ann_parameters,
-                numberOfInferences=number_of_inferences,
-                inferenceType=inference_type,
                 numberOfShards=number_of_shards,
                 numberOfReplicas=number_of_replicas,
                 storageClass=storage_class,
