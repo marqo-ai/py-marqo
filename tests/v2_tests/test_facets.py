@@ -346,8 +346,9 @@ class TestFacets(MarqoTestCase):
                 self.assertIn("facets", res)
                 self.assertIn("color", res["facets"])
 
-    def test_filter_exclusions_without_filter_fails(self):
-        """Test that exclude terms require a filter string"""
+    def test_filter_exclusions_without_filter_are_dropped(self):
+        """Exclude terms without a filter can't match anything, so they are silently dropped
+        (not rejected): the search still succeeds and returns facets."""
         for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
             test_index_name = self.get_test_index_name(
                 cloud_test_index_to_use=cloud_test_index_to_use,
@@ -358,23 +359,25 @@ class TestFacets(MarqoTestCase):
                 tensor_fields=["title", "description"]
             )
             with self.subTest(test_index_name=test_index_name):
-                with self.assertRaises(MarqoWebError) as e:
-                    self.client.index(test_index_name).search(
-                        "shirt",
-                        search_method="HYBRID",
-                        facets={
-                            "fields": {
-                                "color": {
-                                    "type": "string",
-                                    "excludeTerms": ["nonexistent:value"]
-                                }
+                res = self.client.index(test_index_name).search(
+                    "shirt",
+                    search_method="HYBRID",
+                    facets={
+                        "fields": {
+                            "color": {
+                                "type": "string",
+                                "excludeTerms": ["nonexistent:value"]
                             }
                         }
-                    )
-                self.assertIn("Exclude terms can only be used when a filter string is provided", str(e.exception))
+                    }
+                )
+                self.assertIn("facets", res)
+                self.assertIn("color", res["facets"])
 
-    def test_invalid_filter_exclusions_fails(self):
-        """Test that exclude terms must be present in filter string"""
+    def test_invalid_filter_exclusions_are_dropped(self):
+        """An exclude term that doesn't match any term in the filter is silently dropped (not
+        rejected) so it doesn't spawn a redundant facets query: the search still succeeds and
+        returns facets as if the bogus exclude term were not supplied."""
         for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
             test_index_name = self.get_test_index_name(
                 cloud_test_index_to_use=cloud_test_index_to_use,
@@ -385,21 +388,21 @@ class TestFacets(MarqoTestCase):
                 tensor_fields=["title", "description"]
             )
             with self.subTest(test_index_name=test_index_name):
-                with self.assertRaises(MarqoWebError) as e:
-                    self.client.index(test_index_name).search(
-                        "shirt",
-                        search_method="HYBRID",
-                        filter_string="existent:notvalue",
-                        facets={
-                            "fields": {
-                                "color": {
-                                    "type": "string",
-                                    "excludeTerms": ["nonexistent:value"]
-                                }
+                res = self.client.index(test_index_name).search(
+                    "shirt",
+                    search_method="HYBRID",
+                    filter_string="color:red",
+                    facets={
+                        "fields": {
+                            "color": {
+                                "type": "string",
+                                "excludeTerms": ["color:blue"]  # not a term in the filter -> dropped
                             }
                         }
-                    )
-                self.assertIn("that do not appear in the filter string", str(e.exception))
+                    }
+                )
+                self.assertIn("facets", res)
+                self.assertIn("color", res["facets"])
 
     def test_invalid_facet_parameters_fail(self):
         """Test that invalid facet parameters raise errors"""
