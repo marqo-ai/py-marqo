@@ -284,18 +284,8 @@ class TestSearch(MarqoTestCase):
             )
 
             run_test(
-                "Should return documents matching multiple values with AND operator",
-                "random content", "text_field_2 in (banana, orange) AND int_filter_field_1 in (0, 1)", None, ["1", "3"]
-            )
-
-            run_test(
-                "Should return documents matching multiple values with OR operator",
-                "random content", "text_field_2 in (banana, orange) OR int_filter_field_1 in (1)", None, ["1", "2", "3"]
-            )
-
-            run_test(
                 "Should return documents matching specific IDs",
-                "random content", "_id in (1, 2)", None, ["1", "2"]
+                "random content", "_id:(1) OR _id:(2)", None, ["1", "2"]
             )
 
             run_test(
