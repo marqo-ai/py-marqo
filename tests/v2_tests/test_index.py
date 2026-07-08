@@ -382,7 +382,7 @@ class TestIndex(MarqoTestCase):
     def test_marqo1_recommendation_when_communicate_with_marqo_v1(self):
         """Ensure that we recommend using marqo1 if the version is 1.x.x"""
         test_index_name = self.get_test_index_name(
-            cloud_test_index_to_use=CloudTestIndex.structured_text,
+            cloud_test_index_to_use=CloudTestIndex.unstructured_text,
             open_source_test_index_name=self.generic_test_index_name,
         )
         marqo_url_and_version_cache.clear()
@@ -412,7 +412,7 @@ class TestIndex(MarqoTestCase):
     def test_no_marqo1_recommendation_if_major_is_not_1(self):
         """Ensure that we do not recommend using marqo1 if the major version is not 1"""
         test_index_name = self.get_test_index_name(
-            cloud_test_index_to_use=CloudTestIndex.structured_text,
+            cloud_test_index_to_use=CloudTestIndex.unstructured_text,
             open_source_test_index_name=self.generic_test_index_name,
         )
         marqo_url_and_version_cache.clear()
@@ -663,7 +663,7 @@ class TestIndex(MarqoTestCase):
     @mark.fixed
     def test_get_cuda_info_raises_exception(self):
         self.test_cases = [  # some cloud indexes use gpu during test runs
-            (CloudTestIndex.structured_image, self.unstructured_index_name)
+            (CloudTestIndex.unstructured_image, self.unstructured_index_name)
         ]
         for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
             test_index_name = self.get_test_index_name(

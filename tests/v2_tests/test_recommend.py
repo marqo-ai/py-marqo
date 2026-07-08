@@ -54,7 +54,7 @@ class TestRecommend(MarqoTestCase):
         Test recommend with all fields provided
         """
 
-        self.test_cases = [(CloudTestIndex.structured_text, self.structured_index_name), ]
+        self.test_cases = [(CloudTestIndex.unstructured_text, self.unstructured_index_name), ]
         for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
             test_index_name = self.get_test_index_name(
                 cloud_test_index_to_use=cloud_test_index_to_use,
@@ -79,7 +79,9 @@ class TestRecommend(MarqoTestCase):
                 }
             ]
 
-            add_docs_results = self.client.index(test_index_name).add_documents(docs)
+            add_docs_results = self.client.index(test_index_name).add_documents(
+                docs, tensor_fields=["text_field_1", "text_field_2"]
+            )
 
             if add_docs_results["errors"]:
                 raise Exception(f"Failed to add documents to index {test_index_name}")
@@ -115,7 +117,7 @@ class TestRecommend(MarqoTestCase):
 
     def test_recommend_rerank_depth_behavior(self):
         """API-level test that rerank_depth affects recommender results according to expected behavior."""
-        self.test_cases = [(CloudTestIndex.structured_text, self.structured_index_name)]
+        self.test_cases = [(CloudTestIndex.unstructured_text, self.unstructured_index_name)]
         docs = [
             {"_id": "doc_0","text_field_1": "Project Overview","text_field_2": "Summary of the project’s goals and deliverables."},
             {"_id": "doc_1", "text_field_1": "Team Roles", "text_field_2": "Descriptions of each team member’s responsibilities."},
@@ -151,9 +153,9 @@ class TestRecommend(MarqoTestCase):
                 open_source_test_index_name=open_source_test_index_name
             )
 
-            self.client.index(test_index_name).add_documents(docs)
-
-            add_docs_results = self.client.index(test_index_name).add_documents(docs)
+            add_docs_results = self.client.index(test_index_name).add_documents(
+                docs, tensor_fields=["text_field_1", "text_field_2"]
+            )
             if add_docs_results["errors"]:
                 raise Exception(f"Failed to add documents to index {test_index_name}")
 

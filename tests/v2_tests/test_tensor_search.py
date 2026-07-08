@@ -131,7 +131,7 @@ class TestSearch(MarqoTestCase):
     @mark.fixed
     def test_select_lexical(self):
         self.test_cases = [
-            (CloudTestIndex.structured_text, self.structured_index_name)
+            (CloudTestIndex.unstructured_text, self.unstructured_index_name)
         ]
         for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
             test_index_name = self.get_test_index_name(
@@ -151,7 +151,7 @@ class TestSearch(MarqoTestCase):
             }
             res = self.client.index(test_index_name).add_documents([
                 d1, d2
-            ])
+            ], tensor_fields=["text_field_1", "text_field_2", "text_field_3"])
 
             # Ensure that vector search works
             if self.IS_MULTI_INSTANCE:
@@ -212,7 +212,7 @@ class TestSearch(MarqoTestCase):
     @mark.fixed
     def test_filter_string_and_searchable_attributes(self):
         self.test_cases = [
-            (CloudTestIndex.structured_text, self.structured_index_name),
+            (CloudTestIndex.unstructured_text, self.unstructured_index_name),
         ]
         for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
             test_index_name = self.get_test_index_name(
@@ -247,7 +247,9 @@ class TestSearch(MarqoTestCase):
                     "int_filter_field_1": 1,
                 }
             ]
-            self.client.index(test_index_name).add_documents(docs)
+            self.client.index(test_index_name).add_documents(
+                docs, tensor_fields=["text_field_1", "text_field_2", "text_field_3"]
+            )
 
             def run_test(title, query, filter_string, searchable_attributes, expected):
                 with self.subTest(msg=title):

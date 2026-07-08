@@ -203,13 +203,8 @@ class MarqoTestCase(TestCase):
         cls.client=marqo.Client(**cls.client_settings)
         cls.generic_test_index_name = "py_marqo_test_index"
         cls.unstructured_index_name = "unstructured_index"
-        cls.structured_index_name = "structured_index"
-        cls.structured_image_index_name = "structured_image_index"
         cls.unstructured_image_index_name = "unstructured_image_index"
-        cls.structured_image_index_name_simple_preprocessing_method = \
-            "structured_image_index_simple_preprocessing_method"
 
-        # TODO: include structured when boolean_field bug for structured is fixed
         cls.test_cases = [
             (CloudTestIndex.unstructured_image, cls.unstructured_index_name),
         ]
@@ -225,32 +220,9 @@ class MarqoTestCase(TestCase):
                         "type": "unstructured"
                     },
                     {
-                        "indexName": cls.structured_index_name,
-                        "type": "structured",
-                        "allFields": [{"name": "text_field_1", "type": "text", "features": ["lexical_search", "filter"]},
-                                      {"name": "text_field_2", "type": "text", "features": ["lexical_search", "filter"]},
-                                      {"name": "text_field_3", "type": "text", "features": ["lexical_search"]},
-                                      {"name": "int_field_1", "type": "int", "features": ["score_modifier"]},
-                                      {"name": "int_filter_field_1", "type": "int",
-                                       "features": ["filter", "score_modifier"]
-                                       }],
-                        "tensorFields": ["text_field_1", "text_field_2", "text_field_3"]
-                    },
-                    {
                         "indexName": cls.unstructured_image_index_name,
                         "type": "unstructured",
                         "treatUrlsAndPointersAsImages": True,
-                        "model": "open_clip/ViT-B-32/laion400m_e32",
-                    },
-                    {
-                        "indexName": cls.structured_image_index_name,
-                        "type": "structured",
-                        "allFields": [{"name": "text_field_1", "type": "text", "features": ["lexical_search"]},
-                                      {"name": "text_field_2", "type": "text", "features": ["lexical_search"]},
-                                      {"name": "text_field_3", "type": "text", "features": ["lexical_search"]},
-                                      {"name": "image_field_1", "type": "image_pointer"},
-                                      ],
-                        "tensorFields": ["text_field_1", "text_field_2", "text_field_3", "image_field_1"],
                         "model": "open_clip/ViT-B-32/laion400m_e32",
                     },
                 ])
