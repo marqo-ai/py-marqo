@@ -9,7 +9,7 @@ class CloudTestIndex(str, Enum):
 
     We create unstructured indexes to test:
 
-    1) unstructured_text: Text-only index using hf/e5-base-v2, 2 shards, 1 replica, CPU, balanced storage, for hybrid duplicates testing.
+    1) unstructured_text: Text-only index using hf/e5-base-v2, 2 shards, 1 replica, CPU, basic storage, for hybrid duplicates testing.
     2) unstructured_image: Image-compatible index using open_clip/ViT-B-32/laion2b_s34b_b79k, 1 shard, no replicas, CPU, basic storage.
     For more information on the settings of each index, please refer to index_name_to_settings_mappings.
 
@@ -32,7 +32,7 @@ index_name_to_settings_mappings = {
         "type": "unstructured",
         "treatUrlsAndPointersAsImages": False,
         "model": "hf/e5-base-v2",
-        "storageClass": "marqo.balanced",
+        "storageClass": "marqo.basic",
         "numberOfShards": 2,
         "numberOfReplicas": 1,  # For hybrid duplicates test
     },
