@@ -13,14 +13,6 @@ class TestBoostSearch(MarqoTestCase):
                 {
                     "indexName": self.unstructured_index_name,
                     "type": "unstructured"
-                },
-                {
-                    "indexName": self.structured_index_name,
-                    "type": "structured",
-                    "allFields": [{"name": "text_field_1", "type": "text"},
-                                  {"name": "text_field_2", "type": "text"},
-                                  {"name": "text_field_3", "type": "text"}],
-                    "tensorFields": ["text_field_1", "text_field_2", "text_field_3"]
                 }
             ])
         self.test_index_name = self.get_test_index_name(

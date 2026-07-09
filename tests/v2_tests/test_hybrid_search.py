@@ -56,14 +56,17 @@ class TestHybridSearch(MarqoTestCase):
         """
 
         index_test_cases = [
-            (CloudTestIndex.structured_text, self.structured_index_name)    # TODO: add unstructured when supported
+            (CloudTestIndex.unstructured_text, self.unstructured_index_name)
         ]
         for cloud_test_index_to_use, open_source_test_index_name in index_test_cases:
             test_index_name = self.get_test_index_name(
                 cloud_test_index_to_use=cloud_test_index_to_use,
                 open_source_test_index_name=open_source_test_index_name
             )
-            self.client.index(test_index_name).add_documents(self.docs_list)
+            self.client.index(test_index_name).add_documents(
+                self.docs_list,
+                tensor_fields=["text_field_1", "text_field_2", "text_field_3"]
+            )
 
             with self.subTest("retrieval: disjunction, ranking: rrf"):
                 hybrid_res = self.client.index(test_index_name).search(
@@ -122,14 +125,17 @@ class TestHybridSearch(MarqoTestCase):
         """
 
         index_test_cases = [
-            (CloudTestIndex.structured_text, self.structured_index_name)  # TODO: add unstructured when supported
+            (CloudTestIndex.unstructured_text, self.unstructured_index_name)
         ]
         for cloud_test_index_to_use, open_source_test_index_name in index_test_cases:
             test_index_name = self.get_test_index_name(
                 cloud_test_index_to_use=cloud_test_index_to_use,
                 open_source_test_index_name=open_source_test_index_name
             )
-            self.client.index(test_index_name).add_documents(self.docs_list)
+            self.client.index(test_index_name).add_documents(
+                self.docs_list,
+                tensor_fields=["text_field_1", "text_field_2", "text_field_3"]
+            )
             sample_vector = [0.5 for _ in range(768)]
 
             res_custom_vector = self.client.index(test_index_name).search(
@@ -160,14 +166,17 @@ class TestHybridSearch(MarqoTestCase):
         """
 
         index_test_cases = [
-            (CloudTestIndex.structured_text, self.structured_index_name)  # TODO: add unstructured when supported
+            (CloudTestIndex.unstructured_text, self.unstructured_index_name)
         ]
         for cloud_test_index_to_use, open_source_test_index_name in index_test_cases:
             test_index_name = self.get_test_index_name(
                 cloud_test_index_to_use=cloud_test_index_to_use,
                 open_source_test_index_name=open_source_test_index_name
             )
-            self.client.index(test_index_name).add_documents(self.docs_list)
+            self.client.index(test_index_name).add_documents(
+                self.docs_list,
+                tensor_fields=["text_field_1", "text_field_2", "text_field_3"]
+            )
 
             test_cases = [
                 ("lexical", "lexical"),
@@ -203,14 +212,17 @@ class TestHybridSearch(MarqoTestCase):
         """
 
         index_test_cases = [
-            (CloudTestIndex.structured_text, self.structured_index_name)  # TODO: add unstructured when supported
+            (CloudTestIndex.unstructured_text, self.unstructured_index_name)
         ]
         for cloud_test_index_to_use, open_source_test_index_name in index_test_cases:
             test_index_name = self.get_test_index_name(
                 cloud_test_index_to_use=cloud_test_index_to_use,
                 open_source_test_index_name=open_source_test_index_name
             )
-            self.client.index(test_index_name).add_documents(self.docs_list)
+            self.client.index(test_index_name).add_documents(
+                self.docs_list,
+                tensor_fields=["text_field_1", "text_field_2", "text_field_3"]
+            )
 
             test_cases = [
                 ("disjunction", "rrf"),
@@ -233,38 +245,6 @@ class TestHybridSearch(MarqoTestCase):
 
                     self.assertEqual(len(hybrid_res["hits"]), 1)
                     self.assertEqual(hybrid_res["hits"][0]["_id"], "doc8")
-
-    def test_hybrid_search_structured_rrf_with_replicas_has_no_duplicates(self):
-        """
-        Tests that show that running 100 searches on indexes with 3 replicas (structured text & unstructured text)
-        will not have duplicates in results.
-        Only relevant for cloud tests.
-        """
-
-        if not self.client.config.is_marqo_cloud:
-            self.skipTest("Test is not relevant for non-Marqo Cloud instances")
-
-        # Split into 2 separate blocks to unblock (looping error occurring)
-        cloud_test_index_to_use = CloudTestIndex.structured_text
-        test_index_name = self.get_test_index_name(
-            cloud_test_index_to_use=cloud_test_index_to_use,
-            open_source_test_index_name=None
-        )
-        print(f"Running test for index: {test_index_name}", flush=True)
-        add_docs_res = self.client.index(test_index_name).add_documents(self.docs_list)
-        print(f"Add docs result: {add_docs_res}", flush=True)
-        for _ in range(100):
-            hybrid_res = self.client.index(test_index_name).search(
-                "dogs",
-                search_method="HYBRID",
-                limit=10
-            )
-
-            # check for duplicates
-            hit_ids = [hit["_id"] for hit in hybrid_res["hits"]]
-            self.assertEqual(len(hit_ids), len(set(hit_ids)),
-                             f"Duplicates found in results. Only {len(set(hit_ids))} unique results out of "
-                             f"{len(hit_ids)}")
 
     def test_hybrid_search_unstructured_rrf_with_replicas_has_no_duplicates(self):
         """

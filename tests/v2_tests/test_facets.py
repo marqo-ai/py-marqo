@@ -119,24 +119,6 @@ class TestFacets(MarqoTestCase):
             (CloudTestIndex.unstructured_text, cls.unstructured_index_name),
         ]
 
-    def test_facets_structured_index_fails(self):
-        """Verify facets fail on structured indexes"""
-        for cloud_test_index_to_use, open_source_test_index_name in [
-            (CloudTestIndex.structured_text, self.structured_index_name),
-        ]:
-            test_index_name = self.get_test_index_name(
-                cloud_test_index_to_use=cloud_test_index_to_use,
-                open_source_test_index_name=open_source_test_index_name
-            )
-            with self.subTest(test_index_name=test_index_name):
-                with self.assertRaises(MarqoWebError) as e:
-                    self.client.index(test_index_name).search(
-                        "shirt",
-                        search_method="HYBRID",
-                        facets={"fields": {"color": {"type": "string"}}}
-                    )
-                self.assertIn("Facets are only supported for unstructured indexes", str(e.exception))
-
     def test_facets_non_hybrid_search_fails(self):
         """Verify facets only work with HYBRID search method"""
         for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:

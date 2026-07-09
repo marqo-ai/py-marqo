@@ -12,7 +12,7 @@ class TestEmbed(MarqoTestCase):
 
     def setUp(self):
         self.test_cases = [
-            (CloudTestIndex.structured_text, self.unstructured_index_name),
+            (CloudTestIndex.unstructured_text, self.unstructured_index_name),
         ]
 
     def test_embed_single_string(self):

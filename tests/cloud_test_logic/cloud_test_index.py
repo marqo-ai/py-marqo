@@ -7,16 +7,14 @@ class CloudTestIndex(str, Enum):
 
     Please try to keep names short to avoid hitting name-length limits
 
-    We create 3 unstructured indexes and 3 structured indexes to test:
+    We create unstructured indexes to test:
 
-    1) unstructured_text: Text-only index using hf/e5-base-v2, 2 shards, 1 replica, CPU, balanced storage, for hybrid duplicates testing.
+    1) unstructured_text: Text-only index using hf/e5-base-v2, 2 shards, 1 replica, CPU, basic storage, for hybrid duplicates testing.
     2) unstructured_image: Image-compatible index using open_clip/ViT-B-32/laion2b_s34b_b79k, 1 shard, no replicas, CPU, basic storage.
-    3) structured_text: Structured text index with hf/e5-base-v2, lexical search, 2 shards, 1 replica, CPU, balanced storage.
-    4) structured_image: Structured image-text index with open_clip/ViT-B-32, 2 shards, 1 replica, CPU, balanced storage, with image preprocessing.
     For more information on the settings of each index, please refer to index_name_to_settings_mappings.
 
     FOR CLOUD REPLICAS AND SHARDS:
-    - Use unstructured_text, structured_text, or structured_images for 1 replica & 2 shards
+    - Use unstructured_text for 1 replica & 2 shards
     - Use all other indexes for 0 replicas & 1 shard
 
     We design these indexes to maximize the coverage of different settings and features. For each test method,
@@ -28,18 +26,13 @@ class CloudTestIndex(str, Enum):
     unstructured_image = "pymarqo_unstr_img"
     unstructured_text_custom_prepro = "pymarqo_unstr_txt_cstm_pre"
 
-    structured_image_prepro = "pymarqo_str_img_prepro"
-    structured_image_custom = "pymarqo_str_img_custom"
-    structured_text = "pymarqo_str_txt"
-    structured_image = "pymarqo_str_img"
-
 
 index_name_to_settings_mappings = {
     CloudTestIndex.unstructured_text: {
         "type": "unstructured",
         "treatUrlsAndPointersAsImages": False,
         "model": "hf/e5-base-v2",
-        "storageClass": "marqo.balanced",
+        "storageClass": "marqo.basic",
         "numberOfShards": 2,
         "numberOfReplicas": 1,  # For hybrid duplicates test
     },
@@ -50,51 +43,5 @@ index_name_to_settings_mappings = {
         "storageClass": "marqo.basic",
         "numberOfShards": 1,
         "numberOfReplicas": 0,
-    },
-    CloudTestIndex.structured_text: {
-        "type": "structured",
-        "model": "hf/e5-base-v2",
-        "allFields": [
-            {"name": "text_field_1", "type": "text", "features": ["lexical_search", "filter"]},
-            {"name": "text_field_2", "type": "text", "features": ["lexical_search", "filter"]},
-            {"name": "text_field_3", "type": "text", "features": ["lexical_search"]},
-            {"name": "int_field_1", "type": "int", "features": ["score_modifier"]},
-            {"name": "int_filter_field_1", "type": "int", "features": ["filter", "score_modifier"]},
-            {"name": "map_int_score_modifier_field", "type": "map<text, int>", "features": ["score_modifier"]},
-            {"name": "map_double_score_modifier_field", "type": "map<text, double>", "features": ["score_modifier"]},
-            {"name": "map_float_score_modifier_field", "type": "map<text, float>", "features": ["score_modifier"]},
-            {"name": "map_long_score_modifier_field", "type": "map<text, long>", "features": ["score_modifier"]},
-        ],
-        "tensorFields": ["text_field_1", "text_field_2", "text_field_3"],
-        "storageClass": "marqo.balanced",
-        "numberOfShards": 2,
-        "numberOfReplicas": 1, # For hybrid duplicates test
-    },
-    CloudTestIndex.structured_image: {
-        "type": "structured",
-        "model": "open_clip/ViT-B-32/laion2b_s34b_b79k",
-        "storageClass": "marqo.balanced",
-        "numberOfShards": 2,
-        "numberOfReplicas": 1,  # For hybrid duplicates test
-
-        "allFields": [
-            {"name": "text_field_1", "type": "text", "features": ["lexical_search", "filter"]},
-            {"name": "text_field_2", "type": "text", "features": ["lexical_search", "filter"]},
-            {"name": "text_field_3", "type": "text", "features": ["filter"]},
-            {"name": "image_field_1", "type": "image_pointer"},
-            {"name": "array_field_1", "type": "array<text>", "features": ["filter"]},
-            {"name": "float_field_1", "type": "float", "features": ["filter", "score_modifier"]},
-            {"name": "int_field_1", "type": "int", "features": ["score_modifier"]},
-            {"name": "int_filter_field_1", "type": "int", "features": ["filter", "score_modifier"]},
-            {"name": "bool_field_1", "type": "bool", "features": ["filter"]},
-            {"name": "map_int_score_modifier_field", "type": "map<text, int>", "features": ["score_modifier"]},
-            {"name": "map_double_score_modifier_field", "type": "map<text, double>", "features": ["score_modifier"]},
-            {"name": "map_float_score_modifier_field", "type": "map<text, float>", "features": ["score_modifier"]},
-            {"name": "map_long_score_modifier_field", "type": "map<text, long>", "features": ["score_modifier"]},
-        ],
-        "tensorFields": ["text_field_1", "text_field_2", "text_field_3", "image_field_1"],
-        "imagePreprocessing": {
-            "patchMethod": "simple",
-        }
     },
 }

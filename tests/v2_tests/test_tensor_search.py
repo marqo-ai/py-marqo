@@ -131,7 +131,7 @@ class TestSearch(MarqoTestCase):
     @mark.fixed
     def test_select_lexical(self):
         self.test_cases = [
-            (CloudTestIndex.structured_text, self.structured_index_name)
+            (CloudTestIndex.unstructured_text, self.unstructured_index_name)
         ]
         for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
             test_index_name = self.get_test_index_name(
@@ -151,7 +151,7 @@ class TestSearch(MarqoTestCase):
             }
             res = self.client.index(test_index_name).add_documents([
                 d1, d2
-            ])
+            ], tensor_fields=["text_field_1", "text_field_2", "text_field_3"])
 
             # Ensure that vector search works
             if self.IS_MULTI_INSTANCE:
@@ -212,7 +212,7 @@ class TestSearch(MarqoTestCase):
     @mark.fixed
     def test_filter_string_and_searchable_attributes(self):
         self.test_cases = [
-            (CloudTestIndex.structured_text, self.structured_index_name),
+            (CloudTestIndex.unstructured_text, self.unstructured_index_name),
         ]
         for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
             test_index_name = self.get_test_index_name(
@@ -247,7 +247,9 @@ class TestSearch(MarqoTestCase):
                     "int_filter_field_1": 1,
                 }
             ]
-            self.client.index(test_index_name).add_documents(docs)
+            self.client.index(test_index_name).add_documents(
+                docs, tensor_fields=["text_field_1", "text_field_2", "text_field_3"]
+            )
 
             def run_test(title, query, filter_string, searchable_attributes, expected):
                 with self.subTest(msg=title):
@@ -282,18 +284,8 @@ class TestSearch(MarqoTestCase):
             )
 
             run_test(
-                "Should return documents matching multiple values with AND operator",
-                "random content", "text_field_2 in (banana, orange) AND int_filter_field_1 in (0, 1)", None, ["1", "3"]
-            )
-
-            run_test(
-                "Should return documents matching multiple values with OR operator",
-                "random content", "text_field_2 in (banana, orange) OR int_filter_field_1 in (1)", None, ["1", "2", "3"]
-            )
-
-            run_test(
                 "Should return documents matching specific IDs",
-                "random content", "_id in (1, 2)", None, ["1", "2"]
+                "random content", "_id:(1) OR _id:(2)", None, ["1", "2"]
             )
 
             run_test(

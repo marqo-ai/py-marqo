@@ -11,7 +11,7 @@ class TestDemo(MarqoTestCase):
     def test_demo(self):
         client = Client(**self.client_settings)
         self.test_cases = [
-            (CloudTestIndex.structured_text, self.structured_index_name),
+            (CloudTestIndex.unstructured_text, self.unstructured_index_name),
         ]
         for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
             test_index_name = self.get_test_index_name(
@@ -26,16 +26,16 @@ class TestDemo(MarqoTestCase):
                  },
                 {
                     "text_field_1": "Top Places to Visit in Melbourne ",
-                    "text_field_3": """ - Collingwood 
-                    - Toorak 
+                    "text_field_3": """ - Collingwood
+                    - Toorak
                     - Brunswick
-                    - Cremorne 
-                    
+                    - Cremorne
+
                     Some of these places are great living areas, and some are great places to eat.
                     S2Search is based in Melbourne. Melbourne has beautiful waterways running through it.
                     """
                 },
-            ])
+            ], tensor_fields=["text_field_1", "text_field_2", "text_field_3"])
             print("\nSearching the phrase 'River' across all fields")
 
             if self.IS_MULTI_INSTANCE:
@@ -57,7 +57,7 @@ class TestDemo(MarqoTestCase):
         mq = marqo.Client(**self.client_settings)
 
         self.test_cases = [
-            (CloudTestIndex.structured_text, self.structured_index_name),
+            (CloudTestIndex.unstructured_text, self.unstructured_index_name),
         ]
 
         for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
@@ -76,7 +76,8 @@ class TestDemo(MarqoTestCase):
                                        "mobility, life support, and communications for astronauts",
                         "_id": "article_591"
                     }
-                ]
+                ],
+                tensor_fields=["text_field_1", "text_field_2"]
             )
 
             if self.IS_MULTI_INSTANCE:
@@ -124,7 +125,7 @@ class TestDemo(MarqoTestCase):
         import marqo
         mq = marqo.Client(**self.client_settings)
         self.test_cases = [
-            (CloudTestIndex.structured_text, self.structured_index_name),
+            (CloudTestIndex.unstructured_text, self.unstructured_index_name),
         ]
         for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
             test_index_name = self.get_test_index_name(
@@ -148,7 +149,8 @@ class TestDemo(MarqoTestCase):
                         "is an extinct carnivorous marsupial."
                         "The last known of its species died in 1936.",
                     },
-                ]
+                ],
+                tensor_fields=["text_field_1", "text_field_2"]
             )
 
             r1 = mq.index(test_index_name).get_stats()
@@ -203,7 +205,7 @@ class TestDemo(MarqoTestCase):
     def test_readme_example_multimodal_combination_query(self):
         import marqo
         self.test_cases = [
-            (CloudTestIndex.structured_text, self.structured_index_name),
+            (CloudTestIndex.unstructured_image, self.unstructured_image_index_name),
         ]
         mq = marqo.Client(**self.client_settings)
         for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
@@ -238,6 +240,7 @@ class TestDemo(MarqoTestCase):
                         },
                     }
                 },
+                tensor_fields=["captioned_image"],
             )
 
 

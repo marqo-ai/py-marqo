@@ -27,7 +27,7 @@ class TestImageChunking(MarqoTestCase):
                 pass
 
         self.test_cases = [
-            (CloudTestIndex.structured_image, self.structured_image_index_name),
+            (CloudTestIndex.unstructured_image, self.unstructured_image_index_name),
         ]
         for cloud_test_index_to_use, open_source_test_index_name in self.test_cases:
             test_index_name = self.get_test_index_name(
@@ -43,7 +43,10 @@ class TestImageChunking(MarqoTestCase):
                 'image_field_1': temp_file_name,
                          }
 
-            client.index(test_index_name).add_documents([document1])
+            client.index(test_index_name).add_documents(
+                [document1],
+                tensor_fields=["text_field_1", "text_field_2", "image_field_1"]
+            )
 
             # test the search works
             if self.IS_MULTI_INSTANCE:
@@ -74,14 +77,9 @@ class TestImageChunking(MarqoTestCase):
                 pass
 
         settings = {
-            "type": "structured",
-        "model": "open_clip/ViT-B-32/laion2b_s34b_b79k",
-        "allFields": [
-            {"name": "text_field_1", "type": "text", "features": ["lexical_search", "filter"]},
-            {"name": "text_field_2", "type": "text", "features": ["lexical_search", "filter"]},
-            {"name": "image_field_1", "type": "image_pointer"},
-            ],
-            "tensorFields": ["text_field_1", "text_field_2", "image_field_1"],
+            "type": "unstructured",
+            "model": "open_clip/ViT-B-32/laion2b_s34b_b79k",
+            "treatUrlsAndPointersAsImages": True,
             "imagePreprocessing": {
                 "patchMethod": "simple",
             },
@@ -91,7 +89,7 @@ class TestImageChunking(MarqoTestCase):
             self.client.create_index(self.generic_test_index_name, settings_dict=settings)
 
         test_index_name = self.get_test_index_name(
-            cloud_test_index_to_use=CloudTestIndex.structured_image,
+            cloud_test_index_to_use=CloudTestIndex.unstructured_image,
             open_source_test_index_name=self.generic_test_index_name
         )
         temp_file_name = 'https://avatars.githubusercontent.com/u/13092433?v=4'
@@ -103,7 +101,10 @@ class TestImageChunking(MarqoTestCase):
             'text_field_2': 'the image chunking can (optionally) chunk the image into sub-patches (akin to segmenting text) by using either a learned model or simple box generation and cropping',
             'image_field_1': temp_file_name}
 
-        client.index(test_index_name).add_documents([document1])
+        client.index(test_index_name).add_documents(
+            [document1],
+            tensor_fields=["text_field_1", "text_field_2", "image_field_1"]
+        )
 
         # test the search works
         if self.IS_MULTI_INSTANCE:
