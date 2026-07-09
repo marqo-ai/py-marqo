@@ -129,7 +129,8 @@ class TestCreateIndex(MarqoTestCase):
         image_url = "https://raw.githubusercontent.com/marqo-ai/marqo/mainline/examples/ImageSearchGuide/data/image2.jpg"
         documents = [{"test": "test",
                       "image": image_url}]
-        self.client.index(self.index_name).add_documents(documents, tensor_fields=["test", "image"])
+        res = self.client.index(self.index_name).add_documents(documents, tensor_fields=["test", "image"])
+        self.assertFalse(res["errors"], f"add_documents failed: {res}")
 
         lexical_search_res = self.client.index(self.index_name).search(q="test", search_method="LEXICAL")
         tensor_search_res = self.client.index(self.index_name).search(q="test", search_method="TENSOR")
@@ -177,7 +178,8 @@ class TestCreateIndex(MarqoTestCase):
         image_url = "https://raw.githubusercontent.com/marqo-ai/marqo/mainline/examples/ImageSearchGuide/data/image2.jpg"
         documents = [{"test": "test",
                       "image": image_url}]
-        self.client.index(self.index_name).add_documents(documents, tensor_fields=["test", "image"])
+        res = self.client.index(self.index_name).add_documents(documents, tensor_fields=["test", "image"])
+        self.assertFalse(res["errors"], f"add_documents failed: {res}")
 
         lexical_search_res = self.client.index(self.index_name).search(q="test", search_method="LEXICAL")
         tensor_search_res = self.client.index(self.index_name).search(q="test", search_method="TENSOR")
