@@ -237,7 +237,9 @@ class Index:
                model_auth: Optional[dict] = None,
                ef_search: Optional[int] = None, approximate: Optional[bool] = None,
                text_query_prefix: Optional[str] = None, hybrid_parameters: Optional[dict] = None,
-               rerank_depth: Optional[int] = None, facets: Optional[dict] = None,
+               rerank_depth: Optional[int] = None,
+               rerank_depth_start: Optional[int] = None,
+               facets: Optional[dict] = None,
                track_total_hits: Optional[bool] = None,
                approximate_threshold: Optional[float] = None,
                language: Optional[str] = None,
@@ -284,6 +286,11 @@ class Index:
             hybrid_parameters: a dictionary of parameters to be used for hybrid search
             rerank_depth: The number of documents to rerank with score modifiers if used with hybrid search.
                 Number of hits to get from each shard if used with tensor search.
+            rerank_depth_start: The index of the first result to rerank. Hits before this position
+                are preserved as-is (their scores and order are unchanged). Only hits in
+                [rerank_depth_start, rerank_depth) are subject to global score modifiers and
+                reranking. Must be a non-negative integer less than rerank_depth if both are set.
+                Default is 0 (rerank all hits within rerank_depth).
             facets: a dictionary of facets to be used for facet search.
             track_total_hits: Set to True to return total number of lexical or tensor matches
             approximate_threshold: hit ratio threshold for deciding if a nearest neighbor search should be performed as
@@ -323,6 +330,7 @@ class Index:
             "limit": limit,
             "offset": offset,
             "rerankDepth": rerank_depth,
+            "rerankDepthStart": rerank_depth_start,
             "searchMethod": search_method,
             "showHighlights": show_highlights,
             "reRanker": reranker,
